@@ -61,8 +61,8 @@ public class TrackBuilder {
 	
 	//TODO handleCollisions
 		//Detect new collisions
-		//Release disconnected collisions
-		//Repair bad collisions
+		//Release disconnected collisions to ActiveTracks
+		//Repair/Flag bad collisions
 	
 	//TODO detectNewCollisions
 	
@@ -70,15 +70,19 @@ public class TrackBuilder {
 	
 	//TODO repairBadCollisions
 		//Detect bad collisions (no 2-2 matches) 
-		//
+		//Try to match to empty points nearby
+		//Try to split the one image to two
+		//Mark bad collisions (to widen range of points nearby)
 	
 	//TODO detectBadCollisions
 	
-	//TODO
+	//TODO matchCollisionWithEmptyPoint
+	
+	//TODO splitImagetoMultiplePoints
 	
 	
 	//TODO fuseTracks
-		//Extend 1-1 matches and collision matches
+		//Extend 1-1 matches and good collision matches
 		//Start new tracks (unmatched points), move to active
 		//End dead tracks (unmatched tracks), move to finished
 	

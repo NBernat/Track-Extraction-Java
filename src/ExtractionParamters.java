@@ -5,10 +5,10 @@ public class ExtractionParamters {
 	
 	//collisionDist
 	
+	////////////////////////////////
+	// Extraction Parameters 
+	////////////////////////////////
 	
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		
-	}
+	
 	
 }
