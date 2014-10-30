@@ -5,10 +5,6 @@ public class TrackMatch {
 	//Array: pointID, dist2trackID
 	
 	
-
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-
-	}
-
+	
+	
 }

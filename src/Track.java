@@ -1,6 +1,6 @@
 
 public class Track {
-	//point(ID)s
+	//points
 	//trackID
 	//isActive?
 	
