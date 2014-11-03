@@ -1,13 +1,9 @@
 
 public class Collision {
 	
-	//TrackA
-	//TrackB
+	//inTracks
+	//outTracks
 	
-	//CollisionTrackA
-	//CollisionTrackB
-	
-	//TrackC
-	//TrackD
+	//CollisionPair[] collisionPoints
 	
 }

@@ -1,11 +1,42 @@
 //import opencv stuff
 public class PointExtractor {
-		
+	
+	/**
+	 * The points which were extracted in the last call to extractFrame() 
+	 * <p>
+	 * Only publicly accessible via getPoints()
+	 */
+	private TrackPoint[] extractedPoints;
+	/**
+	 * Index of the last frame that was run through the point extractor
+	 */
+	int lastFrameExtracted;
+	/**
+	 * How many frames the extractor moves forward when nextFrame() is called
+	 */
+	int increment;
+	/**
+	 * Index of the last frame in the stack 
+	 */
+	int endFrameNum;
+	
 	//TODO constructor
 	
-	//TODO nextFrame
+	/**
+	 * 
+	 * @return Index of the frame following the last frame loaded
+	 */
+	public int nextFrame(){
+		return lastFrameExtracted+increment;
+	}
 		//increment the framenum
 		//load frame LOADFRAME
+	
+	public void extractFrame(int frameNum) {
+		//loadFrame
+		//points=getPoints
+	}
+	
 	
 	//TODO loadFrame
 		//calculate background image
@@ -32,7 +63,9 @@ public class PointExtractor {
 		//
 	
 	//TODO accessors
-	
+	public TrackPoint[] getPoints(){
+		return extractedPoints;
+	}
 	
 	
 	
