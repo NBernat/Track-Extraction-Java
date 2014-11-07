@@ -1,5 +1,15 @@
+import ij.*;
 //import opencv stuff
 public class PointExtractor {
+	
+	
+	////////////////////////////
+	//  
+	////////////////////////////
+	/**
+	 * The stack of images to extract points from 
+	 */
+	ImageStack imageStack;
 	
 	/**
 	 * The points which were extracted in the last call to extractFrame() 
@@ -20,25 +30,48 @@ public class PointExtractor {
 	 */
 	int endFrameNum;
 	
+	////////////////////////////
+	//Other fields
+	//background images and that sort of thing
+	
+	
+	////////////////////////////
+	// Point Extracting methods 
+	////////////////////////////
+	
 	//TODO constructor
 	
 	/**
-	 * 
+	 * Calculates the index of the next frame
 	 * @return Index of the frame following the last frame loaded
 	 */
 	public int nextFrame(){
 		return lastFrameExtracted+increment;
 	}
-		//increment the framenum
-		//load frame LOADFRAME
+
 	
-	public void extractFrame(int frameNum) {
+	/**
+	 * 
+	 * @param frameNum Index of the stack slice to load
+	 * @return
+	 */
+	public int extractFrame(int frameNum) {
 		//loadFrame
+		if(loadFrame(frameNum)>0){
+			return 1;
+		}
 		//points=getPoints
+		lastFrameExtracted = frameNum;
+		return 0;
 	}
 	
 	
 	//TODO loadFrame
+	public int loadFrame(int frameNum){
+		
+		
+		return 0;
+	}
 		//calculate background image
 		//error checks on the frame (framenum in range, frameloader not null, no frameloading error)
 		//subtract background image from frame 
