@@ -17,6 +17,10 @@ public class commtest {
 		cm.message("this is a message!", VerbLevel.verb_error);
 		cm.message("this is another message!",VerbLevel.verb_verbose);
 
+		int x = 1;
+		int y = ++x;
+		System.out.println("y: "+y);
+		System.out.println("x: "+x);
 		
 	}
 

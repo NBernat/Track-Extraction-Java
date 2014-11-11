@@ -1,5 +1,5 @@
-import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.ListIterator;
+import java.util.Vector;
 
 
 public class TrackBuilder {
@@ -11,15 +11,15 @@ public class TrackBuilder {
 	/**
 	 * Tracks which have not yet been ended
 	 */
-	ArrayList<Track> activeTracks;
+	Vector<Track> activeTracks;
 	/**
 	 * Tracks which have been ended
 	 */
-	ArrayList<Track> finishedTracks;
+	Vector<Track> finishedTracks;
 	/**
 	 * All (active? TBD) collision events  
 	 */
-	ArrayList<Collision> collisions;
+	Vector<Collision> collisions;
 	/**
 	 * Number of tracks, including active tracks and tracks in collisions 
 	 */
@@ -33,17 +33,17 @@ public class TrackBuilder {
 	 * <p>
 	 * Set when the points are activated
 	 */
-	TrackPoint[] activePts;
+	Vector<TrackPoint> activePts;
 	/**
 	 * Matches between tracks and their (nearest/nearby? TBD) points
 	 * <p>
 	 * Set when the tracks are activated
 	 */
-	TrackMatch[] matches;
+	Vector<TrackMatch> matches;
 	/**
-	 * Cross-referencing list for {@link TrackBuilder.matches}
+	 * Cross-reference table for point matches, showing how many primary matches contain this point
 	 */
-	LinkedList<Integer>[] pointMatchList;
+	int[] pointMatchTable;
 	/**
 	 * Index of frame being processed
 	 */
@@ -53,6 +53,10 @@ public class TrackBuilder {
 	////////////////////////////
 	// Auxiliary  objects
 	////////////////////////////
+	/**
+	 * Parameters used for extracting tracks
+	 */
+	ExtractionParameters ep;
 	/**
 	* An object which provides points from an image 
 	* <p>
@@ -166,10 +170,10 @@ public class TrackBuilder {
 			return 1;
 		}
 		activePts = pe.getPoints();
-		if (activePts.length==0){
+		if (activePts.size()==0){
 			comm.message("No points were extracted from frame "+frameNum, VerbLevel.verb_warning);
 		}
-		
+		pointMatchTable = new int[activePts.size()];
 		return 0;
 	}
 	
@@ -194,7 +198,7 @@ public class TrackBuilder {
 		
 		//Build matches
 		buildMatches();
-		if (matches.length==0){
+		if (matches.size()==0){
 			comm.message("No matches were made in frame "+frameNum, VerbLevel.verb_warning);
 			return 1;
 		}
@@ -216,16 +220,14 @@ public class TrackBuilder {
 	
 	
 	/**
-	 * Matches the newly added points to  
+	 * Matches the newly added points to the tracks 
 	 */
 	public void buildMatches(){
 		
-		matches = new TrackMatch[activeTracks.size()+collisions.size()];
+		matches = new Vector<TrackMatch>();
 		
-		int startMatchInd=0;
-		matchPtsToActiveTracks(startMatchInd);
-		startMatchInd=activeTracks.size();
-		matchPtsToCollisions(startMatchInd);
+		matchPtsToActiveTracks();
+		matchPtsToCollisions();
 		
 	}
 	
@@ -235,10 +237,11 @@ public class TrackBuilder {
 	 * Builds a {@link TrackMatch} for each active track and stores it in matches 
 	 * @param startMatchInd The first index of {@link TrackBuilder.matches} to fill
 	 */
-	public void matchPtsToActiveTracks(int startMatchInd){
+	public void matchPtsToActiveTracks(){
 		int i;
 		for(i=0; i<activeTracks.size(); i++){
-			matches[startMatchInd+i] = new TrackMatch(activeTracks.get(i), activePts);
+			matches.add(new TrackMatch(activeTracks.get(i), activePts, ep.numPtsInTrackMatch));
+			//TODO update match table
 		}
 	}
 
@@ -247,43 +250,62 @@ public class TrackBuilder {
 	 * Builds a CollisionMatch, which contains TrackMatches for each relevant track, for each collision and stores it in matches 
 	 * @param startMatchInd The first index of {@link TrackBuilder.matches} to fill
 	 */
-	public void matchPtsToCollisions(int startMatchInd){
+	public void matchPtsToCollisions(){
 		
 		int i;
 		for(i=0; i<collisions.size(); i++){
-			
-			matches[startMatchInd+i] = new CollisionMatch(activeTracks.get(i-startMatchInd), activePts);
-			
-//			int j;
-//			int numPoints = collisions.get(i).inTracks.length;
-//			matchNPtstoCollision(numPoints, collisions.get(i));
-//			for (j=0; j<numPoints; j++){
-//				
-//			}
-//			matches[i] = new TrackMatch(activeTracks.get(i-startMatchInd), activePts);
+			matches.add(new CollisionMatch(activeTracks.get(i), activePts, ep.numPtsInTrackMatch));
+			//TODO update match table
 		}
 	}
 	
 	
-	//TODO modifyMatches
+	//TODO modifyMatches: error checking
 	public int modifyMatches(){
+		
+		int numCutByDist = cutMatchesByDistance();
+		comm.message("Number of matches cut from frame "+frameNum+" by distance: "+numCutByDist, VerbLevel.verb_debug);
+		
+		handleCollisions();
 		
 		return 0;
 	}
-		//Remove matches that are too far CUTMATCHESBYDISTANCE
-		//Handle collisions
 	
-	//TODO cutMatchesByDistance
-		//If trackmatch.dist is too great, deleete it
+	
+	/**
+	 * Marks as invalid any TrackMatch that is too far away 
+	 * @return Total number of matches  
+	 */
+	public int cutMatchesByDistance(){
+		 
+		ListIterator<TrackMatch> it = matches.listIterator();
+		int numRemoved = 0;
+		while (it.hasNext()) {
+			numRemoved += it.next().cutPointsByDistance(ep.collisionDist);
+		}
+		return numRemoved;
+	}
 	
 	//TODO handleCollisions
 		//Detect new collisions
 		//Release disconnected collisions to ActiveTracks
 		//Repair/Flag bad collisions
+	public int handleCollisions(){
+		
+		detectNewCollisions();
+		
+		return 0;
+	}
 	
 	//TODO detectNewCollisions
-		//Find double matches
+		//Find double matches in points
 		//measure distances
+	public int detectNewCollisions(){
+		
+		
+		
+		return 0;
+	}
 	
 	//TODO releaseCollisions
 		//Decide which track goes with which

@@ -1,3 +1,5 @@
+import java.util.Vector;
+
 import ij.*;
 //import opencv stuff
 public class PointExtractor {
@@ -16,7 +18,7 @@ public class PointExtractor {
 	 * <p>
 	 * Only publicly accessible via getPoints()
 	 */
-	private TrackPoint[] extractedPoints;
+	private Vector<TrackPoint> extractedPoints;
 	/**
 	 * Index of the last frame that was run through the point extractor
 	 */
@@ -96,7 +98,7 @@ public class PointExtractor {
 		//
 	
 	//TODO accessors
-	public TrackPoint[] getPoints(){
+	public Vector<TrackPoint> getPoints(){
 		return extractedPoints;
 	}
 	
