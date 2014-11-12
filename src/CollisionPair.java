@@ -5,6 +5,8 @@ public class CollisionPair {
 	//TrackPoint[] trackPoints --> order matters
 	CollisionPoint[] cPoints;
 	
+	int frameNum;
+	
 	public CollisionPair(TrackPoint[] points){
 		//TODO preserve order...
 		//TODO converrt points to collision points

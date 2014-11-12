@@ -12,6 +12,10 @@ public class PointExtractor {
 	 * The stack of images to extract points from 
 	 */
 	ImageStack imageStack;
+	/**
+	 * Parameters used for extracting points
+	 */
+	ExtractionParameters ep;
 	
 	/**
 	 * The points which were extracted in the last call to extractFrame() 
@@ -22,33 +26,65 @@ public class PointExtractor {
 	/**
 	 * Index of the last frame that was run through the point extractor
 	 */
-	int lastFrameExtracted;
+	int lastFrameExtracted=-1;
 	/**
 	 * How many frames the extractor moves forward when nextFrame() is called
 	 */
 	int increment;
 	/**
+	 * First frame to be extracted
+	 */
+	int startFrame;
+	/**
 	 * Index of the last frame in the stack 
 	 */
-	int endFrameNum;
+	int endFrame;
 	
 	////////////////////////////
 	//Other fields
 	//background images and that sort of thing
-	
+	////////////////////////////
+	//Images:
+		//currentFrame
+		//backgroundIm
+		//backSub (background subtracted im)
+		//thresholdCompareIm
+		//threshIm
+		//foregroundIm
+		
+		//FrameLoader [getframe]
+		
+		//rectangle analysisRect
+		//int frameNum
+		//int backValidUntil?
 	
 	////////////////////////////
 	// Point Extracting methods 
 	////////////////////////////
 	
-	//TODO constructor
+	
+	public PointExtractor(ImageStack stack){
+		init(0, stack);
+	}
+	
+	//TODO
+	public void init(int startFrame, ImageStack stack){
+		this.startFrame = startFrame;
+		imageStack = stack;
+		endFrame = imageStack.getSize()-1;
+		increment = ep.increment;
+	}
 	
 	/**
 	 * Calculates the index of the next frame
 	 * @return Index of the frame following the last frame loaded
 	 */
 	public int nextFrame(){
-		return lastFrameExtracted+increment;
+		if (lastFrameExtracted == -1){
+			return startFrame;
+		} else {
+			return lastFrameExtracted+increment;
+		}
 	}
 
 	
@@ -70,7 +106,7 @@ public class PointExtractor {
 	
 	//TODO loadFrame
 	public int loadFrame(int frameNum){
-		
+		//do the work
 		
 		return 0;
 	}
@@ -81,7 +117,7 @@ public class PointExtractor {
 		//threshold the image
 	
 	//TODO getPoints
-		//find contours
+		//find contours (method below)
 		//convert contours to trackPoints
 	
 	//TODO findContours
@@ -104,28 +140,5 @@ public class PointExtractor {
 	
 	
 	
-	
-	//Images:
-	//currentFrame
-	//backgroundIm
-	//backSub (background subtracted im)
-	//thresholdCompareIm
-	//threshIm
-	//foregroundIm
-	
-	//FrameLoader [getframe]
-	
-	//rectangle analysisRect
-	//int firstFrame
-	//int lastFrame
-	//int frameNum
-	//int increment?
-	//int backValidUntil?
-	
-	//ExtractionParams ep
-		//double minArea,maxArea
-
-	//int 
-	
-	
+		
 }
