@@ -301,7 +301,7 @@ public class TrackBuilder {
 		int numFinishedCollisions = releaseFinishedCollisions();
 		comm.message("Number of collisions ended in frame "+frameNum+": "+numFinishedCollisions, VerbLevel.verb_debug);
 		
-		//Try to maintain number of track in collision
+		//Try to maintain number of tracks in each collision
 		int netChange = conserveCollisionNums();
 		comm.message("Net change in maggot number within collisions at frame "+frameNum+": "+netChange, VerbLevel.verb_debug);
 		

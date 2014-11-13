@@ -1,6 +1,9 @@
-import java.util.Vector;
 //import org.opencv.imgproc.Imgproc;
+//import ContourPlotter_;
 import ij.*;
+import java.util.Vector;
+
+
 
 public class PointExtractor {
 	
@@ -193,6 +196,9 @@ public class PointExtractor {
 	//TODO extractPoints
 		//find contours (method below)
 		//convert contours to trackPoints
+	public void extractPoints() {
+		
+	}
 	
 	//TODO findContours
 		//call openCV function to find contours

@@ -4,5 +4,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/OpenCV"/>
 	<classpathentry kind="lib" path="C:/Users/Natalie/Downloads/ij148v.jar"/>
+	<classpathentry kind="lib" path="C:/Program Files/Fiji.app/plugins/Contour_Plotter.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
