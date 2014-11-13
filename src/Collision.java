@@ -47,7 +47,7 @@ public class Collision {
 	
 	public void finishCollision(int endFrame){
 		 
-		Vector<Track> newTracks = new Vector<Track>();
+		//Vector<Track> newTracks = new Vector<Track>();
 		
 		//TODO 
 		//convert final points to tracks

@@ -23,7 +23,12 @@ public class ExtractionParameters {
 	 */
 	int increment = 1;
 	
-	//Maggot size limits minArea,maxArea
+	//Maggot size limits: minArea,maxArea
+	
+	/**
+	 * 
+	 */
+	double[][] analysisRect = {{0,0},{-1,-1}};
 	
 	
 	public ExtractionParameters(){

@@ -10,7 +10,9 @@ public class Communicator {
 	}
 	
 	public void message(String message, VerbLevel messVerb){
-		if(messVerb.compareTo(verbosity) <=0 ){
+		if (messVerb==null){
+			return;
+		} else if (messVerb.compareTo(verbosity) <=0 ){
 			System.out.println(messVerb.toString()+": "+message);
 		}
 	}

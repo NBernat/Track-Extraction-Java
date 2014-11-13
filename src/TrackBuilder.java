@@ -83,15 +83,18 @@ public class TrackBuilder {
 	 * 
 	 */
 	public TrackBuilder(ImageStack IS, ExtractionParameters ep){
-		pe = new PointExtractor(IS);
+		
 		this.ep = ep;
-		init(0);
+		init(0, IS);
 	}
 	
 	/**
 	 * Initialization of objects
 	 */
-	public void init(int frameNum){
+	public void init(int frameNum, ImageStack IS){
+		
+		comm = new Communicator();
+		pe = new PointExtractor(IS, comm);
 		
 		activeTracks = new Vector<Track>();
 		finishedTracks  = new Vector<Track>();
@@ -104,7 +107,6 @@ public class TrackBuilder {
 //		if (pe==null){
 //			pe = new PointExtractor(frameNum);
 //		}
-		comm = new Communicator();
 		
 		
 		//Build the tracks
