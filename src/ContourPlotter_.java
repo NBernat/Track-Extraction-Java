@@ -41,6 +41,7 @@
 import java.awt.*;
 import java.util.Vector;
 
+
 //import java.awt.image.*;
 import ij.*;
 import ij.plugin.*;
@@ -89,39 +90,6 @@ class stateClass {
 
 
 
-class Contour {
-	
-	
-	
-}
-
-class ContourLevel{
-	int threshold;
-	Vector<Contour> contours;
-	
-	void addContour(Contour ctr){
-		contours.add(ctr);
-	}
-	
-	ContourLevel(int thr){
-		threshold = thr;
-		contours = new Vector<Contour>();
-	}
-	
-}
-
-class SliceContours{
-	
-	int sliceNum;
-	Vector<ContourLevel> cLevels;
-	
-	SliceContours(int sliceN){
-		sliceNum = sliceN;
-		cLevels = new Vector<ContourLevel>(); 
-	}
-	
-}
-
 
 
 public class ContourPlotter_ implements PlugIn {
@@ -139,18 +107,29 @@ public class ContourPlotter_ implements PlugIn {
    plotClass plot;         /* plot description, reused for each */
    float[][] pixels;       
    //TODO Fix this to be a Vector<SliceLevels>
-   float[][][][] contours;   // [image slice][level][pts][xy]   
+   float[][][][] contours;   // [image slice][level][pts][xy] 
    
    private ImagePlus imp;  // set in setup()
    private ImageCanvas Parent_Canvas; 
    private Graphics Parent_Graphics;
    int nSlices, ImgWidth, ImgHeight;
+   int nLevels;
+   int nsegments[][], segmentStarts[][][], segmentEnds[][][]; // [slice][level][segment]
+   
    
    boolean DebugOn = false;
    final String[] colors = {"green","blue","red","black","white","yellow","orange","cyan"};
-   int nsegments[][], segmentStarts[][][], segmentEnds[][][]; // [slice][level][segment]
    GenericRecallableDialog gd;
    
+   //Params
+   int MaxNsegments = 100;
+   
+   
+   
+   /**
+    * Plugin Driver
+    */
+   @SuppressWarnings("deprecation")
    public void run(String arg) {
 	  /**
 	   * Get the imagePlus imp and mark down information about it
@@ -186,6 +165,7 @@ public class ContourPlotter_ implements PlugIn {
 		
       
       plot = new plotClass();
+      nLevels = plot.nlevels;
       //TODO The contours need to be separated from the GUI structure 
       //contours = new ContourLevel[nSlices]();
       contours = new float[nSlices][plot.nlevels][][]; // will be allocated fully later
@@ -231,7 +211,7 @@ public class ContourPlotter_ implements PlugIn {
             IJ.showStatus(" computing contours, please wait...");
             
             //This is where the work is actually done
-            getContours(plot);
+            plotContours(plot);
             
             
             IJ.showStatus(" done computing contours ...");
@@ -241,24 +221,25 @@ public class ContourPlotter_ implements PlugIn {
       }// end while
    }
    
-   
+
    
    /**
-    * Gruntwork Methods
+    * Contour-Finding and Related Methods
     */
    //TODO Switch these to PLOT methods, and remove the actual work. Hrmmmm.
-   public void getContours(plotClass plot) {
+   public void plotContours(plotClass plot) {
      if (imp.getWindow().isClosed()) { // the original image window was closed by the user
        IJ.write("  error: someone closed the original image window, restarting..");
        gd.dispose();
        run("new run"); // restart analysis on new image
      }
+     
      terrainClass terrain;
      float[][]pixels = new float[ImgWidth][ImgHeight];
      ImageProcessor ip;
      // WO need to better align the contour segments as they jump around
      // also, segment points can be reversed ordered, so check for that
-     int MaxNsegments = 100;
+     
      nsegments = new int[nSlices][plot.nlevels];
      segmentStarts = new int[nSlices][plot.nlevels][MaxNsegments]; // max nsegments is assumed to be 100
      segmentEnds = new int[nSlices][plot.nlevels][MaxNsegments]; 
@@ -272,8 +253,9 @@ public class ContourPlotter_ implements PlugIn {
         /**
          * Get the Pixel Values from the image
          */
+        //pixels = (float[][])ip.getPixels();
         for (int w=0; w<ImgWidth; w++) 
-           for (int h=0; h<ImgHeight; h++) 
+          for (int h=0; h<ImgHeight; h++) 
               pixels[w][h] = ip.getPixelValue(w, h);
         /**
          * For each contour level k,
@@ -284,7 +266,7 @@ public class ContourPlotter_ implements PlugIn {
            if (plot.levels[k]>=0f) { 
               nsegments[slice][k] = 0;  // WO reorder segments at end
               /**
-               * Get terrain?
+               * Get terrain
                */
               terrain = getTerrain (plot.levels[k], plot, pixels);
               /**

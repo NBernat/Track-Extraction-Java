@@ -1,6 +1,9 @@
-//import org.opencv.imgproc.Imgproc;
+import org.opencv.imgproc.Imgproc;
+
 //import ContourPlotter_;
 import ij.*;
+import ij.gui.Roi;
+
 import java.util.Vector;
 
 
@@ -42,15 +45,15 @@ public class PointExtractor {
 	/**
 	 * First frame to be extracted
 	 */
-	int startFrame;
+	int startFrameNum;
 	/**
 	 * Index of the last frame in the stack 
 	 */
-	int endFrame;
+	int endFrameNum;
 	/**
 	 * The frame being processed
 	 */
-	int currentFrame;
+	int currentFrameNum;
 	
 	////////////////////////////
 	//Other fields
@@ -61,7 +64,7 @@ public class PointExtractor {
 	/**
 	 * 
 	 */
-	double [][] analysisRegion;
+	Roi analysisRegion;
 	/**
 	 * The image being processed
 	 */
@@ -90,8 +93,10 @@ public class PointExtractor {
 		//FrameLoader [getframe]
 		
 		//rectangle analysisRect
-		//int frameNum
-		//int backValidUntil?
+	/**
+	 * Index of the last frame where the background image is valid (and doesn't need to be reloaded)
+	 */
+	int backValidUntil;
 	
 	////////////////////////////
 	// Point Extracting methods 
@@ -104,10 +109,10 @@ public class PointExtractor {
 	
 	//TODO
 	public void init(int startFrame, ImageStack stack, Communicator comm){
-		this.startFrame = startFrame;
+		this.startFrameNum = startFrame;
 		imageStack = stack;
 		this.comm = comm;
-		endFrame = imageStack.getSize()-1;
+		endFrameNum = imageStack.getSize()-1;//.getNFrames()-1;// 
 		increment = ep.increment;
 	}
 	
@@ -117,7 +122,7 @@ public class PointExtractor {
 	 */
 	public int nextFrame(){
 		if (lastFrameExtracted == -1){
-			return startFrame;
+			return startFrameNum;
 		} else {
 			return lastFrameExtracted+increment;
 		}
@@ -148,21 +153,19 @@ public class PointExtractor {
 		//threshold the image
 	public int loadFrame(int frameNum){
 		
-		currentFrame = frameNum;
-		if (currentFrame>endFrame) {
-			comm.message("Attempt to load frame "+currentFrame+" but the stack ends at frame "+endFrame, VerbLevel.verb_error);
+		currentFrameNum = frameNum;
+		if (currentFrameNum>endFrameNum) {
+			comm.message("Attempt to load frame "+currentFrameNum+" but the stack ends at frame "+endFrameNum, VerbLevel.verb_error);
 			return 1;
 		}
 		
 		calculateBackground();
 		
-		currentIm = new ImagePlus("Frame"+currentFrame, imageStack.getProcessor(currentFrame));
+		currentIm = new ImagePlus("Frame"+currentFrameNum, imageStack.getProcessor(currentFrameNum));//.getFrame(currentFrame)// 
 		if (currentIm==null) {
-			comm.message("The image in rame "+currentFrame+" was not returned from the ImageStack", VerbLevel.verb_error);
+			comm.message("The image in rame "+currentFrameNum+" was not returned from the ImageStack", VerbLevel.verb_error);
 			return 2;
 		}
-		
-		analysisRegion = ep.analysisRect;
 		
 		createBackSubIm();
 		createForegroundIm();
