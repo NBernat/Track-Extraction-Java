@@ -31,6 +31,22 @@ public class ExtractionParameters {
 	double[][] analysisRect = {{0,0},{-1,-1}};
 	
 	
+	///////////////////////////
+	// Background Parameters
+	///////////////////////////
+	/**
+	 * 
+	 */
+	int nBackgroundFrames;
+	/**
+	 * 
+	 */
+    int resampleInterval;
+    /**
+     * 
+     */
+    double blurSigma;
+	
 	public ExtractionParameters(){
 		
 	}

@@ -1,9 +1,11 @@
 import org.opencv.imgproc.Imgproc;
 
+
 //import ContourPlotter_;
 import ij.*;
 import ij.gui.Roi;
 
+import java.awt.Rectangle;
 import java.util.Vector;
 
 
@@ -37,7 +39,7 @@ public class PointExtractor {
 	/**
 	 * Index of the last frame that was run through the point extractor
 	 */
-	int lastFrameExtracted=-1;
+	int lastFrameExtracted;
 	/**
 	 * How many frames the extractor moves forward when nextFrame() is called
 	 */
@@ -55,6 +57,26 @@ public class PointExtractor {
 	 */
 	int currentFrameNum;
 	
+	/**
+	 * Whether or not the frame being processed is the first one
+	 */
+	boolean isFirstRun;
+	
+	
+	/**
+	 * Object that retrieves frame from image
+	 */
+	FrameLoader fl;
+	/**
+	 * Normalization type (See class below)
+	 */
+	_frame_normalization_methodT fnm;
+	/**
+	 * Normalization Factor
+	 */
+	double normFactor;
+	
+	
 	////////////////////////////
 	//Other fields
 	//background images and that sort of thing
@@ -62,16 +84,16 @@ public class PointExtractor {
 	//Images:
 		//currentFrame
 	/**
-	 * 
+	 * The current region of analysis
 	 */
-	Roi analysisRegion;
+	Rectangle analysisRegion;
 	/**
 	 * The image being processed
 	 */
 	ImagePlus currentIm;
 	
 	/**
-	 * ??//TODO
+	 * background image
 	 */
 	ImagePlus backgroundIm;
 	
@@ -81,7 +103,7 @@ public class PointExtractor {
 	ImagePlus backSubIm;
 	
 	/**
-	 * ForegroundIm??//TODO
+	 * Foreground image
 	 */
 	ImagePlus foregroundIm;
 		//backgroundIm
@@ -97,6 +119,7 @@ public class PointExtractor {
 	 * Index of the last frame where the background image is valid (and doesn't need to be reloaded)
 	 */
 	int backValidUntil;
+	
 	
 	////////////////////////////
 	// Point Extracting methods 
@@ -114,13 +137,16 @@ public class PointExtractor {
 		this.comm = comm;
 		endFrameNum = imageStack.getSize()-1;//.getNFrames()-1;// 
 		increment = ep.increment;
+		lastFrameExtracted=-1;
+		isFirstRun=true;
+		fl = new FrameLoader(comm, stack);
 	}
 	
 	/**
 	 * Calculates the index of the next frame
 	 * @return Index of the frame following the last frame loaded
 	 */
-	public int nextFrame(){
+	public int nextFrameNum(){
 		if (lastFrameExtracted == -1){
 			return startFrameNum;
 		} else {
@@ -134,7 +160,7 @@ public class PointExtractor {
 	 * @param frameNum Index of the stack slice to load
 	 * @return
 	 */
-	public int extractFrame(int frameNum) {
+	public int extractFramePoints(int frameNum) {
 		
 		if(loadFrame(frameNum)>0){
 			return 1;
@@ -177,7 +203,99 @@ public class PointExtractor {
 	
 	//TODO
 	public void calculateBackground() {
+		//if the background image is still valid, leave it as-is
+		if (!isFirstRun && currentFrameNum <= backValidUntil) {   
+	        return;
+	     }
 		
+		comm.message("Calculating bakcground", VerbLevel.verb_message);
+		
+		if (imageStack==null) {
+			
+			comm.message("The image stack is empty, no background image could be made", VerbLevel.verb_warning);			
+			return;
+		}
+		
+		//Set the interval of images (from which the background im is constructed) properly
+		int first = currentFrameNum;
+		first = (first + ep.resampleInterval <= endFrameNum) ? first : endFrameNum - ep.resampleInterval;
+		first = (first >= startFrameNum) ? first : startFrameNum;
+		
+		int last = first + ep.resampleInterval;
+		last = (last <= endFrameNum) ? last : endFrameNum;
+		double delta = (last - first) / (ep.nBackgroundFrames - 1);
+		
+		//Normalize the frame, if necessary
+		if(fnm!=_frame_normalization_methodT._frame_none){
+			double normSum = fl.getFrameNormFactor(first, fnm);
+			if (normSum<=0) {
+				comm.message("Frame normalization reported an error", VerbLevel.verb_error);
+			}
+			int i;
+			for (i=1; i<ep.nBackgroundFrames; i++) {
+				String s = "norm sum = "+normSum;
+				comm.message(s, VerbLevel.verb_debug);
+				int nf = fl.getFrameNormFactor((int)(first + i*delta + .5), fnm);
+				if (nf<=0) {
+					comm.message("Frame normalization reported an error", VerbLevel.verb_error);
+				}
+				normSum+=nf;
+			}
+			
+			
+			if (normSum <= 0) {
+	            comm.message ("sum of norm factors gives non positive number", VerbLevel.verb_error);
+	        }
+			if (ep.nBackgroundFrames <= 0) {
+	            comm.message ("number of background frames is nonpositive", VerbLevel.verb_error);
+	        }
+			
+			
+			normFactor = (int) (normSum / ep.nBackgroundFrames);
+			
+			String s = "norm sum is "+normSum+" nBackgroundFrames is "+ep.nBackgroundFrames+" norm factor is "+normFactor;
+			comm.message(s, VerbLevel.verb_message);
+			
+		} else {
+	        comm.message("frame normalization is turned off", VerbLevel.verb_message);
+	        normFactor = -1;
+	    }
+		
+		comm.message ("calling get frame", VerbLevel.verb_debug);
+		
+		if (fl.getFrame(first, fnm, normFactor)!=0) {
+			
+		} else {
+			backgroundIm = new ImagePlus("BackgroundIm_"+first+"_"+last, fl.returnIm);
+		}
+		
+		analysisRegion = fl.ar;
+		
+		int i;
+		for (i=1; i<ep.nBackgroundFrames; i++){
+			
+			if (fl.getFrame((int) (first + i*delta + 0.5), fnm, normFactor) == 0) {
+				currentIm = new ImagePlus("", fl.returnIm);
+	            if (currentIm == null || backgroundIm == null) {
+	                comm.message ("current frame or background im is NULL", VerbLevel.verb_error);
+	            } else {
+	               cvMin (currentIm, backgroundIm, backgroundIm);
+	            }
+	        } else {
+	            message ("frame loader reports error", VerbLevel.verb_error);
+	        }
+			
+		}
+		
+		backValidUntil = first + ep.resampleInterval;
+	    
+	    if (ep.blurSigma > 0) {
+	        comm.message ("blurring background ", VerbLevel.verb_verbose);
+	        IplImage *im = checkoutTempIm();
+	        cloneImage(backgroundIm, &im);
+	        blurIm(im, backgroundIm, ep.blurSigma);
+	        checkinTempIm(&im);
+	    }
 	}
 	
 	//TODO
@@ -222,6 +340,9 @@ public class PointExtractor {
 	}
 	
 	
-	
-		
 }
+
+
+
+
+

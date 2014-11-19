@@ -125,10 +125,10 @@ public class TrackBuilder {
 	 */
 	public void buildTracks(){
 		//Add frames to track objects
-		while (pe.nextFrame() <= pe.endFrame) {
-			frameNum = pe.nextFrame();
+		while (pe.nextFrameNum() <= pe.endFrameNum) {
+			frameNum = pe.nextFrameNum();
 			if (addFrame(frameNum)>0) {
-				comm.message("Error adding frame "+pe.nextFrame(), VerbLevel.verb_error);
+				comm.message("Error adding frame "+pe.nextFrameNum(), VerbLevel.verb_error);
 				return;
 			}
 			
@@ -169,7 +169,7 @@ public class TrackBuilder {
 	 */
 	public int loadPoints(int frameNum){
 		
-		if(pe.extractFrame(frameNum)>0){
+		if(pe.extractFramePoints(frameNum)>0){
 			comm.message("Error extracting points from frame "+frameNum, VerbLevel.verb_error);
 			return 1;
 		}
