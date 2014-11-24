@@ -1,3 +1,4 @@
+import java.awt.Rectangle;
 import java.util.ListIterator;
 import java.util.Vector;
 
@@ -16,6 +17,10 @@ public class TrackPoint {
 	 * y location of the point
 	 */
 	double y;
+	/**
+	 * ROI containing this point
+	 */
+	Rectangle rect;
 	/**
 	 * Index of the frame containing this point 
 	 */
@@ -39,30 +44,32 @@ public class TrackPoint {
 	// Constructors & Related Methods
 	////////////////////////////////////
 	
-	TrackPoint(double x, double y, int frame) {
-	    init(x, y, 0, null, frame, ++lastIDNum);
+	TrackPoint(double x, double y, Rectangle rect, double area, int frame) {
+	    init(x, y, rect, area, null, frame, ++lastIDNum);
 	}
 
-	TrackPoint (double x, double y, double area,  double[] cov, int frame) {
-	     init(x, y, area, cov, frame, ++lastIDNum);
+	TrackPoint (double x, double y, Rectangle rect, double area,  double[] cov, int frame) {
+	     init(x, y, rect, area, cov, frame, ++lastIDNum);
 	 }
 
-	TrackPoint (double x, double y, double area, double[] cov, int frame, int ID) {
-	     init(x, y, area, cov, frame, ID);
+	TrackPoint (double x, double y, Rectangle rect, double area, double[] cov, int frame, int ID) {
+	     init(x, y, rect, area, cov, frame, ID);
 	 }
 	
 	/**
 	 * Helper method for constructors 
 	 */
-	public void init(double x, double y, double area, double[] cov, int frame, int ID){
+	public void init(double x, double y, Rectangle rect, double area, double[] cov, int frame, int ID){
 		this.x = x;
 		this.y = y;
+		this.rect = rect;
 		this.area = area;
 		covariance = cov;
 		frameNum = frame;
 		trackID = ID;
 		
 	}
+	
 	
 	
 	/////////////////////

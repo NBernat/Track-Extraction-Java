@@ -1,9 +1,18 @@
 import org.opencv.imgproc.Imgproc;
 
 
+
+
+
+
+
+
 //import ContourPlotter_;
 import ij.*;
 import ij.gui.Roi;
+import ij.measure.ResultsTable;
+import ij.plugin.ImageCalculator;
+import ij.plugin.filter.GaussianBlur;
 
 import java.awt.Rectangle;
 import java.util.Vector;
@@ -29,6 +38,12 @@ public class PointExtractor {
 	 * Message handler
 	 */
 	Communicator comm;
+	/**
+	 * Image Process calculator
+	 * <p>
+	 * See IJ_Props.txt for calculator function strings 
+	 */
+	ImageCalculator IC;
 	
 	/**
 	 * The points which were extracted in the last call to extractFrame() 
@@ -93,6 +108,18 @@ public class PointExtractor {
 	ImagePlus currentIm;
 	
 	/**
+	 * The resultsTable made by finding particles in the currentIm
+	 * <p>
+	 * Includes points out of the size range 
+	 * <p>
+	 * defaultHeadings = {"Area","Mean","StdDev","Mode","Min","Max",
+     *  "X","Y","XM","YM","Perim.","BX","BY","Width","Height","Major","Minor","Angle",
+     *  "Circ.", "Feret", "IntDen", "Median","Skew","Kurt", "%Area", "RawIntDen", "Ch", "Slice", "Frame", 
+     *   "FeretX", "FeretY", "FeretAngle", "MinFeret", "AR", "Round", "Solidity"}
+	 */
+	ResultsTable pointTable;
+	
+	/**
 	 * background image
 	 */
 	ImagePlus backgroundIm;
@@ -106,6 +133,16 @@ public class PointExtractor {
 	 * Foreground image
 	 */
 	ImagePlus foregroundIm;
+	
+	/**
+	 * Thresholded image
+	 */
+	ImagePlus threshIm;
+	/**
+	 * Threshold comparison Image, used for non-global thresholding
+	 */
+	ImagePlus threshCompIm;
+	
 		//backgroundIm
 		//backSub (background subtracted im)
 		//thresholdCompareIm
@@ -140,6 +177,7 @@ public class PointExtractor {
 		lastFrameExtracted=-1;
 		isFirstRun=true;
 		fl = new FrameLoader(comm, stack);
+		IC = new ImageCalculator();
 	}
 	
 	/**
@@ -171,37 +209,54 @@ public class PointExtractor {
 	}
 	
 	
-	//TODO loadFrame
-		//calculate background image
-		//error checks on the frame (framenum in range, frameloader not null, no frameloading error)
-		//subtract background image from frame 
-		//make foregroundim: use backsubtracted, or max of backsubtracted and current foreground [WHEN IS THE LATTER CASE USED?]
-		//threshold the image
+	/**
+	 * Loads the frame into the currentIm, backSubIm, ForegroundIm, and threshIm images, and loads the proper backgroundIm 
+	 * @param frameNum Index of the frame to be loaded
+	 * @return status, 0 means all is good, otherwise error
+	 */
 	public int loadFrame(int frameNum){
 		
+		//Set the current frame
 		currentFrameNum = frameNum;
 		if (currentFrameNum>endFrameNum) {
 			comm.message("Attempt to load frame "+currentFrameNum+" but the stack ends at frame "+endFrameNum, VerbLevel.verb_error);
 			return 1;
 		}
 		
+		//Calculate the background image
 		calculateBackground();
 		
-		currentIm = new ImagePlus("Frame"+currentFrameNum, imageStack.getProcessor(currentFrameNum));//.getFrame(currentFrame)// 
-		if (currentIm==null) {
-			comm.message("The image in rame "+currentFrameNum+" was not returned from the ImageStack", VerbLevel.verb_error);
+		//Set the current image and analysis region
+		if (fl.getFrame(frameNum, fnm, normFactor)!=0) {
+			comm.message("Frame Loader returned error", VerbLevel.verb_warning);
 			return 2;
+		} else {
+			currentIm = new ImagePlus("Frame "+frameNum,fl.returnIm);
+		}
+		assert (currentIm!=null);
+		analysisRegion = fl.ar;
+		
+		//Create a background-subtracted image for the current im
+		backSubIm = IC.run("sub", currentIm, backgroundIm);
+
+		//Create a foreground image...not sure when the "else" is ever used...
+		if (foregroundIm==null) {
+			foregroundIm = (ImagePlus) backSubIm.clone();
+		} else {
+			comm.message ("Foreground image already exists, taking max of FG im and BS im", VerbLevel.verb_debug);
+			foregroundIm = IC.run("max", backSubIm, foregroundIm);
+			
 		}
 		
-		createBackSubIm();
-		createForegroundIm();
-		
+		threshToZero();
 		
 		return 0;
 	}
 	
 	
-	//TODO
+	/**
+	 * Calculate the background image
+	 */
 	public void calculateBackground() {
 		//if the background image is still valid, leave it as-is
 		if (!isFirstRun && currentFrameNum <= backValidUntil) {   
@@ -225,7 +280,7 @@ public class PointExtractor {
 		last = (last <= endFrameNum) ? last : endFrameNum;
 		double delta = (last - first) / (ep.nBackgroundFrames - 1);
 		
-		//Normalize the frame, if necessary
+		//Get the frame normalization factor, if necessary
 		if(fnm!=_frame_normalization_methodT._frame_none){
 			double normSum = fl.getFrameNormFactor(first, fnm);
 			if (normSum<=0) {
@@ -261,10 +316,11 @@ public class PointExtractor {
 	        normFactor = -1;
 	    }
 		
+		//Construct the background image from the properly normalized, in-range, frames
 		comm.message ("calling get frame", VerbLevel.verb_debug);
 		
 		if (fl.getFrame(first, fnm, normFactor)!=0) {
-			
+			comm.message ("frame loader reports error", VerbLevel.verb_error);
 		} else {
 			backgroundIm = new ImagePlus("BackgroundIm_"+first+"_"+last, fl.returnIm);
 		}
@@ -279,51 +335,125 @@ public class PointExtractor {
 	            if (currentIm == null || backgroundIm == null) {
 	                comm.message ("current frame or background im is NULL", VerbLevel.verb_error);
 	            } else {
-	               cvMin (currentIm, backgroundIm, backgroundIm);
+	            	backgroundIm = IC.run("min", currentIm, backgroundIm);
 	            }
 	        } else {
-	            message ("frame loader reports error", VerbLevel.verb_error);
+	            comm.message("frame loader reports error", VerbLevel.verb_error);
 	        }
 			
 		}
 		
 		backValidUntil = first + ep.resampleInterval;
 	    
+		//Blur the background image, if needed
 	    if (ep.blurSigma > 0) {
-	        comm.message ("blurring background ", VerbLevel.verb_verbose);
-	        IplImage *im = checkoutTempIm();
-	        cloneImage(backgroundIm, &im);
-	        blurIm(im, backgroundIm, ep.blurSigma);
-	        checkinTempIm(&im);
+	        
+	    	comm.message ("blurring background ", VerbLevel.verb_verbose);
+	        
+	        GaussianBlur GB = new GaussianBlur();
+	        GB.blurGaussian(backgroundIm.getProcessor(), ep.blurSigma, ep.blurSigma, ep.blurAccuracy);
+	        
 	    }
 	}
 	
-	//TODO
-	public void createBackSubIm() {
-		//subtract the background image from the currentframe
+
+	/**
+	 * Thresholds backSubIm according to the method set in the extraction parameters, and stores the results in threshIm  
+	 */
+	void threshToZero() {
+		
+	    comm.message ("pe threshto0", VerbLevel.verb_debug);
+	    if (ep.useGlobalThresh) {
+	        comm.message ("global threshold used", VerbLevel.verb_debug);
+	        if (ep.blurSigma > 0) {
+	        	
+	            threshIm = (ImagePlus) backSubIm.clone();
+	            
+	            CVUtils.blurIm(threshIm.getProcessor(), ep.blurSigma);
+		        comm.message ("im blurred", VerbLevel.verb_debug);
+	            
+		        threshIm = CVUtils.thresholdImtoZero(threshIm, ep.globalThreshValue);
+		        
+	            comm.message ("im thresholded", VerbLevel.verb_debug);
+	            
+	        } else {
+	        	threshIm = CVUtils.thresholdImtoZero(backSubIm, ep.globalThreshValue);
+	            
+	        }
+	    } else {
+	        ImagePlus maskIm = (ImagePlus) backSubIm.clone();
+	        if (ep.blurSigma > 0) {
+	            threshIm = CVUtils.blurIm(backSubIm, ep.blurSigma);
+	            maskIm = CVUtils.compGE(threshIm, threshCompIm);
+	        } else {
+	            maskIm = CVUtils.compGE(threshIm, threshCompIm);
+	        }
+	        
+	        threshIm = CVUtils.maskCopy(backSubIm, maskIm);
+	    }
+	    comm.message ("pe threshto0 done", VerbLevel.verb_debug);
 	}
 	
-	//TODO
-	public void createForegroundIm() {
-		if (foregroundIm == null) {
-			foregroundIm = (ImagePlus)backSubIm.clone();
-		} else {
-			
-			//foregroundIm = max(backSubIm,foregroundIm)
+	/**
+	 * Sets the fields needed to do a non-global threshold 
+	 * @param thrCmpIm The image used for comparison to generate local "threshold"
+	 */
+	void setThresholdCompareIm (ImagePlus thrCmpIm) {
+		threshCompIm = (ImagePlus) thrCmpIm.clone();
+	    ep.useGlobalThresh = false;
+	}
+	
+	
+	
+	/**
+	 * Extracts points from the specified frame, storing them in extractedPoints
+	 * @param frameNum
+	 */
+	public void extractPoints(int frameNum) {
+		
+		if (currentFrameNum!= frameNum){
+			loadFrame(frameNum);
 		}
+		
+	    comm.message("get points called", VerbLevel.verb_debug);
+	    
+	    pointTable = CVUtils.findPoints(threshIm, ep);
+	    
+	    extractedPoints = rt2TrackPoints(pointTable, currentFrameNum);
+	    
+	    String s = "Frame "+currentFrameNum+": Extracted "+extractedPoints.size()+" new points";
+	    comm.message(s, VerbLevel.verb_message);
+	    		
 	}
 	
-	
-	//TODO extractPoints
-		//find contours (method below)
-		//convert contours to trackPoints
-	public void extractPoints() {
+	/**
+	 * Adds a row from the results table to the list of TrackPoints, if the point is the proper size according to the extraction parameters
+	 * @param rt Results Table containing point info 
+	 * @param frameNum Frame number
+	 * @return List of Trackpoints within the 
+	 */
+	public Vector<TrackPoint> rt2TrackPoints (ResultsTable rt, int frameNum) {
+		
+		Vector<TrackPoint> tp = new Vector<TrackPoint>();
+		
+		for (int row=1; row<rt.getCounter(); row++) {
+			double x = rt.getValue("X"+ep.centerMethod, row);
+			double y = rt.getValue("Y"+ep.centerMethod, row);
+			double boundX = rt.getValue("BX", row);
+			double boundY = rt.getValue("BY", row);
+			double width = rt.getValue("Width", row);
+			double height = rt.getValue("Height", row);
+			double area = rt.getValue("Area", row);
+			Rectangle rect = new Rectangle((int)boundX, (int)boundY, (int)width, (int)height);
+			
+			if (ep.properPointSize(area)) {
+				tp.add(new TrackPoint(x,y,rect,area,frameNum));
+			}
+		}
+		
+		return tp;
 		
 	}
-	
-	//TODO findContours
-		//call openCV function to find contours
-		//http://docs.opencv.org/java/index.html?org/opencv/imgproc/Imgproc.html findContours
 	
 	
 	//TODO splitPoint
@@ -334,7 +464,11 @@ public class PointExtractor {
 		//Rethreshold to a number of subregions (CVUtilsPlus) 
 		//
 	
-	//TODO accessors
+	
+	/**
+	 * Returns the extracted points
+	 * @return Extracted points
+	 */
 	public Vector<TrackPoint> getPoints(){
 		return extractedPoints;
 	}
