@@ -80,7 +80,7 @@ public class TrackBuilder {
 	////////////////////////////
 
 	/**
-	 * 
+	 * Constructs a TrackBuilder object
 	 */
 	public TrackBuilder(ImageStack IS, ExtractionParameters ep){
 		
@@ -93,26 +93,24 @@ public class TrackBuilder {
 	 */
 	public void init(int frameNum, ImageStack IS){
 		
+		//Set Auxillary objects
 		comm = new Communicator();
 		pe = new PointExtractor(IS, comm);
 		
+		//Set track-building objects
 		activeTracks = new Vector<Track>();
 		finishedTracks  = new Vector<Track>();
 		activeCollisions  = new Vector<Collision>();
 		finishedCollisions  = new Vector<Collision>();
 		
+		//Set status parameters
 		this.frameNum = frameNum;
 		
-		//TODO load the stack in here?
-//		if (pe==null){
-//			pe = new PointExtractor(frameNum);
-//		}
+		//TODO Put this here?
+		//Build the tracks 
+		//buildTracks();
 		
 		
-		//Build the tracks
-		buildTracks();
-		//Comb out collisions
-		resolveCollisions();
 		
 	}
 	
@@ -124,6 +122,7 @@ public class TrackBuilder {
 	 * Constructs tracks from a series of images
 	 */
 	public void buildTracks(){
+		
 		//Add frames to track objects
 		while (pe.nextFrameNum() <= pe.endFrameNum) {
 			frameNum = pe.nextFrameNum();
@@ -133,6 +132,9 @@ public class TrackBuilder {
 			}
 			
 		}
+		
+		//Comb out collisions
+		//TODO resolveCollisions();
 	}
 	
 	
@@ -141,19 +143,14 @@ public class TrackBuilder {
 	 * @param frameNum Index of the frame to be added
 	 * @return status: 0 means all is well, >0 means there's an error
 	 */
-	public int addFrame(int frameNum) {
-		
-		//set activePoints
-		//set matches
-		//set pointMatchList
-		
+	private int addFrame(int frameNum) {
+				
 		if (loadPoints(frameNum)>0) {
 			comm.message("Error loading points in frame "+frameNum, VerbLevel.verb_error);
 			return 1;
 		}
-		
-		
-		if (extendTracks()>0) {
+				
+		if (updateTracks()>0) {
 			comm.message("Error extending tracks in frame "+frameNum, VerbLevel.verb_error);
 			return 1;
 		}
@@ -167,7 +164,7 @@ public class TrackBuilder {
 	 * @param frameNum Index of the frame to load
 	 * @return status: 0 means all is well, >0 means there's an error
 	 */
-	public int loadPoints(int frameNum){
+	private int loadPoints(int frameNum){
 		
 		if(pe.extractFramePoints(frameNum)>0){
 			comm.message("Error extracting points from frame "+frameNum, VerbLevel.verb_error);
@@ -195,13 +192,13 @@ public class TrackBuilder {
 	
 	
 	/**
-	 * Extend the tracks to include points extracted from the current frame
+	 * Extend the tracks to include points extracted from the current frame 
 	 * @return status: 0 means all is well, >0 means there's an error
 	 */
-	public int extendTracks(){
+	private int updateTracks(){
 		
 		//Build matches
-		buildMatches();
+		makeMatches();
 		if (matches.size()==0){
 			comm.message("No matches were made in frame "+frameNum, VerbLevel.verb_warning);
 			return 1;
@@ -211,10 +208,13 @@ public class TrackBuilder {
 		modifyMatches();
 		
 		//Fuse matches to tracks
-		if (fuseMatches()>0){
+		if (extendOrEndTracks()>0){
 			comm.message("Error attaching new points to tracks", VerbLevel.verb_error);
 			return 1;
 		}
+		
+		//Start new tracks from remaining activePts
+		startNewTracks();
 		
 		return 0;
 	}
@@ -223,50 +223,30 @@ public class TrackBuilder {
 	/**
 	 * Matches the newly added points to the tracks 
 	 */
-	public void buildMatches(){
+	private void makeMatches(){
 		
 		matches = new Vector<TrackMatch>();
-		
-		matchPtsToTracks();
-		matchPtsToCollisions();
-		
-	}
-	
-	
-	
-	/**
-	 * Builds a {@link #TrackMatch} for each active track and stores it in matches 
-	 * @param startMatchInd The first index of {@link #matches} to fill
-	 */
-	public void matchPtsToTracks(){
-		int i;
-		for(i=0; i<activeTracks.size(); i++){
+
+		//Match points to Tracks
+		for(int i=0; i<activeTracks.size(); i++){
 			TrackMatch newMatch = new TrackMatch(activeTracks.get(i), activePts, ep.numPtsInTrackMatch);
 			matches.add(newMatch);
 			//TODO update match table
 		}
-	}
-
-
-	/**
-	 * Builds a CollisionMatch, which contains TrackMatches for each relevant track, for each collision and stores it in matches 
-	 * @param startMatchInd The first index of {@link #matches} to fill
-	 */
-	public void matchPtsToCollisions(){
-		
-		int i;
-		for(i=0; i<activeCollisions.size(); i++){
+		//Match points to Collisions
+		for(int j=0; j<activeCollisions.size(); j++){
 			//TODO matches.add(new CollisionMatch(activeCollisions.get(i), activePts, ep.numPtsInTrackMatch));
-			TrackMatch newMatch = new CollisionMatch(activeTracks.get(i), activePts, ep.numPtsInTrackMatch); 
+			TrackMatch newMatch = new CollisionMatch(activeTracks.get(j), activePts, ep.numPtsInTrackMatch); 
 			matches.add(newMatch);
 			//TODO update match table
 			
 		}
+		
 	}
 	
 	
 	//TODO modifyMatches: error checking
-	public void modifyMatches(){
+	private void modifyMatches(){
 		
 		int numCutByDist = cutMatchesByDistance();
 		comm.message("Number of matches cut from frame "+frameNum+" by distance: "+numCutByDist, VerbLevel.verb_debug);
@@ -279,7 +259,7 @@ public class TrackBuilder {
 	 * Marks as invalid any TrackMatch that is too far away 
 	 * @return Total number of matches  
 	 */
-	public int cutMatchesByDistance(){
+	private int cutMatchesByDistance(){
 		 
 		ListIterator<TrackMatch> it = matches.listIterator();
 		int numRemoved = 0;
@@ -296,30 +276,49 @@ public class TrackBuilder {
 	/**
 	 * Maintains the collision structures by adding new collisions and ending finished collisions 
 	 */
-	public void manageCollisions(){
+	private void manageCollisions(){
 		 
-		int numFinishedCollisions = releaseFinishedCollisions();
-		comm.message("Number of collisions ended in frame "+frameNum+": "+numFinishedCollisions, VerbLevel.verb_debug);
+		//matchCollisionsToEmptyTracks();
+		//splitCollisionPoints();
+		//endCollisionTracks();
+		//Find the 
 		
-		//Try to maintain number of tracks in each collision
-		int netChange = conserveCollisionNums();
-		comm.message("Net change in maggot number within collisions at frame "+frameNum+": "+netChange, VerbLevel.verb_debug);
 		
-		int numNewColl = detectNewCollisions();
-		comm.message("Number of new collisions in frame "+frameNum+": "+numNewColl, VerbLevel.verb_debug);
+		//TODO
+//		int numNewColl = detectNewCollisions();
+//		comm.message("Number of new collisions in frame "+frameNum+": "+numNewColl, VerbLevel.verb_debug);
+//		
+//		//Try to maintain number of tracks in each collision
+//		int netChange = conserveCollisionNums();
+//		comm.message("Net change in maggot number within collisions at frame "+frameNum+": "+netChange, VerbLevel.verb_debug);
+//		
+//		int numFinishedCollisions = releaseFinishedCollisions();
+//		comm.message("Number of collisions ended in frame "+frameNum+": "+numFinishedCollisions, VerbLevel.verb_debug);
 		
 		
 	}
 	
-	 
-		//Decide which track goes with which?
-		//Convert CollisionPairs to CollisionPoints?
-		//if one of the tracks has missing...???
+	
+	//TODO 
+//	private void matchCollisionsToEmptyTracks(){
+//		
+//	}
+
+	//TODO
+//	private void splitCollisionPoints(){
+//		
+//	}
+	
+	//TODO
+	private void endCollisionTracks(){
+		
+	}
+	
 	/**
 	 * Finds and releases collision events which have finished
 	 * @return number of collisions released
 	 */
-	public int releaseFinishedCollisions(){
+	private int releaseFinishedCollisions(){
 		
 		Vector<Collision> finished = detectFinishedCollisions();
 		int numFinishedCollisions = finished.size();
@@ -337,7 +336,7 @@ public class TrackBuilder {
 	 * Checks the active collisions for any finished events
 	 * @return Vector of finished collision objects
 	 */
-	public Vector<Collision> detectFinishedCollisions(){
+	private Vector<Collision> detectFinishedCollisions(){
 		Vector<Collision> finished = new Vector<Collision>();
 		
 		ListIterator<Collision> cIt = activeCollisions.listIterator();
@@ -355,7 +354,7 @@ public class TrackBuilder {
 	 * Releases a collision by ending the event, adding the outgoing tracks to activeTracks, and storing the collision event for later processing 
 	 * @param col The collision to be released
 	 */
-	public void releaseCollision(Collision col){
+	private void releaseCollision(Collision col){
 		
 		//Tell the collision object that this is where to end it
 		col.finishCollision(frameNum-pe.increment);
@@ -368,7 +367,7 @@ public class TrackBuilder {
 	
 	
 	
-	public int conserveCollisionNums(){
+	private int conserveCollisionNums(){
 		
 		int netNumChange=0;
 		//TODO
@@ -376,7 +375,7 @@ public class TrackBuilder {
 		
 	}
 		
-	public int detectNewCollisions(){
+	private int detectNewCollisions(){
 		
 		int numNewColl=0;
 		//TODO 
@@ -387,12 +386,44 @@ public class TrackBuilder {
 	
 	
 
-	//TODO fuseTracks
+	//TODO extendOrEndTracks
 		//Extend 1-1 matches and good collision matches
 		//Start new tracks (unmatched points), move to active
 		//End dead tracks (unmatched tracks), move to finished
 		//Update track number
-	public int fuseMatches(){
+	private int extendOrEndTracks(){
+		
+		ListIterator<TrackMatch> mIt = matches.listIterator();
+		while (mIt.hasNext()) {
+			TrackMatch match = mIt.next();
+			if (match.numMatches==0){
+				//move track from activeTracks to finishedTracks
+				finishedTracks.addElement(match.track);
+				activeTracks.remove(match.track);
+			} else if (match.numMatches==1){
+				//add point to track
+				//TODO error check the matchPt choice with match.validPts
+				int ind = 0; 
+				match.track.extendTrack(match.matchPts[ind]);
+				activePts.remove(match.matchPts[ind]);				
+				//remove point from active points 
+			} else {
+				comm.message("Track ID number "+match.track.trackID+"was matched to multiple points but not converted into a collision. Deleting matches.", VerbLevel.verb_warning);
+			}
+			
+		}
+		
+		return 0;
+	}
+	
+	//TODO
+	private int startNewTracks(){
+		
+		ListIterator<TrackPoint> tpIt = activePts.listIterator();
+		while (tpIt.hasNext()) {
+			TrackPoint pt = tpIt.next();
+			activeTracks.addElement(new Track(pt));
+		}
 		
 		return 0;
 	}
@@ -407,7 +438,7 @@ public class TrackBuilder {
 	
 	
 	//TODO resolveCollisions	
-	public int resolveCollisions(){
+	private int resolveCollisions(){
 		
 		
 		return 0;

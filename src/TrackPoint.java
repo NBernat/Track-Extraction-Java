@@ -1,3 +1,5 @@
+import ij.ImagePlus;
+
 import java.awt.Rectangle;
 import java.util.ListIterator;
 import java.util.Vector;
@@ -33,6 +35,10 @@ public class TrackPoint {
 	 * Covariance matrix for the image
 	 */
 	double[] covariance; 
+	/**
+	 * Image of maggot
+	 */
+	ImagePlus im;
 	/**
 	 * Used to generate unique IDs for the TrackPoints
 	 * <p> 
@@ -147,6 +153,10 @@ public class TrackPoint {
 	 */
 	public double VertexAngle(TrackPoint ptA, TrackPoint ptC){
 		return Math.acos(((x - ptA.x)*(x - ptC.x) + (y - ptA.y)*(y - ptC.y))/(dist(ptA)*dist(ptC)));
+	}
+	
+	public ImagePlus getIm(){
+		return im;
 	}
 	
 	//TODO draw methods, openCV?

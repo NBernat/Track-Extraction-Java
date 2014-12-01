@@ -1,4 +1,8 @@
+import ij.ImagePlus;
+import ij.gui.ImageWindow;
+
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.Vector;
 
@@ -20,6 +24,11 @@ public class Track {
 	 */
 	static int lastIDNum=0;
 	//isActive?
+	
+	/**
+	 * Length of time to pause between frames, ie 1/frameRate, in ms
+	 */
+	int frameLength = 71;//FrameRate=~14fps
 	
 		
 	///////////////////////////
@@ -136,5 +145,32 @@ public class Track {
 	//TODO accessors: (get first last and nth, length, startFrame, endFrame,trackLen)
 	//TODO draw methods
 	//TODO playMovie method
+	
+	public void playMovie(){
+		
+		ListIterator<TrackPoint> tpIt = points.listIterator();
+		if (tpIt.hasNext()) {
+			ImagePlus firstIm = tpIt.next().getIm();
+			firstIm.show();
+			ImageWindow window = firstIm.getWindow(); 
+			while(tpIt.hasNext()){
+				window.updateImage(tpIt.next().getIm());
+				pause(frameLength);
+			}
+		}
+	}
+	
+	public static void pause (int time)
+	{
+	     try                            //opens an exception handling statement
+	     {
+	          Thread.sleep(time);
+	     }
+	     catch(InterruptedException e)  //captures the exception
+	     {
+	     }
+	}
+	
+	
 		
 }
