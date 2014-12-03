@@ -8,9 +8,9 @@ import java.util.Vector;
 public class TrackPoint {
 
 	/**
-	 *Unique id for the track
+	 *Unique id for the point
 	 */
-	int trackID;
+	int pointID;
 	/**
 	 * X location of the point
 	 */
@@ -46,6 +46,11 @@ public class TrackPoint {
 	 */
 	static int lastIDNum=0;
 	
+	/**
+	 * The number of tracks that the point is initially matched to
+	 */
+	private int numMatches;
+	
 	////////////////////////////////////
 	// Constructors & Related Methods
 	////////////////////////////////////
@@ -72,7 +77,8 @@ public class TrackPoint {
 		this.area = area;
 		covariance = cov;
 		frameNum = frame;
-		trackID = ID;
+		pointID = ID;
+		numMatches = 0;
 		
 	}
 	
@@ -157,6 +163,14 @@ public class TrackPoint {
 	
 	public ImagePlus getIm(){
 		return im;
+	}
+	
+	public void setNumMatches(int num){
+		numMatches = num;
+	}
+	
+	public int getNumMatches() {
+		return numMatches;
 	}
 	
 	//TODO draw methods, openCV?

@@ -1,17 +1,36 @@
 import java.util.ListIterator;
 import java.util.Vector;
 
-
+/**
+ * The TrackMatch class stores a track and a set of points which each might be the next point in the track
+ * @author Natalie
+ *
+ */
 public class TrackMatch {
 	
+	/**
+	 * The track to which points are matched 
+	 */
 	Track track;
+	/**
+	 * Non-zero number indicating how many of the closest points should be stored in the match
+	 */
 	int numMatches;
+	/**
+	 * The closest points to the end of the track
+	 */
 	TrackPoint[] matchPts;
+	/**
+	 * The distance from each matchPt to the end of the track
+	 */
 	Double[] dist2MatchPts;
+	/**
+	 * Whether or not each matchPt is valid
+	 */
 	int[] validMatch;
 	
 	/**
-	 * Constructor 
+	 * Constructs a TrackMatch for a track which stores a certain number of point-matches 
 	 * @param track Track object to which points are matched  
 	 * @param points Points matched to the track
 	 * @param numMatches Maximum number of matches stored
@@ -64,6 +83,8 @@ public class TrackMatch {
 				
 			i++;
 		}
+		//Increment the primary point's match count
+		matchPts[0].setNumMatches(matchPts[0].getNumMatches()+1);
 			
 	}
 	
@@ -101,6 +122,69 @@ public class TrackMatch {
 		dist2MatchPts[toIndex] = dist2MatchPts[fromIndex];
 		validMatch[toIndex] = validMatch[fromIndex];
 		
+	}
+	
+	/**
+	 * Returns the closest match
+	 * @return An array holding the closest point to the end in the track
+	 */
+	public TrackPoint[] getPoints(){
+		
+		if (validMatch[0] == 1){
+			TrackPoint[] point = new TrackPoint[]{matchPts[0]};
+			return point;
+		} else{
+			return null;			
+		}
+		
+	}
+	
+	public TrackPoint getTopMatchPoint(){
+		for (int i=0; i<matchPts.length; i++){
+			if (validMatch[i]>0) {
+				return matchPts[i];
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * Tells whether or not the top match is in a collision
+	 * @return True if the closest point to the end of the track is the closest point to multiple matches 
+	 */
+	public int checkTopMatchForCollision(){
+		
+		TrackPoint topPoint = getTopMatchPoint();
+		if (topPoint==null){
+			return -1;
+		}
+		if (matchPts[0].getNumMatches()>1) {
+			return 1;
+		}
+		return 0;
+	}
+	
+	/**
+	 * Finds the first trackMatch which is colliding with this trackMatch's track 
+	 * @param matches List of TrackMatches containing the colliding track
+	 * @param startInd First index of matches that is searched for colliding tracks; none of the previous matches are searched 
+	 * @return Index of the first TrackMatch whose primary pointMatch is the same as this TrackMatch's primary pointMatch 
+	 */
+	public int findCollidingTrackMatch(Vector<TrackMatch> matches, int startInd){
+		
+		int ind = -1;
+		boolean notFound = true;
+		ListIterator<TrackMatch> tmIt = matches.listIterator(startInd);
+		while (notFound && tmIt.hasNext()) {
+			int curInd = tmIt.nextIndex();
+			TrackMatch mCheck = tmIt.next();
+			if (mCheck.matchPts[0].pointID==matchPts[0].pointID) {
+				ind = curInd;
+				notFound = false;
+			}
+		}
+		
+		return ind;
 	}
 	
 	

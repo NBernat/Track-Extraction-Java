@@ -4,8 +4,11 @@ import java.util.Vector;
 
 public class Collision {
 	
+	//TODO
 	Vector<Track> inTracks;
-	ArrayList<CollisionPair> collisionPairs;
+	//TODO
+	ArrayList<CollisionPair> collisionPairs; //OR COLLISIONPOINTS??	
+	//TODO
 	Vector<Track> outTracks;
 	/**
 	 * First frame where the maggots collide
@@ -21,10 +24,10 @@ public class Collision {
 	int endFrame;
 	
 	
-	public Collision(Vector<Track> inTracks, Vector<Track> outTracks, TrackPoint[] points){
+	public Collision(Vector<Track> inTracks, TrackPoint point, int frameNum){
 		this.inTracks = inTracks;
-		this.outTracks = outTracks;
-		collisionPairs.add(new CollisionPair(points));
+		collisionPairs.add(new CollisionPair(point));
+		startFrame = frameNum;
 	}
 	
 	//TODO addPair method
@@ -44,7 +47,7 @@ public class Collision {
 	
 	
 	
-	
+	//TODO
 	public void finishCollision(int endFrame){
 		 
 		//Vector<Track> newTracks = new Vector<Track>();
@@ -54,6 +57,12 @@ public class Collision {
 		//store as outTracks
 		//update endFrame
 		
+	}
+	
+	//Try to fix the collision at the current frame
+	public int fixCollision(Vector<TrackMatch> matches ) {
+		//TODO try to fix the collision point using the specified matches 
+		return 0;
 	}
 	
 	

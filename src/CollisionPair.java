@@ -7,7 +7,7 @@ public class CollisionPair {
 	
 	int frameNum;
 	
-	public CollisionPair(TrackPoint[] points){
+	public CollisionPair(TrackPoint point){
 		//TODO preserve order...
 		//TODO converrt points to collision points
 	}

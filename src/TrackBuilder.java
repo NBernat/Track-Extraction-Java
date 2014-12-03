@@ -1,5 +1,6 @@
 import ij.ImageStack;
 
+import java.util.Arrays;
 import java.util.ListIterator;
 import java.util.Vector;
 
@@ -46,10 +47,12 @@ public class TrackBuilder {
 	 * Set when the tracks are activated
 	 */
 	Vector<TrackMatch> matches;
-	/**
+	/*
 	 * Cross-reference table for point matches, showing how many primary matches contain this point
+	 * <p>
+	 * each row contains the pointID, and the number of TrackMatches with that point (in that order)
 	 */
-	int[] pointMatchTable;
+	//int[][] pointMatchTable;
 	/**
 	 * Index of frame being processed
 	 */
@@ -174,7 +177,11 @@ public class TrackBuilder {
 		if (activePts.size()==0){
 			comm.message("No points were extracted from frame "+frameNum, VerbLevel.verb_warning);
 		}
-		pointMatchTable = new int[activePts.size()];
+//		pointMatchTable = new int[2][activePts.size()];
+//		for (int i=0; i<activePts.size(); i++) {
+//			pointMatchTable[0][i] = activePts.get(i).pointID;
+//			pointMatchTable[1][i] = 0; 
+//		}
 		return 0;
 	}
 	
@@ -231,25 +238,38 @@ public class TrackBuilder {
 		for(int i=0; i<activeTracks.size(); i++){
 			TrackMatch newMatch = new TrackMatch(activeTracks.get(i), activePts, ep.numPtsInTrackMatch);
 			matches.add(newMatch);
-			//TODO update match table
+			//addMatchToPointTable(newMatch);
 		}
 		//Match points to Collisions
 		for(int j=0; j<activeCollisions.size(); j++){
 			//TODO matches.add(new CollisionMatch(activeCollisions.get(i), activePts, ep.numPtsInTrackMatch));
 			TrackMatch newMatch = new CollisionMatch(activeTracks.get(j), activePts, ep.numPtsInTrackMatch); 
 			matches.add(newMatch);
-			//TODO update match table
+			//addMatchToPointTable(newMatch);
 			
 		}
 		
 	}
 	
 	
-	//TODO modifyMatches: error checking
+//	private void addMatchToPointTable (TrackMatch newMatch) {
+//		TrackPoint[] pts = newMatch.getPoints();//An array so that Collision matches don't need to be handled seperately
+//		for (int i=0; i<pts.length; i++) {
+//			int ID = pts[i].pointID;
+//			int ind = Arrays.asList(pointMatchTable[0]).indexOf(ID);
+//			pointMatchTable[1][ind]++;
+//			
+//		}
+//	}
+	
+	/**
+	 * Corrects initial matching errors
+	 */
 	private void modifyMatches(){
 		
 		int numCutByDist = cutMatchesByDistance();
 		comm.message("Number of matches cut from frame "+frameNum+" by distance: "+numCutByDist, VerbLevel.verb_debug);
+		
 		manageCollisions();
 		
 	}
@@ -269,50 +289,93 @@ public class TrackBuilder {
 		return numRemoved;
 	}
 	
-	//TODO handleCollisions
-		//Release disconnected collisions to ActiveTracks
-		//Detect new collisions
-		//DON'T repair/Flag bad collisions...that comes later after all the tracks are built
+	
 	/**
-	 * Maintains the collision structures by adding new collisions and ending finished collisions 
+	 * Maintains the collision structures by adding new collisions, trying basic methods of fixing current colllions, and ending finished collisions 
 	 */
 	private void manageCollisions(){
 		 
-		//matchCollisionsToEmptyTracks();
-		//splitCollisionPoints();
-		//endCollisionTracks();
-		//Find the 
+		//if a point is assigned to more than one track, start a collision event
+		int numNewColl = detectNewCollisions();
+		comm.message("Number of new collisions in frame "+frameNum+": "+numNewColl, VerbLevel.verb_debug);
+		
+		//Try to maintain number of incoming tracks in each collision by grabbing nearby tracks and splitting points 
+		conserveCollisionNums();
+		
+		//if number incoming = number outgoing, finish
+		int numFinishedCollisions = releaseFinishedCollisions();
+		comm.message("Number of collisions ended in frame "+frameNum+": "+numFinishedCollisions, VerbLevel.verb_debug);
+		
+		
+	}
+	
+	//TODO
+	private int detectNewCollisions(){
+		
+		//TODO make new 
+		Vector<Collision> newCollisions = new Vector<Collision>;
+		boolean[] matchInCollision = new boolean[matches.size()];
+		for (int i=0;i<matches.size();i++) {
+			
+			if (!matchInCollision[i] && matches.get(i).checkTopMatchForCollision()>0){
+				Vector<Track> colTracks = new Vector<Track>();
+				colTracks.add(matches.get(i).track);
+				matchInCollision[i] = true;
+				
+				int numColliding = matches.get(i).getTopMatchPoint().getNumMatches();
+				//Find the colliding track(s)
+				int startInd = i+1;
+				for (int j=0; j<(numColliding-1); j++) {
+					int colInd = matches.get(i).findCollidingTrackMatch(matches, startInd);
+					//TODO add matches to colMatches vetor
+					colTracks.add(matches.get(colInd).track);
+					matchInCollision[colInd] = true;
+					startInd = colInd+1;
+				}
+				
+				Collision newCol = new Collision(colTracks, matches.get(i).getTopMatchPoint(), frameNum);
+				
+				//Try to fix the collision 
+				
+				if (newCol.fixCollision(colMatches)) {
+					activeCollisions.addElement(newCol);
+					newCollisions.add(newCol);
+					//TODO end tracks
+				}
+				//WHAT TO DO WITH MATCHES? CONVERT TO COLLISIONMATCH?
+			}
+
+		}
+	}
+	
+	
+	
+	
+	private void conserveCollisionNums(){
 		
 		
 		//TODO
-//		int numNewColl = detectNewCollisions();
-//		comm.message("Number of new collisions in frame "+frameNum+": "+numNewColl, VerbLevel.verb_debug);
-//		
-//		//Try to maintain number of tracks in each collision
-//		int netChange = conserveCollisionNums();
-//		comm.message("Net change in maggot number within collisions at frame "+frameNum+": "+netChange, VerbLevel.verb_debug);
-//		
-//		int numFinishedCollisions = releaseFinishedCollisions();
-//		comm.message("Number of collisions ended in frame "+frameNum+": "+numFinishedCollisions, VerbLevel.verb_debug);
+		
+		matchCollisionsToEmptyTracks();
+		
+		splitCollisionPoints();
 		
 		
 	}
-	
 	
 	//TODO 
-//	private void matchCollisionsToEmptyTracks(){
-//		
-//	}
-
-	//TODO
-//	private void splitCollisionPoints(){
-//		
-//	}
-	
-	//TODO
-	private void endCollisionTracks(){
+	private void matchCollisionsToEmptyTracks(){
+		
+		//Check each trackMatch to see if it has any validmatches 
 		
 	}
+
+	//TODO
+	private void splitCollisionPoints(){
+		
+	}
+	
+
 	
 	/**
 	 * Finds and releases collision events which have finished
@@ -364,26 +427,8 @@ public class TrackBuilder {
 		//Store the collision event for later processing
 		finishedCollisions.add(col);
 	}
-	
-	
-	
-	private int conserveCollisionNums(){
-		
-		int netNumChange=0;
-		//TODO
-		return netNumChange;
-		
-	}
-		
-	private int detectNewCollisions(){
-		
-		int numNewColl=0;
-		//TODO 
-		//Find double matches in points
-		//measure distances to second matches
-		return numNewColl;
-	}
-	
+
+
 	
 
 	//TODO extendOrEndTracks
@@ -428,13 +473,6 @@ public class TrackBuilder {
 		return 0;
 	}
 	
-	
-	//TODO fuseTrackMatches
-	
-	//TODO startNewTracks
-	
-	//TODO endDeadTracks
-
 	
 	
 	//TODO resolveCollisions	
