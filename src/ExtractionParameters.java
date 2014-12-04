@@ -7,28 +7,37 @@ public class ExtractionParameters {
 	int numPtsInTrackMatch = 3;
 	
 	/**
-	 *  Distance in pixels(?) which indicates a collision
+	 * Determines how much collision handling should be done
+	 * <p>
+	 * 0: When tracks collide, just end them
+	 * <p>
+	 * 1: Match collisions to nearby points, then try to split image into multiple points
+	 * <p>
+	 * 2: Level 2, then comb through collisions after tracks are made 
 	 */
-	double collisionDist;
+	int collisionLevel = 0;
 	
 	/**
-	 * Max distance in pixels(?) for a point match
-	 * <p>
-	 * Determined by body length? 
+	 *  Distance in pixels which indicates a collision
 	 */
-	double maxMatchDist;
+	//double collisionDist;
+	
+	/**
+	 * Max distance in pixels for a point match 
+	 */
+	double maxMatchDist = 7;
 	
 	/**
 	 * How many frames to move forward when extracting points
 	 */
 	int increment = 1;
 	
-	//Maggot size limits: minArea,maxArea
 	
-	/**
-	 * 
-	 */
-	double[][] analysisRect = {{0,0},{-1,-1}};
+	
+	//TODO
+	int startFrame = 0;
+	int endFrame = 500;
+	//_frame_normalization_methodT fnm = _frame_normalization_methodT._frame_none;
 	
 	
 	///////////////////////////
@@ -37,19 +46,19 @@ public class ExtractionParameters {
 	/**
 	 * 
 	 */
-	int nBackgroundFrames;
+	int nBackgroundFrames = 5;
 	/**
 	 * 
 	 */
-    int resampleInterval;
+    int resampleInterval = 200;
     /**
      * 
      */
-    double blurSigma;
+    double blurSigma = 1;
 	/**
 	 * 
 	 */
-    double blurAccuracy;//<0.02, lower=better but longer execution
+    double blurAccuracy = 0.02;//<0.02, lower=better but longer execution
     
     /**
      * Whether or not to globally threshold the image
@@ -58,7 +67,7 @@ public class ExtractionParameters {
     /**
      * The global threshold value
      */
-    double globalThreshValue;
+    double globalThreshValue = 20;
     
     /**
      * Add-on for the string which specifies the center coordinates of the points
@@ -72,11 +81,11 @@ public class ExtractionParameters {
     /**
      * Minimum blob area
      */
-    double minArea;
+    double minArea = 10;
     /**
      * Maximum blob area
      */
-    double maxArea;
+    double maxArea = 500;
     
     
 	public ExtractionParameters(){

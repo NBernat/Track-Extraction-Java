@@ -37,6 +37,9 @@ public class FrameLoader {
 	 */
 	Communicator comm;
 	
+	//TODO
+	_frame_normalization_methodT fnm;
+	
 	/////////////////////
 	// Constructors
 	/////////////////////
@@ -60,6 +63,8 @@ public class FrameLoader {
 		imageStack = IS;
 		ar = new Rectangle(0,0,-1,-1);
 		lastFrameLoaded = -10000;
+		
+		fnm = _frame_normalization_methodT._frame_none;
 		
 	}
 	

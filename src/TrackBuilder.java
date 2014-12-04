@@ -88,7 +88,7 @@ public class TrackBuilder {
 	public TrackBuilder(ImageStack IS, ExtractionParameters ep){
 		
 		this.ep = ep;
-		init(0, IS);
+		init(1, IS);
 	}
 	
 	/**
@@ -98,7 +98,7 @@ public class TrackBuilder {
 		
 		//Set Auxillary objects
 		comm = new Communicator();
-		pe = new PointExtractor(IS, comm);
+		pe = new PointExtractor(IS, comm, ep);
 		
 		//Set track-building objects
 		activeTracks = new Vector<Track>();
@@ -127,7 +127,7 @@ public class TrackBuilder {
 	public void buildTracks(){
 		
 		//Add frames to track objects
-		while (pe.nextFrameNum() <= pe.endFrameNum) {
+		while (pe.nextFrameNum() <= pe.endFrameNum && pe.nextFrameNum() <= ep.endFrame) {
 			frameNum = pe.nextFrameNum();
 			if (addFrame(frameNum)>0) {
 				comm.message("Error adding frame "+pe.nextFrameNum(), VerbLevel.verb_error);
@@ -138,6 +138,12 @@ public class TrackBuilder {
 		
 		//Comb out collisions
 		//TODO resolveCollisions();
+		
+		//Move all active tracks to finished
+		finishedTracks.addAll(activeTracks);
+		activeTracks.removeAll(activeTracks);
+		finishedCollisions.addAll(activeCollisions);
+		activeCollisions.removeAll(finishedCollisions);
 	}
 	
 	
@@ -272,26 +278,27 @@ public class TrackBuilder {
 	private void manageCollisions(){
 		 
 		//End Collision tracks, reduce point's number to 0
-		endNewCollisions();
-		
-		//if a point is assigned to more than one track, start a collision event
-//		int numNewColl = detectNewCollisions();
-//		comm.message("Number of new collisions in frame "+frameNum+": "+numNewColl, VerbLevel.verb_debug);
-		
-		//Try to maintain number of incoming tracks in each collision by grabbing nearby tracks and splitting points 
-//		conserveCollisionNums();
-		
-		//if number incoming = number outgoing, finish
-//		int numFinishedCollisions = releaseFinishedCollisions();
-//		comm.message("Number of collisions ended in frame "+frameNum+": "+numFinishedCollisions, VerbLevel.verb_debug);
-		
-		//Add new collisions to activeTracks, since the have been dealt with
-		
+		if (ep.collisionLevel==0){
+			endNewCollisions();
+		} else {
+			//if a point is assigned to more than one track, start a collision event
+			int numNewColl = detectNewCollisions();
+			comm.message("Number of new collisions in frame "+frameNum+": "+numNewColl, VerbLevel.verb_debug);
+			
+			//Try to maintain number of incoming tracks in each collision by grabbing nearby tracks and splitting points 
+			conserveCollisionNums();
+			
+			//if number incoming = number outgoing, finish
+			int numFinishedCollisions = releaseFinishedCollisions();
+			comm.message("Number of collisions ended in frame "+frameNum+": "+numFinishedCollisions, VerbLevel.verb_debug);
+			
+			//Add new collisions to activeTracks, since the have been dealt with
+		}
 		
 	}
 	
 	
-	public void endNewCollisions(){
+	private void endNewCollisions(){
 		
 		ListIterator<TrackMatch> tmIt = matches.listIterator();
 		
@@ -399,17 +406,17 @@ public class TrackBuilder {
 		return 0;
 	}
 	
-	public Vector<TrackPoint> findEmptyPoints() {
-		Vector<TrackPoint> emptyPoints = new Vector<TrackPoint>();
-		ListIterator<TrackPoint> tpIt = activePts.listIterator();
-		while (tpIt.hasNext()) {
-			TrackPoint pt = tpIt.next(); 
-			if (pt.getNumMatches()==0) {
-				emptyPoints.add(pt);
-			}
-		}
-		return emptyPoints;
-	}
+//	private Vector<TrackPoint> findEmptyPoints() {
+//		Vector<TrackPoint> emptyPoints = new Vector<TrackPoint>();
+//		ListIterator<TrackPoint> tpIt = activePts.listIterator();
+//		while (tpIt.hasNext()) {
+//			TrackPoint pt = tpIt.next(); 
+//			if (pt.getNumMatches()==0) {
+//				emptyPoints.add(pt);
+//			}
+//		}
+//		return emptyPoints;
+//	}
 	
 	
 	private void conserveCollisionNums(){
@@ -494,7 +501,6 @@ public class TrackBuilder {
 
 	//TODO extendOrEndTracks
 		//Extend 1-1 matches and good collision matches
-		//Start new tracks (unmatched points), move to active
 		//End dead tracks (unmatched tracks), move to finished
 		//Update track number
 	private int extendOrEndTracks(){
@@ -504,18 +510,16 @@ public class TrackBuilder {
 			TrackMatch match = mIt.next();
 			
 			if (match.getTopMatchPoint()==null) {
-				
 				finishedTracks.addElement(match.track);
 				activeTracks.remove(match.track);
 				
 			} else {
 				match.track.extendTrack(match.getTopMatchPoint());
 				activePts.remove(match.getTopMatchPoint());
-				
 			}
-			
-			
 		}
+		
+		numTracks = activeTracks.size() + activeCollisions.size();
 		
 		return 0;
 	}

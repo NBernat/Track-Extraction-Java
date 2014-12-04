@@ -1,4 +1,4 @@
-import org.opencv.imgproc.Imgproc;
+
 
 
 
@@ -9,7 +9,6 @@ import org.opencv.imgproc.Imgproc;
 
 //import ContourPlotter_;
 import ij.*;
-import ij.gui.Roi;
 import ij.measure.ResultsTable;
 import ij.plugin.ImageCalculator;
 import ij.plugin.filter.GaussianBlur;
@@ -163,21 +162,23 @@ public class PointExtractor {
 	////////////////////////////
 	
 	
-	public PointExtractor(ImageStack stack, Communicator comm){
-		init(0, stack, comm);
+	public PointExtractor(ImageStack stack, Communicator comm, ExtractionParameters ep){
+		init(0, stack, comm, ep);
 	}
 	
 	//TODO
-	public void init(int startFrame, ImageStack stack, Communicator comm){
+	public void init(int startFrame, ImageStack stack, Communicator comm, ExtractionParameters ep){
 		this.startFrameNum = startFrame;
 		imageStack = stack;
 		this.comm = comm;
+		this.ep = ep;
 		endFrameNum = imageStack.getSize()-1;//.getNFrames()-1;// 
 		increment = ep.increment;
 		lastFrameExtracted=-1;
 		isFirstRun=true;
 		fl = new FrameLoader(comm, stack);
 		IC = new ImageCalculator();
+		fnm = fl.fnm;
 	}
 	
 	/**
