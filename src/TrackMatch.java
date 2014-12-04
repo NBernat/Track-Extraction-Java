@@ -15,7 +15,7 @@ public class TrackMatch {
 	/**
 	 * Non-zero number indicating how many of the closest points should be stored in the match
 	 */
-	int numMatches;
+	int numStoredMatches;
 	/**
 	 * The closest points to the end of the track
 	 */
@@ -40,6 +40,7 @@ public class TrackMatch {
 		matchPts = new TrackPoint[numMatches];
 		dist2MatchPts = new Double[numMatches];
 		validMatch = new int[numMatches];
+		numStoredMatches = numMatches;
 	}
 	
 	
@@ -54,7 +55,7 @@ public class TrackMatch {
 		matchPts = new TrackPoint[numMatches];
 		dist2MatchPts = new Double[numMatches];
 		validMatch = new int[numMatches];
-		
+		numStoredMatches = numMatches;
 		matchPointsToTrack(points);
 	}
 	
@@ -67,10 +68,10 @@ public class TrackMatch {
 	 * @param points List of points from which to find matches
 	 */
 	public void matchPointsToTrack(Vector<TrackPoint> points){
-		Vector<TrackPoint> nearestPoints = track.nearestNPts2End(points, numMatches);
+		Vector<TrackPoint> nearestPoints = track.nearestNPts2End(points, numStoredMatches);
 		int i=0;
 		ListIterator<TrackPoint> iter = nearestPoints.listIterator();
-		while (i<numMatches){
+		while (i<numStoredMatches){
 			if (iter.hasNext()){
 				matchPts[i] = iter.next();
 				dist2MatchPts[i] = track.getEnd().dist(matchPts[i]);
@@ -115,7 +116,7 @@ public class TrackMatch {
 	 * @param toIndex Index to which to move data
 	 */
 	public void moveMatchAtoMatchB(int fromIndex, int toIndex){
-		if ( fromIndex<0 || toIndex<0 || fromIndex>=numMatches || toIndex>=numMatches) {
+		if ( fromIndex<0 || toIndex<0 || fromIndex>=numStoredMatches || toIndex>=numStoredMatches) {
 			return;
 		}
 		matchPts[toIndex] = matchPts[fromIndex];
@@ -174,17 +175,27 @@ public class TrackMatch {
 		
 		int ind = -1;
 		boolean notFound = true;
-		ListIterator<TrackMatch> tmIt = matches.listIterator(startInd);
-		while (notFound && tmIt.hasNext()) {
-			int curInd = tmIt.nextIndex();
-			TrackMatch mCheck = tmIt.next();
-			if (mCheck.matchPts[0].pointID==matchPts[0].pointID) {
-				ind = curInd;
-				notFound = false;
+		if (startInd<matches.size()){
+			ListIterator<TrackMatch> tmIt = matches.listIterator(startInd);
+			while (notFound && tmIt.hasNext()) {
+				int curInd = tmIt.nextIndex();
+				TrackMatch mCheck = tmIt.next();
+				if (mCheck.getTopMatchPoint().pointID==getTopMatchPoint().pointID) {
+					ind = curInd;
+					notFound = false;
+				}
 			}
 		}
-		
 		return ind;
+	}
+	
+	
+	public void clearAllMatches(){
+		//Set all to invalid, decrement the primary point's point count
+		for (int i=0; i<numStoredMatches; i++) {
+			validMatch[i]=0;
+			getTopMatchPoint().setNumMatches(getTopMatchPoint().getNumMatches()-1);
+		}
 	}
 	
 	

@@ -7,7 +7,7 @@ public class Collision {
 	//TODO
 	Vector<Track> inTracks;
 	//TODO
-	ArrayList<CollisionPair> collisionPairs; //OR COLLISIONPOINTS??	
+	CollisionTrack colTrack;	
 	//TODO
 	Vector<Track> outTracks;
 	/**
@@ -22,11 +22,13 @@ public class Collision {
 	 * LastFrame with colliding maggots
 	 */
 	int endFrame;
-	
+	/**
+	 */
+	Vector<TrackMatch> colMatches;//usually contains only one; gets relpaced when matched 
 	
 	public Collision(Vector<Track> inTracks, TrackPoint point, int frameNum){
 		this.inTracks = inTracks;
-		collisionPairs.add(new CollisionPair(point));
+		//collisionPairs.add(new CollisionPair(point));
 		startFrame = frameNum;
 	}
 	
@@ -35,8 +37,7 @@ public class Collision {
 	//TODO
 	public boolean hasFinsihed(){
 		
-		//check numin vs numcurrent 
-		//Check distace
+		//check numin vs numcurrent(aka length of matches)
 		
 		return false;
 	}
@@ -60,10 +61,48 @@ public class Collision {
 	}
 	
 	//Try to fix the collision at the current frame
-	public int fixCollision(Vector<TrackMatch> matches ) {
-		//TODO try to fix the collision point using the specified matches 
+	//TODO try to fix the collision point using the specified matches
+	public int fixCollision(Vector<TrackMatch> colMatches) {		
+		
+		if (matchToEmptyPts(colMatches)){
+			return 1;
+		}
+		if (matchToSplitPts(colMatches)) {
+			return 2;
+		}
+		
 		return 0;
 	}
+	
+	
+	//TODO  
+	public boolean matchToEmptyPts(Vector<TrackMatch> colMatches) {
+		//find empty points from matches
+		//if (single or multiple) exactly one has a good one
+			//take that one
+		//if multiple and both have a good one
+			//compare, take best
+		
+		//fix matches, fix pointMatchNums 
+		
+		//if no good ones,
+		return false;
+	}
+	
+	//TODO 
+	public boolean matchToSplitPts(Vector<TrackMatch> colMatches) {
+		//Vector<TrackPoint> splitPts = splitPoint(colPoint);
+		//if (splitPts!=null) {
+			//fix matches, fix pointMatchNums, 
+		//}
+		
+		return false;
+	}
+	
+	
+	
+	
+	
 	
 	
 }
