@@ -50,7 +50,7 @@ public class ExtractionParameters {
 	/**
 	 * 
 	 */
-    int resampleInterval = 200;
+    int resampleInterval = 100;
     /**
      * 
      */
@@ -63,7 +63,7 @@ public class ExtractionParameters {
     /**
      * Whether or not to globally threshold the image
      */
-    boolean useGlobalThresh;
+    boolean useGlobalThresh = true;
     /**
      * The global threshold value
      */

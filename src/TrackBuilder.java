@@ -197,22 +197,25 @@ public class TrackBuilder {
 		
 		//Build matches
 		makeMatches();
+		comm.message("Frame "+frameNum+" initially has "+matches.size()+" matches", VerbLevel.verb_debug);
 		if (matches.size()==0){
 			comm.message("No matches were made in frame "+frameNum, VerbLevel.verb_warning);
-			return 1;
 		}
 		
 		//Modify matches
 		modifyMatches();
 		
 		//Fuse matches to tracks
-		if (extendOrEndTracks()>0){
+		int acTrNum = extendOrEndTracks(); 
+		if (acTrNum<0){
 			comm.message("Error attaching new points to tracks", VerbLevel.verb_error);
 			return 1;
 		}
+		comm.message("Number of active tracks: "+acTrNum, VerbLevel.verb_debug);
 		
 		//Start new tracks from remaining activePts
-		startNewTracks();
+		int numNew = startNewTracks();
+		comm.message("New Tracks: "+numNew, VerbLevel.verb_debug);
 		
 		return 0;
 	}
@@ -279,7 +282,8 @@ public class TrackBuilder {
 		 
 		//End Collision tracks, reduce point's number to 0
 		if (ep.collisionLevel==0){
-			endNewCollisions();
+			int numEnded = endNewCollisions();
+			comm.message("Tracks ended due to collision: "+numEnded, VerbLevel.verb_debug);
 		} else {
 			//if a point is assigned to more than one track, start a collision event
 			int numNewColl = detectNewCollisions();
@@ -298,8 +302,10 @@ public class TrackBuilder {
 	}
 	
 	
-	private void endNewCollisions(){
+	//TODO javadoc
+	private int endNewCollisions(){
 		
+		int numEnded = 0;
 		ListIterator<TrackMatch> tmIt = matches.listIterator();
 		
 		while (tmIt.hasNext()){
@@ -308,6 +314,7 @@ public class TrackBuilder {
 			TrackMatch match = tmIt.next();
 			
 			if (match.checkTopMatchForCollision()>0) {
+				comm.message("Collision found", VerbLevel.verb_debug);
 				//Collect the info from the tracks in collisions
 				Vector<Track> colTracks = new Vector<Track>();
 				Vector<TrackMatch> colMatches= new Vector<TrackMatch>();
@@ -317,6 +324,7 @@ public class TrackBuilder {
 				
 				//Find all the additional tracks in the collision
 				int numColliding = match.getTopMatchPoint().getNumMatches();
+				comm.message("Collision has "+numColliding+" tracks", VerbLevel.verb_debug);
 				int startInd = i+1;
 				for (int j=0; j<(numColliding-1); j++) {
 					
@@ -325,22 +333,27 @@ public class TrackBuilder {
 					if (colInd>=0) {
 						colMatches.add(matches.get(colInd));
 						colTracks.add(matches.get(colInd).track);
-						
+						comm.message("Matching track found!", VerbLevel.verb_debug);
 						//If there are more than 2 tracks in the collision, start looking for collision matches at the index following the one that was just found
 						startInd = colInd+1;
+					} else {
+						comm.message("matching collision not found", VerbLevel.verb_debug); 
 					}
 				}
 				
 				//End the colliding tracks
 				ListIterator<TrackMatch> cmIt = colMatches.listIterator();
 				while (cmIt.hasNext()) {
-					
+					comm.message("Clearing collsions", VerbLevel.verb_debug);
+					numEnded++;
 					TrackMatch endMatch = cmIt.next();
 					endMatch.clearAllMatches();
 					
 				}
+				
 			}	
-		}		
+		}
+		return numEnded;
 	}
 	
 	
@@ -521,23 +534,25 @@ public class TrackBuilder {
 		
 		numTracks = activeTracks.size() + activeCollisions.size();
 		
-		return 0;
+		return numTracks;
 	}
 	
 	//TODO
 	private int startNewTracks(){
 		
+		int numNew=0;
 		ListIterator<TrackPoint> tpIt = activePts.listIterator();
 		while (tpIt.hasNext()) {
 			TrackPoint pt = tpIt.next();
 			if (pt.getNumMatches()==0) {
 				activeTracks.addElement(new Track(pt));
+				numNew++;
 			} else {
 				comm.message("TrackPoint "+pt.pointID+" has TrackMatches, but remained active after matches were added to tracks", VerbLevel.verb_warning);
 			}
 		}
 		
-		return 0;
+		return numNew;
 	}
 	
 	

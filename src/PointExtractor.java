@@ -12,6 +12,7 @@ import ij.*;
 import ij.measure.ResultsTable;
 import ij.plugin.ImageCalculator;
 import ij.plugin.filter.GaussianBlur;
+import ij.process.Blitter;
 
 import java.awt.Rectangle;
 import java.util.Vector;
@@ -163,7 +164,7 @@ public class PointExtractor {
 	
 	
 	public PointExtractor(ImageStack stack, Communicator comm, ExtractionParameters ep){
-		init(0, stack, comm, ep);
+		init(1, stack, comm, ep);
 	}
 	
 	//TODO
@@ -202,9 +203,11 @@ public class PointExtractor {
 	public int extractFramePoints(int frameNum) {
 		
 		if(loadFrame(frameNum)>0){
-			return 1;
+			comm.message("Frame "+frameNum+" was NOT successfully loaded in Point Extractor", VerbLevel.verb_debug);
+			return 1; 
 		}
-		//extractPoints
+		comm.message("Frame "+frameNum+" successfully loaded in Point Extractor", VerbLevel.verb_debug);
+		extractPoints(frameNum);
 		lastFrameExtracted = frameNum;
 		return 0;
 	}
@@ -232,24 +235,34 @@ public class PointExtractor {
 			comm.message("Frame Loader returned error", VerbLevel.verb_warning);
 			return 2;
 		} else {
+			comm.message("No error from frame loader when loading frame "+frameNum+" in pe.loadFrame", VerbLevel.verb_debug);
 			currentIm = new ImagePlus("Frame "+frameNum,fl.returnIm);
 		}
 		assert (currentIm!=null);
 		analysisRegion = fl.ar;
 		
 		//Create a background-subtracted image for the current im
-		backSubIm = IC.run("sub", currentIm, backgroundIm);
+		backSubIm = CVUtils.blitterProcessing(currentIm, backgroundIm, Blitter.SUBTRACT);//IC.run("sub", currentIm, backgroundIm);
+		comm.message("Created background subtracted image when loading frame "+frameNum+" in pe.loadFrame", VerbLevel.verb_debug);
 
 		//Create a foreground image...not sure when the "else" is ever used...
 		if (foregroundIm==null) {
-			foregroundIm = (ImagePlus) backSubIm.clone();
+			comm.message ("Foreground image doesn't exist, cloning background subtracted image", VerbLevel.verb_debug);
+			try {
+				foregroundIm = (ImagePlus) backSubIm.clone();
+			} catch (Exception e) {
+				comm.message("failed clone of background subtracted image", VerbLevel.verb_debug);
+			}
 		} else {
 			comm.message ("Foreground image already exists, taking max of FG im and BS im", VerbLevel.verb_debug);
-			foregroundIm = IC.run("max", backSubIm, foregroundIm);
+			foregroundIm = CVUtils.blitterProcessing(backSubIm, foregroundIm, Blitter.MAX);
+			//foregroundIm = IC.run("max", backSubIm, foregroundIm);
 			
 		}
 		
+		comm.message("Thresholding image to zero...", VerbLevel.verb_debug);
 		threshToZero();
+		comm.message("...finished thresholding image to zero", VerbLevel.verb_debug);
 		
 		return 0;
 	}
@@ -264,7 +277,7 @@ public class PointExtractor {
 	        return;
 	     }
 		
-		comm.message("Calculating bakcground", VerbLevel.verb_message);
+		comm.message("Calculating background", VerbLevel.verb_message);
 		
 		if (imageStack==null) {
 			
@@ -326,18 +339,32 @@ public class PointExtractor {
 			backgroundIm = new ImagePlus("BackgroundIm_"+first+"_"+last, fl.returnIm);
 		}
 		
+		if (backgroundIm==null) {
+			comm.message("Initial background image is null", VerbLevel.verb_warning);
+		}
+		
 		analysisRegion = fl.ar;
 		
 		int i;
 		for (i=1; i<ep.nBackgroundFrames; i++){
 			
-			if (fl.getFrame((int) (first + i*delta + 0.5), fnm, normFactor) == 0) {
+			//TODO currentIm is returning null!
+			int nextFrame = (int) (first + i*delta + 0.5);
+			comm.message("Adding frame "+nextFrame+" to the background image", VerbLevel.verb_debug);
+			if (fl.getFrame(nextFrame, fnm, normFactor) == 0) {
 				currentIm = new ImagePlus("", fl.returnIm);
 	            if (currentIm == null || backgroundIm == null) {
 	                comm.message ("current frame or background im is NULL", VerbLevel.verb_error);
 	            } else {
-	            	backgroundIm = IC.run("min", currentIm, backgroundIm);
+	            	backgroundIm = CVUtils.blitterProcessing(currentIm, backgroundIm, Blitter.MIN);
+	            	//backgroundIm = IC.run("min", currentIm, backgroundIm);
 	            }
+	            
+	            
+	            if (backgroundIm==null) {
+	    			comm.message("Background image is null after adding contributing frame number "+i, VerbLevel.verb_warning);
+	    		}
+	            
 	        } else {
 	            comm.message("frame loader reports error", VerbLevel.verb_error);
 	        }
@@ -363,36 +390,46 @@ public class PointExtractor {
 	 */
 	void threshToZero() {
 		
-	    comm.message ("pe threshto0", VerbLevel.verb_debug);
-	    if (ep.useGlobalThresh) {
-	        comm.message ("global threshold used", VerbLevel.verb_debug);
-	        if (ep.blurSigma > 0) {
-	        	
-	            threshIm = (ImagePlus) backSubIm.clone();
-	            
-	            CVUtils.blurIm(threshIm.getProcessor(), ep.blurSigma);
-		        comm.message ("im blurred", VerbLevel.verb_debug);
-	            
-		        threshIm = CVUtils.thresholdImtoZero(threshIm, ep.globalThreshValue);
-		        
-	            comm.message ("im thresholded", VerbLevel.verb_debug);
-	            
-	        } else {
-	        	threshIm = CVUtils.thresholdImtoZero(backSubIm, ep.globalThreshValue);
-	            
-	        }
-	    } else {
-	        ImagePlus maskIm = (ImagePlus) backSubIm.clone();
-	        if (ep.blurSigma > 0) {
-	            threshIm = CVUtils.blurIm(backSubIm, ep.blurSigma);
-	            maskIm = CVUtils.compGE(threshIm, threshCompIm);
-	        } else {
-	            maskIm = CVUtils.compGE(threshIm, threshCompIm);
-	        }
-	        
-	        threshIm = CVUtils.maskCopy(backSubIm, maskIm);
-	    }
-	    comm.message ("pe threshto0 done", VerbLevel.verb_debug);
+		threshIm = (ImagePlus) backSubIm.clone();
+		threshIm.getProcessor().threshold((int) ep.globalThreshValue);
+//		
+//	    comm.message ("pe threshto0", VerbLevel.verb_debug);
+//	    if (ep.useGlobalThresh) {
+//	        comm.message ("global threshold used in pe", VerbLevel.verb_debug);
+//	        if (ep.blurSigma > 0) {
+//	        	
+//	            threshIm = (ImagePlus) backSubIm.clone();
+//	            comm.message("threshIm created from cloned backSubIm", VerbLevel.verb_debug);
+//	             
+//	            CVUtils.blurIm(threshIm.getProcessor(), ep.blurSigma);
+//		        comm.message ("im blurred", VerbLevel.verb_debug);
+//	            
+//		        
+//		        threshIm = CVUtils.thresholdImtoZero(threshIm, ep.globalThreshValue);
+//		        if (threshIm!=null){
+//		        	comm.message ("im thresholded", VerbLevel.verb_debug);
+//		        } else {
+//		        	comm.message ("Thresholded failed", VerbLevel.verb_warning);
+//		        }
+//	            
+//	        } else {
+//	        	threshIm = CVUtils.thresholdImtoZero(backSubIm, ep.globalThreshValue);
+//	            
+//	        }
+//	    } else {
+//	    	comm.message("Non-global thresholding in pe", VerbLevel.verb_debug);
+//	        ImagePlus maskIm = (ImagePlus) backSubIm.clone();
+//	        if (ep.blurSigma > 0) {
+//	        	
+//	            threshIm = CVUtils.blurIm(backSubIm, ep.blurSigma);
+//	            maskIm = CVUtils.compGE(threshIm, threshCompIm);
+//	        } else {
+//	            maskIm = CVUtils.compGE(threshIm, threshCompIm);
+//	        }
+//	        
+//	        threshIm = CVUtils.maskCopy(backSubIm, maskIm);
+//	    }
+//	    comm.message ("pe threshto0 done", VerbLevel.verb_debug);
 	}
 	
 	/**
@@ -416,9 +453,10 @@ public class PointExtractor {
 			loadFrame(frameNum);
 		}
 		
-	    comm.message("get points called", VerbLevel.verb_debug);
+	    comm.message("extract points called", VerbLevel.verb_debug);
 	    
 	    pointTable = CVUtils.findPoints(threshIm, ep);
+	    comm.message("Frame "+currentFrameNum+": "+pointTable.getCounter()+" points in ResultsTable", VerbLevel.verb_debug);
 	    
 	    extractedPoints = rt2TrackPoints(pointTable, currentFrameNum);
 	    
@@ -438,15 +476,18 @@ public class PointExtractor {
 		Vector<TrackPoint> tp = new Vector<TrackPoint>();
 		
 		for (int row=1; row<rt.getCounter(); row++) {
-			double x = rt.getValue("X"+ep.centerMethod, row);
-			double y = rt.getValue("Y"+ep.centerMethod, row);
-			double boundX = rt.getValue("BX", row);
-			double boundY = rt.getValue("BY", row);
-			double width = rt.getValue("Width", row);
-			double height = rt.getValue("Height", row);
-			double area = rt.getValue("Area", row);
+			comm.message("Gathering info for Point "+row+" from ResultsTable", VerbLevel.verb_debug);
+			double area = rt.getValueAsDouble(ResultsTable.AREA, row);
+			comm.message("Point "+row+": area="+area, VerbLevel.verb_debug);
+			double x = rt.getValueAsDouble(ResultsTable.X_CENTROID, row);
+			double y = rt.getValueAsDouble(ResultsTable.Y_CENTROID, row);
+			double width = rt.getValueAsDouble(ResultsTable.ROI_WIDTH, row);
+			double height = rt.getValueAsDouble(ResultsTable.ROI_HEIGHT, row);
+			double boundX = rt.getValueAsDouble(ResultsTable.ROI_X, row);
+			double boundY = rt.getValueAsDouble(ResultsTable.ROI_Y, row);
 			Rectangle rect = new Rectangle((int)boundX, (int)boundY, (int)width, (int)height);
 			
+			comm.message("Converting Point "+row+" to TrackPoint", VerbLevel.verb_debug);
 			if (ep.properPointSize(area)) {
 				tp.add(new TrackPoint(x,y,rect,area,frameNum));
 			}

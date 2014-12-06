@@ -175,6 +175,9 @@ public class TrackMatch {
 		
 		int ind = -1;
 		boolean notFound = true;
+		if (matches.isEmpty()){
+			return -2;
+		}
 		if (startInd<matches.size()){
 			ListIterator<TrackMatch> tmIt = matches.listIterator(startInd);
 			while (notFound && tmIt.hasNext()) {

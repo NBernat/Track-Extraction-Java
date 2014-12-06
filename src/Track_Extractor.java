@@ -36,12 +36,12 @@ public class Track_Extractor implements PlugIn{
 //		if (IS.getProcessor() != null) {
 //			IJ.showMessage("Is an ImageProcessor");
 //		} 
-		if (IS.getProcessor(0)==null) {
-			IJ.showMessage("Zero Null ");
-		} 
-		if (IS.getProcessor(1)==null) {
-			IJ.showMessage("One Null ");
-		}
+//		if (IS.getProcessor(0)==null) {
+//			IJ.showMessage("Zero Null ");
+//		} 
+//		if (IS.getProcessor(1)==null) {
+//			IJ.showMessage("One Null ");
+//		}
 		
 		IJ.showStatus("Setting up TrackBuiling");
 		ep= new ExtractionParameters();
@@ -56,6 +56,7 @@ public class Track_Extractor implements PlugIn{
 			
 		}
 		catch (Exception e) {
+			tb.comm.message(e.getMessage(), VerbLevel.verb_error);
 			TextWindow tw = new TextWindow("Error", tb.comm.outString, 500, 500);
 		}
 		
