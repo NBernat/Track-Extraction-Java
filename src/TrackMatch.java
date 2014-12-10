@@ -9,6 +9,10 @@ import java.util.Vector;
 public class TrackMatch {
 	
 	/**
+	 * The TrackBuilder which is using this TrackMatch
+	 */
+	TrackBuilder TB;
+	/**
 	 * The track to which points are matched 
 	 */
 	Track track;
@@ -35,12 +39,13 @@ public class TrackMatch {
 	 * @param points Points matched to the track
 	 * @param numMatches Maximum number of matches stored
 	 */
-	public TrackMatch(Track track, int numMatches){
+	public TrackMatch(Track track, int numMatches, TrackBuilder TB){
 		this.track = track;
 		matchPts = new TrackPoint[numMatches];
 		dist2MatchPts = new Double[numMatches];
 		validMatch = new int[numMatches];
 		numStoredMatches = numMatches;
+		this.TB = TB;
 	}
 	
 	
@@ -50,13 +55,14 @@ public class TrackMatch {
 	 * @param points Points matched to the track
 	 * @param numMatches Maximum number of matches stored
 	 */
-	public TrackMatch(Track track, Vector<TrackPoint> points, int numMatches) {
+	public TrackMatch(Track track, Vector<TrackPoint> points, int numMatches, TrackBuilder TB) {
 		this.track = track;
 		matchPts = new TrackPoint[numMatches];
 		dist2MatchPts = new Double[numMatches];
 		validMatch = new int[numMatches];
 		numStoredMatches = numMatches;
 		matchPointsToTrack(points);
+		this.TB = TB;
 	}
 	
 	/**
@@ -146,6 +152,7 @@ public class TrackMatch {
 				return matchPts[i];
 			}
 		}
+		TB.comm.message("Did not find top match point", VerbLevel.verb_debug);
 		return null;
 	}
 	
@@ -159,7 +166,7 @@ public class TrackMatch {
 		if (topPoint==null){
 			return -1;
 		}
-		if (matchPts[0].getNumMatches()>1) {
+		if (topPoint.getNumMatches()>1) {
 			return 1;
 		}
 		return 0;
@@ -172,18 +179,23 @@ public class TrackMatch {
 	 * @return Index of the first TrackMatch whose primary pointMatch is the same as this TrackMatch's primary pointMatch 
 	 */
 	public int findCollidingTrackMatch(Vector<TrackMatch> matches, int startInd){
-		
+		TB.comm.message("findCollidingTrackMatch called on track "+track.trackID, VerbLevel.verb_debug);
 		int ind = -1;
 		boolean notFound = true;
 		if (matches.isEmpty()){
+			TB.comm.message("Match list empty", VerbLevel.verb_debug);
 			return -2;
+		} else {
+			TB.comm.message("Of "+matches.size()+" matches, we're starting at number "+startInd, VerbLevel.verb_debug);
 		}
+		
 		if (startInd<matches.size()){
+			TB.comm.message("Searching list for collision match...", VerbLevel.verb_debug);
 			ListIterator<TrackMatch> tmIt = matches.listIterator(startInd);
 			while (notFound && tmIt.hasNext()) {
 				int curInd = tmIt.nextIndex();
 				TrackMatch mCheck = tmIt.next();
-				if (mCheck.getTopMatchPoint().pointID==getTopMatchPoint().pointID) {
+				if (mCheck.getTopMatchPoint()!=null && mCheck.getTopMatchPoint().pointID==getTopMatchPoint().pointID) {
 					ind = curInd;
 					notFound = false;
 				}
@@ -195,9 +207,10 @@ public class TrackMatch {
 	
 	public void clearAllMatches(){
 		//Set all to invalid, decrement the primary point's point count
+		getTopMatchPoint().setNumMatches(getTopMatchPoint().getNumMatches()-1);
 		for (int i=0; i<numStoredMatches; i++) {
 			validMatch[i]=0;
-			getTopMatchPoint().setNumMatches(getTopMatchPoint().getNumMatches()-1);
+			
 		}
 	}
 	

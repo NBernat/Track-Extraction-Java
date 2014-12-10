@@ -50,13 +50,14 @@ public class Track_Extractor implements PlugIn{
 		try {
 			tb.buildTracks();
 			
-			int trackInd = 5;
+			int trackInd = 1;
+			tb.comm.message("", messVerb);
 			IJ.showStatus("Playing Track "+trackInd);
 			tb.finishedTracks.get(trackInd).playMovie();
 			
 		}
 		catch (Exception e) {
-			tb.comm.message(e.getMessage(), VerbLevel.verb_error);
+			tb.comm.message(e.toString(), VerbLevel.verb_error);
 			TextWindow tw = new TextWindow("Error", tb.comm.outString, 500, 500);
 		}
 		

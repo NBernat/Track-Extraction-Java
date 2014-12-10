@@ -164,7 +164,7 @@ public class PointExtractor {
 	
 	
 	public PointExtractor(ImageStack stack, Communicator comm, ExtractionParameters ep){
-		init(1, stack, comm, ep);
+		init(ep.startFrame, stack, comm, ep);
 	}
 	
 	//TODO
@@ -456,7 +456,7 @@ public class PointExtractor {
 	    comm.message("extract points called", VerbLevel.verb_debug);
 	    
 	    pointTable = CVUtils.findPoints(threshIm, ep);
-	    comm.message("Frame "+currentFrameNum+": "+pointTable.getCounter()+" points in ResultsTable", VerbLevel.verb_debug);
+	    comm.message("Frame "+currentFrameNum+": "+pointTable.getCounter()+" points in ResultsTable", VerbLevel.verb_message);
 	    
 	    extractedPoints = rt2TrackPoints(pointTable, currentFrameNum);
 	    

@@ -35,7 +35,7 @@ public class ExtractionParameters {
 	
 	
 	//TODO
-	int startFrame = 0;
+	int startFrame = 300;
 	int endFrame = 500;
 	//_frame_normalization_methodT fnm = _frame_normalization_methodT._frame_none;
 	
