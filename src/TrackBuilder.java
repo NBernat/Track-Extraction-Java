@@ -146,8 +146,8 @@ public class TrackBuilder {
 		//Move all active tracks to finished
 		finishedTracks.addAll(activeTracks);
 		activeTracks.removeAll(activeTracks);
-		finishedCollisions.addAll(activeCollisions);
-		activeCollisions.removeAll(finishedCollisions);
+//		finishedCollisions.addAll(activeCollisions);
+//		activeCollisions.removeAll(finishedCollisions);
 	}
 	
 	
@@ -554,7 +554,7 @@ public class TrackBuilder {
 		while (tpIt.hasNext()) {
 			TrackPoint pt = tpIt.next();
 			if (pt.getNumMatches()==0) {
-				activeTracks.addElement(new Track(pt));
+				activeTracks.addElement(new Track(pt, this));
 				numNew++;
 			} else {
 				comm.message("TrackPoint "+pt.pointID+" has TrackMatches, but remained active after matches were added to tracks", VerbLevel.verb_warning);

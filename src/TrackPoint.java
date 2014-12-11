@@ -1,4 +1,6 @@
 import ij.ImagePlus;
+import ij.gui.ImageWindow;
+import ij.process.ImageProcessor;
 
 import java.awt.Rectangle;
 import java.util.ListIterator;
@@ -26,7 +28,7 @@ public class TrackPoint {
 	/**
 	 * Index of the frame containing this point 
 	 */
-	double frameNum;
+	int frameNum;
 	/**
 	 * Area inside the countour
 	 */
@@ -35,10 +37,6 @@ public class TrackPoint {
 	 * Covariance matrix for the image
 	 */
 	double[] covariance; 
-	/**
-	 * Image of maggot
-	 */
-	ImagePlus im;
 	/**
 	 * Used to generate unique IDs for the TrackPoints
 	 * <p> 
@@ -49,7 +47,11 @@ public class TrackPoint {
 	/**
 	 * The number of tracks that the point is initially matched to
 	 */
-	private int numMatches;
+	protected int numMatches;
+	/**
+	 * The track to which this point belongs
+	 */
+	Track track;
 	
 	////////////////////////////////////
 	// Constructors & Related Methods
@@ -79,6 +81,7 @@ public class TrackPoint {
 		frameNum = frame;
 		pointID = ID;
 		numMatches = 0;
+		track = null;
 		
 	}
 	
@@ -162,7 +165,7 @@ public class TrackPoint {
 	}
 	
 	public ImagePlus getIm(){
-		return im;
+		return null;
 	}
 	
 	public void setNumMatches(int num){
@@ -172,6 +175,36 @@ public class TrackPoint {
 	public int getNumMatches() {
 		return numMatches;
 	}
+		
+	public void setTrack(Track track){
+		this.track = track;
+	}
+	
+	public ImageWindow showTrackPoint(ImageWindow window){
+		return showTrackPoint(window, "Track point "+pointID);
+	}
+	
+	
+	public ImageWindow showTrackPoint(ImageWindow window, String label){
+		ImageProcessor trPtIm = track.tb.pe.imageStack.getProcessor(frameNum).duplicate();
+		trPtIm.setRoi(rect);
+		ImageProcessor crIm = trPtIm.crop();
+		//crIm.resize(crIm.getWidth()*tb.ep.trackZoomFac);
+		ImagePlus img = new ImagePlus("", crIm);
+		track.tb.comm.message("Showing Track point...", VerbLevel.verb_message);
+		if (window==null){
+			img.show();
+			ImageWindow win = img.getWindow();
+			win.setTitle(label);
+			return win;
+
+		}else {
+			window.setImage(img);
+			//window.getCanvas().setMagnification(tb.ep.trackZoomFac);
+			return window;
+		}
+	}
+
 	
 	//TODO draw methods, openCV?
 	//TODO to&from file?

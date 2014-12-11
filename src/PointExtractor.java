@@ -392,6 +392,13 @@ public class PointExtractor {
 		
 		threshIm = (ImagePlus) backSubIm.clone();
 		threshIm.getProcessor().threshold((int) ep.globalThreshValue);
+//		if (lastFrameExtracted%25==0) {
+//			threshIm.show();
+//		}
+		
+		
+		
+		
 //		
 //	    comm.message ("pe threshto0", VerbLevel.verb_debug);
 //	    if (ep.useGlobalThresh) {
@@ -455,47 +462,22 @@ public class PointExtractor {
 		
 	    comm.message("extract points called", VerbLevel.verb_debug);
 	    
-	    pointTable = CVUtils.findPoints(threshIm, ep);
+	    boolean showResults =  ep.showSampleData>=2 && ep.sampleInd==frameNum;
+	    if (showResults) {
+	    	threshIm.show();
+	    }
+	    pointTable = CVUtils.findPoints(threshIm, ep, showResults);
 	    comm.message("Frame "+currentFrameNum+": "+pointTable.getCounter()+" points in ResultsTable", VerbLevel.verb_message);
 	    
-	    extractedPoints = rt2TrackPoints(pointTable, currentFrameNum);
+	    
+	    extractedPoints = CVUtils.rt2TrackPoints(pointTable, currentFrameNum, comm, ep);
 	    
 	    String s = "Frame "+currentFrameNum+": Extracted "+extractedPoints.size()+" new points";
 	    comm.message(s, VerbLevel.verb_message);
 	    		
 	}
 	
-	/**
-	 * Adds a row from the results table to the list of TrackPoints, if the point is the proper size according to the extraction parameters
-	 * @param rt Results Table containing point info 
-	 * @param frameNum Frame number
-	 * @return List of Trackpoints within the 
-	 */
-	public Vector<TrackPoint> rt2TrackPoints (ResultsTable rt, int frameNum) {
-		
-		Vector<TrackPoint> tp = new Vector<TrackPoint>();
-		
-		for (int row=1; row<rt.getCounter(); row++) {
-			comm.message("Gathering info for Point "+row+" from ResultsTable", VerbLevel.verb_debug);
-			double area = rt.getValueAsDouble(ResultsTable.AREA, row);
-			comm.message("Point "+row+": area="+area, VerbLevel.verb_debug);
-			double x = rt.getValueAsDouble(ResultsTable.X_CENTROID, row);
-			double y = rt.getValueAsDouble(ResultsTable.Y_CENTROID, row);
-			double width = rt.getValueAsDouble(ResultsTable.ROI_WIDTH, row);
-			double height = rt.getValueAsDouble(ResultsTable.ROI_HEIGHT, row);
-			double boundX = rt.getValueAsDouble(ResultsTable.ROI_X, row);
-			double boundY = rt.getValueAsDouble(ResultsTable.ROI_Y, row);
-			Rectangle rect = new Rectangle((int)boundX, (int)boundY, (int)width, (int)height);
-			
-			comm.message("Converting Point "+row+" to TrackPoint", VerbLevel.verb_debug);
-			if (ep.properPointSize(area)) {
-				tp.add(new TrackPoint(x,y,rect,area,frameNum));
-			}
-		}
-		
-		return tp;
-		
-	}
+
 	
 	
 	//TODO splitPoint

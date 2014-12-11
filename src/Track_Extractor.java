@@ -46,19 +46,31 @@ public class Track_Extractor implements PlugIn{
 		IJ.showStatus("Setting up TrackBuiling");
 		ep= new ExtractionParameters();
 		IJ.showStatus("Building Tracks");
+		
+		// 
 		tb = new TrackBuilder(IS, ep);
+		
 		try {
+			
 			tb.buildTracks();
 			
-			int trackInd = 1;
-			tb.comm.message("", messVerb);
-			IJ.showStatus("Playing Track "+trackInd);
-			tb.finishedTracks.get(trackInd).playMovie();
+			if (ep.showSampleData>=1){
+				int trackInd = ep.sampleInd;
+				tb.comm.message("Number of Finished Tracks: "+tb.finishedTracks.size(), VerbLevel.verb_message);
+				IJ.showStatus("Playing Track "+trackInd);
+				tb.comm.message("Playing TrackID "+tb.finishedTracks.get(trackInd).trackID, VerbLevel.verb_message);
+				tb.finishedTracks.get(trackInd).playMovie(trackInd);
+	
+				tb.comm.message("Completed successfully!", VerbLevel.verb_message);
+				if (ep.showSampleData>=2){
+					TextWindow tw = new TextWindow("Communicator Output", tb.comm.outString, 500, 500);
+				}
+			}
 			
 		}
 		catch (Exception e) {
 			tb.comm.message(e.toString(), VerbLevel.verb_error);
-			TextWindow tw = new TextWindow("Error", tb.comm.outString, 500, 500);
+			TextWindow tw = new TextWindow("Communicator Output: Error", tb.comm.outString, 500, 500);
 		}
 		
 		

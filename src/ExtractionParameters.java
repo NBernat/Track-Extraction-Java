@@ -33,11 +33,25 @@ public class ExtractionParameters {
 	int increment = 1;
 	
 	
+	///////////////////////////
+	// Sample data display
+	///////////////////////////
 	
+	/**
+	 * 0=nothing
+	 * 1 = play track specified by sampleInd
+	 * 2 = 1, plus show ResultsTable & thresholded image of frame specified by sampleInd
+	 */
+	int showSampleData = 1; 
+	int sampleInd = 5;
 	//TODO
-	int startFrame = 300;
-	int endFrame = 500;
+	int startFrame = 1;
+	int endFrame = 200;
 	//_frame_normalization_methodT fnm = _frame_normalization_methodT._frame_none;
+	//TODO
+//	int trackImHeight = 51;
+//	int trackImWidth = 51;
+	int trackZoomFac = 10;
 	
 	
 	///////////////////////////
@@ -81,11 +95,13 @@ public class ExtractionParameters {
     /**
      * Minimum blob area
      */
-    double minArea = 10;
+    double minArea = 50;
     /**
      * Maximum blob area
      */
-    double maxArea = 500;
+    double maxArea = 1000;
+    //TODO
+    int roiPadding = 15;
     
     
 	public ExtractionParameters(){

@@ -1,6 +1,10 @@
+import ij.IJ;
 import ij.ImagePlus;
+import ij.ImageStack;
 import ij.gui.ImageWindow;
+import ij.process.ImageProcessor;
 
+import java.awt.Rectangle;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.ListIterator;
@@ -26,9 +30,24 @@ public class Track {
 	//isActive?
 	
 	/**
+	 * Maximum ROI height, for playing movies
+	 */
+	int maxHeight;
+	
+	/**
+	 * Maximum image height, for playing movies
+	 */
+	int maxWidth;
+	
+	
+	/**
 	 * Length of time to pause between frames, ie 1/frameRate, in ms
 	 */
 	int frameLength = 71;//FrameRate=~14fps
+	/**
+	 * Access to the TrackBuilder
+	 */
+	TrackBuilder tb;
 	
 		
 	///////////////////////////
@@ -38,14 +57,21 @@ public class Track {
 		points = new Vector<TrackPoint>();
 		trackID = lastIDNum;
 		lastIDNum++;
+
+		maxHeight=0;
+		maxWidth=0;
 	}
 	
 	
-	public Track(TrackPoint firstPt){
+	public Track(TrackPoint firstPt, TrackBuilder tb){
 		points = new Vector<TrackPoint>();
 		points.add(firstPt);
 		trackID = lastIDNum;
 		lastIDNum++;
+		this.tb = tb;
+		
+		maxHeight=0;
+		maxWidth=0;
 	}
 	
 	///////////////////////////
@@ -58,6 +84,16 @@ public class Track {
 	 */
 	public void extendTrack(TrackPoint pt){
 		points.add(pt);
+		pt.setTrack(this);
+		
+		if(pt.rect.height>maxHeight){
+			maxHeight = pt.rect.height; 
+		}
+		
+		if(pt.rect.width>maxWidth){
+			maxWidth = pt.rect.width; 
+		}
+		
 	}
 	
 	///////////////////////////
@@ -146,17 +182,69 @@ public class Track {
 	//TODO draw methods
 	//TODO playMovie method
 	
-	public void playMovie(){
+	
+	public void playMovie() {
+		playMovie(trackID);
+	}
+	
+	public void playMovie(int labelInd){
 		
+		tb.comm.message("This track has "+points.size()+"points", VerbLevel.verb_message);
 		ListIterator<TrackPoint> tpIt = points.listIterator();
 		if (tpIt.hasNext()) {
-			ImagePlus firstIm = tpIt.next().getIm();
-			firstIm.show();
-			ImageWindow window = firstIm.getWindow(); 
+		
+			IJ.showMessage("Playing track"+labelInd);
+			TrackPoint point = points.firstElement();
+//			ImageWindow window = point.showTrackPoint(null,"Track "+labelInd+": Frames "+points.firstElement().frameNum+"-"+points.lastElement().frameNum);
+			
+			//Remove vvv
+			
+			ImageProcessor trPtIm = tb.pe.imageStack.getProcessor(point.frameNum).duplicate();
+			trPtIm.setRoi(point.rect);
+			ImageProcessor crIm = trPtIm.crop();
+			//crIm.resize(crIm.getWidth()*tb.ep.trackZoomFac);
+			ImagePlus img = new ImagePlus("", crIm);
+			
+//			ImageStack trackStack = new ImageStack();
+//			trackStack.addSlice(crIm);
+//			img.getProcessor().drawDot((int)point.x, (int)point.y);
+			
+			img.show();
+			//Show the rest of the images
+			ImageWindow window = img.getWindow();
+			window.setTitle("Track "+labelInd+": Frames "+points.firstElement().frameNum+"-"+points.lastElement().frameNum);
+			
+//			Rectangle rect = window.getBounds(null);
+//			window.setBounds(x, y, width, height);
+//			window.getCanvas().setMagnification(tb.ep.trackZoomFac);
+			
+			//Remove ^^^
+			
+			
 			while(tpIt.hasNext()){
-				window.updateImage(tpIt.next().getIm());
+				point = tpIt.next();
+//				point.showTrackPoint(window, "Track "+labelInd+": Frames "+points.firstElement().frameNum+"-"+points.lastElement().frameNum);
+				
+				
+				//Remove vvv
+				trPtIm = tb.pe.imageStack.getProcessor(point.frameNum).duplicate();
+				trPtIm.setRoi(point.rect);
+				crIm = trPtIm.crop();
+//				int centerX = (int)(point.x-point.rect.x);
+//				int centerY = (int)(point.y-point.rect.y);
+//				trackStack.addSlice(CVUtils.padAndCenter(new ImagePlus("Track "+trackID+" frame "+point.frameNum,crIm), tb.ep.trackImWidth, tb.ep.trackImHeight, centerX, centerY));
+				img = new ImagePlus("", crIm);
+				window.setImage(img);
+				window.getCanvas().setMagnification(tb.ep.trackZoomFac);
+//				img.getProcessor().drawDot((int)point.x, (int)point.y);
+				//Remove ^^^
 				pause(frameLength);
 			}
+				
+//			ImagePlus trackPlus = new ImagePlus("Track "+trackID ,trackStack);
+//			trackPlus.show();
+				
+			
 		}
 	}
 	

@@ -1,4 +1,11 @@
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
+import java.util.Vector;
+
 import ij.ImagePlus;
+import ij.gui.Roi;
 import ij.measure.Measurements;
 import ij.measure.ResultsTable;
 import ij.plugin.filter.GaussianBlur;
@@ -120,17 +127,19 @@ public class CVUtils {
 	 * @param ep Extraction Parameters
 	 * @return A ResultsTable with the appropriate info
 	 */
-	static ResultsTable findPoints(ImagePlus threshIm, ExtractionParameters ep) {
+	static ResultsTable findPoints(ImagePlus threshIm, ExtractionParameters ep, boolean showResults) {
 		
-		int options = getPointFindingOptions();
+		int options = getPointFindingOptions(showResults);
 		int measurements = getPointFindingMeasurements();
 		ResultsTable rt = new ResultsTable();
 		
 		ParticleAnalyzer partAn = new ParticleAnalyzer(options, measurements, rt, ep.minArea, ep.maxArea);
 		
 		//Populate the results table
+		Roi r = threshIm.getRoi();
+		threshIm.deleteRoi();
 		partAn.analyze(threshIm);
-		
+		threshIm.setRoi(r);
 		return rt;
 	}
 	
@@ -138,10 +147,15 @@ public class CVUtils {
 	 * Returns a flag word created by ORing the appropriate constants (SHOW_RESULTS, EXCLUDE_EDGE_PARTICLES, etc.)
 	 * @return
 	 */
-	public static int getPointFindingOptions() {
+	public static int getPointFindingOptions( boolean showResults) {
 		
 		//Don't show anything, don't exclude edgepoints. basically we have no special options
 		int opInt=0;
+		if (showResults) {
+			opInt+=ParticleAnalyzer.SHOW_RESULTS;
+		} else {
+			opInt+=ParticleAnalyzer.SHOW_NONE;
+		}
 		
 		return opInt;
 	}
@@ -167,6 +181,66 @@ public class CVUtils {
 		measInt += Measurements.AREA;
 		
 		return measInt;
+	}
+	
+	
+	/**
+	 * Adds a row from the results table to the list of TrackPoints, if the point is the proper size according to the extraction parameters
+	 * @param rt Results Table containing point info 
+	 * @param frameNum Frame number
+	 * @return List of Trackpoints within the 
+	 */
+	public static Vector<TrackPoint> rt2TrackPoints (ResultsTable rt, int frameNum, Communicator comm, ExtractionParameters ep) {
+		
+		Vector<TrackPoint> tp = new Vector<TrackPoint>();
+		
+		for (int row=1; row<rt.getCounter(); row++) {
+			comm.message("Gathering info for Point "+row+" from ResultsTable", VerbLevel.verb_debug);
+			double area = rt.getValueAsDouble(ResultsTable.AREA, row);
+			comm.message("Point "+row+": area="+area, VerbLevel.verb_debug);
+			double x = rt.getValueAsDouble(ResultsTable.X_CENTROID, row)-1;
+			double y = rt.getValueAsDouble(ResultsTable.Y_CENTROID, row)-1;
+			double width = rt.getValueAsDouble(ResultsTable.ROI_WIDTH, row)-1;
+			double height = rt.getValueAsDouble(ResultsTable.ROI_HEIGHT, row)-1;
+			double boundX = rt.getValueAsDouble(ResultsTable.ROI_X, row)-1;
+			double boundY = rt.getValueAsDouble(ResultsTable.ROI_Y, row)-1;
+			//Rectangle rect = new Rectangle((int)boundX-ep.roiPadding, (int)boundY-ep.roiPadding, (int)width+2*ep.roiPadding, (int)height+2*ep.roiPadding);
+			//Rectangle rect = new Rectangle((int)boundX, (int)boundY, (int)width, (int)height);
+			Rectangle rect = new Rectangle((int)x-ep.roiPadding, (int)y-ep.roiPadding, (int)2*ep.roiPadding, (int)2*ep.roiPadding);
+			
+			
+			comm.message("Converting Point "+row+" to TrackPoint", VerbLevel.verb_debug);
+			if (ep.properPointSize(area)) {
+				tp.add(new TrackPoint(x,y,rect,area,frameNum));
+			}
+		}
+		
+		return tp;
+		
+	}
+	
+	
+	
+	
+	
+	
+	
+	public static ImageProcessor padAndCenter(ImagePlus image, int newWidth, int newHeight, int centerX, int centerY){
+		
+		BufferedImage newIm = new BufferedImage(newWidth, newHeight, image.getBufferedImage().getType());
+		Graphics g = newIm.getGraphics();
+		g.setColor(Color.black);
+		g.fillRect(0,0,newWidth,newHeight);
+		int offsetX = (newWidth/2)+1-centerX;
+		int offsetY = (newHeight/2)+1-centerY;
+		g.drawImage(newIm, offsetX, offsetY, null);
+		
+		ImagePlus retIm = new ImagePlus("Padded "+image.getTitle(), newIm);
+		
+		return retIm.getProcessor();
+		
+		
+		
 	}
 	
 	
