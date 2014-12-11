@@ -51,7 +51,7 @@ public class TrackPoint {
 	/**
 	 * The track to which this point belongs
 	 */
-	Track track;
+//	Track track;
 	
 	////////////////////////////////////
 	// Constructors & Related Methods
@@ -81,7 +81,7 @@ public class TrackPoint {
 		frameNum = frame;
 		pointID = ID;
 		numMatches = 0;
-		track = null;
+//		track = null;
 		
 	}
 	
@@ -176,34 +176,34 @@ public class TrackPoint {
 		return numMatches;
 	}
 		
-	public void setTrack(Track track){
-		this.track = track;
-	}
+//	public void setTrack(Track track){
+//		this.track = track;
+//	}
 	
-	public ImageWindow showTrackPoint(ImageWindow window){
-		return showTrackPoint(window, "Track point "+pointID);
-	}
-	
-	
-	public ImageWindow showTrackPoint(ImageWindow window, String label){
-		ImageProcessor trPtIm = track.tb.pe.imageStack.getProcessor(frameNum).duplicate();
-		trPtIm.setRoi(rect);
-		ImageProcessor crIm = trPtIm.crop();
-		//crIm.resize(crIm.getWidth()*tb.ep.trackZoomFac);
-		ImagePlus img = new ImagePlus("", crIm);
-		track.tb.comm.message("Showing Track point...", VerbLevel.verb_message);
-		if (window==null){
-			img.show();
-			ImageWindow win = img.getWindow();
-			win.setTitle(label);
-			return win;
-
-		}else {
-			window.setImage(img);
-			//window.getCanvas().setMagnification(tb.ep.trackZoomFac);
-			return window;
-		}
-	}
+//	public ImageWindow showTrackPoint(ImageWindow window){
+//		return showTrackPoint(window, "Track point "+pointID);
+//	}
+//	
+//	
+//	public ImageWindow showTrackPoint(ImageWindow window, String label){
+//		ImageProcessor trPtIm = track.tb.pe.imageStack.getProcessor(frameNum).duplicate();
+//		trPtIm.setRoi(rect);
+//		ImageProcessor crIm = trPtIm.crop();
+//		//crIm.resize(crIm.getWidth()*tb.ep.trackZoomFac);
+//		ImagePlus img = new ImagePlus("", crIm);
+//		track.tb.comm.message("Showing Track point...", VerbLevel.verb_message);
+//		if (window==null){
+//			img.show();
+//			ImageWindow win = img.getWindow();
+//			win.setTitle(label);
+//			return win;
+//
+//		}else {
+//			window.setImage(img);
+//			//window.getCanvas().setMagnification(tb.ep.trackZoomFac);
+//			return window;
+//		}
+//	}
 
 	
 	//TODO draw methods, openCV?

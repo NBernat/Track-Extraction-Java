@@ -4,6 +4,7 @@ import ij.ImageStack;
 import ij.gui.ImageWindow;
 import ij.process.ImageProcessor;
 
+import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.util.Collections;
 import java.util.Iterator;
@@ -84,7 +85,7 @@ public class Track {
 	 */
 	public void extendTrack(TrackPoint pt){
 		points.add(pt);
-		pt.setTrack(this);
+//		pt.setTrack(this);
 		
 		if(pt.rect.height>maxHeight){
 			maxHeight = pt.rect.height; 
@@ -193,7 +194,7 @@ public class Track {
 		ListIterator<TrackPoint> tpIt = points.listIterator();
 		if (tpIt.hasNext()) {
 		
-			IJ.showMessage("Playing track"+labelInd);
+			//IJ.showMessage("Playing track "+labelInd);
 			TrackPoint point = points.firstElement();
 //			ImageWindow window = point.showTrackPoint(null,"Track "+labelInd+": Frames "+points.firstElement().frameNum+"-"+points.lastElement().frameNum);
 			
@@ -212,6 +213,9 @@ public class Track {
 			img.show();
 			//Show the rest of the images
 			ImageWindow window = img.getWindow();
+			Dimension d = new Dimension(tb.ep.trackWindowWidth, tb.ep.trackWindowHeight);
+			
+			window.setSize(d);
 			window.setTitle("Track "+labelInd+": Frames "+points.firstElement().frameNum+"-"+points.lastElement().frameNum);
 			
 //			Rectangle rect = window.getBounds(null);
@@ -235,7 +239,7 @@ public class Track {
 //				trackStack.addSlice(CVUtils.padAndCenter(new ImagePlus("Track "+trackID+" frame "+point.frameNum,crIm), tb.ep.trackImWidth, tb.ep.trackImHeight, centerX, centerY));
 				img = new ImagePlus("", crIm);
 				window.setImage(img);
-				window.getCanvas().setMagnification(tb.ep.trackZoomFac);
+//				window.getCanvas().setMagnification(tb.ep.trackZoomFac);
 //				img.getProcessor().drawDot((int)point.x, (int)point.y);
 				//Remove ^^^
 				pause(frameLength);

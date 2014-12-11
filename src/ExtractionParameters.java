@@ -43,14 +43,14 @@ public class ExtractionParameters {
 	 * 2 = 1, plus show ResultsTable & thresholded image of frame specified by sampleInd
 	 */
 	int showSampleData = 1; 
-	int sampleInd = 5;
+	int sampleInd = 10;
 	//TODO
 	int startFrame = 1;
 	int endFrame = 200;
 	//_frame_normalization_methodT fnm = _frame_normalization_methodT._frame_none;
 	//TODO
-//	int trackImHeight = 51;
-//	int trackImWidth = 51;
+	int trackWindowHeight = 250;
+	int trackWindowWidth = 250;
 	int trackZoomFac = 10;
 	
 	

@@ -5,6 +5,7 @@ import ij.ImagePlus;
 import ij.ImageStack;
 //import ij.ImageStack;
 import ij.WindowManager;
+import ij.gui.GenericDialog;
 import ij.plugin.PlugIn;
 import ij.text.TextWindow;
 
@@ -23,7 +24,7 @@ public class Track_Extractor implements PlugIn{
 	
 	public void run(String arg) {
 		
-		
+		//GUItest.main();
 		
 		IJ.showStatus("Getting stack");
 		//IS = WindowManager.getCurrentImage();
@@ -53,6 +54,25 @@ public class Track_Extractor implements PlugIn{
 		try {
 			
 			tb.buildTracks();
+			
+			
+			GenericDialog gd = new GenericDialog("Track chooser");
+			gd.addMessage("Choose a track (1-"+tb.finishedTracks.size()+")");
+			gd.addMessage("Then press enter");
+			gd.addMessage("To close, X out of this box");
+			gd.addNumericField("Track", 1, 0);
+			
+			while (!gd.wasCanceled()){
+				gd.showDialog();
+				//EXECUTE THIS ON "OKAY" PRESS
+				int trackInd = (int)gd.getNextNumber();
+				if (trackInd<=tb.finishedTracks.size() && !gd.wasCanceled()){
+					tb.finishedTracks.get(trackInd).playMovie(trackInd);
+				}
+				
+			}
+			
+			
 			
 			if (ep.showSampleData>=1){
 				int trackInd = ep.sampleInd;
