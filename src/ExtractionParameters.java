@@ -54,6 +54,8 @@ public class ExtractionParameters {
 	int trackZoomFac = 10;
 	
 	
+	int matchSpill = 0;
+	
 	///////////////////////////
 	// Background Parameters
 	///////////////////////////

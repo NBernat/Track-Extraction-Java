@@ -67,26 +67,28 @@ public class Track_Extractor implements PlugIn{
 				//EXECUTE THIS ON "OKAY" PRESS
 				int trackInd = (int)gd.getNextNumber();
 				if (trackInd<=tb.finishedTracks.size() && !gd.wasCanceled()){
-					tb.finishedTracks.get(trackInd).playMovie(trackInd);
+					Track track = tb.finishedTracks.get(trackInd);
+					track.playMovie(trackInd);
+					TextWindow tw = new TextWindow("Match Spill for frame ", tb.matchSpills.get(track.points.lastElement().frameNum).outString, 500, 500);
 				}
 				
 			}
 			
 			
 			
-			if (ep.showSampleData>=1){
-				int trackInd = ep.sampleInd;
-				tb.comm.message("Number of Finished Tracks: "+tb.finishedTracks.size(), VerbLevel.verb_message);
-				IJ.showStatus("Playing Track "+trackInd);
-				tb.comm.message("Playing TrackID "+tb.finishedTracks.get(trackInd).trackID, VerbLevel.verb_message);
-				tb.finishedTracks.get(trackInd).playMovie(trackInd);
-	
-				tb.comm.message("Completed successfully!", VerbLevel.verb_message);
-				if (ep.showSampleData>=2){
-					TextWindow tw = new TextWindow("Communicator Output", tb.comm.outString, 500, 500);
-				}
-			}
-			
+//			if (ep.showSampleData>=1){
+//				int trackInd = ep.sampleInd;
+//				tb.comm.message("Number of Finished Tracks: "+tb.finishedTracks.size(), VerbLevel.verb_message);
+//				IJ.showStatus("Playing Track "+trackInd);
+//				tb.comm.message("Playing TrackID "+tb.finishedTracks.get(trackInd).trackID, VerbLevel.verb_message);
+//				tb.finishedTracks.get(trackInd).playMovie(trackInd);
+//	
+//				tb.comm.message("Completed successfully!", VerbLevel.verb_message);
+//				if (ep.showSampleData>=2){
+//					TextWindow tw = new TextWindow("Communicator Output", tb.comm.outString, 500, 500);
+//				}
+//			}
+//			
 		}
 		catch (Exception e) {
 			tb.comm.message(e.toString(), VerbLevel.verb_error);

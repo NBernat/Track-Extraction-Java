@@ -1,5 +1,6 @@
 import ij.IJ;
 import ij.ImageStack;
+import ij.text.TextWindow;
 
 import java.util.Arrays;
 import java.util.ListIterator;
@@ -78,6 +79,7 @@ public class TrackBuilder {
 	 */
 	Communicator comm;
 	
+	Vector<Communicator> matchSpills;
 	
 	////////////////////////////
 	// Driver and Constructors
@@ -109,6 +111,7 @@ public class TrackBuilder {
 		
 		//Set status parameters
 		this.frameNum = frameNum;
+		matchSpills = new Vector<Communicator>();
 		
 		//TODO Put this here?
 		//Build the tracks 
@@ -230,12 +233,15 @@ public class TrackBuilder {
 	 */
 	private void makeMatches(){
 		
+		Communicator matchComm = new Communicator();
+		
 		matches = new Vector<TrackMatch>();
 
 		//Match points to Tracks
 		for(int i=0; i<activeTracks.size(); i++){
 			TrackMatch newMatch = new TrackMatch(activeTracks.get(i), activePts, ep.numPtsInTrackMatch, this);
 			matches.add(newMatch);
+			newMatch.spillInfoToCommunicator(matchComm);
 			//addMatchToPointTable(newMatch);
 		}
 		//Match points to Collisions
@@ -246,6 +252,12 @@ public class TrackBuilder {
 //			//addMatchToPointTable(newMatch);
 //			
 //		}
+		
+		matchSpills.addElement(matchComm);
+		
+		if (ep.matchSpill>0 && frameNum==ep.matchSpill) {
+			TextWindow tw = new TextWindow("Match Spill for frame "+frameNum, matchComm.outString, 500, 500);
+		}
 		
 	}
 	

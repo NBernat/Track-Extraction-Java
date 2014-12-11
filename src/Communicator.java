@@ -22,6 +22,10 @@ public class Communicator {
 		}
 	}
 	
+	public void setVerbosity(VerbLevel verbosity){
+		this.verbosity = verbosity;
+	}
+	
 
 }
 
