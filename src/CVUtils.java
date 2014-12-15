@@ -205,7 +205,7 @@ public class CVUtils {
 			double boundX = rt.getValueAsDouble(ResultsTable.ROI_X, row)-1;
 			double boundY = rt.getValueAsDouble(ResultsTable.ROI_Y, row)-1;
 			Rectangle rect = new Rectangle((int)boundX-ep.roiPadding, (int)boundY-ep.roiPadding, (int)width+2*ep.roiPadding, (int)height+2*ep.roiPadding);
-			//Rectangle rect = new Rectangle((int)boundX, (int)boundY, (int)width, (int)height);
+			//Rectangle rect = new Rectangle((int)boundX-1, (int)boundY-1, (int)width+2, (int)height+2);
 			//Rectangle rect = new Rectangle((int)x-ep.roiPadding, (int)y-ep.roiPadding, (int)2*ep.roiPadding, (int)2*ep.roiPadding);
 			
 			

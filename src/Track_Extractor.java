@@ -57,7 +57,7 @@ public class Track_Extractor implements PlugIn{
 			
 			
 			GenericDialog gd = new GenericDialog("Track chooser");
-			gd.addMessage("Choose a track (1-"+tb.finishedTracks.size()+")");
+			gd.addMessage("Choose a track (0-"+(tb.finishedTracks.size()-1)+")");
 			gd.addMessage("Then press enter");
 			gd.addMessage("To close, X out of this box");
 			gd.addNumericField("Track", 1, 0);
@@ -65,10 +65,15 @@ public class Track_Extractor implements PlugIn{
 			while (!gd.wasCanceled()){
 				gd.showDialog();
 				//EXECUTE THIS ON "OKAY" PRESS
-				int trackInd = (int)gd.getNextNumber();
-				if (trackInd<=tb.finishedTracks.size() && !gd.wasCanceled()){
-					Track track = tb.finishedTracks.get(trackInd);
-					track.playMovie(trackInd);
+				int num = (int)gd.getNextNumber();
+				if (num<=tb.finishedTracks.size() && !gd.wasCanceled()){
+					int trackInd = tb.findIndOfTrack(num);
+					try {
+						Track track = tb.finishedTracks.get(trackInd);
+						track.playMovie();
+					} catch (Exception e) {
+						new TextWindow("Error", "Could not find trackID number "+num, 500, 500);
+					}
 //					TextWindow tw = new TextWindow("Match Spill for frame ", tb.matchSpills.get(track.points.lastElement().frameNum).outString, 500, 500);
 				}
 				

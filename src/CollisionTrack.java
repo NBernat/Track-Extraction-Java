@@ -1,4 +1,11 @@
 
-public class CollisionTrack {
-
+public class CollisionTrack extends Track {
+	
+	
+	
+	
+	
+	
+	
+	
 }

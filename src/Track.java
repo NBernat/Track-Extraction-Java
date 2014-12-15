@@ -1,13 +1,9 @@
-import ij.IJ;
 import ij.ImagePlus;
-import ij.ImageStack;
 import ij.gui.ImageWindow;
 import ij.process.ImageProcessor;
 
 import java.awt.Dimension;
-import java.awt.Rectangle;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.Vector;
 
@@ -41,6 +37,11 @@ public class Track {
 	int maxWidth;
 	
 	
+	Vector<Boolean> isCollision;
+	
+	Vector<Collision> collisions;
+	
+	
 	/**
 	 * Length of time to pause between frames, ie 1/frameRate, in ms
 	 */
@@ -65,14 +66,17 @@ public class Track {
 	
 	
 	public Track(TrackPoint firstPt, TrackBuilder tb){
+		maxHeight=0;
+		maxWidth=0;
+		
 		points = new Vector<TrackPoint>();
-		points.add(firstPt);
+		extendTrack(firstPt);
+//		points.add(firstPt);
+		
 		trackID = lastIDNum;
 		lastIDNum++;
 		this.tb = tb;
 		
-		maxHeight=0;
-		maxWidth=0;
 	}
 	
 	///////////////////////////
@@ -86,6 +90,7 @@ public class Track {
 	public void extendTrack(TrackPoint pt){
 		points.add(pt);
 //		pt.setTrack(this);
+		isCollision.addElement(false);
 		
 		if(pt.rect.height>maxHeight){
 			maxHeight = pt.rect.height; 
@@ -95,6 +100,25 @@ public class Track {
 			maxWidth = pt.rect.width; 
 		}
 		
+	}
+	
+	public void setCollision(int frameNum, Collision coll){
+		
+		int ptInd = frameNum-points.firstElement().frameNum+1;
+		
+		isCollision.set(ptInd, true);
+		
+		collisions.add(coll);
+	}
+	
+	public Collision getCollision(int frameNum){
+		for (int i=1; i<=collisions.size(); i++){
+			Collision colli = collisions.get(i);
+			if (colli.startFrame<=frameNum && (frameNum<=colli.endFrame || colli.endFrame<0) ){
+				return colli;
+			}
+		}
+		return null;
 	}
 	
 	///////////////////////////
@@ -266,6 +290,16 @@ public class Track {
 	     }
 	}
 	
+	
+	public String infoString(){
+		String info = "";
+		
+		info += "Track "+trackID+": "+points.size()+" points,";
+		info += " frames "+points.firstElement().frameNum+"-"+points.lastElement().frameNum;
+		
+		return info;
+		
+	}
 	
 		
 }

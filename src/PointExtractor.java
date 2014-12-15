@@ -228,7 +228,7 @@ public class PointExtractor {
 		}
 		
 		//Calculate the background image
-		calculateBackground();
+//		calculateBackground();
 		
 		//Set the current image and analysis region
 		if (fl.getFrame(frameNum, fnm, normFactor)!=0) {
@@ -241,24 +241,28 @@ public class PointExtractor {
 		assert (currentIm!=null);
 		analysisRegion = fl.ar;
 		
+		
+		backSubIm = currentIm;
+		//VVVVVVVVV delete
 		//Create a background-subtracted image for the current im
-		backSubIm = CVUtils.blitterProcessing(currentIm, backgroundIm, Blitter.SUBTRACT);//IC.run("sub", currentIm, backgroundIm);
-		comm.message("Created background subtracted image when loading frame "+frameNum+" in pe.loadFrame", VerbLevel.verb_debug);
-
-		//Create a foreground image...not sure when the "else" is ever used...
-		if (foregroundIm==null) {
-			comm.message ("Foreground image doesn't exist, cloning background subtracted image", VerbLevel.verb_debug);
-			try {
-				foregroundIm = (ImagePlus) backSubIm.clone();
-			} catch (Exception e) {
-				comm.message("failed clone of background subtracted image", VerbLevel.verb_debug);
-			}
-		} else {
-			comm.message ("Foreground image already exists, taking max of FG im and BS im", VerbLevel.verb_debug);
-			foregroundIm = CVUtils.blitterProcessing(backSubIm, foregroundIm, Blitter.MAX);
-			//foregroundIm = IC.run("max", backSubIm, foregroundIm);
-			
-		}
+//		backSubIm = CVUtils.blitterProcessing(currentIm, backgroundIm, Blitter.SUBTRACT);//IC.run("sub", currentIm, backgroundIm);
+//		comm.message("Created background subtracted image when loading frame "+frameNum+" in pe.loadFrame", VerbLevel.verb_debug);
+//
+//		//Create a foreground image...not sure when the "else" is ever used...
+//		if (foregroundIm==null) {
+//			comm.message ("Foreground image doesn't exist, cloning background subtracted image", VerbLevel.verb_debug);
+//			try {
+//				foregroundIm = (ImagePlus) backSubIm.clone();
+//			} catch (Exception e) {
+//				comm.message("failed clone of background subtracted image", VerbLevel.verb_debug);
+//			}
+//		} else {
+//			comm.message ("Foreground image already exists, taking max of FG im and BS im", VerbLevel.verb_debug);
+//			foregroundIm = CVUtils.blitterProcessing(backSubIm, foregroundIm, Blitter.MAX);
+//			//foregroundIm = IC.run("max", backSubIm, foregroundIm);
+//			
+//		}
+		//^^^^^^^^^^^^^^^^^^^^ delete
 		
 		comm.message("Thresholding image to zero...", VerbLevel.verb_debug);
 		threshToZero();

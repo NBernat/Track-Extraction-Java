@@ -12,7 +12,7 @@ public class Collision {
 	//TODO
 	Vector<Track> outTracks;
 	//TODO
-	CollisionTrack collTrack;
+	Track collTrack; 
 	/**
 	 * First frame where the maggots collide
 	 */
@@ -31,6 +31,7 @@ public class Collision {
 		this.inTracks = inTracks;
 		//collisionPairs.add(new CollisionPair(point));
 		startFrame = frameNum;
+		endFrame=-1;
 	}
 	
 	//TODO addPair method

@@ -219,10 +219,10 @@ public class TrackMatch {
 		comm.setVerbosity(VerbLevel.verb_debug);
 		
 		comm.message(" ", VerbLevel.verb_debug);
-		comm.message("TrackID: "+track.trackID, VerbLevel.verb_debug);
+		comm.message("TrackID: "+track.trackID+" ("+(int)track.points.lastElement().x+", "+(int)track.points.lastElement().y+")", VerbLevel.verb_debug);
 		for (int i=0; i<numStoredMatches; i++){
 			TrackPoint pt = matchPts[i];
-			String s = "MatchPt"+i+": point "+pt.pointID+", ("+pt.x+","+pt.y+"), ";
+			String s = "MatchPt"+i+": point "+pt.pointID+", ("+(int)pt.x+","+(int)pt.y+"), ";
 			s += dist2MatchPts[i]+" pix away from track, ";
 			if (validMatch[i]==0){
 				s += "NOT ";

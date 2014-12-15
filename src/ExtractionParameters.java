@@ -45,8 +45,8 @@ public class ExtractionParameters {
 	int showSampleData = 1; 
 	int sampleInd = 10;
 	//TODO
-	int startFrame = 1;
-	int endFrame = 200;
+	int startFrame = 200;
+	int endFrame = 500;
 	//_frame_normalization_methodT fnm = _frame_normalization_methodT._frame_none;
 	//TODO
 	int trackWindowHeight = 250;
@@ -54,7 +54,8 @@ public class ExtractionParameters {
 	int trackZoomFac = 10;
 	
 	
-	int matchSpill = 0;
+	int[] matchSpill = {7,83,159};
+	boolean dispTrackInfo = true;
 	
 	///////////////////////////
 	// Background Parameters
@@ -103,7 +104,7 @@ public class ExtractionParameters {
      */
     double maxArea = 1000;
     //TODO
-    int roiPadding = 15;
+    int roiPadding = 5;
     
     
 	public ExtractionParameters(){
