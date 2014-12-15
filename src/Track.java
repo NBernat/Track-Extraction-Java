@@ -207,8 +207,11 @@ public class Track {
 			ImagePlus img = new ImagePlus("", crIm);
 			
 //			ImageStack trackStack = new ImageStack();
-//			trackStack.addSlice(crIm);
-//			img.getProcessor().drawDot((int)point.x, (int)point.y);
+//			int centerX = (int)(point.x-point.rect.x);
+//			int centerY = (int)(point.y-point.rect.y);
+//			trackStack.addSlice(CVUtils.padAndCenter(new ImagePlus("Track "+trackID+" frame "+point.frameNum,crIm), tb.ep.trackWindowWidth, tb.ep.trackWindowHeight, centerX, centerY));
+
+			img.getProcessor().drawDot((int)point.x, (int)point.y);
 			
 			img.show();
 			//Show the rest of the images
@@ -234,15 +237,15 @@ public class Track {
 				trPtIm = tb.pe.imageStack.getProcessor(point.frameNum).duplicate();
 				trPtIm.setRoi(point.rect);
 				crIm = trPtIm.crop();
-//				int centerX = (int)(point.x-point.rect.x);
-//				int centerY = (int)(point.y-point.rect.y);
-//				trackStack.addSlice(CVUtils.padAndCenter(new ImagePlus("Track "+trackID+" frame "+point.frameNum,crIm), tb.ep.trackImWidth, tb.ep.trackImHeight, centerX, centerY));
+//				centerX = (int)(point.x-point.rect.x);
+//				centerY = (int)(point.y-point.rect.y);
+//				trackStack.addSlice(CVUtils.padAndCenter(new ImagePlus("Track "+trackID+" frame "+point.frameNum,crIm), tb.ep.trackWindowWidth, tb.ep.trackWindowHeight, centerX, centerY));
 				img = new ImagePlus("", crIm);
 				window.setImage(img);
 //				window.getCanvas().setMagnification(tb.ep.trackZoomFac);
 //				img.getProcessor().drawDot((int)point.x, (int)point.y);
 				//Remove ^^^
-				pause(frameLength);
+				pause(frameLength); 
 			}
 				
 //			ImagePlus trackPlus = new ImagePlus("Track "+trackID ,trackStack);

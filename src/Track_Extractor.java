@@ -69,7 +69,7 @@ public class Track_Extractor implements PlugIn{
 				if (trackInd<=tb.finishedTracks.size() && !gd.wasCanceled()){
 					Track track = tb.finishedTracks.get(trackInd);
 					track.playMovie(trackInd);
-					TextWindow tw = new TextWindow("Match Spill for frame ", tb.matchSpills.get(track.points.lastElement().frameNum).outString, 500, 500);
+//					TextWindow tw = new TextWindow("Match Spill for frame ", tb.matchSpills.get(track.points.lastElement().frameNum).outString, 500, 500);
 				}
 				
 			}

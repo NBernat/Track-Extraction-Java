@@ -1,15 +1,18 @@
-import java.util.ArrayList;
 import java.util.Vector;
 
-
+/**
+ * An object that stores all the information about a collision event
+ * @author Natalie
+ *
+ */
 public class Collision {
 	
 	//TODO
-	Vector<Track> inTracks;
-	//TODO
-	CollisionTrack colTrack;	
+	Vector<Track> inTracks;	
 	//TODO
 	Vector<Track> outTracks;
+	//TODO
+	CollisionTrack collTrack;
 	/**
 	 * First frame where the maggots collide
 	 */
@@ -22,9 +25,7 @@ public class Collision {
 	 * LastFrame with colliding maggots
 	 */
 	int endFrame;
-	/**
-	 */
-	Vector<TrackMatch> colMatches;//usually contains only one; gets relpaced when matched 
+
 	
 	public Collision(Vector<Track> inTracks, TrackPoint point, int frameNum){
 		this.inTracks = inTracks;
