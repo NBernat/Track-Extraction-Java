@@ -1,6 +1,4 @@
 import ij.ImagePlus;
-import ij.gui.ImageWindow;
-import ij.process.ImageProcessor;
 
 import java.awt.Rectangle;
 import java.util.ListIterator;

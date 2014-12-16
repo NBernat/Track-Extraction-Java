@@ -55,13 +55,18 @@ public class Track {
 	///////////////////////////
 	// Constructors
 	///////////////////////////	
-	public Track(){
-		points = new Vector<TrackPoint>();
-		trackID = lastIDNum;
-		lastIDNum++;
-
+	public Track(TrackBuilder tb){
 		maxHeight=0;
 		maxWidth=0;
+		
+		points = new Vector<TrackPoint>();
+		isCollision = new Vector<Boolean>();
+		collisions = new Vector<Collision>(); 
+		
+		trackID = lastIDNum;
+		lastIDNum++;
+		this.tb = tb;
+
 	}
 	
 	
@@ -70,6 +75,9 @@ public class Track {
 		maxWidth=0;
 		
 		points = new Vector<TrackPoint>();
+		isCollision = new Vector<Boolean>();
+		collisions = new Vector<Collision>(); 
+		
 		extendTrack(firstPt);
 //		points.add(firstPt);
 		
@@ -107,8 +115,9 @@ public class Track {
 		int ptInd = frameNum-points.firstElement().frameNum+1;
 		
 		isCollision.set(ptInd, true);
-		
-		collisions.add(coll);
+		if (coll!=null){
+			collisions.add(coll);
+		}
 	}
 	
 	public Collision getCollision(int frameNum){

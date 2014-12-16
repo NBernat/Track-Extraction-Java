@@ -8,7 +8,7 @@ public class Communicator {
 	String lb;
 	
 	public Communicator(){
-		verbosity = VerbLevel.verb_message;
+		verbosity = VerbLevel.verb_debug;
 		outString = "";
 		lb = System.getProperty("line.separator");
 	}

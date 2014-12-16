@@ -1,7 +1,6 @@
 //import ij.IJ;
 import ij.IJ;
 import ij.ImageJ;
-import ij.ImagePlus;
 import ij.ImageStack;
 //import ij.ImageStack;
 import ij.WindowManager;
@@ -97,7 +96,7 @@ public class Track_Extractor implements PlugIn{
 		}
 		catch (Exception e) {
 			tb.comm.message(e.toString(), VerbLevel.verb_error);
-			TextWindow tw = new TextWindow("Communicator Output: Error", tb.comm.outString, 500, 500);
+			new TextWindow("Communicator Output: Error", tb.comm.outString, 500, 500);
 		}
 		
 		
