@@ -1,3 +1,5 @@
+import java.util.Collections;
+import java.util.ListIterator;
 import java.util.Vector;
 
 /**
@@ -7,11 +9,17 @@ import java.util.Vector;
  */
 public class Collision {
 	
-	//TODO
+	/**
+	 * The tracks leading up to the collision
+	 */
 	Vector<Track> inTracks;	
-	//TODO
+	/**
+	 * The tracks attached to the end of the collision
+	 */
 	Vector<Track> outTracks;
-	//TODO
+	/**
+	 * The track consisting of maggots stuck in a collision
+	 */
 	Track collTrack; 
 	/**
 	 * First frame where the maggots collide
@@ -25,12 +33,24 @@ public class Collision {
 	 * LastFrame with colliding maggots
 	 */
 	int endFrame;
+	
+	Vector<TrackMatch> matches;
 
 	
-	public Collision(Vector<Track> inTracks, TrackPoint point, int frameNum){
-		this.inTracks = inTracks;
+	//TODO
+	public Collision(Vector<TrackMatch> initMatches, int frameNum){
+		//this.inTracks = inTracks;
 		//collisionPairs.add(new CollisionPair(point));
+		
+		matches.addAll(initMatches);
+		
+		inTracks = new Vector<Track>();
+		for (int i=0; i<initMatches.size(); i++){
+			inTracks.add(initMatches.get(i).track);
+		}
+		outTracks = new Vector<Track>();
 		startFrame = frameNum;
+		currentFrame = frameNum;
 		endFrame=-1;
 	}
 	
@@ -48,14 +68,11 @@ public class Collision {
 		return outTracks;
 	}
 	
-	
-	
-	//TODO
+
 	public void finishCollision(int endFrame){
 		 
 		//Vector<Track> newTracks = new Vector<Track>();
 		
-		//TODO 
 		//convert final points to tracks
 		//store as outTracks
 		//update endFrame
@@ -63,13 +80,13 @@ public class Collision {
 	}
 	
 	//Try to fix the collision at the current frame
-	//TODO try to fix the collision point using the specified matches
-	public int fixCollision(Vector<TrackMatch> colMatches) {		
+	//TODO try to fix the collision point using the stored matches
+	public int fixCollision() {		
 		
-		if (matchToEmptyPts(colMatches)){
+		if (matchToEmptyPts()){
 			return 1;
 		}
-		if (matchToSplitPts(colMatches)) {
+		if (matchToSplitPts()) {
 			return 2;
 		}
 		
@@ -77,8 +94,53 @@ public class Collision {
 	}
 	
 	
-	//TODO  
-	public boolean matchToEmptyPts(Vector<TrackMatch> colMatches) {
+	//TODO Implement this for collision track points 
+	public boolean matchToEmptyPts() {
+		
+		
+		//Iterate through the matches
+			//find the best match
+		Vector<TrackMatch> otherMatches = new Vector<TrackMatch>();//for locating the match to modify
+		Vector<Integer> otherMatchInds = new Vector<Integer>(); //for locating the point within the match 
+		Vector<Double> otherPointDists = new Vector<Double>();//for finding best new match
+		
+		//Find the available emptypoints
+		ListIterator<TrackMatch> mIt = matches.listIterator();
+		while (mIt.hasNext()) {
+			TrackMatch match = mIt.next();
+			int[] betterInds = match.indsOfValidNonPrimaryEmptyMatches();
+			if (betterInds.length>0) {
+				for (int i=0; i<betterInds.length; i++){
+					otherMatches.add(match);
+					otherMatchInds.add(betterInds[i]);
+					otherPointDists.add(match.dist2MatchPts[betterInds[i]]);
+				}
+			}
+		}
+
+		int numDesired = inTracks.size();
+		int numCurrent = matches.size();
+		
+		if (numCurrent==numDesired){
+			//Try to match the new pointmatches to current trackmatches
+			if (otherMatches.size()>0) {
+				Object minDist = Collections.min(otherPointDists);
+				int ind = otherPointDists.indexOf(minDist);
+				//Change the primary point to this one by setting all matches before the new match to be invalid
+				for (int i=0; i<otherMatchInds.get(ind); i++) {
+					otherMatches.get(ind).validMatch[i]=0;
+				}
+				
+			} else {
+				return false;
+			}
+			
+		} else {
+			//create new pointmatches
+			
+		}
+		
+		
 		//find empty points from matches
 		//if (single or multiple) exactly one has a good one
 			//take that one
@@ -91,8 +153,10 @@ public class Collision {
 		return false;
 	}
 	
+//	public 
+	
 	//TODO 
-	public boolean matchToSplitPts(Vector<TrackMatch> colMatches) {
+	public boolean matchToSplitPts() {
 		//Vector<TrackPoint> splitPts = splitPoint(colPoint);
 		//if (splitPts!=null) {
 			//fix matches, fix pointMatchNums, 

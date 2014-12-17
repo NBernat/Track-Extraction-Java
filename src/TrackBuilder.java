@@ -21,7 +21,7 @@ public class TrackBuilder {
 	 */
 	Vector<Track> finishedTracks;
 	/**
-	 * All (active? TBD) collision events  
+	 * Active collision events  
 	 */
 	Vector<Collision> activeCollisions;
 	/**
@@ -417,35 +417,52 @@ public class TrackBuilder {
 	//TODO
 	private int detectNewCollisions(){
 		
-		Vector<Collision> newCollisions = new Vector<Collision>();
+		int numNewCollisions = 0;
+//		Vector<Collision> newCollisions = new Vector<Collision>();
 		//Used to avoid double-checking
-		boolean[] matchInNewCollision = new boolean[matches.size()];
+//		boolean[] matchInNewCollision = new boolean[matches.size()];
 
 		//Check each match for a collision
-		//TODO switch to iterator 
-		for (int i=0;i<matches.size();i++) {
+		ListIterator<TrackMatch> mIt = matches.listIterator(); 
+		while (mIt.hasNext()){
+//		for (int i=0;i<matches.size();i++) {
 			
-			if (!matchInNewCollision[i] && matches.get(i).checkTopMatchForCollision()>0){
+			TrackMatch match = mIt.next();
+			
+			if (!match.track.isCollision.lastElement() && match.checkTopMatchForCollision()>0){
+//			if (!matchInNewCollision[i] && matches.get(i).checkTopMatchForCollision()>0){
 
 				//Collect the info from the tracks in collisions
 //				Vector<Track> colTracks = new Vector<Track>();
+				
 				Vector<TrackMatch> colMatches= new Vector<TrackMatch>();
 				
-				matchInNewCollision[i] = true;
-				colMatches.add(matches.get(i));
-
-				colMatches.addAll(getCollisionMatches(matches.get(i)));
+//				matchInNewCollision[i] = true;
+				colMatches.add(match);
+				colMatches.addAll(getCollisionMatches(match));
 				
-				
-				//Create a new collision object
-				Collision newCol = avoidOrCreateCollision(colMatches);
-				
-				if (newCol!=null){
-					activeCollisions.addElement(newCol);
-					newCollisions.add(newCol);
+				if(colMatches.size()==1){
+					comm.message("Collision at point "+match.getTopMatchPoint().pointID+" in track "+match.track.trackID+" has no accompanying trackmatch!", VerbLevel.verb_error);
 				}
 				
+				numNewCollisions += avoidOrCreateCollision(colMatches);
 				
+				//Create a new collision object
+//				Collision newCol = avoidOrCreateCollision(colMatches);
+//				
+//				///vvvv Should this just be done in avoidOrCreateCollision?
+//				if (newCol!=null){
+//					numNewCollisions++;
+//					matches.add(newCol.matches.firstElement());
+//					//matches.removeAll(colMatches); DON'T DO THIS, THESE MATCHES SIGNAL THE TRACK TO END 
+//					activeCollisions.addElement(newCol);
+////					newCollisions.add(newCol);
+//				}
+				////^^^^ 
+				
+				
+				
+			}
 				//Find the colliding track(s)
 //				int numColliding = matches.get(i).getTopMatchPoint().getNumMatches();
 //				int startInd = i+1;
@@ -483,10 +500,10 @@ public class TrackBuilder {
 //					newCollisions.add(newCol);
 //				}
 				//WHAT TO DO WITH MATCHES? CONVERT TO COLLISIONMATCH?
-			}
+//			}
 
 		}
-		return 0;
+		return numNewCollisions;
 	}
 	
 //	private Vector<TrackPoint> findEmptyPoints() {
@@ -527,18 +544,34 @@ public class TrackBuilder {
 	}
 	
 	
-	private Collision avoidOrCreateCollision(Vector<TrackMatch> colMatches){
+	private int avoidOrCreateCollision(Vector<TrackMatch> colMatches){
 		
-		Collision newCol=null;
+		//Create a new collision object from the collision
+		Collision newCol = new Collision(colMatches, frameNum);
 		
+		//Try to fix the collision
+		int colFix = newCol.fixCollision();
 		
+		if (colFix==0){
+			//New collision
+			
+			
+			return 0;
+//		} else if (colFix==1) {
+//			//Fixed by matching to nearby points
+//			//The matches are now fixed
+//			
+//			return 1;
+//		} else if (colFix==2) {
+//			//Fixed by splitting points into two
+//			//The matches are now fixed
+//			
+//			return 1;
+		}
 		
-		
-		
-		
-		
-		
-		return newCol;
+		else {
+			return 1;
+		}
 		
 		
 	}
@@ -647,6 +680,7 @@ public class TrackBuilder {
 			TrackMatch match = mIt.next();
 			
 			if (match.getTopMatchPoint()==null) {
+				//End the match/track
 				finishedTracks.addElement(match.track);
 				trackMessage.message(match.track.infoString(), VerbLevel.verb_message);
 				activeTracks.remove(match.track);

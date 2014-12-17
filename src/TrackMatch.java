@@ -204,6 +204,36 @@ public class TrackMatch {
 		return ind;
 	}
 	
+	public int[] indsOfValidNonPrimaryEmptyMatches(){
+		
+		//Mark the good non-primary matches
+		int[] goodMatch = new int[numStoredMatches];
+		//Skip the first, bc we want non-primary matches
+		
+		for (int i=1; i<numStoredMatches; i++) {
+			if (validMatch[i]==1 && matchPts[i].numMatches==0) {
+				goodMatch[i]=1;
+			} else {
+				goodMatch[i]=0;
+			}
+		}
+		
+		//Determine the length of the return array
+		int sum=0;
+		for (int j : goodMatch) sum+=j;
+		
+		//Populate the return array
+		int[] inds = new int[sum];
+		//Skip the first, bc, again, we want non-primary matches
+		for (int i=1; i<numStoredMatches; i++) {
+			if (goodMatch[i]==1) {
+				inds[i] = i;
+			}
+		}
+		
+		return null;
+	}
+	
 	
 	public void clearAllMatches(){
 		//Set all to invalid, decrement the primary point's point count
