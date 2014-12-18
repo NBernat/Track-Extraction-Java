@@ -543,8 +543,16 @@ public class TrackBuilder {
 		
 	}
 	
-	
+
+	/**
+	 * Tries to edit colliding track matches, otherwise ends the tracks, creates a collision track, and keeps a record of the event in the form of a Collision object
+	 * @param colMatches The TrackMatches that collide to the same point 
+	 * @return The number of new collisions 
+	 */
 	private int avoidOrCreateCollision(Vector<TrackMatch> colMatches){
+		
+		//For debugging output, grab the point
+		int ptID = colMatches.firstElement().getTopMatchPoint().pointID;
 		
 		//Create a new collision object from the collision
 		Collision newCol = new Collision(colMatches, frameNum);
@@ -552,25 +560,25 @@ public class TrackBuilder {
 		//Try to fix the collision
 		int colFix = newCol.fixCollision();
 		
-		if (colFix==0){
-			//New collision
+		if (colFix==0){ //The Collision-fixing machinery did not fix the matches
+			//The old matches still exist, and they will be used later to end tracks 
+			
+			//TODO New collision
+			//Add new match to the matches
+			//Add the new collision to activeCollisions
 			
 			
-			return 0;
-//		} else if (colFix==1) {
-//			//Fixed by matching to nearby points
-//			//The matches are now fixed
-//			
-//			return 1;
-//		} else if (colFix==2) {
-//			//Fixed by splitting points into two
-//			//The matches are now fixed
-//			
-//			return 1;
+			return 1; //1 new collision
+
 		}
 		
-		else {
-			return 1;
+		else { //The Collision-fixing machinery fixed the matches
+			if (colFix==1) {
+				comm.message("Collision avoided at point "+ptID+" by matching to nearby points", VerbLevel.verb_debug);
+			} else if (colFix==2) {
+				comm.message("Collision avoided at point "+ptID+" by splitting the collision point", VerbLevel.verb_debug);
+			}
+			return 0; //0 new collisions
 		}
 		
 		
@@ -700,7 +708,7 @@ public class TrackBuilder {
 				//activePts.remove(match.getTopMatchPoint());
 			}
 		}
-		
+		 
 		numTracks = activeTracks.size();
 		
 		return numTracks;

@@ -147,13 +147,23 @@ public class TrackMatch {
 	}
 	
 	public TrackPoint getTopMatchPoint(){
+		int ind = getTopMatchInd();
+		if (ind<0){
+			TB.comm.message("Did not find top match point", VerbLevel.verb_debug);
+			return null;
+		} else {
+			return matchPts[ind];
+		}
+	}
+	
+	public int getTopMatchInd(){
 		for (int i=0; i<matchPts.length; i++){
 			if (validMatch[i]>0) {
-				return matchPts[i];
+				return i;
 			}
 		}
 		TB.comm.message("Did not find top match point", VerbLevel.verb_debug);
-		return null;
+		return -1;
 	}
 	
 	/**

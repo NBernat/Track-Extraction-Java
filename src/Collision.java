@@ -54,12 +54,15 @@ public class Collision {
 		endFrame=-1;
 	}
 	
-	//TODO addPair method
-	
-	//TODO
+	/**
+	 * 
+	 * @return Whether or not the collision has diverged into separate tracks
+	 */
 	public boolean hasFinsihed(){
 		
-		//check numin vs numcurrent(aka length of matches)
+		if (outTracks.size()>0){
+			return true;
+		}
 		
 		return false;
 	}
@@ -69,15 +72,7 @@ public class Collision {
 	}
 	
 
-	public void finishCollision(int endFrame){
-		 
-		//Vector<Track> newTracks = new Vector<Track>();
-		
-		//convert final points to tracks
-		//store as outTracks
-		//update endFrame
-		
-	}
+
 	
 	//Try to fix the collision at the current frame
 	//TODO try to fix the collision point using the stored matches
@@ -90,21 +85,28 @@ public class Collision {
 			return 2;
 		}
 		
+		//This is a legit collision: 
+		//make a new track and trackmatch 
+		//end the old track matches (invalidate all) 
+		
 		return 0;
 	}
 	
 	
-	//TODO Implement this for collision track points 
+	/**
+	 * Finds unmatched points near the collision and uses them to end/avoid a collision  
+	 * <p>
+	 * Empty points are found from point matches; the number of points in a match/ distance from original points are set in Extraction Parameters
+	 * @return Whether or not empty points were used to fix the collision 
+	 */
 	public boolean matchToEmptyPts() {
 		
-		
-		//Iterate through the matches
-			//find the best match
+		//Set up the data needed to adjust the matches
 		Vector<TrackMatch> otherMatches = new Vector<TrackMatch>();//for locating the match to modify
 		Vector<Integer> otherMatchInds = new Vector<Integer>(); //for locating the point within the match 
 		Vector<Double> otherPointDists = new Vector<Double>();//for finding best new match
 		
-		//Find the available emptypoints
+		//Find the available empty points and store info about them
 		ListIterator<TrackMatch> mIt = matches.listIterator();
 		while (mIt.hasNext()) {
 			TrackMatch match = mIt.next();
@@ -118,28 +120,37 @@ public class Collision {
 			}
 		}
 
+		
 		int numDesired = inTracks.size();
 		int numCurrent = matches.size();
 		
-		if (numCurrent==numDesired){
-			//Try to match the new pointmatches to current trackmatches
-			if (otherMatches.size()>0) {
-				Object minDist = Collections.min(otherPointDists);
-				int ind = otherPointDists.indexOf(minDist);
-				//Change the primary point to this one by setting all matches before the new match to be invalid
-				for (int i=0; i<otherMatchInds.get(ind); i++) {
-					otherMatches.get(ind).validMatch[i]=0;
-				}
-				
-			} else {
-				return false;
-			}
-			
-		} else {
-			//create new pointmatches
-			
-		}
+		if (otherMatches.size()>0) { //Empty points were found
+			//Edit the matches to avoid/end the collision
 		
+			//Get the best secondary match
+			Object minDist = Collections.min(otherPointDists);
+			int ind = otherPointDists.indexOf(minDist);
+			TrackMatch match2Change = otherMatches.get(ind);
+			
+			if (numCurrent==numDesired){//This is an initial correction, just edit the existing matches 
+					
+				//Since the matches are ordered by distance, this will be the first valid match after the
+				//primary match; to change the top match to the new one, simply invalidate the top match
+				int oldInd = match2Change.getTopMatchInd();
+				int newInd = otherMatchInds.get(ind);
+				match2Change.validMatch[oldInd]=0;
+				match2Change.matchPts[oldInd].numMatches--;
+				match2Change.matchPts[newInd].numMatches++;
+					
+			} else {//This is the end of a collision, create new matches (which will be converted to new tracks)
+				//TODO handle the end of collisions
+				
+				
+				
+			}
+		} else { //No empty points were found
+			return false;
+		}
 		
 		//find empty points from matches
 		//if (single or multiple) exactly one has a good one
