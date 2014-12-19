@@ -5,7 +5,11 @@ import ij.text.TextWindow;
 import java.util.ListIterator;
 import java.util.Vector;
 
-
+/**
+ * Extracts tracks of moving blobs from a stack of images.  
+ * @author Natalie Bernat
+ *
+ */
 public class TrackBuilder {
 
 		
@@ -48,12 +52,6 @@ public class TrackBuilder {
 	 * Set when the tracks are activated
 	 */
 	Vector<TrackMatch> matches;
-	/*
-	 * Cross-reference table for point matches, showing how many primary matches contain this point
-	 * <p>
-	 * each row contains the pointID, and the number of TrackMatches with that point (in that order)
-	 */
-	//int[][] pointMatchTable;
 	/**
 	 * Index of frame being processed
 	 */
@@ -175,8 +173,8 @@ public class TrackBuilder {
 
 		//TODO Comb out collisions
 		//resolveCollisions();
-//		finishedCollisions.addAll(activeCollisions);
-//		activeCollisions.removeAll(finishedCollisions);
+		finishedCollisions.addAll(activeCollisions);
+		activeCollisions.removeAll(finishedCollisions);
 	}
 	
 	
@@ -271,16 +269,7 @@ public class TrackBuilder {
 			TrackMatch newMatch = new TrackMatch(activeTracks.get(i), activePts, ep.numPtsInTrackMatch, this);
 			matches.add(newMatch);
 			newMatch.spillInfoToCommunicator(matchComm);
-			//addMatchToPointTable(newMatch);
 		}
-		//Match points to Collisions
-//		for(int j=0; j<activeCollisions.size(); j++){
-//			// matches.add(new CollisionMatch(activeCollisions.get(i), activePts, ep.numPtsInTrackMatch));
-//			TrackMatch newMatch = new CollisionMatch(activeTracks.get(j), activePts, ep.numPtsInTrackMatch); 
-//			matches.add(newMatch);
-//			//addMatchToPointTable(newMatch);
-//			
-//		}
 		
 		matchSpills.addElement(matchComm);
 		
@@ -322,14 +311,14 @@ public class TrackBuilder {
 	 * Maintains the collision structures by adding new collisions, trying basic methods of fixing current colllions, and ending finished collisions 
 	 */
 	private void manageCollisions(){
-		 
-		//End Collision tracks, reduce point's number to 0
+		
 		if (ep.collisionLevel==0){
+			
 			int numEnded = endNewCollisions();
 			comm.message("Tracks ended due to collision: "+numEnded, VerbLevel.verb_debug);
+			
 		} else {
-			
-			
+						
 			//if a point is assigned to more than one track, start a collision event
 			int numNewColl = detectNewCollisions();
 			comm.message("Number of new collisions in frame "+frameNum+": "+numNewColl, VerbLevel.verb_debug);
@@ -341,7 +330,6 @@ public class TrackBuilder {
 			int numFinishedCollisions = releaseFinishedCollisions();
 			comm.message("Number of collisions ended in frame "+frameNum+": "+numFinishedCollisions, VerbLevel.verb_debug);
 			
-			//Add new collisions to activeTracks, since the have been dealt with
 		}
 		
 	}
@@ -358,38 +346,20 @@ public class TrackBuilder {
 		
 		while (tmIt.hasNext()){
 			
-//			int i = tmIt.nextIndex();
 			TrackMatch match = tmIt.next();
 			comm.message("Checking Track "+match.track.trackID+" for collisions..", VerbLevel.verb_debug);
 			
 			if (match.checkTopMatchForCollision()>0) {
 				comm.message("Collision found, "+match.getTopMatchPoint().getNumMatches()+" tracks matched to point", VerbLevel.verb_debug);
 				//Collect the info from the tracks in collisions
-//				Vector<Track> colTracks = new Vector<Track>();
 				Vector<TrackMatch> colMatches= new Vector<TrackMatch>();
 				
-				colMatches.add(match); 
-//				colTracks.add(match.track);
+				colMatches.add(match);
 				
 				//Find all the additional tracks in the collision
 				int numColliding = match.getTopMatchPoint().getNumMatches();
 				comm.message("Collision has "+numColliding+" tracks", VerbLevel.verb_debug);
-//				int startInd = i+1;
 				colMatches.addAll(getCollisionMatches(match));
-//				for (int j=0; j<(numColliding-1); j++) {
-//					comm.message("Finding collision track number "+(j+2), VerbLevel.verb_debug);
-//					//Find the first TrackMatch in matches that's in the collision
-//					int colInd = match.findCollidingTrackMatch(matches, startInd);
-//					if (colInd>=0) {
-//						comm.message("Matching track found!", VerbLevel.verb_debug);
-//						colMatches.add(matches.get(colInd));
-//						colTracks.add(matches.get(colInd).track);
-//						//If there are more than 2 tracks in the collision, start looking for collision matches at the index following the one that was just found
-//						startInd = colInd+1;
-//					} else {
-//						comm.message("matching collision not found", VerbLevel.verb_debug); 
-//					}
-//				}
 				
 				//End the colliding tracks
 				ListIterator<TrackMatch> cmIt = colMatches.listIterator();
@@ -414,30 +384,26 @@ public class TrackBuilder {
 	
 	
 	
-	//TODO
+	/**
+	 * Finds tracks that collide, tries to resolve them, and if they can't be fixed, creates a new Track and Collision 
+	 * @return The number of new collisions
+	 */
 	private int detectNewCollisions(){
 		
 		int numNewCollisions = 0;
-//		Vector<Collision> newCollisions = new Vector<Collision>();
-		//Used to avoid double-checking
-//		boolean[] matchInNewCollision = new boolean[matches.size()];
 
 		//Check each match for a collision
 		ListIterator<TrackMatch> mIt = matches.listIterator(); 
 		while (mIt.hasNext()){
-//		for (int i=0;i<matches.size();i++) {
 			
 			TrackMatch match = mIt.next();
 			
 			if (!match.track.isCollision.lastElement() && match.checkTopMatchForCollision()>0){
-//			if (!matchInNewCollision[i] && matches.get(i).checkTopMatchForCollision()>0){
 
 				//Collect the info from the tracks in collisions
-//				Vector<Track> colTracks = new Vector<Track>();
 				
 				Vector<TrackMatch> colMatches= new Vector<TrackMatch>();
 				
-//				matchInNewCollision[i] = true;
 				colMatches.add(match);
 				colMatches.addAll(getCollisionMatches(match));
 				
@@ -447,77 +413,18 @@ public class TrackBuilder {
 				
 				numNewCollisions += avoidOrCreateCollision(colMatches);
 				
-				//Create a new collision object
-//				Collision newCol = avoidOrCreateCollision(colMatches);
-//				
-//				///vvvv Should this just be done in avoidOrCreateCollision?
-//				if (newCol!=null){
-//					numNewCollisions++;
-//					matches.add(newCol.matches.firstElement());
-//					//matches.removeAll(colMatches); DON'T DO THIS, THESE MATCHES SIGNAL THE TRACK TO END 
-//					activeCollisions.addElement(newCol);
-////					newCollisions.add(newCol);
-//				}
-				////^^^^ 
-				
-				
 				
 			}
-				//Find the colliding track(s)
-//				int numColliding = matches.get(i).getTopMatchPoint().getNumMatches();
-//				int startInd = i+1;
-//				for (int j=0; j<(numColliding-1); j++) {
-//					
-//					//Find the first TrackMatch in matches that's in the collision
-//					int colInd = matches.get(i).findCollidingTrackMatch(matches, startInd);
-//					if (colInd>=0) {
-//						matchInNewCollision[colInd] = true;
-//						colMatches.add(matches.get(colInd));
-//						colTracks.add(matches.get(colInd).track);
-//						
-//						//If there are more than 2 tracks in the collision, start looking for collision matches at the index following the one that was just found
-//						startInd = colInd+1;
-//					}
-//				}
-				// All code below needs to be revised
-				
-				// FIX THIS vvv
-//				Collision newCol = new Collision(colTracks, matches.get(i).getTopMatchPoint(), frameNum);
-				
-				//Try to fix the collision; if unsuccessful, end the tracks and start a new collision
-//				int fixResult = newCol.fixCollision(colMatches); 
-//				if (fixResult>0) {
-//					//If the collision is fixed, then take the collisionPoint's and  
-//					if (fixResult==2){
-//						// fix the activePts structure: remove bad point, add new points
-//					}
-//					// Then the matches have been modified, and you're done! 
-//					
-//				} else {
-					// Modify the collision? It's already been created, so I think it should be done for this frame iteration
-					
-//					activeCollisions.addElement(newCol);
-//					newCollisions.add(newCol);
-//				}
-				//WHAT TO DO WITH MATCHES? CONVERT TO COLLISIONMATCH?
-//			}
-
 		}
 		return numNewCollisions;
 	}
 	
-//	private Vector<TrackPoint> findEmptyPoints() {
-//		Vector<TrackPoint> emptyPoints = new Vector<TrackPoint>();
-//		ListIterator<TrackPoint> tpIt = activePts.listIterator();
-//		while (tpIt.hasNext()) {
-//			TrackPoint pt = tpIt.next(); 
-//			if (pt.getNumMatches()==0) {
-//				emptyPoints.add(pt);
-//			}
-//		}
-//		return emptyPoints;
-//	}
-	
+
+	/**
+	 * Finds the TrackMatches which are colliding with the given TrackMatch
+	 * @param match The query TrackMatch
+	 * @return A Vector of TrackMatches sharing the same match point
+	 */
 	public Vector<TrackMatch> getCollisionMatches(TrackMatch match){
 		
 		
@@ -561,12 +468,11 @@ public class TrackBuilder {
 		int colFix = newCol.fixCollision();
 		
 		if (colFix==0){ //The Collision-fixing machinery did not fix the matches
-			//The old matches still exist, and they will be used later to end tracks 
+			//The old matches still exist, and they will be used later to end tracks (ie don't remove them)
 			
-			//TODO New collision
-			//Add new match to the matches
-			//Add the new collision to activeCollisions
-			
+			newCol.startCollision();
+			activeCollisions.add(newCol);
+			matches.add(newCol.matches.firstElement());
 			
 			return 1; //1 new collision
 
@@ -584,40 +490,15 @@ public class TrackBuilder {
 		
 	}
 	
-	
+	//TODO 
 	private void fixCollisions(){
 		
 		
-//		for (int i=1; i<=matches.size(); i++){
-//			TrackMatch match = matches.get(i); 
-//			if (match.track.isCollision.get(frameNum)){
-//				Collision colli = match.track.getCollision(frameNum);
-//				
-//				colli.fixCollision(getCollisionMatches(match));
-//			}			
-//		}
-		
-		
-		
-//		matchCollisionsToEmptyTracks();
-		
-//		splitCollisionPoints();
 		
 		
 	}
 	
-//	 
-//	private void matchCollisionsToEmptyTracks(){
-//		
-//		//Check each trackMatch to see if it has any validmatches 
-//		
-//	}
-//
-//	
-//	private void splitCollisionPoints(){
-//		
-//	}
-	
+
 
 	
 	/**
@@ -663,7 +544,7 @@ public class TrackBuilder {
 	private void releaseCollision(Collision col){
 		
 		//Tell the collision object that this is where to end it
-		col.finishCollision(frameNum-pe.increment);
+//		col.finishCollision(frameNum-pe.increment);
 		//Add the newly started tracks to active tracks
 		Vector<Track> newTracks = col.getOutTracks();
 		activeTracks.addAll(newTracks);
@@ -694,6 +575,7 @@ public class TrackBuilder {
 				activeTracks.remove(match.track);
 				
 			} else if (match.track.points.size()==0) {
+				//THIS IS IMPORTANT!
 				//if there's a new track created by a collision starting/ending, add it to activeTracks
 				match.track.extendTrack(match.getTopMatchPoint());
 				match.track.setCollision(frameNum, null);
@@ -737,27 +619,22 @@ public class TrackBuilder {
 		return numNew;
 	}
 	
-	
-	public int findIndOfTrack(int trackID){
+	/**
+	 * Finds the index in the given Track list of the specified track ID
+	 * @param trackID The track to be found
+	 * @param trackList The list to search through 
+	 * @return The index of list that can be used to access the query track (-1 if it's not found)
+	 */
+	public int findIndOfTrack(int trackID, Vector<Track> trackList){
 		
-		for (int i=0;i<finishedTracks.size();i++){
-			if (finishedTracks.get(i).trackID==trackID){
+		for (int i=0;i<trackList.size();i++){
+			if (trackList.get(i).trackID==trackID){
 				return i;
 			}
 		}
 		return -1;
 		
-		
-		
 	}
 	
-	
-	
-//	private int resolveCollisions(){
-//		
-//		
-//		return 0;
-//		
-//	}
 
 }

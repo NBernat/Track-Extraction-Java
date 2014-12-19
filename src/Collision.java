@@ -33,14 +33,18 @@ public class Collision {
 	 * LastFrame with colliding maggots
 	 */
 	int endFrame;
-	
+	/**
+	 * Any matches to the track/tracks involved in the collision
+	 */
 	Vector<TrackMatch> matches;
 
 	
-	//TODO
+	/**
+	 * Constructs a Collision object from the tracks in the given trackmatches
+	 * @param initMatches The matches that collide to a single point
+	 * @param frameNum The frame at which they collide
+	 */
 	public Collision(Vector<TrackMatch> initMatches, int frameNum){
-		//this.inTracks = inTracks;
-		//collisionPairs.add(new CollisionPair(point));
 		
 		matches.addAll(initMatches);
 		
@@ -55,8 +59,8 @@ public class Collision {
 	}
 	
 	/**
-	 * 
-	 * @return Whether or not the collision has diverged into separate tracks
+	 * Checks if the collision has been ended 
+	 * @return Whether or not the collision track has ended 	
 	 */
 	public boolean hasFinsihed(){
 		
@@ -67,27 +71,63 @@ public class Collision {
 		return false;
 	}
 	
+	/**
+	 * Accessor for the tracks leaving the collisions 
+	 * @return The outgoing tracks from this collision
+	 */
 	public Vector<Track> getOutTracks(){
 		return outTracks;
 	}
 	
 
-
+	/**
+	 * Starts the collision's track and adjusts the matches
+	 */
+	public void startCollision(){
+		
+		//Make a new track and match
+		TrackMatch match = matches.firstElement();
+		collTrack = new Track(match.TB);
+		TrackMatch newMatch = new TrackMatch(collTrack, match);
+		ListIterator<TrackMatch> mIt = matches.listIterator();
+		
+		//Replace the old matches with new one
+		while (mIt.hasNext()) {
+			mIt.next().clearAllMatches();
+		}
+		matches.removeAllElements();
+		matches.add(newMatch);
+		
+	}
 	
-	//Try to fix the collision at the current frame
-	//TODO try to fix the collision point using the stored matches
+	//TODO
+	public void endCollision() {
+		
+		ListIterator<TrackMatch> mIt = matches.listIterator();
+		while (mIt.hasNext()){
+			outTracks.add(mIt.next().track);
+			
+		}
+		
+		endFrame = outTracks.firstElement().points.firstElement().frameNum;
+		
+	}
+	
+	/**
+	 * Try to fix the collision 
+	 * @return Status int: 0 = unfixed; 1 = fixed by matching to nearby points; 2 = fixed by splitting the points apart
+	 */
 	public int fixCollision() {		
 		
 		if (matchToEmptyPts()){
+
 			return 1;
 		}
 		if (matchToSplitPts()) {
+
 			return 2;
 		}
 		
-		//This is a legit collision: 
-		//make a new track and trackmatch 
-		//end the old track matches (invalidate all) 
 		
 		return 0;
 	}
@@ -123,48 +163,50 @@ public class Collision {
 		
 		int numDesired = inTracks.size();
 		int numCurrent = matches.size();
+		boolean collisionIsEnding = (numCurrent!=numDesired);
 		
-		if (otherMatches.size()>0) { //Empty points were found
-			//Edit the matches to avoid/end the collision
+		
+		if (otherMatches.size()>0) { //Empty points were found, edit the matches to avoid/end the collision
 		
 			//Get the best secondary match
 			Object minDist = Collections.min(otherPointDists);
 			int ind = otherPointDists.indexOf(minDist);
 			TrackMatch match2Change = otherMatches.get(ind);
 			
-			if (numCurrent==numDesired){//This is an initial correction, just edit the existing matches 
+			
+			Vector<TrackMatch> newMatches = new Vector<TrackMatch>(); 
+			
+			if (collisionIsEnding){
+				//Make new tracks; stick the current top match and the new top match into new trackmatches
+				Track track1 = new Track(match2Change.TB);
+				newMatches.add(new TrackMatch(track1, match2Change));
+			}
+			
+			//If this is just an initial correction, simply edit the existing matches
+			//Since the matches are ordered by distance, this will be the first valid match after the
+			//primary match; to change the top match to the new one, simply invalidate the top match
+			int oldInd = match2Change.getTopMatchInd();
+			int newInd = otherMatchInds.get(ind);
+			match2Change.validMatch[oldInd]=0;
+			match2Change.matchPts[oldInd].numMatches--;
+			match2Change.matchPts[newInd].numMatches++;
 					
-				//Since the matches are ordered by distance, this will be the first valid match after the
-				//primary match; to change the top match to the new one, simply invalidate the top match
-				int oldInd = match2Change.getTopMatchInd();
-				int newInd = otherMatchInds.get(ind);
-				match2Change.validMatch[oldInd]=0;
-				match2Change.matchPts[oldInd].numMatches--;
-				match2Change.matchPts[newInd].numMatches++;
-					
-			} else {//This is the end of a collision, create new matches (which will be converted to new tracks)
-				//TODO handle the end of collisions
+			if (collisionIsEnding) {
+
+				Track track2 = new Track(match2Change.TB);
+				newMatches.add(new TrackMatch(track2, match2Change));
 				
-				
-				
+				//Switch the match to the new match 
+				match2Change.clearAllMatches();
+				matches = newMatches;
 			}
 		} else { //No empty points were found
 			return false;
 		}
 		
-		//find empty points from matches
-		//if (single or multiple) exactly one has a good one
-			//take that one
-		//if multiple and both have a good one
-			//compare, take best
-		
-		//fix matches, fix pointMatchNums 
-		
-		//if no good ones,
 		return false;
 	}
 	
-//	public 
 	
 	//TODO 
 	public boolean matchToSplitPts() {

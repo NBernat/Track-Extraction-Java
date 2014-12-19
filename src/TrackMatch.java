@@ -40,12 +40,9 @@ public class TrackMatch {
 	 * @param numMatches Maximum number of matches stored
 	 */
 	public TrackMatch(Track track, int numMatches, TrackBuilder TB){
-		this.track = track;
-		matchPts = new TrackPoint[numMatches];
-		dist2MatchPts = new Double[numMatches];
-		validMatch = new int[numMatches];
-		numStoredMatches = numMatches;
-		this.TB = TB;
+		
+		init(track, numMatches, TB);
+		
 	}
 	
 	
@@ -56,12 +53,35 @@ public class TrackMatch {
 	 * @param numMatches Maximum number of matches stored
 	 */
 	public TrackMatch(Track track, Vector<TrackPoint> points, int numMatches, TrackBuilder TB) {
+		
+		init(track, numMatches, TB);
+		
+		matchPointsToTrack(points);
+		
+	}
+	
+	/**
+	 * Constructs a new TrackMatch by copying the info from a given match, except the track changes
+	 * @param newTrack The new track 
+	 * @param oldMatch The oldmatch that is being copied
+	 */
+	public TrackMatch(Track newTrack, TrackMatch oldMatch){
+		
+		this.track = newTrack;
+		matchPts = oldMatch.matchPts.clone();
+		dist2MatchPts = oldMatch.dist2MatchPts.clone();
+		validMatch = oldMatch.validMatch.clone();
+		numStoredMatches = oldMatch.numStoredMatches;
+		TB = oldMatch.TB;
+		
+	}
+	
+	public void init(Track track, int numMatches, TrackBuilder TB){
 		this.track = track;
 		matchPts = new TrackPoint[numMatches];
 		dist2MatchPts = new Double[numMatches];
 		validMatch = new int[numMatches];
 		numStoredMatches = numMatches;
-		matchPointsToTrack(points);
 		this.TB = TB;
 	}
 	

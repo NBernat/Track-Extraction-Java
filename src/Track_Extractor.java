@@ -66,7 +66,7 @@ public class Track_Extractor implements PlugIn{
 				//EXECUTE THIS ON "OKAY" PRESS
 				int num = (int)gd.getNextNumber();
 				if (num<=tb.finishedTracks.size() && !gd.wasCanceled()){
-					int trackInd = tb.findIndOfTrack(num);
+					int trackInd = tb.findIndOfTrack(num, tb.finishedTracks);
 					try {
 						Track track = tb.finishedTracks.get(trackInd);
 						track.playMovie();
