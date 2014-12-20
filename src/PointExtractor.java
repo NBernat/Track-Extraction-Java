@@ -162,13 +162,24 @@ public class PointExtractor {
 	// Point Extracting methods 
 	////////////////////////////
 	
-	
+	/**
+	 * Constructs a Point Extractor for a given stack
+	 * @param stack
+	 * @param comm
+	 * @param ep
+	 */
 	public PointExtractor(ImageStack stack, Communicator comm, ExtractionParameters ep){
 		init(ep.startFrame, stack, comm, ep);
 	}
 	
-	//TODO
-	public void init(int startFrame, ImageStack stack, Communicator comm, ExtractionParameters ep){
+	/**
+	 * Machinery for constructing a PointExtractor
+	 * @param startFrame
+	 * @param stack
+	 * @param comm
+	 * @param ep
+	 */
+	private void init(int startFrame, ImageStack stack, Communicator comm, ExtractionParameters ep){
 		this.startFrameNum = startFrame;
 		imageStack = stack;
 		this.comm = comm;
@@ -273,7 +284,7 @@ public class PointExtractor {
 	
 	
 	/**
-	 * Calculate the background image
+	 * Calculate the background image //TODO Delete this?
 	 */
 	public void calculateBackground() {
 		//if the background image is still valid, leave it as-is
@@ -484,7 +495,26 @@ public class PointExtractor {
 
 	
 	
-	//TODO splitPoint
+	//TODO
+	public Vector<TrackPoint> splitPoint(TrackPoint point, int numDesiredPts){
+		
+		Vector<TrackPoint> newPoints = new Vector<TrackPoint>();
+		
+		loadFrame(point.frameNum);
+		
+		ImagePlus crIm = (ImagePlus) currentIm.clone();
+		crIm.setRoi(point.rect);
+		crIm.getProcessor().crop();
+		//Try to find the threshold (CVUtils)
+		int newThres = CVUtils.findThreshforNumPts(crIm, numDesiredPts);
+		//if found, threshold the cropped im, create the points (rt2TrackPts, adjusting for crop offset), add to list
+		if (newThres>0){
+			//threshold the image
+			find the points 
+		}
+		
+		return newPoints;
+	}
 		//rethreshold
 		//find contours
 		//find the relevant contour

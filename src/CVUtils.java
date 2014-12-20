@@ -60,6 +60,15 @@ public class CVUtils {
 		return cloneIm;
 	}
 	
+	/**
+	 * Takes an image and tries to find the lowest threshold at which the 
+	 */
+	static int findThreshforNumPts(ImagePlus image, int numPts){
+		
+		
+		return -1;
+	}
+	
 	
 	//http://docs.opencv.org/modules/core/doc/old_basic_structures.html
 	/**
@@ -109,14 +118,7 @@ public class CVUtils {
 	}
 	
 	
-	//TODO
-	//http://docs.opencv.org/modules/core/doc/operations_on_arrays.html
-	static ImagePlus compGE(ImagePlus threshIm, ImagePlus threshCompIm){
-		ImagePlus compdIm = null;
-		
-		return compdIm;
-		
-	}
+
 	
 	//TODO 
 	//http://rsb.info.nih.gov/ij/developer/api/ij/measure/ResultsTable.html#ResultsTable()

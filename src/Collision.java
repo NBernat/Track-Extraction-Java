@@ -169,6 +169,7 @@ public class Collision {
 		if (otherMatches.size()>0) { //Empty points were found, edit the matches to avoid/end the collision
 		
 			//Get the best secondary match
+			 
 			Object minDist = Collections.min(otherPointDists);
 			int ind = otherPointDists.indexOf(minDist);
 			TrackMatch match2Change = otherMatches.get(ind);
@@ -208,12 +209,16 @@ public class Collision {
 	}
 	
 	
-	//TODO 
 	public boolean matchToSplitPts() {
-		//Vector<TrackPoint> splitPts = splitPoint(colPoint);
-		//if (splitPts!=null) {
+		
+		TrackPoint badPt = matches.firstElement().getTopMatchPoint();
+		//Try to split the points into the appropriate number of points
+		Vector<TrackPoint> splitPts = collTrack.tb.pe.splitPoint(badPt, inTracks.size());
+		if (splitPts!=null) {
 			//fix matches, fix pointMatchNums, 
-		//}
+		}
+		
+		
 		
 		return false;
 	}
