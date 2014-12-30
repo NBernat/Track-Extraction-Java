@@ -8,7 +8,7 @@ import ij.ImagePlus;
 import ij.gui.Roi;
 import ij.measure.Measurements;
 import ij.measure.ResultsTable;
-import ij.plugin.filter.GaussianBlur;
+//import ij.plugin.filter.GaussianBlur;
 import ij.plugin.filter.ParticleAnalyzer;
 import ij.process.Blitter;
 import ij.process.ImageProcessor;
@@ -61,14 +61,71 @@ public class CVUtils {
 	}
 	
 	/**
-	 * Takes an image and tries to find the lowest threshold at which the 
+	 * Takes an image and tries to find the lowest threshold at which the point can be split into multiple points of an appropriate area
 	 */
-	static int findThreshforNumPts(ImagePlus image, int numPts){
+	static int findThreshforNumPts(ImagePlus image, ExtractionParameters ep, int numPts, int minArea, int maxArea, int targetArea){
+		int minTotal = numPts*minArea;
+	    int maxTotal = numPts*maxArea;
+	    if (maxTotal>=(image.getHeight()*image.getWidth())) {
+	    	maxTotal = (image.getHeight()*image.getWidth())-1;
+	    } 
+	    
+	    ImagePlus thrIm = (ImagePlus) image.clone();
+	    
+	    int bestThres = -1;
+	    double goodness, bestGoodness = -200*numPts;
+	    for (int j=1; j<255; j++) {
+	    	thrIm.getProcessor().threshold(j);
+	    	int ct = countNonZero(image);
+	    	if (ct<minTotal) {
+	    		break;
+	    	}
+	    	if (ct <= maxTotal){
+	    		goodness = findGoodness(thrIm, ep, numPts, minArea, maxArea, targetArea);
+	    		if (goodness > bestGoodness) {
+	    			bestGoodness = goodness;
+	    			bestThres = j;
+	        	}
+	    	}
+	    }
 		
-		
-		return -1;
+		return bestThres;
 	}
 	
+	static int countNonZero(ImagePlus image){
+		int count = 0;
+		for (int h=0; h<image.getHeight(); h++) {
+			for (int w=0; w<image.getWidth(); w++) {
+				if (image.getPixel(w, h)[0]>0){
+					count++;
+				}
+			}
+		}
+		return count;
+	}
+	
+	
+	static double findGoodness(ImagePlus threshIm, ExtractionParameters ep, int nregions, int minArea, int maxArea, int bestArea) {
+	    double goodness = 0;
+	    //-100 for every contour# you are away from nregions
+	    //-10 for every contour below minArea or above maxArea
+	    //-1 * (area - bestArea)^2 / (maxArea - minArea)^2 for each contour
+	    int nc = 0;
+	    int area;
+	    ResultsTable rt = findPoints(threshIm, ep, false);
+	    nc = rt.getCounter();
+	    goodness -= Math.abs(nc - nregions) * 100;
+	    //nc = number of results; iterate through resulting areas
+	    for (int i=1; i<=nc; i++) {
+	        area = (int) rt.getValueAsDouble(ResultsTable.AREA, i);;
+	        if (area < minArea || area > maxArea) {
+	            goodness -= 10;
+	        }
+	        goodness -= 1.0*(area - bestArea)*(area - bestArea) / ((maxArea-minArea)*(maxArea - minArea));
+	    }
+	    return goodness;
+
+	}
 	
 	//http://docs.opencv.org/modules/core/doc/old_basic_structures.html
 	/**
@@ -98,25 +155,25 @@ public class CVUtils {
 	 * @param sigma Sigma value used in Gaussian blurring
 	 * @return Blurred image
 	 */
-	static ImageProcessor blurIm(ImageProcessor image, double sigma){
-		
-		ImageProcessor cloneIm = (ImageProcessor) image.clone();
-		GaussianBlur GB = new GaussianBlur();
-        GB.blurGaussian(image, sigma, sigma, .02);
-        return cloneIm;
-	}
-	
-	/**
-	 * Creates a blurred copy of image
-	 * @param image Image to be blurred
-	 * @param sigma Sigma value used in Gaussian blurring
-	 * @return Blurred image
-	 */
-	static ImagePlus blurIm(ImagePlus image, double sigma) {
-		ImageProcessor cloneIm = ((ImagePlus)image.clone()).getProcessor();
-		return new ImagePlus(image.getTitle(), blurIm(cloneIm,sigma));
-	}
-	
+//	static ImageProcessor blurIm(ImageProcessor image, double sigma){
+//		
+//		ImageProcessor cloneIm = (ImageProcessor) image.clone();
+//		GaussianBlur GB = new GaussianBlur();
+//        GB.blurGaussian(image, sigma, sigma, .02);
+//        return cloneIm;
+//	}
+//	
+//	/**
+//	 * Creates a blurred copy of image
+//	 * @param image Image to be blurred
+//	 * @param sigma Sigma value used in Gaussian blurring
+//	 * @return Blurred image
+//	 */
+//	static ImagePlus blurIm(ImagePlus image, double sigma) {
+//		ImageProcessor cloneIm = ((ImagePlus)image.clone()).getProcessor();
+//		return new ImagePlus(image.getTitle(), blurIm(cloneIm,sigma));
+//	}
+//	
 	
 
 	

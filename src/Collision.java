@@ -208,22 +208,91 @@ public class Collision {
 		return false;
 	}
 	
-	
+	//TODO 
 	public boolean matchToSplitPts() {
 		
 		TrackPoint badPt = matches.firstElement().getTopMatchPoint();
 		//Try to split the points into the appropriate number of points
-		Vector<TrackPoint> splitPts = collTrack.tb.pe.splitPoint(badPt, inTracks.size());
+		Vector<TrackPoint> splitPts = collTrack.tb.pe.splitPoint(badPt, inTracks.size(), (int) meanAreaOfInTracks());
+		
+		
+		int numDesired = inTracks.size();
+		int numCurrent = matches.size();
+		boolean collisionIsEnding = (numCurrent!=numDesired);
+		
 		if (splitPts!=null) {
-			//fix matches, fix pointMatchNums, 
+			if (collisionIsEnding){
+				//Make new tracks
+				//Remove point from old trackmatch
+			} else {
+				//Replace matches
+				
+			}
+			
+			//If track has no points, match incoming points to split points  
+				//fix matches, fix pointMatchNums,
+			//Else, start new 
+			return true;
+		} else {
+			return false;
 		}
-		
-		
-		
-		return false;
 	}
 	
+	/**
+	 * Matches each of two points to a point from a list, minimizing the total distance between points 
+	 * @param ptA Point matched to first point in returnPoints
+	 * @param ptB Point matched to second point in returnPoints
+	 * @param nearbyPts Top points to be matched to ptA&ptB
+	 * @return List of points matched to ptA and ptB, in order (AMatch, BMatch)
+	 */
+	public Vector<TrackPoint> matchPtsToNearbyPts(TrackPoint ptA, TrackPoint ptB, Vector<TrackPoint> nearbyPts){
+		
+		Vector<TrackPoint> bestMatches = new Vector<TrackPoint>();//In order, (A,B)
+		double bestTotalDist = Double.POSITIVE_INFINITY;
+		
+		for (int ptCInd=1; ptCInd<nearbyPts.size(); ptCInd++){
+			for(int ptDInd=(ptCInd+1); ptDInd<=nearbyPts.size(); ptDInd++){
+				//Try A-C B-D
+				double dist1 = distBtwnPts(ptA, nearbyPts.get(ptCInd)) + distBtwnPts(ptB, nearbyPts.get(ptDInd));
+				//Try A-C B-D
+				double dist2 = distBtwnPts(ptA, nearbyPts.get(ptDInd)) + distBtwnPts(ptB, nearbyPts.get(ptCInd));
+				
+				if (dist1<bestTotalDist){
+					bestMatches.clear();
+					if (dist2<dist1){
+						bestTotalDist = dist2;
+						bestMatches.add(nearbyPts.get(ptDInd));
+						bestMatches.add(nearbyPts.get(ptCInd));
+					}
+					else {
+						bestTotalDist = dist1;
+						bestMatches.add(nearbyPts.get(ptCInd));
+						bestMatches.add(nearbyPts.get(ptDInd));
+					}
+				}
+			}
+		}
+		
+		return bestMatches;
+	}
 	
+	public double distBtwnPts(TrackPoint pt1, TrackPoint pt2){
+		return Math.sqrt((pt1.x-pt2.x)*(pt1.x-pt2.x)+(pt1.y-pt2.y)*(pt1.y-pt2.y));
+	}
+	
+	public double meanAreaOfInTracks(){
+		
+		double totalA = 0;
+		int num = 0;
+		
+		ListIterator<Track> trIt = inTracks.listIterator();
+		while (trIt.hasNext()) {
+			num++;
+			totalA += trIt.next().points.lastElement().area;
+		}
+		
+		return totalA/num; 
+	}
 	
 	
 	

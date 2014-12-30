@@ -481,22 +481,36 @@ public class PointExtractor {
 	    if (showResults) {
 	    	threshIm.show();
 	    }
-	    pointTable = CVUtils.findPoints(threshIm, ep, showResults);
-	    comm.message("Frame "+currentFrameNum+": "+pointTable.getCounter()+" points in ResultsTable", VerbLevel.verb_message);
+	    //
+//	    pointTable = CVUtils.findPoints(threshIm, ep, showResults);
+//	    comm.message("Frame "+currentFrameNum+": "+pointTable.getCounter()+" points in ResultsTable", VerbLevel.verb_message);
+//	    
+//	    extractedPoints = CVUtils.rt2TrackPoints(pointTable, currentFrameNum, comm, ep);
+	    extractedPoints = findPtsInIm(threshIm, showResults);
 	    
-	    
-	    extractedPoints = CVUtils.rt2TrackPoints(pointTable, currentFrameNum, comm, ep);
 	    
 	    String s = "Frame "+currentFrameNum+": Extracted "+extractedPoints.size()+" new points";
 	    comm.message(s, VerbLevel.verb_message);
 	    		
 	}
 	
-
+	public Vector<TrackPoint> findPtsInIm(ImagePlus im, boolean showResults){
+		pointTable = CVUtils.findPoints(threshIm, ep, showResults);
+		if (showResults) {
+			comm.message("Frame "+currentFrameNum+": "+pointTable.getCounter()+" points in ResultsTable", VerbLevel.verb_message);
+	    }
+		Vector<TrackPoint> pts = CVUtils.rt2TrackPoints(pointTable, currentFrameNum, comm, ep);
+		return pts;
+	}
 	
 	
-	//TODO
-	public Vector<TrackPoint> splitPoint(TrackPoint point, int numDesiredPts){
+	/**
+	 * Tries to find a pixel threshold which can achieve the desired number of points. If sucessful, returns a list of the new points.
+	 * @param point The point to be split
+	 * @param numDesiredPts the number of points which "should" be in that image
+	 * @return The new points if a threshold was found, otherwise an empty list 
+	 */
+	public Vector<TrackPoint> splitPoint(TrackPoint point, int numDesiredPts, int targetArea){
 		
 		Vector<TrackPoint> newPoints = new Vector<TrackPoint>();
 		
@@ -506,22 +520,27 @@ public class PointExtractor {
 		crIm.setRoi(point.rect);
 		crIm.getProcessor().crop();
 		//Try to find the threshold (CVUtils)
-		int newThres = CVUtils.findThreshforNumPts(crIm, numDesiredPts);
-		//if found, threshold the cropped im, create the points (rt2TrackPts, adjusting for crop offset), add to list
+		int minArea = (int) (targetArea*(1-ep.fracChangeForSplitting));
+		int maxArea = (int) (targetArea*(1+ep.fracChangeForSplitting));
+		int newThres = CVUtils.findThreshforNumPts(crIm, ep, numDesiredPts, minArea, maxArea, targetArea);
 		if (newThres>0){
-			//threshold the image
-			find the points 
+			//Threshold the image
+			crIm.getProcessor().threshold(newThres);
+			//Find the points 
+			newPoints = findPtsInIm(crIm, false);
+			//Fix the offsets
+			for (int i=1; i<=newPoints.size(); i++){
+				Rectangle rect = newPoints.get(i).rect;
+				rect.x += point.rect.x;
+				rect.y += point.rect.y;
+				newPoints.get(i).rect = rect;
+			}
+			
 		}
 		
 		return newPoints;
 	}
-		//rethreshold
-		//find contours
-		//find the relevant contour
-		//take the proper subimage
-		//Rethreshold to a number of subregions (CVUtilsPlus) 
-		//
-	
+
 	
 	/**
 	 * Returns the extracted points

@@ -85,6 +85,12 @@ public class ExtractionParameters {
      * The global threshold value
      */
     double globalThreshValue = 20;
+    /**
+     * The fraction from which the area of a maggot can deviate from the target area when splitting a point
+     * <p>
+     * Between 0 and 1, inclusive 
+     */
+    double fracChangeForSplitting = .5;
     
     /**
      * Add-on for the string which specifies the center coordinates of the points
