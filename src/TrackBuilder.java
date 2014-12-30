@@ -494,12 +494,39 @@ public class TrackBuilder {
 		
 	}
 	
-	//TODO 
+	/**
+	 * Tries to fix each ongoing collision
+	 */
 	private void fixCollisions(){
 		
+		ListIterator<Collision> colIt = activeCollisions.listIterator();
 		
-		//end the collision 
-		//Add the new trackmatches to the match list 
+		while (colIt.hasNext()) {
+			
+			Collision col = colIt.next();
+			TrackPoint colPt = col.matches.firstElement().getTopMatchPoint();
+			
+			int fixStatus = col.fixCollision(); 
+			
+			if (fixStatus>0){ //The collision was fixed! 
+				
+				if (fixStatus==1) {
+					comm.message("Collision fixed at track "+col.collTrack.trackID+" by matching to nearby points", VerbLevel.verb_debug);
+				} else if (fixStatus==2) {
+					activePts.remove(colPt);
+					activePts.addAll(col.getMatchPoints());
+					comm.message("Collision fixed at track "+col.collTrack.trackID+" by splitting the collision point", VerbLevel.verb_debug);
+				}
+				
+				//End the collision, remove it from activeCollisions, and add the new matches to the match list
+				col.endCollision();
+				activeCollisions.remove(col);
+				matches.addAll(col.matches);
+				
+			}
+			
+			
+		}
 		
 	}
 	
@@ -584,16 +611,20 @@ public class TrackBuilder {
 				//if there's a new track created by a collision starting/ending, add it to activeTracks & remove the pt from points 
 				match.track.extendTrack(match.getTopMatchPoint());
 				match.track.setCollision(frameNum, null);
+				
 				activeTracks.add(match.track);
 				activePts.remove(match.track.points.lastElement());
+				
 			} else {
 				match.track.extendTrack(match.getTopMatchPoint());
-				activePts.remove(match.track.points.lastElement());
 				//If the track is in a collision, mark the new point 
 				//THIS MAY BE MODIFIED vvvv
 				if (match.track.isCollision.get(match.track.isCollision.size()-1)){
 					match.track.setCollision(frameNum, null);
 				}
+				
+
+				activePts.remove(match.track.points.lastElement());
 						
 				//activePts.remove(match.getTopMatchPoint());
 			}
