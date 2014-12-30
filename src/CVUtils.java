@@ -249,7 +249,7 @@ public class CVUtils {
 	 * @param frameNum Frame number
 	 * @return List of Trackpoints within the 
 	 */
-	public static Vector<TrackPoint> rt2TrackPoints (ResultsTable rt, int frameNum, Communicator comm, ExtractionParameters ep) {
+	public static Vector<TrackPoint> rt2TrackPoints (ResultsTable rt, int frameNum, Communicator comm, ExtractionParameters ep, int thresh) {
 		
 		Vector<TrackPoint> tp = new Vector<TrackPoint>();
 		
@@ -270,7 +270,7 @@ public class CVUtils {
 			
 			comm.message("Converting Point "+row+" to TrackPoint", VerbLevel.verb_debug);
 			if (ep.properPointSize(area)) {
-				tp.add(new TrackPoint(x,y,rect,area,frameNum));
+				tp.add(new TrackPoint(x,y,rect,area,frameNum,thresh));
 			}
 		}
 		

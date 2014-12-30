@@ -100,7 +100,9 @@ public class Collision {
 		
 	}
 	
-	//TODO
+	/**
+	 * Housekeeping for when a collision is fixed
+	 */
 	public void endCollision() {
 		
 		ListIterator<TrackMatch> mIt = matches.listIterator();
@@ -159,17 +161,12 @@ public class Collision {
 				}
 			}
 		}
-
-		
-		int numDesired = inTracks.size();
-		int numCurrent = matches.size();
-		boolean collisionIsEnding = (numCurrent!=numDesired);
 		
 		
 		if (otherMatches.size()>0) { //Empty points were found, edit the matches to avoid/end the collision
 		
 			//Get the best secondary match
-			 
+			//TODO change this choice
 			Object minDist = Collections.min(otherPointDists);
 			int ind = otherPointDists.indexOf(minDist);
 			TrackMatch match2Change = otherMatches.get(ind);
@@ -177,7 +174,7 @@ public class Collision {
 			
 			Vector<TrackMatch> newMatches = new Vector<TrackMatch>(); 
 			
-			if (collisionIsEnding){
+			if (collisionIsEnding()){
 				//Make new tracks; stick the current top match and the new top match into new trackmatches
 				Track track1 = new Track(match2Change.TB);
 				newMatches.add(new TrackMatch(track1, match2Change));
@@ -192,7 +189,7 @@ public class Collision {
 			match2Change.matchPts[oldInd].numMatches--;
 			match2Change.matchPts[newInd].numMatches++;
 					
-			if (collisionIsEnding) {
+			if (collisionIsEnding()) {
 
 				Track track2 = new Track(match2Change.TB);
 				newMatches.add(new TrackMatch(track2, match2Change));
@@ -208,30 +205,48 @@ public class Collision {
 		return false;
 	}
 	
-	//TODO 
+	/**
+	 * Attempts to resolve the collision by splitting the collision point into multiple points
+	 * @return Whether or not the collision point could be split
+	 */
 	public boolean matchToSplitPts() {
 		
 		TrackPoint badPt = matches.firstElement().getTopMatchPoint();
 		//Try to split the points into the appropriate number of points
 		Vector<TrackPoint> splitPts = collTrack.tb.pe.splitPoint(badPt, inTracks.size(), (int) meanAreaOfInTracks());
 		
-		
-		int numDesired = inTracks.size();
-		int numCurrent = matches.size();
-		boolean collisionIsEnding = (numCurrent!=numDesired);
-		
 		if (splitPts!=null) {
-			if (collisionIsEnding){
-				//Make new tracks
-				//Remove point from old trackmatch
-			} else {
-				//Replace matches
+			
+			//(Delete old point in TrackBuilder)
+			
+			if (collisionIsEnding()){ //Old collision- end the track, start new ones
 				
+				//End the old track by clearing that match 
+				TrackMatch oldMatch = matches.firstElement();
+				oldMatch.clearAllMatches();
+				matches.clear();
+				
+				//Make new empty tracks & TrackMatches for each of the split points
+				ListIterator<TrackPoint> spIt = splitPts.listIterator();
+				while (spIt.hasNext()){
+					Track tr = new Track(oldMatch.TB);
+					TrackMatch newMatch =new TrackMatch(tr, oldMatch); 
+					newMatch.replaceMatch(1, spIt.next());
+					matches.add(newMatch);
+				}
+				
+			} else { //New collision- modify the matches
+				//Decide which point goes with which track
+				TrackPoint ptA = matches.get(1).track.points.lastElement();
+				TrackPoint ptB = matches.get(2).track.points.lastElement();
+				Vector<TrackPoint> orderedPts = matchPtsToNearbyPts(ptA, ptB, splitPts);
+				//Replace the points in the TrackMatches
+				orderedPts.get(1).numMatches++;
+				matches.get(1).replaceMatch(1, orderedPts.get(1));
+				orderedPts.get(2).numMatches++;
+				matches.get(2).replaceMatch(1, orderedPts.get(2));
 			}
 			
-			//If track has no points, match incoming points to split points  
-				//fix matches, fix pointMatchNums,
-			//Else, start new 
 			return true;
 		} else {
 			return false;
@@ -294,7 +309,20 @@ public class Collision {
 		return totalA/num; 
 	}
 	
+	public Vector<TrackPoint> getMatchPoints(){
+		Vector<TrackPoint> matchPts = new Vector<TrackPoint>();
+		for (int i=1; i<matches.size(); i++){
+			matchPts.add(matches.get(i).getTopMatchPoint());
+		}
+		return matchPts;
+	}
 	
+	//TODO change this?
+	public boolean collisionIsEnding(){
+		int numDesired = inTracks.size();
+		int numCurrent = matches.size();
+		return numCurrent!=numDesired;
+	}
 	
 	
 	

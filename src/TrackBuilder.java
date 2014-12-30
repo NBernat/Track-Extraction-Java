@@ -327,8 +327,8 @@ public class TrackBuilder {
 			fixCollisions();
 			
 			//if number incoming = number outgoing, finish
-			int numFinishedCollisions = releaseFinishedCollisions();
-			comm.message("Number of collisions ended in frame "+frameNum+": "+numFinishedCollisions, VerbLevel.verb_debug);
+//			int numFinishedCollisions = releaseFinishedCollisions();
+//			comm.message("Number of collisions ended in frame "+frameNum+": "+numFinishedCollisions, VerbLevel.verb_debug);
 			
 		}
 		
@@ -458,8 +458,9 @@ public class TrackBuilder {
 	 */
 	private int avoidOrCreateCollision(Vector<TrackMatch> colMatches){
 		
-		//For debugging output, grab the point
-		int ptID = colMatches.firstElement().getTopMatchPoint().pointID;
+		//Grab the point. to be deleted if it's split into multiple points
+		TrackPoint colPt = colMatches.firstElement().getTopMatchPoint();
+		int ptID = colPt.pointID;
 		
 		//Create a new collision object from the collision
 		Collision newCol = new Collision(colMatches, frameNum);
@@ -479,9 +480,12 @@ public class TrackBuilder {
 		}
 		
 		else { //The Collision-fixing machinery fixed the matches
+//			newCol.endCollision(); //unnecessary, because we dont save the collision
 			if (colFix==1) {
 				comm.message("Collision avoided at point "+ptID+" by matching to nearby points", VerbLevel.verb_debug);
 			} else if (colFix==2) {
+				activePts.remove(colPt);
+				activePts.addAll(newCol.getMatchPoints());
 				comm.message("Collision avoided at point "+ptID+" by splitting the collision point", VerbLevel.verb_debug);
 			}
 			return 0; //0 new collisions
@@ -494,7 +498,8 @@ public class TrackBuilder {
 	private void fixCollisions(){
 		
 		
-		
+		//end the collision 
+		//Add the new trackmatches to the match list 
 		
 	}
 	
@@ -505,52 +510,52 @@ public class TrackBuilder {
 	 * Finds and releases collision events which have finished
 	 * @return number of collisions released
 	 */
-	private int releaseFinishedCollisions(){
-		
-		Vector<Collision> finished = detectFinishedCollisions();
-		int numFinishedCollisions = finished.size();
-		ListIterator<Collision> cIter = finished.listIterator();
-		while(cIter.hasNext()){
-			releaseCollision(cIter.next());
-		}
-		
-		return numFinishedCollisions;
-		
-	}
+//	private int releaseFinishedCollisions(){
+//		
+//		Vector<Collision> finished = detectFinishedCollisions();
+//		int numFinishedCollisions = finished.size();
+//		ListIterator<Collision> cIter = finished.listIterator();
+//		while(cIter.hasNext()){
+//			releaseCollision(cIter.next());
+//		}
+//		
+//		return numFinishedCollisions;
+//		
+//	}
 	
 	
 	/**
 	 * Checks the active collisions for any finished events
 	 * @return Vector of finished collision objects
 	 */
-	private Vector<Collision> detectFinishedCollisions(){
-		Vector<Collision> finished = new Vector<Collision>();
-		
-		ListIterator<Collision> cIt = activeCollisions.listIterator();
-		while(cIt.hasNext()){
-			Collision col = cIt.next();
-			if (col.hasFinsihed()){
-				finished.add(col);
-			}
-		}
-		
-		return finished;
-	}
+//	private Vector<Collision> detectFinishedCollisions(){
+//		Vector<Collision> finished = new Vector<Collision>();
+//		
+//		ListIterator<Collision> cIt = activeCollisions.listIterator();
+//		while(cIt.hasNext()){
+//			Collision col = cIt.next();
+//			if (col.hasFinsihed()){
+//				finished.add(col);
+//			}
+//		}
+//		
+//		return finished;
+//	}
 	
 	/**
 	 * Releases a collision by ending the event, adding the outgoing tracks to activeTracks, and storing the collision event for later processing 
 	 * @param col The collision to be released
 	 */
-	private void releaseCollision(Collision col){
-		
-		//Tell the collision object that this is where to end it
-//		col.finishCollision(frameNum-pe.increment);
-		//Add the newly started tracks to active tracks
-		Vector<Track> newTracks = col.getOutTracks();
-		activeTracks.addAll(newTracks);
-		//Store the collision event for later processing
-		finishedCollisions.add(col);
-	}
+//	private void releaseCollision(Collision col){
+//		
+//		//Tell the collision object that this is where to end it
+////		col.finishCollision(frameNum-pe.increment);
+//		//Add the newly started tracks to active tracks
+//		Vector<Track> newTracks = col.getOutTracks();
+//		activeTracks.addAll(newTracks);
+//		//Store the collision event for later processing
+//		finishedCollisions.add(col);
+//	}
 
 
 	
@@ -576,13 +581,16 @@ public class TrackBuilder {
 				
 			} else if (match.track.points.size()==0) {
 				//THIS IS IMPORTANT!
-				//if there's a new track created by a collision starting/ending, add it to activeTracks
+				//if there's a new track created by a collision starting/ending, add it to activeTracks & remove the pt from points 
 				match.track.extendTrack(match.getTopMatchPoint());
 				match.track.setCollision(frameNum, null);
 				activeTracks.add(match.track);
+				activePts.remove(match.track.points.lastElement());
 			} else {
 				match.track.extendTrack(match.getTopMatchPoint());
-				//If the track is in a collision, mark the new point
+				activePts.remove(match.track.points.lastElement());
+				//If the track is in a collision, mark the new point 
+				//THIS MAY BE MODIFIED vvvv
 				if (match.track.isCollision.get(match.track.isCollision.size()-1)){
 					match.track.setCollision(frameNum, null);
 				}

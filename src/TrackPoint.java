@@ -49,28 +49,33 @@ public class TrackPoint {
 	/**
 	 * The track to which this point belongs
 	 */
-//	Track track;
+	Track track;
+	/*
+	 * The threshold value used to find this trackpoint
+	 */
+	protected int thresh;
+	
 	
 	////////////////////////////////////
 	// Constructors & Related Methods
 	////////////////////////////////////
 	
-	TrackPoint(double x, double y, Rectangle rect, double area, int frame) {
-	    init(x, y, rect, area, null, frame, ++lastIDNum);
+	TrackPoint(double x, double y, Rectangle rect, double area, int frame, int thresh) {
+	    init(x, y, rect, area, null, frame, ++lastIDNum, thresh);
 	}
 
-	TrackPoint (double x, double y, Rectangle rect, double area,  double[] cov, int frame) {
-	     init(x, y, rect, area, cov, frame, ++lastIDNum);
+	TrackPoint (double x, double y, Rectangle rect, double area,  double[] cov, int frame, int thresh) {
+	     init(x, y, rect, area, cov, frame, ++lastIDNum, thresh);
 	 }
 
-	TrackPoint (double x, double y, Rectangle rect, double area, double[] cov, int frame, int ID) {
-	     init(x, y, rect, area, cov, frame, ID);
+	TrackPoint (double x, double y, Rectangle rect, double area, double[] cov, int frame, int ID, int thresh) {
+	     init(x, y, rect, area, cov, frame, ID, thresh);
 	 }
 	
 	/**
 	 * Helper method for constructors 
 	 */
-	public void init(double x, double y, Rectangle rect, double area, double[] cov, int frame, int ID){
+	public void init(double x, double y, Rectangle rect, double area, double[] cov, int frame, int ID, int thresh){
 		this.x = x;
 		this.y = y;
 		this.rect = rect;
@@ -79,6 +84,7 @@ public class TrackPoint {
 		frameNum = frame;
 		pointID = ID;
 		numMatches = 0;
+		this.thresh = thresh;
 //		track = null;
 		
 	}
@@ -173,10 +179,17 @@ public class TrackPoint {
 	public int getNumMatches() {
 		return numMatches;
 	}
+	
+	public int getThresh(){
+		return thresh;
+	}
 		
-//	public void setTrack(Track track){
-//		this.track = track;
-//	}
+	public void setThresh(int thresh){
+		this.thresh = thresh;
+	}
+	public void setTrack(Track track){
+		this.track = track;
+	}
 	
 //	public ImageWindow showTrackPoint(ImageWindow window){
 //		return showTrackPoint(window, "Track point "+pointID);

@@ -274,6 +274,12 @@ public class TrackMatch {
 		}
 	}
 	
+	public void replaceMatch(int matchIndex, TrackPoint pt){
+		validMatch[matchIndex] = 1;
+		matchPts[matchIndex] = pt;
+		dist2MatchPts[matchIndex] = track.distFromEnd(pt);
+	}
+	
 	public void spillInfoToCommunicator(Communicator comm){
 		VerbLevel oldVerb = comm.verbosity;
 		comm.setVerbosity(VerbLevel.verb_debug);
