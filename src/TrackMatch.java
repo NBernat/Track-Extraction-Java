@@ -126,6 +126,9 @@ public class TrackMatch {
 		int i=0;
 		while (i<matchPts.length){
 			if (dist2MatchPts[i]>distCut){
+				if (i==getTopMatchInd()){
+					matchPts[i].setNumMatches(matchPts[i].getNumMatches()-1);
+				}
 				validMatch[i] = 0;
 			}
 			i++;
@@ -202,13 +205,17 @@ public class TrackMatch {
 		return 0;
 	}
 	
+	
+
+	
 	/**
 	 * Finds the first trackMatch which is colliding with this trackMatch's track 
 	 * @param matches List of TrackMatches containing the colliding track
 	 * @param startInd First index of matches that is searched for colliding tracks; none of the previous matches are searched 
 	 * @return Index of the first TrackMatch whose primary pointMatch is the same as this TrackMatch's primary pointMatch 
 	 */
-	public int findCollidingTrackMatch(Vector<TrackMatch> matches, int startInd){
+//	public int findCollidingTrackMatch(Vector<TrackMatch> matches, int startInd){
+	public int findCollidingTrackMatch(Vector<TrackMatch> matches){
 		TB.comm.message("findCollidingTrackMatch called on track "+track.trackID, VerbLevel.verb_debug);
 		int ind = -1;
 		boolean notFound = true;
@@ -216,21 +223,23 @@ public class TrackMatch {
 			TB.comm.message("Match list empty", VerbLevel.verb_debug);
 			return -2;
 		} else {
-			TB.comm.message("Of "+matches.size()+" matches, we're starting at number "+startInd, VerbLevel.verb_debug);
+//			TB.comm.message("Of "+matches.size()+" matches, we're starting at number "+startInd, VerbLevel.verb_debug);
 		}
 		
-		if (startInd<matches.size()){
+//		if (startInd<matches.size()){
 			TB.comm.message("Searching list for collision match...", VerbLevel.verb_debug);
-			ListIterator<TrackMatch> tmIt = matches.listIterator(startInd);
+//			ListIterator<TrackMatch> tmIt = matches.listIterator(startInd);
+			ListIterator<TrackMatch> tmIt = matches.listIterator();
 			while (notFound && tmIt.hasNext()) {
 				int curInd = tmIt.nextIndex();
 				TrackMatch mCheck = tmIt.next();
-				if (mCheck.getTopMatchPoint()!=null && mCheck.getTopMatchPoint().pointID==getTopMatchPoint().pointID) {
+				//If this is not the current match and the point is the same, then we found a winner! 
+				if (mCheck.getTopMatchPoint()!=null && mCheck.track.trackID!=track.trackID && mCheck.getTopMatchPoint().pointID==getTopMatchPoint().pointID) {
 					ind = curInd;
 					notFound = false;
 				}
 			}
-		}
+//		}
 		return ind;
 	}
 	
@@ -290,10 +299,11 @@ public class TrackMatch {
 			TrackPoint pt = matchPts[i];
 			String s = "MatchPt"+i+": point "+pt.pointID+", ("+(int)pt.x+","+(int)pt.y+"), ";
 			s += dist2MatchPts[i]+" pix away from track, ";
-			if (validMatch[i]==0){
-				s += "NOT ";
-			}
-			s += "valid.";
+//			Valid hasn't yet been set, so there's no point incorrectly indicating that it's still valid
+//			if (validMatch[i]==0){
+//				s += "NOT ";
+//			}
+//			s += "valid.";
 			comm.message(s, VerbLevel.verb_debug);
 		}
 		

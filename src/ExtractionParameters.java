@@ -15,7 +15,7 @@ public class ExtractionParameters {
 	 * <p>
 	 * 2: Level 2, then comb through collisions after tracks are made 
 	 */
-	int collisionLevel = 0;
+	int collisionLevel = 1;
 	
 	/**
 	 *  Distance in pixels which indicates a collision
@@ -42,7 +42,7 @@ public class ExtractionParameters {
 	 * 1 = play track specified by sampleInd
 	 * 2 = 1, plus show ResultsTable & thresholded image of frame specified by sampleInd
 	 */
-	int showSampleData = 1; 
+	int showSampleData =2; 
 	int sampleInd = 10;
 	//TODO
 	int startFrame = 200;
@@ -54,7 +54,7 @@ public class ExtractionParameters {
 	int trackZoomFac = 10;
 	
 	
-	int[] matchSpill = {307,383,459};
+	int[] matchSpill = {234,251,356,367};
 	boolean dispTrackInfo = true;
 	
 	///////////////////////////
@@ -104,7 +104,7 @@ public class ExtractionParameters {
     /**
      * Minimum blob area
      */
-    double minArea = 50;
+    double minArea = 35;
     /**
      * Maximum blob area
      */

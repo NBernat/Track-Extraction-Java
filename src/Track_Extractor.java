@@ -78,7 +78,7 @@ public class Track_Extractor implements PlugIn{
 				
 			}
 			
-			
+			new TextWindow("Communicator Output", tb.comm.outString, 500, 500);
 			
 //			if (ep.showSampleData>=1){
 //				int trackInd = ep.sampleInd;
@@ -93,9 +93,17 @@ public class Track_Extractor implements PlugIn{
 //				}
 //			}
 //			
+			
 		}
 		catch (Exception e) {
-			tb.comm.message(e.toString(), VerbLevel.verb_error);
+			
+			StackTraceElement[] tr = e.getStackTrace();
+			String s = e.toString()+"\n";
+			for (int i=0; i<tr.length; i++){
+				s += tr[i].toString()+"\n";
+			}
+			
+			tb.comm.message(s, VerbLevel.verb_error);
 			new TextWindow("Communicator Output: Error", tb.comm.outString, 500, 500);
 		}
 		

@@ -158,7 +158,7 @@ public class TrackBuilder {
 		if (ep.matchSpill.length>0) {
 			for (int i=0;i<ep.matchSpill.length;i++){
 				
-				int ind = ep.startFrame-ep.matchSpill[i]+1;
+				int ind = ep.matchSpill[i]-ep.startFrame+1;
 				if (ind>0){
 					new TextWindow("Match Spill for frame "+ep.matchSpill[i], matchSpills.get(ind).outString, 500, 500);
 				}
@@ -409,10 +409,12 @@ public class TrackBuilder {
 				
 				if(colMatches.size()==1){
 					comm.message("Collision at point "+match.getTopMatchPoint().pointID+" in track "+match.track.trackID+" has no accompanying trackmatch!", VerbLevel.verb_error);
+					match.getTopMatchPoint().setNumMatches(match.getTopMatchPoint().getNumMatches()-1);
+					trackMessage.message("Track "+match.track.trackID+" ended at frame "+(frameNum-1)+" for rogue collision in frame "+frameNum, VerbLevel.verb_message);
+					match.clearAllMatches();
+				} else {
+					numNewCollisions += avoidOrCreateCollision(colMatches);
 				}
-				
-				numNewCollisions += avoidOrCreateCollision(colMatches);
-				
 				
 			}
 		}
@@ -430,20 +432,23 @@ public class TrackBuilder {
 		
 		Vector<TrackMatch> colMatches= new Vector<TrackMatch>();
 		
-		int numColliding = match.getTopMatchPoint().getNumMatches();
-		int startInd = matches.indexOf(match)+1;
-		for (int j=0; j<(numColliding-1); j++) {
+//		int numColliding = match.getTopMatchPoint().getNumMatches();
+//		int startInd = matches.indexOf(match)+1;
+//		for (int j=0; j<(numColliding-1); j++) {//
 			
 			//Find the first TrackMatch in matches that's in the collision
-			int colInd = match.findCollidingTrackMatch(matches, startInd);
+//			int colInd = match.findCollidingTrackMatch(matches, startInd);
+			int colInd = match.findCollidingTrackMatch(matches);
 			if (colInd>=0) {
 				colMatches.add(matches.get(colInd));
 //				colTracks.add(matches.get(colInd).track);
-				
+				comm.message("Match found", VerbLevel.verb_debug);
 				//If there are more than 2 tracks in the collision, start looking for collision matches at the index following the one that was just found
-				startInd = colInd+1;
+//				startInd = colInd+1;
+			} else{
+				comm.message("No matches found", VerbLevel.verb_debug);
 			}
-		}
+//		}
 		
 		return colMatches;
 

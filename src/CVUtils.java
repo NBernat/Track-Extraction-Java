@@ -210,6 +210,7 @@ public class CVUtils {
 		
 		//Don't show anything, don't exclude edgepoints. basically we have no special options
 		int opInt=0;
+		opInt+=ParticleAnalyzer.EXCLUDE_EDGE_PARTICLES;
 		if (showResults) {
 			opInt+=ParticleAnalyzer.SHOW_RESULTS;
 		} else {
@@ -268,10 +269,15 @@ public class CVUtils {
 			//Rectangle rect = new Rectangle((int)x-ep.roiPadding, (int)y-ep.roiPadding, (int)2*ep.roiPadding, (int)2*ep.roiPadding);
 			
 			
-			comm.message("Converting Point "+row+" to TrackPoint", VerbLevel.verb_debug);
+			comm.message("Converting Point "+row+" "+"("+(int)x+","+(int)y+")"+"to TrackPoint", VerbLevel.verb_debug);
 			if (ep.properPointSize(area)) {
-				tp.add(new TrackPoint(x,y,rect,area,frameNum,thresh));
+				TrackPoint newPt = new TrackPoint(x,y,rect,area,frameNum,thresh); 
+				tp.add(newPt);
+				comm.message("Point "+row+" has pointID "+newPt.pointID, VerbLevel.verb_debug);
+			} else{
+				comm.message("Point was not proper size: not made into a point", VerbLevel.verb_debug);
 			}
+			
 		}
 		
 		return tp;
