@@ -310,6 +310,31 @@ public class TrackMatch {
 		comm.setVerbosity(oldVerb);
 	}
 	
-
+	/**
+	 * Changes the primary match to the specified index. On error, nothing is changed.
+	 * @param ind The index of the new primary match
+	 * @return status: -1 for ind out of bounds, 0 for invalid match at ind, 1 for success
+	 */
+	public int changePrimaryMatch(int ind){
+		
+		if (ind<0 || ind>validMatch.length){
+			return -1;
+		}
+		
+		if (validMatch[ind]==0) {
+			return 0;
+		}
+		
+		for(int i=0; i<ind; i++){
+			if (i==getTopMatchInd()){
+				getTopMatchPoint().setNumMatches(getTopMatchPoint().getNumMatches()-1);
+			}
+			validMatch[i]=0;
+		}
+		matchPts[ind].setNumMatches(matchPts[ind].getNumMatches()+1);
+		return 1;
+		
+	}
+	
 	
 }

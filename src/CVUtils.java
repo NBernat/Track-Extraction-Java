@@ -298,7 +298,7 @@ public class CVUtils {
 		g.fillRect(0,0,newWidth,newHeight);
 		int offsetX = (newWidth/2)+1-centerX;
 		int offsetY = (newHeight/2)+1-centerY;
-		g.drawImage(newIm, offsetX, offsetY, null);
+		g.drawImage(image.getBufferedImage(), offsetX, offsetY, null);
 		
 		ImagePlus retIm = new ImagePlus("Padded "+image.getTitle(), newIm);
 		

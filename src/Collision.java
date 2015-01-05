@@ -64,7 +64,8 @@ public class Collision {
 	 */
 	public boolean hasFinsihed(){
 		
-		if (outTracks.size()>0){
+//		if (outTracks.size()>0){
+		if (collTrack!=null){
 			return true;
 		}
 		
@@ -153,51 +154,97 @@ public class Collision {
 		while (mIt.hasNext()) {
 			TrackMatch match = mIt.next();
 			int[] betterInds = match.indsOfValidNonPrimaryEmptyMatches();
-			if (betterInds.length>0) {
-				for (int i=0; i<betterInds.length; i++){
-					otherMatches.add(match);
-					otherMatchInds.add(betterInds[i]);
-					otherPointDists.add(match.dist2MatchPts[betterInds[i]]);
-				}
+			for (int i=0; i<betterInds.length; i++){
+				otherMatches.add(match);
+				otherMatchInds.add(betterInds[i]);
+				otherPointDists.add(match.dist2MatchPts[betterInds[i]]);
 			}
 		}
 		
 		
-		if (otherMatches.size()>0) { //Empty points were found, edit the matches to avoid/end the collision
+		if (otherMatches.size()>0) { //Empty points were found: edit the matches to avoid/end the collision
 		
-			//Get the best secondary match
-			//TODO change this choice
-			Object minDist = Collections.min(otherPointDists);
-			int ind = otherPointDists.indexOf(minDist);
-			TrackMatch match2Change = otherMatches.get(ind);
 			
-			
-			Vector<TrackMatch> newMatches = new Vector<TrackMatch>(); 
-			
-			if (collisionIsEnding()){
-				//Make new tracks; stick the current top match and the new top match into new trackmatches
-				Track track1 = new Track(match2Change.TB);
-				newMatches.add(new TrackMatch(track1, match2Change));
-			}
-			
-			//If this is just an initial correction, simply edit the existing matches
-			//Since the matches are ordered by distance, this will be the first valid match after the
-			//primary match; to change the top match to the new one, simply invalidate the top match
-			int oldInd = match2Change.getTopMatchInd();
-			int newInd = otherMatchInds.get(ind);
-			match2Change.validMatch[oldInd]=0;
-			match2Change.matchPts[oldInd].numMatches--;
-			match2Change.matchPts[newInd].numMatches++;
-					
-			if (collisionIsEnding()) {
-
-				Track track2 = new Track(match2Change.TB);
-				newMatches.add(new TrackMatch(track2, match2Change));
+			if (collisionIsEnding()){ //Make new tracks/matches and replace the old matches 
+				Vector<TrackMatch> newMatches = new Vector<TrackMatch>();
 				
-				//Switch the match to the new match 
-				match2Change.clearAllMatches();
+				//Get the NEAREST point
+				int ind = otherPointDists.indexOf(Collections.min(otherPointDists));
+				TrackMatch matchWithPoint = otherMatches.get(ind);
+				//Make a new track&trackMatch for: 1-the old point 2-the NEAREST empty point
+				Track track1 = new Track (matches.firstElement().TB);
+				newMatches.add(new TrackMatch(track1, matches.firstElement()));//This will copy the trackmatch, and the new track will start with the old point
+				Track track2 = new Track(matchWithPoint.TB);
+				matchWithPoint.changePrimaryMatch(otherMatchInds.get(ind)); 
+				newMatches.add(new TrackMatch(track2, matchWithPoint));//This will copy the trackmatch, and the new track will start with the new empty point
+				//Clear the old trackmatches and replace with the new matches 
+				matches.firstElement().clearAllMatches();
 				matches = newMatches;
+				
+			} else {
+				
+				//Find the point that minimizes the total dist
+				double minTotalDist = Double.POSITIVE_INFINITY;
+				int minInd = -1;
+				
+				TrackPoint ptA = matches.get(0).track.getEnd();
+				TrackPoint ptB = matches.get(1).track.getEnd();
+				Vector<TrackPoint> compPts = new Vector<TrackPoint>();
+				compPts.add(matches.firstElement().getTopMatchPoint());
+				
+				for (int i=0; i<otherMatches.size(); i++) {
+					//Find the pairing which minimizes the total dist between the points
+					compPts.add(otherMatches.get(i).matchPts[otherMatchInds.get(i)]);
+					Vector<TrackPoint> orderedPts = matchPtsToNearbyPts(ptA, ptB, compPts);
+					double totalDist = distBtwnPts(ptA, orderedPts.get(0))+distBtwnPts(ptB, orderedPts.get(1));
+					if (minTotalDist<totalDist){
+						minTotalDist = totalDist;
+						minInd = i;
+					}
+					
+					//Remove point i from the list
+					compPts.remove(1);
+				}
+				
+				//Edit the appropriate match
+				otherMatches.get(minInd).changePrimaryMatch(otherMatchInds.get(minInd));
+				
 			}
+			
+			//Get the best secondary match
+			//Change this choice
+//			Object minDist = Collections.min(otherPointDists);
+//			int ind = otherPointDists.indexOf(minDist);
+//			TrackMatch match2Change = otherMatches.get(ind);
+//			
+//			
+//			Vector<TrackMatch> newMatches = new Vector<TrackMatch>(); 
+//			
+//			//
+//			if (collisionIsEnding()){
+//				//Make new tracks; stick the current top match and the new top match into new trackmatches
+//				Track track1 = new Track(match2Change.TB);
+//				newMatches.add(new TrackMatch(track1, (TrackMatch)match2Change.clone()));
+//			}
+//			
+//			//If this is just an initial correction, simply edit the existing matches
+//			//Since the matches are ordered by distance, this will be the first valid match after the
+//			//primary match; to change the top match to the new one, simply invalidate the top match
+//			int oldInd = match2Change.getTopMatchInd();
+//			int newInd = otherMatchInds.get(ind);
+//			match2Change.validMatch[oldInd]=0;
+//			match2Change.matchPts[oldInd].numMatches--;
+//			match2Change.matchPts[newInd].numMatches++;
+//					
+//			if (collisionIsEnding()) {
+//
+//				Track track2 = new Track(match2Change.TB);
+//				newMatches.add(new TrackMatch(track2, match2Change));
+//				
+//				//Switch the match to the new match 
+//				match2Change.clearAllMatches();
+//				matches = newMatches;
+//			}
 		} else { //No empty points were found
 			return false;
 		}
@@ -269,7 +316,7 @@ public class Collision {
 			for(int ptDInd=(ptCInd+1); ptDInd<=nearbyPts.size(); ptDInd++){
 				//Try A-C B-D
 				double dist1 = distBtwnPts(ptA, nearbyPts.get(ptCInd)) + distBtwnPts(ptB, nearbyPts.get(ptDInd));
-				//Try A-C B-D
+				//Try A-D B-C
 				double dist2 = distBtwnPts(ptA, nearbyPts.get(ptDInd)) + distBtwnPts(ptB, nearbyPts.get(ptCInd));
 				
 				if (dist1<bestTotalDist){

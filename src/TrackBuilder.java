@@ -271,7 +271,10 @@ public class TrackBuilder {
 			newMatch.spillInfoToCommunicator(matchComm);
 		}
 		
-		matchSpills.addElement(matchComm);
+		if (ep.matchSpill.length>0){
+			matchSpills.addElement(matchComm);
+		}
+		
 		
 		
 		
