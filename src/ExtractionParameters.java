@@ -25,7 +25,7 @@ public class ExtractionParameters {
 	/**
 	 * Max distance in pixels for a point match 
 	 */
-	double maxMatchDist = 7;
+	double maxMatchDist = 20;
 	
 	/**
 	 * How many frames to move forward when extracting points
@@ -45,8 +45,8 @@ public class ExtractionParameters {
 	int showSampleData =2; 
 	int sampleInd = 10;
 	//TODO
-	int startFrame = 200;
-	int endFrame = 400;
+	int startFrame = 300;
+	int endFrame = 500;
 	//_frame_normalization_methodT fnm = _frame_normalization_methodT._frame_none;
 	//TODO
 	int trackWindowHeight = 50;

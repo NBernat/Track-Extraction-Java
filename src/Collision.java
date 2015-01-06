@@ -37,6 +37,8 @@ public class Collision {
 	 * Any matches to the track/tracks involved in the collision
 	 */
 	Vector<TrackMatch> matches;
+	
+	TrackBuilder tb;
 
 	
 	/**
@@ -44,8 +46,9 @@ public class Collision {
 	 * @param initMatches The matches that collide to a single point
 	 * @param frameNum The frame at which they collide
 	 */
-	public Collision(Vector<TrackMatch> initMatches, int frameNum){
+	public Collision(Vector<TrackMatch> initMatches, int frameNum, TrackBuilder tb){
 		
+		matches = new Vector<TrackMatch>(); 
 		matches.addAll(initMatches);
 		
 		inTracks = new Vector<Track>();
@@ -56,6 +59,8 @@ public class Collision {
 		startFrame = frameNum;
 		currentFrame = frameNum;
 		endFrame=-1;
+		
+		this.tb = tb;
 	}
 	
 	/**
@@ -260,9 +265,9 @@ public class Collision {
 		
 		TrackPoint badPt = matches.firstElement().getTopMatchPoint();
 		//Try to split the points into the appropriate number of points
-		Vector<TrackPoint> splitPts = collTrack.tb.pe.splitPoint(badPt, inTracks.size(), (int) meanAreaOfInTracks());
+		Vector<TrackPoint> splitPts = tb.pe.splitPoint(badPt, inTracks.size(), (int) meanAreaOfInTracks());
 		
-		if (splitPts!=null) {
+		if (splitPts.size()>0) {
 			
 			//(Delete old point in TrackBuilder)
 			
@@ -284,14 +289,14 @@ public class Collision {
 				
 			} else { //New collision- modify the matches
 				//Decide which point goes with which track
-				TrackPoint ptA = matches.get(1).track.points.lastElement();
-				TrackPoint ptB = matches.get(2).track.points.lastElement();
+				TrackPoint ptA = matches.get(0).track.points.lastElement();
+				TrackPoint ptB = matches.get(1).track.points.lastElement();
 				Vector<TrackPoint> orderedPts = matchPtsToNearbyPts(ptA, ptB, splitPts);
 				//Replace the points in the TrackMatches
-				orderedPts.get(1).numMatches++;
+				orderedPts.get(0).setNumMatches(orderedPts.get(0).getNumMatches()+1);
+				matches.get(0).replaceMatch(1, orderedPts.get(0));
+				orderedPts.get(1).setNumMatches(orderedPts.get(1).getNumMatches()+1);
 				matches.get(1).replaceMatch(1, orderedPts.get(1));
-				orderedPts.get(2).numMatches++;
-				matches.get(2).replaceMatch(1, orderedPts.get(2));
 			}
 			
 			return true;
@@ -369,6 +374,22 @@ public class Collision {
 		int numDesired = inTracks.size();
 		int numCurrent = matches.size();
 		return numCurrent!=numDesired;
+	}
+	
+	public String collisionInfoSpill(){
+		String s = "Collision: ";
+		s += "Frames "+startFrame+"-"+endFrame;
+		s += "; collTrack ID: "+collTrack.trackID;
+		s += "; InTracks ";
+		for (int i=0; i<inTracks.size(); i++){
+			s += inTracks.get(i).trackID+" ";
+		}
+		s += "; OutTracks ";
+		for (int i=0; i<outTracks.size(); i++){
+			s += outTracks.get(i).trackID+" ";
+		}
+		
+		return s;
 	}
 	
 	

@@ -4,6 +4,7 @@ import ij.gui.ImageWindow;
 import ij.process.ImageProcessor;
 
 import java.awt.Dimension;
+import java.awt.Rectangle;
 import java.util.Collections;
 import java.util.ListIterator;
 import java.util.Vector;
@@ -234,7 +235,8 @@ public class Track {
 			
 			//Get the first image
 			ImageProcessor trPtIm = tb.pe.imageStack.getProcessor(point.frameNum).duplicate();
-			trPtIm.setRoi(point.rect);
+			Rectangle newRect = new Rectangle((int)point.x - tb.ep.trackWindowWidth/2, (int)point.y - tb.ep.trackWindowHeight/2, tb.ep.trackWindowWidth, tb.ep.trackWindowHeight);
+			trPtIm.setRoi(newRect);
 			ImageProcessor crIm = trPtIm.crop();
 			
 			//OLD This holds the current frame 
@@ -242,9 +244,10 @@ public class Track {
 			
 			//NEW Create a stack of images, and add the first frame
 			ImageStack trackStack = new ImageStack(tb.ep.trackWindowWidth, tb.ep.trackWindowHeight);
-			int centerX = (int)(point.x-point.rect.x);
-			int centerY = (int)(point.y-point.rect.y);
-			trackStack.addSlice(CVUtils.padAndCenter(new ImagePlus("Track "+trackID+" frame "+point.frameNum,crIm), tb.ep.trackWindowWidth, tb.ep.trackWindowHeight, centerX, centerY));
+			trackStack.addSlice(crIm);
+//			int centerX = (int)(point.x-point.rect.x);
+//			int centerY = (int)(point.y-point.rect.y);
+//			trackStack.addSlice(CVUtils.padAndCenter(new ImagePlus("Track "+trackID+" frame "+point.frameNum,crIm), tb.ep.trackWindowWidth, tb.ep.trackWindowHeight, centerX, centerY));
 
 			//Draw a dot, to be changed to a contour
 //			img.getProcessor().drawDot((int)point.x, (int)point.y);
@@ -272,12 +275,15 @@ public class Track {
 				
 				//Get the next image
 				trPtIm = tb.pe.imageStack.getProcessor(point.frameNum).duplicate();
-				trPtIm.setRoi(point.rect);
+				newRect = new Rectangle((int)point.x - tb.ep.trackWindowWidth/2, (int)point.y - tb.ep.trackWindowHeight/2, tb.ep.trackWindowWidth, tb.ep.trackWindowHeight);
+				trPtIm.setRoi(newRect);
+//				trPtIm.setRoi(point.rect);
 				crIm = trPtIm.crop();
 				//Make it fit the stack size
-				centerX = (int)(point.x-point.rect.x);
-				centerY = (int)(point.y-point.rect.y);
-				trackStack.addSlice(CVUtils.padAndCenter(new ImagePlus("Track "+trackID+" frame "+point.frameNum,crIm), tb.ep.trackWindowWidth, tb.ep.trackWindowHeight, centerX, centerY));
+				trackStack.addSlice(crIm);
+//				centerX = (int)(point.x-point.rect.x);
+//				centerY = (int)(point.y-point.rect.y);
+//				trackStack.addSlice(CVUtils.padAndCenter(new ImagePlus("Track "+trackID+" frame "+point.frameNum,crIm), tb.ep.trackWindowWidth, tb.ep.trackWindowHeight, centerX, centerY));
 				
 				//OLD Update the window
 //				img = new ImagePlus("", crIm);

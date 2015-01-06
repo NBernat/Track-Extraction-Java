@@ -270,7 +270,7 @@ public class TrackMatch {
 			}
 		}
 		
-		return null;
+		return inds;
 	}
 	
 	

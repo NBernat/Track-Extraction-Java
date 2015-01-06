@@ -165,16 +165,26 @@ public class TrackBuilder {
 			}
 		}
 		
-		if (ep.dispTrackInfo){
-			new TextWindow("Track info", trackMessage.outString, 500, 500);
-		}
 		
-		
-
 		//TODO Comb out collisions
 		//resolveCollisions();
 		finishedCollisions.addAll(activeCollisions);
 		activeCollisions.removeAll(finishedCollisions);
+		
+		
+//		if (trackMessage.verbosity>=VerbLevel.verb_debug){
+		trackMessage.message("There are "+activeCollisions.size()+"+"+finishedCollisions.size()+" collisions", VerbLevel.verb_message);
+			for (int i=0; i<activeCollisions.size(); i++){
+				trackMessage.message(activeCollisions.get(i).collisionInfoSpill(), VerbLevel.verb_message);
+			}	
+//		}
+		
+		if (ep.dispTrackInfo){
+			new TextWindow("Track info", trackMessage.outString, 500, 500);
+		}
+		
+
+		
 	}
 	
 	
@@ -400,6 +410,7 @@ public class TrackBuilder {
 		while (mIt.hasNext()){
 			
 			TrackMatch match = mIt.next();
+			//CONCURRENT MODIFICATION ERROR: can't add elements until this is over?
 			
 			if (!match.track.isCollision.lastElement() && match.checkTopMatchForCollision()>0){
 
@@ -471,7 +482,7 @@ public class TrackBuilder {
 		int ptID = colPt.pointID;
 		
 		//Create a new collision object from the collision
-		Collision newCol = new Collision(colMatches, frameNum);
+		Collision newCol = new Collision(colMatches, frameNum, this);
 		
 		//Try to fix the collision
 		int colFix = newCol.fixCollision();
@@ -683,5 +694,15 @@ public class TrackBuilder {
 		
 	}
 	
+//	public int findIndOfCollision(int colTrackID, Vector<Collision> collisionList){
+//		
+//		for (int i=0;i<collisionList.size();i++){
+//			if (collisionList.get(i).==collisionID){
+//				return i;
+//			}
+//		}
+//		return -1;
+//		
+//	}
 
 }

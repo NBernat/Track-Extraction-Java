@@ -1,12 +1,17 @@
 import ij.ImagePlus;
 
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.util.ListIterator;
 import java.util.Vector;
 
 
-public class TrackPoint {
+public class TrackPoint extends Point {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	/**
 	 *Unique id for the point
 	 */
@@ -72,6 +77,9 @@ public class TrackPoint {
 	     init(x, y, rect, area, cov, frame, ID, thresh);
 	 }
 	
+	TrackPoint(TrackPoint point) {
+		init(point.x, point.y, (Rectangle)point.rect.clone(), point.area, point.covariance, point.frameNum, ++lastIDNum, thresh);
+	}
 	/**
 	 * Helper method for constructors 
 	 */
@@ -125,7 +133,7 @@ public class TrackPoint {
 		}
 		
 		TrackPoint nearestPt = list.firstElement();
-		double shortestDist = Double.POSITIVE_INFINITY;
+		double shortestDist = java.lang.Double.POSITIVE_INFINITY;//The Point2D (superclass of Point) class apparently overwrites Double   
 		ListIterator<TrackPoint> ptListIter = list.listIterator();
 		while (ptListIter.hasNext()){
 			TrackPoint pt = ptListIter.next();
@@ -190,6 +198,8 @@ public class TrackPoint {
 	public void setTrack(Track track){
 		this.track = track;
 	}
+	
+//	public ImageProcessor getIm( )
 	
 //	public ImageWindow showTrackPoint(ImageWindow window){
 //		return showTrackPoint(window, "Track point "+pointID);

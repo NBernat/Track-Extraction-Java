@@ -404,7 +404,7 @@ public class PointExtractor {
 	
 	
 	/**
-	 * Tries to find a pixel threshold which can achieve the desired number of points. If sucessful, returns a list of the new points.
+	 * Tries to find a pixel threshold which can achieve the desired number of points. If successful, returns a list of the new points.
 	 * @param point The point to be split
 	 * @param numDesiredPts the number of points which "should" be in that image
 	 * @return The new points if a threshold was found, otherwise an empty list 
@@ -434,6 +434,7 @@ public class PointExtractor {
 				rect.y += point.rect.y;
 				newPoints.get(i).rect = rect;
 			}
+			
 			
 		}
 		

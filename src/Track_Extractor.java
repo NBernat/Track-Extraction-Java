@@ -56,9 +56,11 @@ public class Track_Extractor implements PlugIn{
 			
 			
 			GenericDialog gd = new GenericDialog("Track chooser");
-			gd.addMessage("Choose a track ");
-			gd.addMessage("Normal Tracks: (0-"+(tb.finishedTracks.size()-1)+")");
-			gd.addMessage("Normal Tracks: Negative (1-"+(tb.finishedCollisions.size())+")");
+			gd.addMessage("Choose a track");
+			gd.addMessage("Tracks: (0-"+(tb.finishedTracks.size()-1)+")");
+			if (tb.finishedCollisions.size()>0){
+				gd.addMessage("Collision Tracks: Negative (1-"+(tb.finishedCollisions.size())+")");
+			}
 			gd.addMessage("Then press enter");
 			gd.addMessage("To close, X out of this box");
 			gd.addNumericField("Track", 1, 0);
@@ -67,22 +69,45 @@ public class Track_Extractor implements PlugIn{
 				gd.showDialog();
 				//EXECUTE THIS ON "OKAY" PRESS
 				int num = (int)gd.getNextNumber();
-				if (num<=tb.finishedTracks.size() && !gd.wasCanceled()){
-					int trackInd = tb.findIndOfTrack(num, tb.finishedTracks);
-					try {
-						Track track = tb.finishedTracks.get(trackInd);
-						track.playMovie();
-					} catch (Exception e) {
-						
-						StackTraceElement[] tr = e.getStackTrace();
-						String s = e.toString()+"\n";
-						for (int i=0; i<tr.length; i++){
-							s += tr[i].toString()+"\n";
+				
+				if (num>=0){
+					if (num<=tb.finishedTracks.size() && !gd.wasCanceled()){
+						int trackInd = tb.findIndOfTrack(num, tb.finishedTracks);
+						try {
+							Track track = tb.finishedTracks.get(trackInd);
+							track.playMovie();
+						} catch (Exception e) {
+							
+							StackTraceElement[] tr = e.getStackTrace();
+							String s = e.toString()+"\n";
+							for (int i=0; i<tr.length; i++){
+								s += tr[i].toString()+"\n";
+							}
+							
+							new TextWindow("Error", "Error playing trackID number "+num+"\n"+s, 500, 500);
 						}
-						
-						new TextWindow("Error", "Error playing trackID number "+num+"\n"+s, 500, 500);
+	//					TextWindow tw = new TextWindow("Match Spill for frame ", tb.matchSpills.get(track.points.lastElement().frameNum).outString, 500, 500);
 					}
-//					TextWindow tw = new TextWindow("Match Spill for frame ", tb.matchSpills.get(track.points.lastElement().frameNum).outString, 500, 500);
+				} else{
+//					num = -1-num;//this makes it an index of collision tracks
+//					//TODO Search through the finishedCollisions for the specified collision
+//					if (num<=tb.finishedTracks.size() && !gd.wasCanceled()){
+//						int trackInd = tb.findIndOfTrack(num, tb.finishedTracks);
+//						try {
+//							Track track = tb.finishedTracks.get(trackInd);
+//							track.playMovie();
+//						} catch (Exception e) {
+//							
+//							StackTraceElement[] tr = e.getStackTrace();
+//							String s = e.toString()+"\n";
+//							for (int i=0; i<tr.length; i++){
+//								s += tr[i].toString()+"\n";
+//							}
+//							
+//							new TextWindow("Error", "Error playing trackID number "+num+"\n"+s, 500, 500);
+//						}
+////						TextWindow tw = new TextWindow("Match Spill for frame ", tb.matchSpills.get(track.points.lastElement().frameNum).outString, 500, 500);
+//					}
 				}
 				
 			}
