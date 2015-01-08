@@ -54,7 +54,7 @@ public class ExtractionParameters {
 	int trackZoomFac = 10;
 	
 	
-	int[] matchSpill = {};//{234,251,356,367};
+	int[] matchSpill = {384};//{234,251,356,367};
 	boolean dispTrackInfo = true;
 	
 	///////////////////////////

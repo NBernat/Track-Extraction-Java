@@ -73,6 +73,7 @@ public class TrackMatch {
 		validMatch = oldMatch.validMatch.clone();
 		numStoredMatches = oldMatch.numStoredMatches;
 		TB = oldMatch.TB;
+		track.setMatch(this);
 		
 	}
 	
@@ -83,6 +84,7 @@ public class TrackMatch {
 		validMatch = new int[numMatches];
 		numStoredMatches = numMatches;
 		this.TB = TB;
+		track.setMatch(this);
 	}
 	
 	/**
@@ -99,7 +101,11 @@ public class TrackMatch {
 		ListIterator<TrackPoint> iter = nearestPoints.listIterator();
 		while (i<numStoredMatches){
 			if (iter.hasNext()){
-				matchPts[i] = iter.next();
+				TrackPoint pt = iter.next();
+				if (containsPt(pt.pointID)){
+					TB.comm.message("MATCH ALREADY CONTAINS POINT "+pt.pointID, VerbLevel.verb_warning);
+				}
+				matchPts[i] = pt; //iter.next();
 				dist2MatchPts[i] = track.getEnd().dist(matchPts[i]);
 				validMatch[i]=1;
 			} else {
@@ -355,6 +361,13 @@ public class TrackMatch {
 		
 	}
 	
-	
+	public boolean containsPt(int ptID){
+		for (int i=0; i<matchPts.length; i++){
+			if (matchPts[i]!=null && matchPts[i].pointID==ptID){
+				return true;
+			}
+		}
+		return false;
+	}
 	
 }

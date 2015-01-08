@@ -159,8 +159,12 @@ public class TrackPoint extends Point {
 		Vector<TrackPoint> nearestPts = new Vector<TrackPoint>(); 
 		while(nearestPts.size()<nPts && copyList.size()>0){
 			TrackPoint tp = nearestInList2Pt(copyList);
-			nearestPts.add(tp);
+//			if (!copyList.contains(tp)){
+				nearestPts.add(tp);
+//			}
+		
 			copyList.remove(tp);
+			
 		}
 		
 		return nearestPts;
@@ -234,7 +238,9 @@ public class TrackPoint extends Point {
 //		}
 //	}
 
-	
+	public boolean equals(TrackPoint pt){
+		return pt.pointID==pointID;
+	}
 	//TODO draw methods, openCV?
 	//TODO to&from file?
 	//TODO gets&sets (area, cov)

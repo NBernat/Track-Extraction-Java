@@ -60,8 +60,8 @@ public class Track_Extractor implements PlugIn{
 			GenericDialog gd = new GenericDialog("Track chooser");
 			gd.addMessage("Choose a track: (0-"+(tb.finishedTracks.size()-1)+")");
 			String st = "CollisionTracks:";
-			for (int i=0; i<tb.finishedCollisions.size(); i++) {
-				st += " "+tb.finishedCollisions.get(i).collTrack.trackID;
+			for (int i=0; i<tb.finishedColIDs.size(); i++) {
+				st += " "+tb.finishedColIDs.get(i);
 			}
 			gd.addMessage(st);
 			gd.addMessage("Then press enter");

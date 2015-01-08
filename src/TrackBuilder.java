@@ -27,11 +27,11 @@ public class TrackBuilder {
 	/**
 	 * Active collision events  
 	 */
-	Vector<Collision> activeCollisions;
+	Vector<Integer> activeColIDs;
 	/**
 	 * Finished collision events  
 	 */
-	Vector<Collision> finishedCollisions;
+	Vector<Integer> finishedColIDs;
 	/**
 	 * Number of tracks, including active tracks and tracks in collisions 
 	 */
@@ -108,9 +108,9 @@ public class TrackBuilder {
 		
 		//Set track-building objects
 		activeTracks = new Vector<Track>();
-		finishedTracks  = new Vector<Track>();
-		activeCollisions  = new Vector<Collision>();
-		finishedCollisions  = new Vector<Collision>();
+		finishedTracks = new Vector<Track>();
+		activeColIDs = new Vector<Integer>();
+		finishedColIDs = new Vector<Integer>();
 		
 		//Set status parameters
 		this.frameNum = frameNum;
@@ -144,13 +144,13 @@ public class TrackBuilder {
 			
 		}
 		
-		
-		
-		
-		//Move all active tracks to finished
+		//Debug Output
+		trackMessage.message("There are "+activeColIDs.size()+"+"+finishedColIDs.size()+" collisions", VerbLevel.verb_message);
 		for (int i=0; i<activeTracks.size(); i++){
 			trackMessage.message(activeTracks.get(i).infoString(), VerbLevel.verb_message);
 		}
+		
+		//Move all active tracks to finished
 		finishedTracks.addAll(activeTracks);
 		activeTracks.removeAll(activeTracks);
 		
@@ -168,15 +168,15 @@ public class TrackBuilder {
 		
 		//TODO Comb out collisions
 		//resolveCollisions();
-		finishedCollisions.addAll(activeCollisions);
-		activeCollisions.removeAll(finishedCollisions);
+		finishedColIDs.addAll(activeColIDs);
+		activeColIDs.removeAll(finishedColIDs);
 		
 		
 //		if (trackMessage.verbosity>=VerbLevel.verb_debug){
-		trackMessage.message("There are "+activeCollisions.size()+"+"+finishedCollisions.size()+" collisions", VerbLevel.verb_message);
-			for (int i=0; i<finishedCollisions.size(); i++){
-				trackMessage.message(finishedCollisions.get(i).collisionInfoSpill(), VerbLevel.verb_message);
-			}	
+//		trackMessage.message("There are "+activeColIDs.size()+"+"+finishedColIDs.size()+" collisions", VerbLevel.verb_message);
+//			for (int i=0; i<finishedColIDs.size(); i++){
+//				trackMessage.message(finishedColIDs.get(i).collisionInfoSpill(), VerbLevel.verb_message);
+//			}	
 //		}
 		
 		if (ep.dispTrackInfo){
@@ -273,7 +273,13 @@ public class TrackBuilder {
 		Communicator matchComm = new Communicator();
 		
 		matches = new Vector<TrackMatch>();
-
+		
+		for (int j=0; j<activePts.size(); j++){
+			comm.message("Point "+j+": "+activePts.get(j).infoSpill(), VerbLevel.verb_debug);
+		}
+		
+		
+		
 		//Match points to Tracks
 		for(int i=0; i<activeTracks.size(); i++){
 			TrackMatch newMatch = new TrackMatch(activeTracks.get(i), activePts, ep.numPtsInTrackMatch, this);
@@ -491,18 +497,21 @@ public class TrackBuilder {
 		TrackPoint colPt = colMatches.firstElement().getTopMatchPoint();
 		int ptID = colPt.pointID;
 		
-		//Create a new collision object from the collision
-		Collision newCol = new Collision(colMatches, frameNum, this);
+		
 		
 		//Try to fix the collision
-		int colFix = newCol.avoidCollision();
+		int colFix = avoidCollision(colMatches);//newCol.avoidCollision();//
 		
 		if (colFix==0){ //The Collision-fixing machinery did not fix the matches
 			//The old matches still exist, and they will be used later to end tracks (ie don't remove them)
-			
-			newCol.startCollision();
-			activeCollisions.add(newCol);
-			retMatch = newCol.matches.firstElement();
+			//Create a new collision object from the collision
+//			Collision newCol = new Collision(colMatches, frameNum, this);
+			CollisionTrack newCol = new CollisionTrack(colMatches, this);
+			fixCollisionMatches(newCol, colMatches);
+//			newCol.startCollision();
+			activeColIDs.add(newCol.trackID);
+			//add this trackID to list
+			retMatch = newCol.getMatch();//newCol.matches.firstElement();//
 //			matches.add(newCol.matches.firstElement());
 			
 //			return 1; //1 new collision
@@ -514,8 +523,8 @@ public class TrackBuilder {
 			if (colFix==1) {
 				comm.message("Collision avoided at point "+ptID+" by matching to nearby points", VerbLevel.verb_debug);
 			} else if (colFix==2) {
-				activePts.remove(colPt);
-				activePts.addAll(newCol.getMatchPoints());
+//				activePts.remove(colPt);
+//				activePts.addAll(newCol.getMatchPoints());
 				comm.message("Collision avoided at point "+ptID+" by splitting the collision point", VerbLevel.verb_debug);
 			}
 //			return 0; //0 new collisions
@@ -524,44 +533,169 @@ public class TrackBuilder {
 		return retMatch;
 	}
 	
+	//TODO 
+	private int avoidCollision(Vector<TrackMatch> colMatches){
+		
+		if (matchCollisionToEmptyPts(colMatches)){
+			return 1;
+		}  
+		if (matchCollisionToSplitPts(colMatches)) {
+			return 2;
+		}
+		
+		return 0;
+	}
+	
+	
+	//TODO 
+	private boolean matchCollisionToEmptyPts(Vector<TrackMatch> colMatches){
+		
+		//Set up the data needed to adjust the matches
+		Vector<TrackMatch> otherMatches = new Vector<TrackMatch>();//for locating the match to modify
+		Vector<Integer> otherMatchInds = new Vector<Integer>(); //for locating the point within the match 
+		Vector<Double> otherPointDists = new Vector<Double>();//for finding best new match
+		
+		ListIterator<TrackMatch> mIt = colMatches.listIterator();
+		while (mIt.hasNext()) {
+			TrackMatch match = mIt.next();
+			Vector<Integer> betterInds = match.indsOfValidNonPrimaryEmptyMatches();
+			for (int i=0; i<betterInds.size(); i++){
+				otherMatches.add(match);
+				otherMatchInds.add(betterInds.get(i));
+				otherPointDists.add(match.dist2MatchPts[betterInds.get(i)]);
+			}
+		}
+		
+		if (otherMatches.size()>0) { 
+			//Find the point that minimizes the total dist
+			double minTotalDist = Double.POSITIVE_INFINITY;
+			int minInd = -1;
+			
+			TrackPoint ptA = colMatches.get(0).track.getEnd();
+			TrackPoint ptB = colMatches.get(1).track.getEnd();
+			Vector<TrackPoint> compPts = new Vector<TrackPoint>();
+			compPts.add(colMatches.firstElement().getTopMatchPoint());
+			
+			for (int i=0; i<otherMatches.size(); i++) {
+				//Find the pairing which minimizes the total dist between the points
+				compPts.add(otherMatches.get(i).matchPts[otherMatchInds.get(i)]);
+				Vector<TrackPoint> orderedPts = matchPtsToNearbyPts(ptA, ptB, compPts);
+				double totalDist = distBtwnPts(ptA, orderedPts.get(0))+distBtwnPts(ptB, orderedPts.get(1));
+				if (minTotalDist<totalDist){
+					minTotalDist = totalDist;
+					minInd = i;
+				}
+				
+				//Remove point i (=compPts[1]) from the list
+				compPts.remove(1);
+			}
+			
+			//Edit the appropriate match
+			otherMatches.get(minInd).changePrimaryMatch(otherMatchInds.get(minInd));
+			
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	//TODO
+	private boolean matchCollisionToSplitPts(Vector<TrackMatch> colMatches){
+		 
+		TrackPoint badPt = colMatches.firstElement().getTopMatchPoint();
+		//Try to split the points into the appropriate number of points
+		Vector<Track> trList = new Vector<Track>();
+		for(int i=0; i<colMatches.size(); i++){
+			trList.add(colMatches.get(i).track);
+		}
+		Vector<TrackPoint> splitPts = pe.splitPoint(badPt, colMatches.size(), (int) meanAreaOfTracks(trList));
+		
+		if (splitPts.size()>0) {
+			//Decide which point goes with which track
+			TrackPoint ptA = colMatches.get(0).track.points.lastElement();
+			TrackPoint ptB = colMatches.get(1).track.points.lastElement();
+			Vector<TrackPoint> orderedPts = matchPtsToNearbyPts(ptA, ptB, splitPts);
+			//Replace the points in the TrackMatches
+			orderedPts.get(0).setNumMatches(orderedPts.get(0).getNumMatches()+1);
+			colMatches.get(0).replaceMatch(1, orderedPts.get(0));
+			orderedPts.get(1).setNumMatches(orderedPts.get(1).getNumMatches()+1);
+			colMatches.get(1).replaceMatch(1, orderedPts.get(1));
+			
+			//Manage the points in the trackbuilder objects
+			activePts.remove(badPt);
+			activePts.addAll(orderedPts);
+			
+			return true;
+		}
+		
+		
+		return false;
+	}
+
+	//TODO 
+	private void fixCollisionMatches(CollisionTrack colTrack, Vector<TrackMatch> initMatches){
+		
+		colTrack.setMatch(new TrackMatch(colTrack, initMatches.firstElement()));
+		
+		for (int i=0; i<initMatches.size(); i++){
+			initMatches.get(i).clearAllMatches();
+		}
+		
+	}
+	
+	
+	
 	/**
 	 * Tries to fix each ongoing collision
 	 */
 	private int endCollisions(){
 		
 		int endedCols = 0;
+
 		
-		ListIterator<Collision> colIt = activeCollisions.listIterator();
+//		ListIterator<T>
 		
+		
+		
+		ListIterator<Integer> colIt = activeColIDs.listIterator();
+
 		while (colIt.hasNext()) {
 			
-			Collision col = colIt.next();
-//			TrackPoint colPt = col.matches.firstElement().getTopMatchPoint();
-			
-			Vector<TrackMatch> newMatches = col.tryToEndCollision(); 
-			
-			if (newMatches!=null && newMatches.size()>0){ //The collision was fixed! 
+			Integer colID = colIt.next();
+			comm.message("Looking for collisionTrack "+colID, VerbLevel.verb_debug);
+			int ind = findIndOfTrack(colID, activeTracks);
+			if (ind>=0) {//otherwise, it's a new collision and doesn't need to be checked
+				comm.message("Index of activeTracks: "+ind, VerbLevel.verb_debug);
+				CollisionTrack col = (CollisionTrack) activeTracks.get(ind);
+	//			TrackPoint colPt = col.matches.firstElement().getTopMatchPoint();
 				
-				finishedCollisions.addElement(col);
-				activeCollisions.addElement(col);
-				matches.addAll(newMatches);
-				endedCols++;
 				
-//				if (fixStatus==1) {
-////					comm.message("Collision fixed at track "+col.collTrack.trackID+" by matching to nearby points", VerbLevel.verb_debug);
-//				} else if (fixStatus==2) {
-////					activePts.remove(colPt);
-////					activePts.addAll(col.getMatchPoints());
-////					comm.message("Collision fixed at track "+col.collTrack.trackID+" by splitting the collision point", VerbLevel.verb_debug);
-//				}
+				//TODO iterate through a collision track list
 				
-				//End the collision, remove it from activeCollisions, and add the new matches to the match list
-//				col.endCollision();
-//				activeCollisions.remove(col);
-//				matches.addAll(col.matches);
+				Vector<TrackMatch> newMatches = col.tryToEndCollision(); 
+				
+				if (newMatches!=null && newMatches.size()>0){ //The collision was fixed! 
+					
+					finishedColIDs.add(colID);
+					activeColIDs.remove(colID);
+					matches.addAll(newMatches);
+					endedCols++;
+					
+	//				if (fixStatus==1) {
+	////					comm.message("Collision fixed at track "+col.collTrack.trackID+" by matching to nearby points", VerbLevel.verb_debug);
+	//				} else if (fixStatus==2) {
+	////					activePts.remove(colPt);
+	////					activePts.addAll(col.getMatchPoints());
+	////					comm.message("Collision fixed at track "+col.collTrack.trackID+" by splitting the collision point", VerbLevel.verb_debug);
+	//				}
+					
+					//End the collision, remove it from activeCollisions, and add the new matches to the match list
+	//				col.endCollision();
+	//				activeCollisions.remove(col);
+	//				matches.addAll(col.matches);
 				
 			}
-			
+		}
 			
 		}
 		
@@ -649,7 +783,7 @@ public class TrackBuilder {
 				//THIS IS IMPORTANT!
 				//if there's a new track created by a collision starting/ending, add it to activeTracks & remove the pt from points 
 				match.track.extendTrack(match.getTopMatchPoint());
-				match.track.setCollision(frameNum, null);
+				match.track.markCollision(frameNum, null);
 				
 				activeTracks.add(match.track);
 				activePts.remove(match.track.points.lastElement());
@@ -659,7 +793,7 @@ public class TrackBuilder {
 				//If the track is in a collision, mark the new point 
 				//THIS MAY BE MODIFIED vvvv
 				if (match.track.isCollision.get(match.track.isCollision.size()-1)){
-					match.track.setCollision(frameNum, null);
+					match.track.markCollision(frameNum, null);
 				}
 				
 
@@ -713,6 +847,66 @@ public class TrackBuilder {
 		return -1;
 		
 	}
+	
+	
+	
+	/**
+	 * Matches each of two points to a point from a list, minimizing the total distance between points 
+	 * @param ptA Point matched to first point in returnPoints
+	 * @param ptB Point matched to second point in returnPoints
+	 * @param nearbyPts Top points to be matched to ptA&ptB
+	 * @return List of points matched to ptA and ptB, in order (AMatch, BMatch)
+	 */
+	public Vector<TrackPoint> matchPtsToNearbyPts(TrackPoint ptA, TrackPoint ptB, Vector<TrackPoint> nearbyPts){
+		
+		Vector<TrackPoint> bestMatches = new Vector<TrackPoint>();//In order, (A,B)
+		double bestTotalDist = Double.POSITIVE_INFINITY;
+		
+		for (int ptCInd=1; ptCInd<nearbyPts.size(); ptCInd++){
+			for(int ptDInd=(ptCInd+1); ptDInd<=nearbyPts.size(); ptDInd++){
+				//Try A-C B-D
+				double dist1 = distBtwnPts(ptA, nearbyPts.get(ptCInd)) + distBtwnPts(ptB, nearbyPts.get(ptDInd));
+				//Try A-D B-C
+				double dist2 = distBtwnPts(ptA, nearbyPts.get(ptDInd)) + distBtwnPts(ptB, nearbyPts.get(ptCInd));
+				
+				if (dist1<bestTotalDist){
+					bestMatches.clear();
+					if (dist2<dist1){
+						bestTotalDist = dist2;
+						bestMatches.add(nearbyPts.get(ptDInd));
+						bestMatches.add(nearbyPts.get(ptCInd));
+					}
+					else {
+						bestTotalDist = dist1;
+						bestMatches.add(nearbyPts.get(ptCInd));
+						bestMatches.add(nearbyPts.get(ptDInd));
+					}
+				}
+			}
+		}
+		
+		return bestMatches;
+	}
+	
+	
+	public double distBtwnPts(TrackPoint pt1, TrackPoint pt2){
+		return Math.sqrt((pt1.x-pt2.x)*(pt1.x-pt2.x)+(pt1.y-pt2.y)*(pt1.y-pt2.y));
+	}
+	
+	public double meanAreaOfTracks(Vector<Track> tr){
+		
+		double totalA = 0;
+		int num = 0;
+		
+		ListIterator<Track> trIt = tr.listIterator();
+		while (trIt.hasNext()) {
+			num++;
+			totalA += trIt.next().points.lastElement().area;
+		}
+		
+		return totalA/num; 
+	}
+	
 	
 //	public int findIndOfCollision(int colTrackID, Vector<Collision> collisionList){
 //		

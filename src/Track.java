@@ -44,6 +44,8 @@ public class Track {
 	Vector<Collision> collisions;
 	
 	
+	private TrackMatch match;
+	
 	/**
 	 * Length of time to pause between frames, ie 1/frameRate, in ms
 	 */
@@ -112,7 +114,7 @@ public class Track {
 		
 	}
 	
-	public void setCollision(int frameNum, Collision coll){
+	public void markCollision(int frameNum, Collision coll){
 		
 		int ptInd = frameNum-points.firstElement().frameNum;
 		
@@ -331,6 +333,18 @@ public class Track {
 		
 		return info;
 		
+	}
+	
+	public void setMatch(TrackMatch tm){
+		match = tm;
+	}
+	
+	public TrackMatch getMatch(){
+		return match;
+	}
+	
+	public boolean isCollisionTrack(){
+		return false;
 	}
 	
 		
