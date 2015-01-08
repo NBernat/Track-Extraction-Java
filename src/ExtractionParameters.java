@@ -91,6 +91,11 @@ public class ExtractionParameters {
      * Between 0 and 1, inclusive 
      */
     double fracChangeForSplitting = .5;
+    /**
+     *  The area change which indicates that a collision has ended, expressed as a fraction of the previous area
+     */
+    double maxAreaFracForCollisionEnd = .6;
+    
     
     /**
      * Add-on for the string which specifies the center coordinates of the points
@@ -111,6 +116,7 @@ public class ExtractionParameters {
     double maxArea = 1000;
     //TODO
     int roiPadding = 5;
+    
     
     
 	public ExtractionParameters(){

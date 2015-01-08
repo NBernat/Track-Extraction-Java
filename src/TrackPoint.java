@@ -199,6 +199,14 @@ public class TrackPoint extends Point {
 		this.track = track;
 	}
 	
+	public String infoSpill(){
+		String s = "pointID "+pointID;
+		s += "; frame "+frameNum;
+		s += "; ("+(int)x+","+(int)y+")";
+		s += "; area "+(int)area;
+		return s;
+	}
+	
 //	public ImageProcessor getIm( )
 	
 //	public ImageWindow showTrackPoint(ImageWindow window){

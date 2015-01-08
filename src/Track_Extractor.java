@@ -1,4 +1,6 @@
 //import ij.IJ;
+import javax.print.attribute.standard.Finishings;
+
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImageStack;
@@ -56,11 +58,12 @@ public class Track_Extractor implements PlugIn{
 			
 			
 			GenericDialog gd = new GenericDialog("Track chooser");
-			gd.addMessage("Choose a track");
-			gd.addMessage("Tracks: (0-"+(tb.finishedTracks.size()-1)+")");
-			if (tb.finishedCollisions.size()>0){
-				gd.addMessage("Collision Tracks: Negative (1-"+(tb.finishedCollisions.size())+")");
+			gd.addMessage("Choose a track: (0-"+(tb.finishedTracks.size()-1)+")");
+			String st = "CollisionTracks:";
+			for (int i=0; i<tb.finishedCollisions.size(); i++) {
+				st += " "+tb.finishedCollisions.get(i).collTrack.trackID;
 			}
+			gd.addMessage(st);
 			gd.addMessage("Then press enter");
 			gd.addMessage("To close, X out of this box");
 			gd.addNumericField("Track", 1, 0);

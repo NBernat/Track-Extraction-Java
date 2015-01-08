@@ -243,32 +243,35 @@ public class TrackMatch {
 		return ind;
 	}
 	
-	public int[] indsOfValidNonPrimaryEmptyMatches(){
+	public Vector<Integer> indsOfValidNonPrimaryEmptyMatches(){
+		
+		Vector<Integer> inds = new Vector<Integer>();
+		
 		
 		//Mark the good non-primary matches
-		int[] goodMatch = new int[numStoredMatches];
+//		int[] goodMatch = new int[numStoredMatches];
 		//Skip the first, bc we want non-primary matches
-		
 		for (int i=1; i<numStoredMatches; i++) {
 			if (validMatch[i]==1 && matchPts[i].numMatches==0) {
-				goodMatch[i]=1;
+				inds.add(i);
+//				goodMatch[i]=1;
 			} else {
-				goodMatch[i]=0;
+//				goodMatch[i]=0;
 			}
 		}
 		
 		//Determine the length of the return array
-		int sum=0;
-		for (int j : goodMatch) sum+=j;
+//		int sum=0;
+//		for (int j : goodMatch) sum+=j;
 		
 		//Populate the return array
-		int[] inds = new int[sum];
-		//Skip the first, bc, again, we want non-primary matches
-		for (int i=1; i<numStoredMatches; i++) {
-			if (goodMatch[i]==1) {
-				inds[i] = i;
-			}
-		}
+//		int[] inds = new int[sum];
+//		//Skip the first, bc, again, we want non-primary matches
+//		for (int i=1; i<numStoredMatches; i++) {
+//			if (goodMatch[i]==1) {
+//				inds[i-1] = i;
+//			}
+//		}
 		
 		return inds;
 	}
@@ -335,6 +338,23 @@ public class TrackMatch {
 		return 1;
 		
 	}
+	
+	
+	/**
+	 * Returns the area of the top match point as a fraction of the last point in the track
+	 * @return Area of the top match point expressed as a fraction of the last pointin the track, or -1 if there are not enough points in the track
+	 */
+	public double areaChangeFrac(){
+		if (track.points.size()>0){
+			
+			return (getTopMatchPoint().area)/(track.getEnd().area);
+			
+		} else {
+			return -1.0;
+		}
+		
+	}
+	
 	
 	
 }

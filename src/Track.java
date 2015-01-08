@@ -114,7 +114,7 @@ public class Track {
 	
 	public void setCollision(int frameNum, Collision coll){
 		
-		int ptInd = frameNum-points.firstElement().frameNum+1;
+		int ptInd = frameNum-points.firstElement().frameNum;
 		
 		isCollision.set(ptInd, true);
 		if (coll!=null){
@@ -201,6 +201,7 @@ public class Track {
 		return areas.get(areas.size()/2);
 		
 	}
+	
 	
 	
 	///////////////////////////
@@ -320,7 +321,13 @@ public class Track {
 		String info = "";
 		
 		info += "Track "+trackID+": "+points.size()+" points,";
-		info += " frames "+points.firstElement().frameNum+"-"+points.lastElement().frameNum;
+		if (points.size()!=0){
+			info += " frames "+points.firstElement().frameNum+"-"+points.lastElement().frameNum;
+		}
+		
+		for (int i=0; i<points.size(); i++){
+			info += "\n Point "+i+": "+points.get(i).infoSpill();
+		}
 		
 		return info;
 		

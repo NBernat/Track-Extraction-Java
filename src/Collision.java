@@ -20,15 +20,15 @@ public class Collision {
 	/**
 	 * The track consisting of maggots stuck in a collision
 	 */
-	Track collTrack; 
+	Track collTrack; //TODO get rid of this
 	/**
 	 * First frame where the maggots collide
 	 */
-	int startFrame;
+	int startFrame; //TODO get rid of this
 	/**
 	 * Current frame, used to build collisions 
 	 */
-	int currentFrame;
+	int currentFrame; //TODO get rid of this
 	/**
 	 * LastFrame with colliding maggots
 	 */
@@ -40,7 +40,7 @@ public class Collision {
 	
 	TrackBuilder tb;
 
-	
+	//TODO change to intracks and initmatch
 	/**
 	 * Constructs a Collision object from the tracks in the given trackmatches
 	 * @param initMatches The matches that collide to a single point
@@ -69,8 +69,7 @@ public class Collision {
 	 */
 	public boolean hasFinsihed(){
 		
-//		if (outTracks.size()>0){
-		if (collTrack!=null){
+		if (outTracks!=null && outTracks.size()>0){
 			return true;
 		}
 		
@@ -106,6 +105,7 @@ public class Collision {
 		
 	}
 	
+	//TODO put in TB? NOPE get rid of it
 	/**
 	 * Housekeeping for when a collision is fixed
 	 */
@@ -121,11 +121,12 @@ public class Collision {
 		
 	}
 	
+	//TODO put in TB
 	/**
 	 * Try to fix the collision 
 	 * @return Status int: 0 = unfixed; 1 = fixed by matching to nearby points; 2 = fixed by splitting the points apart
 	 */
-	public int fixCollision() {		
+	public int avoidCollision() {		
 		
 		if (matchToEmptyPts()){
 
@@ -140,7 +141,7 @@ public class Collision {
 		return 0;
 	}
 	
-	
+	//TODO put in TB
 	/**
 	 * Finds unmatched points near the collision and uses them to end/avoid a collision  
 	 * <p>
@@ -158,11 +159,11 @@ public class Collision {
 		ListIterator<TrackMatch> mIt = matches.listIterator();
 		while (mIt.hasNext()) {
 			TrackMatch match = mIt.next();
-			int[] betterInds = match.indsOfValidNonPrimaryEmptyMatches();
-			for (int i=0; i<betterInds.length; i++){
+			Vector<Integer> betterInds = match.indsOfValidNonPrimaryEmptyMatches();
+			for (int i=0; i<betterInds.size(); i++){
 				otherMatches.add(match);
-				otherMatchInds.add(betterInds[i]);
-				otherPointDists.add(match.dist2MatchPts[betterInds[i]]);
+				otherMatchInds.add(betterInds.get(i));
+				otherPointDists.add(match.dist2MatchPts[betterInds.get(i)]);
 			}
 		}
 		
@@ -170,23 +171,23 @@ public class Collision {
 		if (otherMatches.size()>0) { //Empty points were found: edit the matches to avoid/end the collision
 		
 			
-			if (collisionIsEnding()){ //Make new tracks/matches and replace the old matches 
-				Vector<TrackMatch> newMatches = new Vector<TrackMatch>();
-				
-				//Get the NEAREST point
-				int ind = otherPointDists.indexOf(Collections.min(otherPointDists));
-				TrackMatch matchWithPoint = otherMatches.get(ind);
-				//Make a new track&trackMatch for: 1-the old point 2-the NEAREST empty point
-				Track track1 = new Track (matches.firstElement().TB);
-				newMatches.add(new TrackMatch(track1, matches.firstElement()));//This will copy the trackmatch, and the new track will start with the old point
-				Track track2 = new Track(matchWithPoint.TB);
-				matchWithPoint.changePrimaryMatch(otherMatchInds.get(ind)); 
-				newMatches.add(new TrackMatch(track2, matchWithPoint));//This will copy the trackmatch, and the new track will start with the new empty point
-				//Clear the old trackmatches and replace with the new matches 
-				matches.firstElement().clearAllMatches();
-				matches = newMatches;
-				
-			} else {
+//			if (collisionIsEnding()){ //Make new tracks/matches and replace the old matches 
+//				Vector<TrackMatch> newMatches = new Vector<TrackMatch>();
+//				
+//				//Get the NEAREST point
+//				int ind = otherPointDists.indexOf(Collections.min(otherPointDists));
+//				TrackMatch matchWithPoint = otherMatches.get(ind);
+//				//Make a new track&trackMatch for: 1-the old point 2-the NEAREST empty point
+//				Track track1 = new Track (matches.firstElement().TB);
+//				newMatches.add(new TrackMatch(track1, matches.firstElement()));//This will copy the trackmatch, and the new track will start with the old point
+//				Track track2 = new Track(matchWithPoint.TB);
+//				matchWithPoint.changePrimaryMatch(otherMatchInds.get(ind)); 
+//				newMatches.add(new TrackMatch(track2, matchWithPoint));//This will copy the trackmatch, and the new track will start with the new empty point
+//				//Clear the old trackmatches and replace with the new matches 
+//				matches.firstElement().clearAllMatches();
+//				matches = newMatches;
+//				
+//			} else {
 				
 				//Find the point that minimizes the total dist
 				double minTotalDist = Double.POSITIVE_INFINITY;
@@ -214,7 +215,7 @@ public class Collision {
 				//Edit the appropriate match
 				otherMatches.get(minInd).changePrimaryMatch(otherMatchInds.get(minInd));
 				
-			}
+//			}
 			
 			//Get the best secondary match
 			//Change this choice
@@ -257,6 +258,7 @@ public class Collision {
 		return false;
 	}
 	
+	//TODO put in TB
 	/**
 	 * Attempts to resolve the collision by splitting the collision point into multiple points
 	 * @return Whether or not the collision point could be split
@@ -271,23 +273,23 @@ public class Collision {
 			
 			//(Delete old point in TrackBuilder)
 			
-			if (collisionIsEnding()){ //Old collision- end the track, start new ones
-				
-				//End the old track by clearing that match 
-				TrackMatch oldMatch = matches.firstElement();
-				oldMatch.clearAllMatches();
-				matches.clear();
-				
-				//Make new empty tracks & TrackMatches for each of the split points
-				ListIterator<TrackPoint> spIt = splitPts.listIterator();
-				while (spIt.hasNext()){
-					Track tr = new Track(oldMatch.TB);
-					TrackMatch newMatch =new TrackMatch(tr, oldMatch); 
-					newMatch.replaceMatch(1, spIt.next());
-					matches.add(newMatch);
-				}
-				
-			} else { //New collision- modify the matches
+//			if (collisionIsEnding()){ //Old collision- end the track, start new ones
+//				
+//				//End the old track by clearing that match 
+//				TrackMatch oldMatch = matches.firstElement();
+//				oldMatch.clearAllMatches();
+//				matches.clear();
+//				
+//				//Make new empty tracks & TrackMatches for each of the split points
+//				ListIterator<TrackPoint> spIt = splitPts.listIterator();
+//				while (spIt.hasNext()){
+//					Track tr = new Track(oldMatch.TB);
+//					TrackMatch newMatch =new TrackMatch(tr, oldMatch); 
+//					newMatch.replaceMatch(1, spIt.next());
+//					matches.add(newMatch);
+//				}
+//				
+//			} else { //New collision- modify the matches
 				//Decide which point goes with which track
 				TrackPoint ptA = matches.get(0).track.points.lastElement();
 				TrackPoint ptB = matches.get(1).track.points.lastElement();
@@ -297,7 +299,7 @@ public class Collision {
 				matches.get(0).replaceMatch(1, orderedPts.get(0));
 				orderedPts.get(1).setNumMatches(orderedPts.get(1).getNumMatches()+1);
 				matches.get(1).replaceMatch(1, orderedPts.get(1));
-			}
+//			}
 			
 			return true;
 		} else {
@@ -305,6 +307,7 @@ public class Collision {
 		}
 	}
 	
+	//TODO put in TB
 	/**
 	 * Matches each of two points to a point from a list, minimizing the total distance between points 
 	 * @param ptA Point matched to first point in returnPoints
@@ -343,6 +346,73 @@ public class Collision {
 		return bestMatches;
 	}
 	
+	
+	
+	
+	//TODO
+	public Vector<TrackMatch> tryToEndCollision(){
+		
+		tb.comm.message("Trying to end collision for track "+collTrack.trackID, VerbLevel.verb_debug);
+		
+		//When the area of the maggot in a collision drops significantly 
+		double areaFrac = matches.lastElement().areaChangeFrac(); 
+		tb.comm.message("Area Frac, point "+matches.lastElement().getTopMatchPoint().pointID+": "+areaFrac, VerbLevel.verb_debug);
+		if (0<areaFrac && areaFrac<tb.ep.maxAreaFracForCollisionEnd){
+			//Find a nearby maggot using the most recent match 
+			//There's only one trackmatch, so look in just that one for an empty point
+			Vector<Integer> emptInds = matches.lastElement().indsOfValidNonPrimaryEmptyMatches();
+			if (emptInds.size()>0) {
+				//Woo! it was found! Now fix the collision
+//				endCollision();
+				Vector<TrackMatch> newMatches = splitColMatchIntoTwo(emptInds.firstElement());
+				
+				//Set the outTracks
+				ListIterator<TrackMatch> tmIt = newMatches.listIterator();
+				while (tmIt.hasNext()){
+					outTracks.addElement(tmIt.next().track);
+				}
+				
+				return newMatches;
+			}
+//			} else {
+////				return -2;
+//			}
+			
+		}
+		
+		return null; 
+//		return -1;
+	}
+	
+	/**
+	 * Creates new trackMatches 
+	 * @param nonPrimaryMatch
+	 * @param nonPrimaryInd
+	 * @return
+	 */
+	public Vector<TrackMatch> splitColMatchIntoTwo(int nonPrimaryInd){
+		
+		Vector<TrackMatch> newMatches = new Vector<TrackMatch>();
+		TrackMatch oldMatch = matches.firstElement();
+		
+		//Add a copy of this match
+		Track track1 = new Track(tb);
+		newMatches.add(new TrackMatch(track1, oldMatch));
+		
+		//Edit the match
+		oldMatch.changePrimaryMatch(nonPrimaryInd);
+		
+		//Add a copy of the edited match
+		Track track2 = new Track(tb);
+		newMatches.add(new TrackMatch(track2, oldMatch));
+		
+		//Clear the old match to end the collision track
+		oldMatch.clearAllMatches();
+		
+		return newMatches;
+	}
+	
+	//TODO put somewhere else
 	public double distBtwnPts(TrackPoint pt1, TrackPoint pt2){
 		return Math.sqrt((pt1.x-pt2.x)*(pt1.x-pt2.x)+(pt1.y-pt2.y)*(pt1.y-pt2.y));
 	}
@@ -369,24 +439,26 @@ public class Collision {
 		return matchPts;
 	}
 	
-	//TODO change this?
 	public boolean collisionIsEnding(){
-		int numDesired = inTracks.size();
-		int numCurrent = matches.size();
-		return numCurrent!=numDesired;
+		
+		return (collTrack!=null && collTrack.points.size()>0);
+		
+//		int numDesired = inTracks.size();
+//		int numCurrent = matches.size();
+//		return numCurrent!=numDesired;
 	}
 	
 	public String collisionInfoSpill(){
 		String s = "Collision: ";
 		s += "Frames "+startFrame+"-"+endFrame;
 		s += "; collTrack ID: "+collTrack.trackID;
-		s += "; InTracks ";
+		s += "; InTracks";
 		for (int i=0; i<inTracks.size(); i++){
-			s += inTracks.get(i).trackID+" ";
+			s += " "+inTracks.get(i).trackID;
 		}
-		s += "; OutTracks ";
+		s += "; OutTracks";
 		for (int i=0; i<outTracks.size(); i++){
-			s += outTracks.get(i).trackID+" ";
+			s += " "+outTracks.get(i).trackID;
 		}
 		
 		return s;
