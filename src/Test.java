@@ -4,7 +4,7 @@ import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 
 import ij.ImagePlus;
-import ij.process.ImageProcessor;
+//import ij.process.ImageProcessor;
 
 
 public class Test {

@@ -1,6 +1,4 @@
 //import ij.IJ;
-import javax.print.attribute.standard.Finishings;
-
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImageStack;

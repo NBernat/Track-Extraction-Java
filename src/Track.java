@@ -1,9 +1,7 @@
 import ij.ImagePlus;
 import ij.ImageStack;
-import ij.gui.ImageWindow;
 import ij.process.ImageProcessor;
 
-import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.util.Collections;
 import java.util.ListIterator;
@@ -41,7 +39,7 @@ public class Track {
 	
 	Vector<Boolean> isCollision;
 	
-	Vector<Collision> collisions;
+//	Vector<Collision> collisions;
 	
 	
 	private TrackMatch match;
@@ -65,7 +63,7 @@ public class Track {
 		
 		points = new Vector<TrackPoint>();
 		isCollision = new Vector<Boolean>();
-		collisions = new Vector<Collision>(); 
+//		collisions = new Vector<Collision>(); 
 		
 		trackID = lastIDNum;
 		lastIDNum++;
@@ -80,7 +78,7 @@ public class Track {
 		
 		points = new Vector<TrackPoint>();
 		isCollision = new Vector<Boolean>();
-		collisions = new Vector<Collision>(); 
+//		collisions = new Vector<Collision>(); 
 		
 		extendTrack(firstPt);
 //		points.add(firstPt);
@@ -114,25 +112,25 @@ public class Track {
 		
 	}
 	
-	public void markCollision(int frameNum, Collision coll){
-		
-		int ptInd = frameNum-points.firstElement().frameNum;
-		
-		isCollision.set(ptInd, true);
-		if (coll!=null){
-			collisions.add(coll);
-		}
-	}
-	
-	public Collision getCollision(int frameNum){
-		for (int i=1; i<=collisions.size(); i++){
-			Collision colli = collisions.get(i);
-			if (colli.startFrame<=frameNum && (frameNum<=colli.endFrame || colli.endFrame<0) ){
-				return colli;
-			}
-		}
-		return null;
-	}
+//	public void markCollision(int frameNum, Collision coll){
+//		
+//		int ptInd = frameNum-points.firstElement().frameNum;
+//		
+//		isCollision.set(ptInd, true);
+//		if (coll!=null){
+//			collisions.add(coll);
+//		}
+//	}
+//	
+//	public Collision getCollision(int frameNum){
+//		for (int i=1; i<=collisions.size(); i++){
+//			Collision colli = collisions.get(i);
+//			if (colli.startFrame<=frameNum && (frameNum<=colli.endFrame || colli.endFrame<0) ){
+//				return colli;
+//			}
+//		}
+//		return null;
+//	}
 	
 	///////////////////////////
 	// Distance methods

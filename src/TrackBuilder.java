@@ -783,7 +783,7 @@ public class TrackBuilder {
 				//THIS IS IMPORTANT!
 				//if there's a new track created by a collision starting/ending, add it to activeTracks & remove the pt from points 
 				match.track.extendTrack(match.getTopMatchPoint());
-				match.track.markCollision(frameNum, null);
+//				match.track.markCollision(frameNum, null);
 				
 				activeTracks.add(match.track);
 				activePts.remove(match.track.points.lastElement());
@@ -793,7 +793,7 @@ public class TrackBuilder {
 				//If the track is in a collision, mark the new point 
 				//THIS MAY BE MODIFIED vvvv
 				if (match.track.isCollision.get(match.track.isCollision.size()-1)){
-					match.track.markCollision(frameNum, null);
+//					match.track.markCollision(frameNum, null);
 				}
 				
 

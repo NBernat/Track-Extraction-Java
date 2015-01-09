@@ -1,7 +1,6 @@
 import java.util.ListIterator;
 import java.util.Vector;
 
-import com.sun.xml.internal.bind.v2.schemagen.xmlschema.List;
 
 
 public class CollisionTrack extends Track{
@@ -83,7 +82,7 @@ public class CollisionTrack extends Track{
 	
 	//TODO
 	public Vector<TrackMatch> tryToEndCollision(){
-		
+		 
 		tb.comm.message("Trying to end collision for track "+trackID, VerbLevel.verb_debug);
 		
 		//When the area of the maggot in a collision drops significantly 
