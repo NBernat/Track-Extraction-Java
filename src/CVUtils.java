@@ -211,6 +211,7 @@ public class CVUtils {
 		//Don't show anything, don't exclude edgepoints. basically we have no special options
 		int opInt=0;
 		opInt+=ParticleAnalyzer.EXCLUDE_EDGE_PARTICLES;
+		opInt+=ParticleAnalyzer.RECORD_STARTS;
 		if (showResults) {
 			opInt+=ParticleAnalyzer.SHOW_RESULTS;
 		} else {
@@ -271,9 +272,23 @@ public class CVUtils {
 			
 			comm.message("Converting Point "+row+" "+"("+(int)x+","+(int)y+")"+"to TrackPoint", VerbLevel.verb_debug);
 			if (ep.properPointSize(area)) {
-				TrackPoint newPt = new TrackPoint(x,y,rect,area,frameNum,thresh); 
-				tp.add(newPt);
-				comm.message("Point "+row+" has pointID "+newPt.pointID, VerbLevel.verb_debug);
+				
+				switch (ep.trackPointType){
+					case 1: //ImTrackPoint
+//						ImTrackPoint newPt = new ImTrackPoint(x,y,rect,area,frameNum,thresh);
+//						ImageProcessor im = ;
+//						newPt.setImage(im);
+						
+						break;
+					case 2: //MaggotTrackPoint
+						break;
+					default:
+						TrackPoint newPt = new TrackPoint(x,y,rect,area,frameNum,thresh); 
+						newPt.setStart((int)rt.getValue("XStart", row), (int)rt.getValue("YStart", row));
+						tp.add(newPt);
+						comm.message("Point "+row+" has pointID "+newPt.pointID, VerbLevel.verb_debug);
+				}
+				
 			} else{
 				comm.message("Point was not proper size: not made into a point", VerbLevel.verb_debug);
 			}

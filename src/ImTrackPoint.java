@@ -1,5 +1,6 @@
 import ij.ImagePlus;
 import ij.gui.Roi;
+import ij.process.ImageProcessor;
 
 import java.awt.Rectangle;
 
@@ -10,7 +11,7 @@ public class ImTrackPoint extends TrackPoint{
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	ImagePlus im;
+	ImageProcessor im;
 	
 //	int[] imOrigin;
 
@@ -34,14 +35,21 @@ public class ImTrackPoint extends TrackPoint{
 		findAndStoreIm(frameIm);
 	}
 	
-	public void setImage(ImagePlus im){
+	public void setImage(ImageProcessor im){
 		this.im = im;
+	}
+	
+	public ImageProcessor getIm(){
+		//pad the image
+//		track.tb.ep.trackWindowHeight;
+		return CVUtils.padAndCenter(new ImagePlus("Point "+pointID, im), track.tb.ep.trackWindowWidth, track.tb.ep.trackWindowHeight, (int)x-rect.x, (int)y-rect.y);
+		 
 	}
 	
 	public void findAndStoreIm(ImagePlus frameIm){
 		Roi oldRoi = frameIm.getRoi();
 		frameIm.setRoi(rect);
-		im = new ImagePlus("Frame "+pointID, frameIm.getProcessor().crop());//Does not affect frameIm's image
+		im = frameIm.getProcessor().crop();//Does not affect frameIm's image
 		frameIm.setRoi(oldRoi);
 	}
 	

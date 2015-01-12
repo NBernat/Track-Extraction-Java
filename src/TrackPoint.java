@@ -1,5 +1,7 @@
-import ij.ImagePlus;
+import ij.gui.Roi;
+import ij.process.ImageProcessor;
 
+import java.awt.Color;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.util.ListIterator;
@@ -60,6 +62,8 @@ public class TrackPoint extends Point {
 	 */
 	protected int thresh;
 	
+	
+	private Point contourStart;
 	
 	////////////////////////////////////
 	// Constructors & Related Methods
@@ -180,8 +184,19 @@ public class TrackPoint extends Point {
 		return Math.acos(((x - ptA.x)*(x - ptC.x) + (y - ptA.y)*(y - ptC.y))/(dist(ptA)*dist(ptC)));
 	}
 	
-	public ImagePlus getIm(){
-		return null;
+	public ImageProcessor getIm(){
+		ImageProcessor trPtIm = track.tb.pe.imageStack.getProcessor(frameNum).duplicate();
+		int newCornerX = (int)x - track.tb.ep.trackWindowWidth/2;
+		int newCornerY = (int)y - track.tb.ep.trackWindowHeight/2;
+		Rectangle newRect = new Rectangle(newCornerX, newCornerY, track.tb.ep.trackWindowWidth, track.tb.ep.trackWindowHeight);
+		trPtIm.setRoi(newRect);
+		trPtIm = trPtIm.crop();
+		trPtIm.setColor(Color.WHITE);
+//		trPtIm.drawDot(5, 5);
+		trPtIm.drawDot((int)x - newCornerX, (int)y - newCornerY);
+//		trPtIm.drawRect(rect.x, rect.y, rect.width, rect.height);
+		return trPtIm;
+		
 	}
 	
 	public void setNumMatches(int num){
@@ -237,7 +252,15 @@ public class TrackPoint extends Point {
 //			return window;
 //		}
 //	}
+	
+	public void setStart(int stX, int stY){
+		contourStart = new Point(stX, stY);
+	}
 
+	public Point getStart(){
+		return contourStart;
+	}
+	
 	public boolean equals(TrackPoint pt){
 		return pt.pointID==pointID;
 	}

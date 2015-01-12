@@ -230,74 +230,48 @@ public class Track {
 		ListIterator<TrackPoint> tpIt = points.listIterator();
 		if (tpIt.hasNext()) {
 		
+			
+			
+			
+			
+			
 			//IJ.showMessage("Playing track "+labelInd);
 			TrackPoint point = points.firstElement();
-//			ImageWindow window = point.showTrackPoint(null,"Track "+labelInd+": Frames "+points.firstElement().frameNum+"-"+points.lastElement().frameNum);
+			point.setTrack(this);
 			
 			//Get the first image
+			/*
 			ImageProcessor trPtIm = tb.pe.imageStack.getProcessor(point.frameNum).duplicate();
 			Rectangle newRect = new Rectangle((int)point.x - tb.ep.trackWindowWidth/2, (int)point.y - tb.ep.trackWindowHeight/2, tb.ep.trackWindowWidth, tb.ep.trackWindowHeight);
 			trPtIm.setRoi(newRect);
 			ImageProcessor crIm = trPtIm.crop();
 			
-			//OLD This holds the current frame 
-//			ImagePlus img = new ImagePlus("", crIm);
-			
-			//NEW Create a stack of images, and add the first frame
+			//Create a stack of images, and add the first frame
 			ImageStack trackStack = new ImageStack(tb.ep.trackWindowWidth, tb.ep.trackWindowHeight);
 			trackStack.addSlice(crIm);
-//			int centerX = (int)(point.x-point.rect.x);
-//			int centerY = (int)(point.y-point.rect.y);
-//			trackStack.addSlice(CVUtils.padAndCenter(new ImagePlus("Track "+trackID+" frame "+point.frameNum,crIm), tb.ep.trackWindowWidth, tb.ep.trackWindowHeight, centerX, centerY));
-
-			//Draw a dot, to be changed to a contour
-//			img.getProcessor().drawDot((int)point.x, (int)point.y);
+			*/
+			ImageProcessor firstIm = point.getIm();
 			
-			//OLD Create a window by showing the first frame 
-//			img.show();
+			ImageStack trackStack = new ImageStack(firstIm.getWidth(), firstIm.getHeight());
 			
-			
-			//OLD get window properties
-//			ImageWindow window = img.getWindow();
-//			Dimension d = new Dimension(tb.ep.trackWindowWidth, tb.ep.trackWindowHeight);
-//			window.setSize(d);
-//			window.setTitle("Track "+labelInd+": Frames "+points.firstElement().frameNum+"-"+points.lastElement().frameNum);
-			
-			//Rectangle rect = window.getBounds(null);
-			//window.setBounds(x, y, width, height);
-			//window.getCanvas().setMagnification(tb.ep.trackZoomFac);
-			
+			trackStack.addSlice(firstIm);
 			
 			//Add the rest of the images to the movie
 			while(tpIt.hasNext()){
 				point = tpIt.next();
-//				point.showTrackPoint(window, "Track "+labelInd+": Frames "+points.firstElement().frameNum+"-"+points.lastElement().frameNum);
-				
-				
+				point.setTrack(this);
 				//Get the next image
+				/*
 				trPtIm = tb.pe.imageStack.getProcessor(point.frameNum).duplicate();
 				newRect = new Rectangle((int)point.x - tb.ep.trackWindowWidth/2, (int)point.y - tb.ep.trackWindowHeight/2, tb.ep.trackWindowWidth, tb.ep.trackWindowHeight);
 				trPtIm.setRoi(newRect);
-//				trPtIm.setRoi(point.rect);
 				crIm = trPtIm.crop();
-				//Make it fit the stack size
 				trackStack.addSlice(crIm);
-//				centerX = (int)(point.x-point.rect.x);
-//				centerY = (int)(point.y-point.rect.y);
-//				trackStack.addSlice(CVUtils.padAndCenter(new ImagePlus("Track "+trackID+" frame "+point.frameNum,crIm), tb.ep.trackWindowWidth, tb.ep.trackWindowHeight, centerX, centerY));
-				
-				//OLD Update the window
-//				img = new ImagePlus("", crIm);
-//				window.setImage(img);
-				
-				//window.getCanvas().setMagnification(tb.ep.trackZoomFac);
-				//img.getProcessor().drawDot((int)point.x, (int)point.y);
-				
-				//Pause between frames
-//				pause(frameLength); 
+				*/
+				trackStack.addSlice(point.getIm());
 			}
 				
-			//NEW Show the stack
+			//Show the stack
 			ImagePlus trackPlus = new ImagePlus("Track "+trackID ,trackStack);
 			trackPlus.show();
 				

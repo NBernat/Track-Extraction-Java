@@ -1,7 +1,9 @@
 //import ContourPlotter_;
 import ij.*;
+import ij.gui.Roi;
 import ij.measure.ResultsTable;
 import ij.plugin.ImageCalculator;
+import ij.process.ImageProcessor;
 
 import java.awt.Rectangle;
 import java.util.Vector;
@@ -198,6 +200,10 @@ public class PointExtractor {
 	 */
 	public int loadFrame(int frameNum){
 		
+		if (frameNum==currentFrameNum){
+			return 0;
+		}
+		
 		//Set the current frame
 		currentFrameNum = frameNum;
 		if (currentFrameNum>endFrameNum) {
@@ -227,142 +233,17 @@ public class PointExtractor {
 	}
 	
 	
-	/**
-	 * Calculate the background image
-	 */
-//	public void calculateBackground() {
-//		//if the background image is still valid, leave it as-is
-//		if (!isFirstRun && currentFrameNum <= backValidUntil) {   
-//	        return;
-//	     }
-//		
-//		comm.message("Calculating background", VerbLevel.verb_message);
-//		
-//		if (imageStack==null) {
-//			
-//			comm.message("The image stack is empty, no background image could be made", VerbLevel.verb_warning);			
-//			return;
-//		}
-//		
-//		//Set the interval of images (from which the background im is constructed) properly
-//		int first = currentFrameNum;
-//		first = (first + ep.resampleInterval <= endFrameNum) ? first : endFrameNum - ep.resampleInterval;
-//		first = (first >= startFrameNum) ? first : startFrameNum;
-//		
-//		int last = first + ep.resampleInterval;
-//		last = (last <= endFrameNum) ? last : endFrameNum;
-//		double delta = (last - first) / (ep.nBackgroundFrames - 1);
-//		
-//		//Get the frame normalization factor, if necessary
-//		if(fnm!=_frame_normalization_methodT._frame_none){
-//			double normSum = fl.getFrameNormFactor(first, fnm);
-//			if (normSum<=0) {
-//				comm.message("Frame normalization reported an error", VerbLevel.verb_error);
-//			}
-//			int i;
-//			for (i=1; i<ep.nBackgroundFrames; i++) {
-//				String s = "norm sum = "+normSum;
-//				comm.message(s, VerbLevel.verb_debug);
-//				int nf = fl.getFrameNormFactor((int)(first + i*delta + .5), fnm);
-//				if (nf<=0) {
-//					comm.message("Frame normalization reported an error", VerbLevel.verb_error);
-//				}
-//				normSum+=nf;
-//			}
-//			
-//			
-//			if (normSum <= 0) {
-//	            comm.message ("sum of norm factors gives non positive number", VerbLevel.verb_error);
-//	        }
-//			if (ep.nBackgroundFrames <= 0) {
-//	            comm.message ("number of background frames is nonpositive", VerbLevel.verb_error);
-//	        }
-//			
-//			
-//			normFactor = (int) (normSum / ep.nBackgroundFrames);
-//			
-//			String s = "norm sum is "+normSum+" nBackgroundFrames is "+ep.nBackgroundFrames+" norm factor is "+normFactor;
-//			comm.message(s, VerbLevel.verb_message);
-//			
-//		} else {
-//	        comm.message("frame normalization is turned off", VerbLevel.verb_message);
-//	        normFactor = -1;
-//	    }
-//		
-//		//Construct the background image from the properly normalized, in-range, frames
-//		comm.message ("calling get frame", VerbLevel.verb_debug);
-//		
-//		if (fl.getFrame(first, fnm, normFactor)!=0) {
-//			comm.message ("frame loader reports error", VerbLevel.verb_error);
-//		} else {
-//			backgroundIm = new ImagePlus("BackgroundIm_"+first+"_"+last, fl.returnIm);
-//		}
-//		
-//		if (backgroundIm==null) {
-//			comm.message("Initial background image is null", VerbLevel.verb_warning);
-//		}
-//		
-//		analysisRegion = fl.ar;
-//		
-//		int i;
-//		for (i=1; i<ep.nBackgroundFrames; i++){
-//			
-//			int nextFrame = (int) (first + i*delta + 0.5);
-//			comm.message("Adding frame "+nextFrame+" to the background image", VerbLevel.verb_debug);
-//			if (fl.getFrame(nextFrame, fnm, normFactor) == 0) {
-//				currentIm = new ImagePlus("", fl.returnIm);
-//	            if (currentIm == null || backgroundIm == null) {
-//	                comm.message ("current frame or background im is NULL", VerbLevel.verb_error);
-//	            } else {
-//	            	backgroundIm = CVUtils.blitterProcessing(currentIm, backgroundIm, Blitter.MIN);
-//	            	//backgroundIm = IC.run("min", currentIm, backgroundIm);
-//	            }
-//	            
-//	            
-//	            if (backgroundIm==null) {
-//	    			comm.message("Background image is null after adding contributing frame number "+i, VerbLevel.verb_warning);
-//	    		}
-//	            
-//	        } else {
-//	            comm.message("frame loader reports error", VerbLevel.verb_error);
-//	        }
-//			
-//		}
-//		
-//		backValidUntil = first + ep.resampleInterval;
-//	    
-//		//Blur the background image, if needed
-//	    if (ep.blurSigma > 0) {
-//	        
-//	    	comm.message ("blurring background ", VerbLevel.verb_verbose);
-//	        
-//	        GaussianBlur GB = new GaussianBlur();
-//	        GB.blurGaussian(backgroundIm.getProcessor(), ep.blurSigma, ep.blurSigma, ep.blurAccuracy);
-//	        
-//	    }
-//	}
-//	
 
 	/**
 	 * Thresholds backSubIm according to the method set in the extraction parameters, and stores the results in threshIm  
 	 */
 	void defaultThresh() {
 		
-		threshIm = (ImagePlus) currentIm.clone();
+		threshIm = new ImagePlus("Thresh im Frame "+currentFrameNum, currentIm.getProcessor().getBufferedImage());
+//		threshIm = (ImagePlus) currentIm.clone();
 		threshIm.getProcessor().threshold((int) ep.globalThreshValue);
 
 	}
-	
-	/**
-	 * Sets the fields needed to do a non-global threshold 
-	 * @param thrCmpIm The image used for comparison to generate local "threshold"
-	 */
-//	void setThresholdCompareIm (ImagePlus thrCmpIm) {
-//		threshCompIm = (ImagePlus) thrCmpIm.clone();
-//	    ep.useGlobalThresh = false;
-//	}
-	
-	
 	
 	/**
 	 * Extracts points from the specified frame, storing them in extractedPoints
@@ -398,8 +279,72 @@ public class PointExtractor {
 		if (showResults) {
 			comm.message("Frame "+currentFrameNum+": "+pointTable.getCounter()+" points in ResultsTable", VerbLevel.verb_message);
 	    }
-		Vector<TrackPoint> pts = CVUtils.rt2TrackPoints(pointTable, currentFrameNum, comm, ep, thresh);
+		//Vector<TrackPoint> pts = CVUtils.rt2TrackPoints(pointTable, currentFrameNum, comm, ep, thresh);
+		Vector<TrackPoint> pts = rt2TrackPoints(pointTable, currentFrameNum, thresh);
 		return pts;
+	}
+	
+	
+	
+	
+	/**
+	 * Adds a row from the results table to the list of TrackPoints, if the point is the proper size according to the extraction parameters
+	 * @param rt Results Table containing point info 
+	 * @param frameNum Frame number
+	 * @return List of Trackpoints within the 
+	 */
+	public Vector<TrackPoint> rt2TrackPoints (ResultsTable rt, int frameNum, int thresh) {
+		
+		Vector<TrackPoint> tp = new Vector<TrackPoint>();
+		
+		for (int row=1; row<rt.getCounter(); row++) {
+			comm.message("Gathering info for Point "+row+" from ResultsTable", VerbLevel.verb_debug);
+			double area = rt.getValueAsDouble(ResultsTable.AREA, row);
+			comm.message("Point "+row+": area="+area, VerbLevel.verb_debug);
+			double x = rt.getValueAsDouble(ResultsTable.X_CENTROID, row)-1;
+			double y = rt.getValueAsDouble(ResultsTable.Y_CENTROID, row)-1;
+			double width = rt.getValueAsDouble(ResultsTable.ROI_WIDTH, row)-1;
+			double height = rt.getValueAsDouble(ResultsTable.ROI_HEIGHT, row)-1;
+			double boundX = rt.getValueAsDouble(ResultsTable.ROI_X, row)-1;
+			double boundY = rt.getValueAsDouble(ResultsTable.ROI_Y, row)-1;
+			Rectangle rect = new Rectangle((int)boundX-ep.roiPadding, (int)boundY-ep.roiPadding, (int)width+2*ep.roiPadding, (int)height+2*ep.roiPadding);
+			//Rectangle rect = new Rectangle((int)boundX-1, (int)boundY-1, (int)width+2, (int)height+2);
+			//Rectangle rect = new Rectangle((int)x-ep.roiPadding, (int)y-ep.roiPadding, (int)2*ep.roiPadding, (int)2*ep.roiPadding);
+			
+			
+			comm.message("Converting Point "+row+" "+"("+(int)x+","+(int)y+")"+"to TrackPoint", VerbLevel.verb_debug);
+			if (ep.properPointSize(area)) {
+				
+				switch (ep.trackPointType){
+					case 1: //ImTrackPoint
+						ImTrackPoint iTPt = new ImTrackPoint(x,y,rect,area,frameNum,thresh);
+						if (currentFrameNum!=frameNum){
+							loadFrame(frameNum);
+						}
+						Roi oldRoi = currentIm.getRoi();
+						currentIm.setRoi(rect);
+						ImageProcessor im = currentIm.getProcessor().crop(); //does not affect currentIm
+						currentIm.setRoi(oldRoi);
+						iTPt.setImage(im);
+						tp.add(iTPt);
+						break;
+					case 2: //MaggotTrackPoint
+						break;
+					default:
+						TrackPoint newPt = new TrackPoint(x,y,rect,area,frameNum,thresh); 
+						newPt.setStart((int)rt.getValue("XStart", row), (int)rt.getValue("YStart", row));
+						tp.add(newPt);
+						comm.message("Point "+row+" has pointID "+newPt.pointID, VerbLevel.verb_debug);
+				}
+				
+			} else{
+				comm.message("Point was not proper size: not made into a point", VerbLevel.verb_debug);
+			}
+			
+		}
+		
+		return tp;
+		
 	}
 	
 	
