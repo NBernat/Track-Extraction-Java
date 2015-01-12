@@ -12,6 +12,8 @@ public class ImTrackPoint extends TrackPoint{
 	 */
 	private static final long serialVersionUID = 1L;
 	ImageProcessor im;
+	int imOriginX;
+	int imOriginY;
 	
 //	int[] imOrigin;
 
@@ -42,6 +44,8 @@ public class ImTrackPoint extends TrackPoint{
 	public ImageProcessor getIm(){
 		//pad the image
 //		track.tb.ep.trackWindowHeight;
+		imOriginX = (int)x-(track.tb.ep.trackWindowWidth/2)-1;
+		imOriginY = (int)y-(track.tb.ep.trackWindowHeight/2)-1;
 		return CVUtils.padAndCenter(new ImagePlus("Point "+pointID, im), track.tb.ep.trackWindowWidth, track.tb.ep.trackWindowHeight, (int)x-rect.x, (int)y-rect.y);
 		 
 	}

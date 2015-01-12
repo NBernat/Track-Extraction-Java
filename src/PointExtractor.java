@@ -317,22 +317,33 @@ public class PointExtractor {
 				
 				switch (ep.trackPointType){
 					case 1: //ImTrackPoint
-						ImTrackPoint iTPt = new ImTrackPoint(x,y,rect,area,frameNum,thresh);
+//						ImTrackPoint iTPt = new ImTrackPoint(x,y,rect,area,frameNum,thresh);
+//						if (currentFrameNum!=frameNum){
+//							loadFrame(frameNum);
+//						}
+//						Roi oldRoi = currentIm.getRoi();
+//						currentIm.setRoi(rect);
+//						ImageProcessor im = currentIm.getProcessor().crop(); //does not affect currentIm
+//						currentIm.setRoi(oldRoi);
+//						iTPt.setImage(im);
+//						tp.add(iTPt);
+						break;
+					case 2: //MaggotTrackPoint
+						MaggotTrackPoint mtPt = new MaggotTrackPoint(x,y,rect,area,frameNum,thresh);
 						if (currentFrameNum!=frameNum){
 							loadFrame(frameNum);
 						}
-						Roi oldRoi = currentIm.getRoi();
+						Roi roi = currentIm.getRoi();
 						currentIm.setRoi(rect);
-						ImageProcessor im = currentIm.getProcessor().crop(); //does not affect currentIm
-						currentIm.setRoi(oldRoi);
-						iTPt.setImage(im);
-						tp.add(iTPt);
-						break;
-					case 2: //MaggotTrackPoint
+						ImageProcessor im2 = currentIm.getProcessor().crop(); //does not affect currentIm
+						currentIm.setRoi(roi);
+						mtPt.setImage(im2);
+						mtPt.setStart((int)rt.getValue("XStart", row), (int)rt.getValue("YStart", row));
+						mtPt.findContours();
+						tp.add(mtPt);
 						break;
 					default:
 						TrackPoint newPt = new TrackPoint(x,y,rect,area,frameNum,thresh); 
-						newPt.setStart((int)rt.getValue("XStart", row), (int)rt.getValue("YStart", row));
 						tp.add(newPt);
 						comm.message("Point "+row+" has pointID "+newPt.pointID, VerbLevel.verb_debug);
 				}

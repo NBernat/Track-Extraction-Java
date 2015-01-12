@@ -1,15 +1,17 @@
+import ij.ImagePlus;
 import ij.gui.Overlay;
 import ij.gui.PolygonRoi;
 import ij.gui.Roi;
 import ij.gui.Wand;
 import ij.process.ImageProcessor;
 
+import java.awt.Color;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.util.Vector;
 
 
-public class MaggotTrackPoint extends TrackPoint {
+public class MaggotTrackPoint extends ImTrackPoint {
 
 
 
@@ -22,7 +24,8 @@ public class MaggotTrackPoint extends TrackPoint {
 	MaggotTrackPoint prev;
 	MaggotTrackPoint next;
 	
-	Vector<Point> contour;
+//	Vector<Point> contour;
+	private Point contourStart;
 	int[] contourX;
 	int[] contourY;
 	Vector<Point> midline;
@@ -54,11 +57,23 @@ public class MaggotTrackPoint extends TrackPoint {
 		// TODO Auto-generated constructor stub
 	}
 
-	MaggotTrackPoint(TrackPoint point) {
-		super(point);
-		// TODO Auto-generated constructor stub
-	}
+//	MaggotTrackPoint(TrackPoint point) {
+//		super(point);
+//	}
 	
+	
+	public void findContours(){
+		ImagePlus thrIm = new ImagePlus("", im.getBufferedImage());//copies image
+		ImageProcessor thIm = thrIm.getProcessor();
+		thIm.threshold(thresh);
+		Wand wand = new Wand(thIm);
+		wand.autoOutline(getStart().x-rect.x, getStart().y-rect.y);
+//		contour = wand2Contour(wand);
+		contourX = wand.xpoints;
+		for (int i=0;i<contourX.length;i++) contourX[i]+=rect.x; 
+		contourY = wand.ypoints;
+		for (int i=0;i<contourY.length;i++) contourY[i]+=rect.y;
+	}
 
 	 /* inline void linkBehind(MaggotTrackPoint *prev)
      * inline void linkAhead(MaggotTrackPoint *next)
@@ -76,41 +91,58 @@ public class MaggotTrackPoint extends TrackPoint {
     public void linkAhead(MaggotTrackPoint next) {
         this.next = next;
     }
-	
-	public void findContours(ImageProcessor im){
-		Wand wand = new Wand(im);
-		wand.autoOutline(getStart().x, getStart().y);
-		contour = wand2Contour(wand);
-		contourX = wand.xpoints;
-		contourY = wand.ypoints;
+    
+	public void setStart(int stX, int stY){
+		contourStart = new Point(stX, stY);
 	}
-	
-	public Vector<Point> wand2Contour(Wand wand){
-		
-		Vector<Point> con = new Vector<Point>();
-		
-		for (int i=0; i<wand.npoints; i++){
-			con.add(new Point(wand.xpoints[i], wand.ypoints[i]));
-		}
-		
-		return con;
+
+	public Point getStart(){
+		return contourStart;
 	}
 	
 	
 	
-	public Overlay contourOverlay(){
-		
-		PolygonRoi pRoi = new PolygonRoi(contourX, contourY, contourX.length, Roi.POLYLINE);
-		return new Overlay(pRoi);
-		
-	}
+//	public Vector<Point> wand2Contour(Wand wand){
+//		
+//		Vector<Point> con = new Vector<Point>();
+//		
+//		for (int i=0; i<wand.npoints; i++){
+//			con.add(new Point(wand.xpoints[i], wand.ypoints[i]));
+//		}
+//		
+//		return con;
+//	}
+	
+	
+	
+//	public Overlay contourOverlay(){
+//		
+//		PolygonRoi pRoi = new PolygonRoi(contourX, contourY, contourX.length, Roi.POLYLINE);
+//		return new Overlay(pRoi);
+//		
+//	}
 	
 	@Override
 	public ImageProcessor getIm() {
-		// TODO Auto-generated method stub
 		ImageProcessor im = super.getIm();
-		im.setOverlay(contourOverlay());
+		drawContour(im);
 		return im;
+	}
+	
+	
+	public void drawContour(ImageProcessor im){
+		
+		
+		im.setColor(Color.WHITE);
+		
+		for (int i=0; i<(contourX.length-1); i++){
+			im.drawLine(contourX[i]-imOriginX, contourY[i]-imOriginY, contourX[i+1]-imOriginX, contourY[i+1]-imOriginY);
+		}
+		if (contourX.length>0){
+			im.drawLine(contourX[contourX.length-1]-imOriginX, contourY[contourY.length-1]-imOriginY, contourX[1]-imOriginX, contourY[1]-imOriginY);			
+		}
+		
+		
 	}
 	
 	

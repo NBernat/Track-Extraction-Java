@@ -1,4 +1,3 @@
-import ij.gui.Roi;
 import ij.process.ImageProcessor;
 
 import java.awt.Color;
@@ -63,7 +62,6 @@ public class TrackPoint extends Point {
 	protected int thresh;
 	
 	
-	private Point contourStart;
 	
 	////////////////////////////////////
 	// Constructors & Related Methods
@@ -253,14 +251,7 @@ public class TrackPoint extends Point {
 //		}
 //	}
 	
-	public void setStart(int stX, int stY){
-		contourStart = new Point(stX, stY);
-	}
 
-	public Point getStart(){
-		return contourStart;
-	}
-	
 	public boolean equals(TrackPoint pt){
 		return pt.pointID==pointID;
 	}

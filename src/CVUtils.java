@@ -188,7 +188,7 @@ public class CVUtils {
 	 */
 	static ResultsTable findPoints(ImagePlus threshIm, ExtractionParameters ep, boolean showResults) {
 		
-		int options = getPointFindingOptions(showResults);
+		int options = getPointFindingOptions(showResults, ep.trackPointType>=2);
 		int measurements = getPointFindingMeasurements();
 		ResultsTable rt = new ResultsTable();
 		
@@ -206,12 +206,14 @@ public class CVUtils {
 	 * Returns a flag word created by ORing the appropriate constants (SHOW_RESULTS, EXCLUDE_EDGE_PARTICLES, etc.)
 	 * @return
 	 */
-	public static int getPointFindingOptions( boolean showResults) {
+	public static int getPointFindingOptions(boolean showResults, boolean contourStart) {
 		
 		//Don't show anything, don't exclude edgepoints. basically we have no special options
 		int opInt=0;
 		opInt+=ParticleAnalyzer.EXCLUDE_EDGE_PARTICLES;
-		opInt+=ParticleAnalyzer.RECORD_STARTS;
+		if (contourStart){
+			opInt+=ParticleAnalyzer.RECORD_STARTS;
+		}
 		if (showResults) {
 			opInt+=ParticleAnalyzer.SHOW_RESULTS;
 		} else {
@@ -251,53 +253,53 @@ public class CVUtils {
 	 * @param frameNum Frame number
 	 * @return List of Trackpoints within the 
 	 */
-	public static Vector<TrackPoint> rt2TrackPoints (ResultsTable rt, int frameNum, Communicator comm, ExtractionParameters ep, int thresh) {
-		
-		Vector<TrackPoint> tp = new Vector<TrackPoint>();
-		
-		for (int row=1; row<rt.getCounter(); row++) {
-			comm.message("Gathering info for Point "+row+" from ResultsTable", VerbLevel.verb_debug);
-			double area = rt.getValueAsDouble(ResultsTable.AREA, row);
-			comm.message("Point "+row+": area="+area, VerbLevel.verb_debug);
-			double x = rt.getValueAsDouble(ResultsTable.X_CENTROID, row)-1;
-			double y = rt.getValueAsDouble(ResultsTable.Y_CENTROID, row)-1;
-			double width = rt.getValueAsDouble(ResultsTable.ROI_WIDTH, row)-1;
-			double height = rt.getValueAsDouble(ResultsTable.ROI_HEIGHT, row)-1;
-			double boundX = rt.getValueAsDouble(ResultsTable.ROI_X, row)-1;
-			double boundY = rt.getValueAsDouble(ResultsTable.ROI_Y, row)-1;
-			Rectangle rect = new Rectangle((int)boundX-ep.roiPadding, (int)boundY-ep.roiPadding, (int)width+2*ep.roiPadding, (int)height+2*ep.roiPadding);
-			//Rectangle rect = new Rectangle((int)boundX-1, (int)boundY-1, (int)width+2, (int)height+2);
-			//Rectangle rect = new Rectangle((int)x-ep.roiPadding, (int)y-ep.roiPadding, (int)2*ep.roiPadding, (int)2*ep.roiPadding);
-			
-			
-			comm.message("Converting Point "+row+" "+"("+(int)x+","+(int)y+")"+"to TrackPoint", VerbLevel.verb_debug);
-			if (ep.properPointSize(area)) {
-				
-				switch (ep.trackPointType){
-					case 1: //ImTrackPoint
-//						ImTrackPoint newPt = new ImTrackPoint(x,y,rect,area,frameNum,thresh);
-//						ImageProcessor im = ;
-//						newPt.setImage(im);
-						
-						break;
-					case 2: //MaggotTrackPoint
-						break;
-					default:
-						TrackPoint newPt = new TrackPoint(x,y,rect,area,frameNum,thresh); 
-						newPt.setStart((int)rt.getValue("XStart", row), (int)rt.getValue("YStart", row));
-						tp.add(newPt);
-						comm.message("Point "+row+" has pointID "+newPt.pointID, VerbLevel.verb_debug);
-				}
-				
-			} else{
-				comm.message("Point was not proper size: not made into a point", VerbLevel.verb_debug);
-			}
-			
-		}
-		
-		return tp;
-		
-	}
+//	public static Vector<TrackPoint> rt2TrackPoints (ResultsTable rt, int frameNum, Communicator comm, ExtractionParameters ep, int thresh) {
+//		
+//		Vector<TrackPoint> tp = new Vector<TrackPoint>();
+//		
+//		for (int row=1; row<rt.getCounter(); row++) {
+//			comm.message("Gathering info for Point "+row+" from ResultsTable", VerbLevel.verb_debug);
+//			double area = rt.getValueAsDouble(ResultsTable.AREA, row);
+//			comm.message("Point "+row+": area="+area, VerbLevel.verb_debug);
+//			double x = rt.getValueAsDouble(ResultsTable.X_CENTROID, row)-1;
+//			double y = rt.getValueAsDouble(ResultsTable.Y_CENTROID, row)-1;
+//			double width = rt.getValueAsDouble(ResultsTable.ROI_WIDTH, row)-1;
+//			double height = rt.getValueAsDouble(ResultsTable.ROI_HEIGHT, row)-1;
+//			double boundX = rt.getValueAsDouble(ResultsTable.ROI_X, row)-1;
+//			double boundY = rt.getValueAsDouble(ResultsTable.ROI_Y, row)-1;
+//			Rectangle rect = new Rectangle((int)boundX-ep.roiPadding, (int)boundY-ep.roiPadding, (int)width+2*ep.roiPadding, (int)height+2*ep.roiPadding);
+//			//Rectangle rect = new Rectangle((int)boundX-1, (int)boundY-1, (int)width+2, (int)height+2);
+//			//Rectangle rect = new Rectangle((int)x-ep.roiPadding, (int)y-ep.roiPadding, (int)2*ep.roiPadding, (int)2*ep.roiPadding);
+//			
+//			
+//			comm.message("Converting Point "+row+" "+"("+(int)x+","+(int)y+")"+"to TrackPoint", VerbLevel.verb_debug);
+//			if (ep.properPointSize(area)) {
+//				
+//				switch (ep.trackPointType){
+//					case 1: //ImTrackPoint
+////						ImTrackPoint newPt = new ImTrackPoint(x,y,rect,area,frameNum,thresh);
+////						ImageProcessor im = ;
+////						newPt.setImage(im);
+//						
+//						break;
+//					case 2: //MaggotTrackPoint
+//						break;
+//					default:
+//						TrackPoint newPt = new TrackPoint(x,y,rect,area,frameNum,thresh); 
+////						newPt.setStart((int)rt.getValue("XStart", row), (int)rt.getValue("YStart", row));
+//						tp.add(newPt);
+//						comm.message("Point "+row+" has pointID "+newPt.pointID, VerbLevel.verb_debug);
+//				}
+//				
+//			} else{
+//				comm.message("Point was not proper size: not made into a point", VerbLevel.verb_debug);
+//			}
+//			
+//		}
+//		
+//		return tp;
+//		
+//	}
 	
 	
 	

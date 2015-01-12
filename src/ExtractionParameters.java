@@ -117,7 +117,7 @@ public class ExtractionParameters {
     //TODO
     int roiPadding = 5;
     
-    int trackPointType = 1;
+    int trackPointType = 2;
     
     
     
