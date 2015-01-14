@@ -317,16 +317,16 @@ public class PointExtractor {
 				
 				switch (ep.trackPointType){
 					case 1: //ImTrackPoint
-//						ImTrackPoint iTPt = new ImTrackPoint(x,y,rect,area,frameNum,thresh);
-//						if (currentFrameNum!=frameNum){
-//							loadFrame(frameNum);
-//						}
-//						Roi oldRoi = currentIm.getRoi();
-//						currentIm.setRoi(rect);
-//						ImageProcessor im = currentIm.getProcessor().crop(); //does not affect currentIm
-//						currentIm.setRoi(oldRoi);
-//						iTPt.setImage(im);
-//						tp.add(iTPt);
+						ImTrackPoint iTPt = new ImTrackPoint(x,y,rect,area,frameNum,thresh);
+						if (currentFrameNum!=frameNum){
+							loadFrame(frameNum);
+						}
+						Roi oldRoi = currentIm.getRoi();
+						currentIm.setRoi(rect);
+						ImageProcessor im = currentIm.getProcessor().crop(); //does not affect currentIm
+						currentIm.setRoi(oldRoi);
+						iTPt.setImage(im);
+						tp.add(iTPt);
 						break;
 					case 2: //MaggotTrackPoint
 						MaggotTrackPoint mtPt = new MaggotTrackPoint(x,y,rect,area,frameNum,thresh);

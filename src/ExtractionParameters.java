@@ -45,7 +45,7 @@ public class ExtractionParameters {
 	int showSampleData =2; 
 	int sampleInd = 10;
 	//TODO
-	int startFrame = 300;
+	int startFrame = 350;
 	int endFrame = 400;
 	//_frame_normalization_methodT fnm = _frame_normalization_methodT._frame_none;
 	//TODO
@@ -54,7 +54,7 @@ public class ExtractionParameters {
 	int trackZoomFac = 10;
 	
 	
-	int[] matchSpill = {384};//{234,251,356,367};
+	int[] matchSpill = {};//{234,251,356,367};
 	boolean dispTrackInfo = true;
 	
 	///////////////////////////

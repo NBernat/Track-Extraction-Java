@@ -1,13 +1,13 @@
 import java.awt.Color;
-import java.awt.Graphics;
+//import java.awt.Graphics;
 import java.awt.Rectangle;
-import java.awt.image.BufferedImage;
+//import java.awt.image.BufferedImage;
 
 import ij.ImagePlus;
 import ij.gui.Wand;
 //import ij.process.ImageProcessor;
 import ij.plugin.PlugIn;
-import ij.process.ImageProcessor;
+//import ij.process.ImageProcessor;
 
 
 public class Test_ implements PlugIn{

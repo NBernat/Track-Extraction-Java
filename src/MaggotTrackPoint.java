@@ -1,5 +1,4 @@
 import ij.ImagePlus;
-import ij.gui.Overlay;
 import ij.gui.PolygonRoi;
 import ij.gui.Roi;
 import ij.gui.Wand;
@@ -8,7 +7,6 @@ import ij.process.ImageProcessor;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.util.Vector;
 
 
 public class MaggotTrackPoint extends ImTrackPoint {
@@ -24,11 +22,18 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	MaggotTrackPoint prev;
 	MaggotTrackPoint next;
 	
-//	Vector<Point> contour;
+
 	private Point contourStart;
-	int[] contourX;
-	int[] contourY;
-	Vector<Point> midline;
+	int nConPts;
+//	int[] contourX;
+//	int[] contourY;
+	
+	PolygonRoi contour;
+	
+	PolygonRoi midline;
+	
+	double[] midlineX;
+	double[] midlineY;
 	
 	Point head;
 	Point mid;
@@ -41,25 +46,20 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	MaggotTrackPoint(double x, double y, Rectangle rect, double area,
 			double[] cov, int frame, int thresh) {
 		super(x, y, rect, area, cov, frame, thresh);
-		// TODO Auto-generated constructor stub
 	}
 
 	
 	MaggotTrackPoint(double x, double y, Rectangle rect, double area,
 			double[] cov, int frame, int ID, int thresh) {
 		super(x, y, rect, area, cov, frame, ID, thresh);
-		// TODO Auto-generated constructor stub
 	}
 	
 	MaggotTrackPoint(double x, double y, Rectangle rect, double area,
 			int frame, int thresh) {
 		super(x, y, rect, area, frame, thresh);
-		// TODO Auto-generated constructor stub
 	}
 
-//	MaggotTrackPoint(TrackPoint point) {
-//		super(point);
-//	}
+
 	
 	
 	public void findContours(){
@@ -68,13 +68,40 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		thIm.threshold(thresh);
 		Wand wand = new Wand(thIm);
 		wand.autoOutline(getStart().x-rect.x, getStart().y-rect.y);
-//		contour = wand2Contour(wand);
-		contourX = wand.xpoints;
-		for (int i=0;i<contourX.length;i++) contourX[i]+=rect.x; 
-		contourY = wand.ypoints;
-		for (int i=0;i<contourY.length;i++) contourY[i]+=rect.y;
+		nConPts = wand.npoints;
+		int[] contourX = wand.xpoints;//Arrays.copyOfRange(wand.xpoints, 0, wand.npoints-1);
+//		for (int i=0;i<nConPts;i++) contourX[i]+=rect.x; 
+		int[] contourY = wand.ypoints;//Arrays.copyOfRange(wand.ypoints, 0, wand.npoints-1);
+//		for (int i=0;i<nConPts;i++) contourY[i]+=rect.y;
+		
+		contour = new PolygonRoi(contourX, contourY, nConPts, Roi.POLYGON);
+		
 	}
+	
 
+
+	public void findHTM(){
+		
+		//Make list of contour points from contour
+		
+		//Find the convex hull and mark the points in the list
+		PolygonRoi cvxHull = new PolygonRoi(contour.getConvexHull(), Roi.POLYGON);
+		
+		//Find the pointy ends: sort the list of points, take the top in cvh, remove the nearby points from the list, take the next top in cvh  
+		
+		
+		
+		//Decide number of re-sampling points by measuring length along contour segments
+		
+		//Re-sample sides
+		
+		
+		//Average each point
+	}
+	
+	
+	
+	
 	 /* inline void linkBehind(MaggotTrackPoint *prev)
      * inline void linkAhead(MaggotTrackPoint *next)
      * 
@@ -100,33 +127,21 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		return contourStart;
 	}
 	
+
 	
+
 	
-//	public Vector<Point> wand2Contour(Wand wand){
-//		
-//		Vector<Point> con = new Vector<Point>();
-//		
-//		for (int i=0; i<wand.npoints; i++){
-//			con.add(new Point(wand.xpoints[i], wand.ypoints[i]));
-//		}
-//		
-//		return con;
-//	}
+
 	
 	
 	
-//	public Overlay contourOverlay(){
-//		
-//		PolygonRoi pRoi = new PolygonRoi(contourX, contourY, contourX.length, Roi.POLYLINE);
-//		return new Overlay(pRoi);
-//		
-//	}
-	
-	@Override
 	public ImageProcessor getIm() {
-		ImageProcessor im = super.getIm();
+		imOriginX = (int)x-(track.tb.ep.trackWindowWidth/2)-1;
+		imOriginY = (int)y-(track.tb.ep.trackWindowHeight/2)-1;
+		im.snapshot();
 		drawContour(im);
-		return im;
+		return CVUtils.padAndCenter(new ImagePlus("Point "+pointID, im), track.tb.ep.trackWindowWidth, track.tb.ep.trackWindowHeight, (int)x-rect.x, (int)y-rect.y);
+		
 	}
 	
 	
@@ -134,66 +149,18 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		
 		
 		im.setColor(Color.WHITE);
+		im.drawRoi(contour);
 		
-		for (int i=0; i<(contourX.length-1); i++){
-			im.drawLine(contourX[i]-imOriginX, contourY[i]-imOriginY, contourX[i+1]-imOriginX, contourY[i+1]-imOriginY);
-		}
-		if (contourX.length>0){
-			im.drawLine(contourX[contourX.length-1]-imOriginX, contourY[contourY.length-1]-imOriginY, contourX[1]-imOriginX, contourY[1]-imOriginY);			
-		}
 		
 		
 	}
 	
-	
-	
-//	
-//	public int[] findInterior(ImageProcessor im){
-//		//find an interior point
-//		int startCoord[] = {(int)x,(int)y};
-//		int inCoord[];
-//		
-//		
-//		int numSteps = 5;
-//		int[] incr = {1,-1};
-//		
-//		
-//		//Check the NUMSTEPS pixels on each of the four sides of the center 
-//		for (int i=0; i<2; i++){//i selects x or y coord for incrementing
-//			
-//			for(int j=0; j<2; j++){//j selects direction of increment
-//				inCoord = startCoord.clone();
-//				
-//				//Increment the pixel loc (up to numSteps times) and check for an interior pixel
-//				int count = 0;
-//				while(count<numSteps){
-//					count++;
-//					inCoord[i] = inCoord[i]+incr[j]; 
-//					
-//					if(im.getPixel(inCoord[0],inCoord[0])>thresh){
-//						return inCoord;
-//					}
-//					
-//				}
-//			}
+//	public String infoSpill(){
+//		String s = super.infoSpill();
+//		for (int i=0; i<contourX.length; i++){
+//			s +="\n\t"+"Contour point "+i+": ("+contourX[i]+","+contourY[i]+")";
 //		}
-//		
-//		
-//		//check all the pixels in the bounding box
-//		
-//		
-//		return {-1, -1};
-//		
+//		return s;
 //	}
-//	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+		
 }

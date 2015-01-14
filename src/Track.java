@@ -2,7 +2,6 @@ import ij.ImagePlus;
 import ij.ImageStack;
 import ij.process.ImageProcessor;
 
-import java.awt.Rectangle;
 import java.util.Collections;
 import java.util.ListIterator;
 import java.util.Vector;
@@ -226,55 +225,40 @@ public class Track {
 	
 	public void playMovie(int labelInd){
 		
+//		String trStr = "";
+		
 		tb.comm.message("This track has "+points.size()+"points", VerbLevel.verb_message);
 		ListIterator<TrackPoint> tpIt = points.listIterator();
 		if (tpIt.hasNext()) {
 		
 			
-			
-			
-			
-			
-			//IJ.showMessage("Playing track "+labelInd);
 			TrackPoint point = points.firstElement();
 			point.setTrack(this);
 			
 			//Get the first image
-			/*
-			ImageProcessor trPtIm = tb.pe.imageStack.getProcessor(point.frameNum).duplicate();
-			Rectangle newRect = new Rectangle((int)point.x - tb.ep.trackWindowWidth/2, (int)point.y - tb.ep.trackWindowHeight/2, tb.ep.trackWindowWidth, tb.ep.trackWindowHeight);
-			trPtIm.setRoi(newRect);
-			ImageProcessor crIm = trPtIm.crop();
-			
-			//Create a stack of images, and add the first frame
-			ImageStack trackStack = new ImageStack(tb.ep.trackWindowWidth, tb.ep.trackWindowHeight);
-			trackStack.addSlice(crIm);
-			*/
 			ImageProcessor firstIm = point.getIm();
 			
 			ImageStack trackStack = new ImageStack(firstIm.getWidth(), firstIm.getHeight());
 			
 			trackStack.addSlice(firstIm);
 			
+//			trStr += point.infoSpill();
+			
 			//Add the rest of the images to the movie
 			while(tpIt.hasNext()){
 				point = tpIt.next();
 				point.setTrack(this);
+				
 				//Get the next image
-				/*
-				trPtIm = tb.pe.imageStack.getProcessor(point.frameNum).duplicate();
-				newRect = new Rectangle((int)point.x - tb.ep.trackWindowWidth/2, (int)point.y - tb.ep.trackWindowHeight/2, tb.ep.trackWindowWidth, tb.ep.trackWindowHeight);
-				trPtIm.setRoi(newRect);
-				crIm = trPtIm.crop();
-				trackStack.addSlice(crIm);
-				*/
 				trackStack.addSlice(point.getIm());
+				
+//				trStr += point.infoSpill();
 			}
 				
 			//Show the stack
 			ImagePlus trackPlus = new ImagePlus("Track "+trackID ,trackStack);
 			trackPlus.show();
-				
+//			TextWindow tWin = new TextWindow("Track "+trackID+" info", trStr, 500, 500);
 			
 		}
 	}
