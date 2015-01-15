@@ -1,37 +1,37 @@
+import java.awt.Point;
 
-public class ContourPoint implements Comparable<ContourPoint> {
+
+public class ContourPoint extends Point implements Comparable<ContourPoint> {
 	
-	double x;
-	double y;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	
+	int x;
+	int y;
 	
 	ContourPoint prevPt;
 	ContourPoint nextPt;
 	
 	double angle;
 	
-	boolean inCvxHull;
+	boolean htCand;
 	
-	public ContourPoint(double x, double y){
+	public ContourPoint(int x, int y){
 		this.x = x;
 		this.y = y;
-		angle=Double.POSITIVE_INFINITY;
-	}
-	
-	public void setPrev(ContourPoint prevPt){
-		this.prevPt = prevPt;
+		angle=java.lang.Double.POSITIVE_INFINITY;
 	}
 
-	
-	public void setNext(ContourPoint nextPt){
-		this.nextPt = nextPt;
+	public ContourPoint(double  x, double y){
+		this.x = (int)x;
+		this.y = (int)y;
+		angle=java.lang.Double.POSITIVE_INFINITY;
 	}
-	
-	
-	
-	
-	
-	
-	public void measureAngle(){
+		
+	public void measureAngle(ContourPoint prevPt, ContourPoint nextPt){
 		if (prevPt==null || nextPt==null){
 			return;
 		}
@@ -52,15 +52,19 @@ public class ContourPoint implements Comparable<ContourPoint> {
 	
 	
 	
-	
+	public boolean equals(ContourPoint cp){
+		
+		return (x==cp.x && y==cp.y);
+		
+	}
 	
 	public int compareTo(ContourPoint otherPt){
 		
-		if (this.angle==Double.POSITIVE_INFINITY || otherPt.angle==Double.POSITIVE_INFINITY){
+		if (this.angle==java.lang.Double.POSITIVE_INFINITY || otherPt.angle==java.lang.Double.POSITIVE_INFINITY){
 			throw new NullPointerException();
 		}
 		
-		if (Math.abs(angle)==Math.abs(otherPt.angle)){
+		if (Math.abs(angle)==Math.abs(otherPt.angle) ){
 			return 0;
 		}
 		
@@ -69,10 +73,20 @@ public class ContourPoint implements Comparable<ContourPoint> {
 		} else {
 			return -1;
 		}
-			
 		
-		
-		
+	}
+	
+	
+	public void setPrev(ContourPoint prevPt){
+		this.prevPt = prevPt;
+	}
+
+	public void setNext(ContourPoint nextPt){
+		this.nextPt = nextPt;
+	}
+	
+	public void sethtCand(boolean cand){
+		htCand = cand;
 	}
 	
 	
