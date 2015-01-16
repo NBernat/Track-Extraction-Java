@@ -326,13 +326,25 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			comm.message("LeftSeg has "+leftSeg.getNCoordinates()+" points", VerbLevel.verb_debug);
 			comm.message("RightSeg has "+rightSeg.getNCoordinates()+" points", VerbLevel.verb_debug);
 			
-//			//Average the coordinates, one by one
-//			if (){
-//				
-//			} else {
-//				comm.message("Segments have different numbers of ", messVerb);
-//			}
-//			
+			//Average the coordinates, one by one
+			float[] midX;
+			float[] midY;
+			PolygonRoi midline;
+			if (leftSeg.getNCoordinates()==rightSeg.getNCoordinates()){
+				midX = new float[leftSeg.getNCoordinates()-2];
+				midY = new float[leftSeg.getNCoordinates()-2];
+				for (int i=1;i<leftSeg.getNCoordinates()-1; i++){
+					midX[i] = (float) ((leftSeg.getXCoordinates()[i]+rightSeg.getXCoordinates()[i])/2.0);
+					midY[i] = (float) ((leftSeg.getYCoordinates()[i]+rightSeg.getYCoordinates()[i])/2.0);
+				}
+				
+				midline = new PolygonRoi(midX,  midY, midX.length, Roi.POLYLINE); 
+				
+				
+			} else {
+				comm.message("Segments have different numbers of Coordinates!!", VerbLevel.verb_error);
+			}
+			
 			
 			
 			
