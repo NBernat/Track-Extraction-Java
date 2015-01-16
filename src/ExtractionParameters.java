@@ -122,7 +122,7 @@ public class ExtractionParameters {
      */
     double maxArea = 1000;
     //TODO
-    int roiPadding = 5;
+    int roiPadding = 0;
     
     int trackPointType = 2;
     

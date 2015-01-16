@@ -301,14 +301,14 @@ public class PointExtractor {
 			comm.message("Gathering info for Point "+row+" from ResultsTable", VerbLevel.verb_debug);
 			double area = rt.getValueAsDouble(ResultsTable.AREA, row);
 			comm.message("Point "+row+": area="+area, VerbLevel.verb_debug);
-			double x = rt.getValueAsDouble(ResultsTable.X_CENTROID, row)-1;
-			double y = rt.getValueAsDouble(ResultsTable.Y_CENTROID, row)-1;
-			double width = rt.getValueAsDouble(ResultsTable.ROI_WIDTH, row)-1;
-			double height = rt.getValueAsDouble(ResultsTable.ROI_HEIGHT, row)-1;
-			double boundX = rt.getValueAsDouble(ResultsTable.ROI_X, row)-1;
-			double boundY = rt.getValueAsDouble(ResultsTable.ROI_Y, row)-1;
+			double x = rt.getValueAsDouble(ResultsTable.X_CENTROID, row);
+			double y = rt.getValueAsDouble(ResultsTable.Y_CENTROID, row);
+			double width = rt.getValueAsDouble(ResultsTable.ROI_WIDTH, row);
+			double height = rt.getValueAsDouble(ResultsTable.ROI_HEIGHT, row);
+			double boundX = rt.getValueAsDouble(ResultsTable.ROI_X, row);
+			double boundY = rt.getValueAsDouble(ResultsTable.ROI_Y, row);
 			Rectangle rect = new Rectangle((int)boundX-ep.roiPadding, (int)boundY-ep.roiPadding, (int)width+2*ep.roiPadding, (int)height+2*ep.roiPadding);
-			//Rectangle rect = new Rectangle((int)boundX-1, (int)boundY-1, (int)width+2, (int)height+2);
+//			Rectangle rect = new Rectangle((int)boundX, (int)boundY, (int)width, (int)height);
 			//Rectangle rect = new Rectangle((int)x-ep.roiPadding, (int)y-ep.roiPadding, (int)2*ep.roiPadding, (int)2*ep.roiPadding);
 			
 			
@@ -340,7 +340,6 @@ public class PointExtractor {
 						currentIm.setRoi(roi);
 						mtPt.setImage(im2);
 						mtPt.setStart((int)rt.getValue("XStart", row), (int)rt.getValue("YStart", row));
-//						mtPt.findContours();
 						mtPt.extractFeatures();
 						tp.add(mtPt);
 						break;
