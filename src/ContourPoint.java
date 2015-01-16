@@ -9,8 +9,8 @@ public class ContourPoint extends Point implements Comparable<ContourPoint> {
 	private static final long serialVersionUID = 1L;
 	
 	
-	int x;
-	int y;
+//	int x;
+//	int y;
 	
 	ContourPoint prevPt;
 	ContourPoint nextPt;

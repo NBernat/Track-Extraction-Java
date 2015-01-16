@@ -95,7 +95,14 @@ public class ExtractionParameters {
      *  The area change which indicates that a collision has ended, expressed as a fraction of the previous area
      */
     double maxAreaFracForCollisionEnd = .6;
-    
+    /**
+     * The maximum angle that a contour point can be to be considered for H/T assignment
+     */
+    double maxContourAngle = Math.PI/2.0;
+    /**
+     * Number of midline coordinates to extract
+     */
+    int numMidCoords = 11;
     
     /**
      * Add-on for the string which specifies the center coordinates of the points

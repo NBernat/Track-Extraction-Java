@@ -330,6 +330,7 @@ public class PointExtractor {
 						break;
 					case 2: //MaggotTrackPoint
 						MaggotTrackPoint mtPt = new MaggotTrackPoint(x,y,rect,area,frameNum,thresh);
+						mtPt.setCommunicator(comm);
 						if (currentFrameNum!=frameNum){
 							loadFrame(frameNum);
 						}
@@ -339,7 +340,8 @@ public class PointExtractor {
 						currentIm.setRoi(roi);
 						mtPt.setImage(im2);
 						mtPt.setStart((int)rt.getValue("XStart", row), (int)rt.getValue("YStart", row));
-						mtPt.findContours();
+//						mtPt.findContours();
+						mtPt.extractFeatures();
 						tp.add(mtPt);
 						break;
 					default:
