@@ -46,6 +46,15 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	int minX;
 	int minY;
 	
+	
+	int[] leftX;
+	int[] leftY;
+	int[] rightX;
+	int[] rightY;
+	
+	PolygonRoi leftSeg;
+	PolygonRoi rightSeg;
+	
 	boolean htValid;
 	
 	private final double maxContourAngle = Math.PI/2.0;
@@ -123,7 +132,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		
 		findHT(maxAngle);
 		
-//		deriveMidline(numMidPts);
+		deriveMidline(numMidPts);
 		
 	}
 	
@@ -290,19 +299,22 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	public void deriveMidline(int numMidPts){
 		
 		comm.message("Entering Midline creation", VerbLevel.verb_debug);
-		if(cont.get(headi)!=null && cont.get(taili)!=null){
+		if(htValid && cont.get(headi)!=null && cont.get(taili)!=null){
 			//Turn each side of the maggot into a polygonRoi 
 			//	take the x-coords & y-coords, find indices of h&t
 			//  make array for each, create polygonRoi
 			int contNum = cont.size();
+			if (contNum<=6){
+				comm.message("Contour has only "+contNum+"points", VerbLevel.verb_warning);
+			}
 			int leftNum = (contNum+headi-taili+1)%contNum;
 			int rightNum = (contNum+taili-headi+1)%contNum;
-			int[] leftX = new int[leftNum];
-			int[] leftY = new int[leftNum];
-			int[] rightX = new int[rightNum];
-			int[] rightY = new int[rightNum];
+			leftX = new int[leftNum];
+			leftY = new int[leftNum];
+			rightX = new int[rightNum];
+			rightY = new int[rightNum];
 			for (int i=0; i<leftNum; i++){
-				int ind = (contNum+taili+i)%contNum;
+				int ind = (contNum+headi-i)%contNum;
 				leftX[i] = cont.get(ind).x;
 				leftY[i] = cont.get(ind).y;
 			}
@@ -312,16 +324,28 @@ public class MaggotTrackPoint extends ImTrackPoint {
 				rightY[i] = cont.get(ind).y;
 			}
 			
-
-			PolygonRoi leftSeg = new PolygonRoi(leftX, leftY, leftNum, Roi.POLYLINE);
-			PolygonRoi rightSeg = new PolygonRoi(leftX, leftY, leftNum, Roi.POLYLINE);
+			comm.message("Left originally has "+leftX.length+" (leftNum="+leftNum+") points", VerbLevel.verb_debug);
+			comm.message("Right originally has "+rightX.length+" (rightNum="+rightNum+") points", VerbLevel.verb_debug);
 			
+
+			leftSeg = new PolygonRoi(leftX, leftY, leftNum, Roi.POLYLINE);
+			rightSeg = new PolygonRoi(rightX, rightY, rightNum, Roi.POLYLINE);
+			
+			comm.message("Segment PolygonRoi's created", VerbLevel.verb_debug);
 			
 			//Interpolate each into numMidPts points (divide by numMidPts+1)
-			double leftSpacing = ((double)leftNum)/(numMidPts+1);
-			double rightSpacing = ((double)rightNum)/(numMidPts+1);
-			leftSeg = new PolygonRoi(leftSeg.getInterpolatedPolygon(leftSpacing, true), Roi.POLYLINE);
-			rightSeg = new PolygonRoi(rightSeg.getInterpolatedPolygon(rightSpacing, true), Roi.POLYLINE);
+//			leftSeg.fitSpline();
+//			rightSeg.fitSpline();
+//			double leftSpacing = (leftSeg.getLength())/(numMidPts+1);
+//			double rightSpacing = (rightSeg.getLength())/(numMidPts+1);
+			
+//			leftSeg.fitSpline();
+//			rightSeg.fitSpline();
+//			leftSeg = new PolygonRoi(leftSeg.getInterpolatedPolygon(leftSpacing, true), Roi.POLYLINE);
+//			rightSeg = new PolygonRoi(rightSeg.getInterpolatedPolygon(rightSpacing, true), Roi.POLYLINE);
+			
+			leftSeg = getInterpolatedSegment(leftSeg, numMidPts+1);
+			rightSeg = getInterpolatedSegment(rightSeg, numMidPts+1);
 			
 			comm.message("LeftSeg has "+leftSeg.getNCoordinates()+" points", VerbLevel.verb_debug);
 			comm.message("RightSeg has "+rightSeg.getNCoordinates()+" points", VerbLevel.verb_debug);
@@ -329,19 +353,20 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			//Average the coordinates, one by one
 			float[] midX;
 			float[] midY;
-			PolygonRoi midline;
+			
 			if (leftSeg.getNCoordinates()==rightSeg.getNCoordinates()){
 				midX = new float[leftSeg.getNCoordinates()-2];
 				midY = new float[leftSeg.getNCoordinates()-2];
 				for (int i=1;i<leftSeg.getNCoordinates()-1; i++){
-					midX[i] = (float) ((leftSeg.getXCoordinates()[i]+rightSeg.getXCoordinates()[i])/2.0);
-					midY[i] = (float) ((leftSeg.getYCoordinates()[i]+rightSeg.getYCoordinates()[i])/2.0);
+					midX[i-1] = (float) ((leftSeg.getXCoordinates()[i]+(int)leftSeg.getXBase()+rightSeg.getXCoordinates()[i]+(int)rightSeg.getXBase())/2.0);
+					midY[i-1] = (float) ((leftSeg.getYCoordinates()[i]+(int)leftSeg.getYBase()+rightSeg.getYCoordinates()[i]+(int)rightSeg.getYBase())/2.0);
 				}
 				
-				midline = new PolygonRoi(midX,  midY, midX.length, Roi.POLYLINE); 
+				midline = new PolygonRoi(midX, midY, midX.length, Roi.POLYLINE); 
 				
 				
 			} else {
+				midline=null;
 				comm.message("Segments have different numbers of Coordinates!!", VerbLevel.verb_error);
 			}
 			
@@ -352,7 +377,32 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		
 	}
 	
-	
+	public PolygonRoi getInterpolatedSegment(PolygonRoi origSegment, int numPts){
+
+		double spacing = (origSegment.getLength())/numPts;
+
+		PolygonRoi retSeg = new PolygonRoi(origSegment.getInterpolatedPolygon(spacing, true), Roi.POLYLINE);
+		if (retSeg.getNCoordinates()!=numPts){
+			double changeFact;
+			if ((retSeg.getNCoordinates()-numPts)>0){ //too many points
+				//increase the spacing slightly, check
+				changeFact=1.05;
+			} else { //too few points
+				changeFact=.95;
+			}
+			
+			while (retSeg.getNCoordinates()!= numPts && retSeg.getNCoordinates()>0 && retSeg.getNCoordinates()<2*numPts){
+				spacing = spacing*changeFact;
+				retSeg = new PolygonRoi(origSegment.getInterpolatedPolygon(spacing, true), Roi.POLYLINE);
+			}
+			
+		}
+		if(retSeg.getNCoordinates()==numPts){
+			return retSeg;
+		} else {
+			return origSegment;
+		}
+	}
 	
 	
 	 /* inline void linkBehind(MaggotTrackPoint *prev)
@@ -404,6 +454,14 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	public ImageProcessor drawFeatures(ImageProcessor grayIm, int offX, int offY){
 		
 		ImageProcessor im = grayIm.convertToRGB();
+				
+		im.setColor(Color.WHITE);
+//		im.drawDot(offX, offY);//Top Right
+		im.drawLine(offX-1, offY-1, offX+rect.width, offY-1);//TL to TR
+		im.drawLine(offX-1, offY+rect.height, offX+rect.width, offY+rect.height);//BL to BR
+		im.drawLine(offX-1, offY-1, offX-1, offY+rect.height);//TL to BL
+		im.drawLine(offX+rect.width, offY-1, offX+rect.width, offY+rect.height);//TR to BR
+//		im.drawDot(rect.width-1+offX, rect.height-1+offY);//Bottom Right
 		
 		im.setColor(Color.YELLOW);
 		for (int i=0; i<(cont.size()-1); i++){
@@ -411,19 +469,45 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		}
 		im.drawLine(cont.get(cont.size()-1).x+offX, cont.get(cont.size()-1).y+offY, cont.get(0).x+offX, cont.get(0).y+offY);
 //		im.drawRoi(contour);
+
 		
-		im.setColor(Color.GREEN);
-		im.drawDot(offX, offY);//Top Right
-		im.drawDot(rect.width-1+offX, rect.height-1+offY);//Bottom Right
+//		im.setColor(Color.BLUE);
+//		im.drawDot((int)x-rect.x+offX, (int)y-rect.y+offY);//Center
+//		im.drawDot(getStart().x-rect.x+offX, getStart().y-rect.y+offY);//First pt in contour algorithm
 		
-		im.setColor(Color.BLUE);
-		im.drawDot((int)x-rect.x+offX, (int)y-rect.y+offY);//Center
-		im.drawDot(getStart().x-rect.x+offX, getStart().y-rect.y+offY);//First pt in contour algorithm
+//		if (leftX!=null){
+//			im.setColor(Color.BLUE);
+//			for (int i=0; i<leftX.length; i++){
+//				im.drawDot(leftX[i]+offX, leftY[i]+offY);
+//			}
+//			im.setColor(Color.YELLOW);
+//			for (int i=0; i<leftSeg.getNCoordinates(); i++){
+//				im.drawDot(leftSeg.getXCoordinates()[i]+offX+(int)leftSeg.getXBase(), leftSeg.getYCoordinates()[i]+offY+(int)leftSeg.getYBase());
+//			}
+//			
+//			im.setColor(Color.CYAN);
+//			for (int i=0; i<rightX.length; i++){
+//				im.drawDot(rightX[i]+offX, rightY[i]+offY);
+//			}
+//			im.setColor(Color.ORANGE);
+//			for (int i=0; i<rightSeg.getNCoordinates(); i++){
+//				im.drawDot(rightSeg.getXCoordinates()[i]+offX+(int)rightSeg.getXBase(), rightSeg.getYCoordinates()[i]+offY+(int)rightSeg.getYBase());
+//			}
+//		}
+		
+		im.setColor(Color.MAGENTA);
+		if (midline!=null){
+			for (int i=0; i<midline.getNCoordinates(); i++){
+				im.drawDot(midline.getXCoordinates()[i]+offX+(int)midline.getXBase(), midline.getYCoordinates()[i]+offY+(int)midline.getYBase());
+				
+			}
+		}
 		
 		im.setColor(Color.RED);
 		if (head!=null){
 			im.drawDot((int)head.x+offX, (int)head.y+offY);
 		}
+		im.setColor(Color.GREEN);
 		if (tail!=null){
 			im.drawDot((int)tail.x+offX, (int)tail.y+offY);
 		}
