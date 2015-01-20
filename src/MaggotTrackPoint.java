@@ -2,6 +2,7 @@ import ij.ImagePlus;
 import ij.gui.PolygonRoi;
 import ij.gui.Roi;
 import ij.gui.Wand;
+import ij.process.FloatPolygon;
 import ij.process.ImageProcessor;
 
 import java.awt.Color;
@@ -37,10 +38,10 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	
 	PolygonRoi midline;
 	
-	Point head;
+	ContourPoint head;
 	int headi;
-	Point mid;
-	Point tail;
+//	ContourPoint mid;
+	ContourPoint tail;
 	int taili;
 	
 	int minX;
@@ -133,6 +134,8 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		findHT(maxAngle);
 		
 		deriveMidline(numMidPts);
+		
+//		flipHT();
 		
 	}
 	
@@ -344,7 +347,9 @@ public class MaggotTrackPoint extends ImTrackPoint {
 //			leftSeg = new PolygonRoi(leftSeg.getInterpolatedPolygon(leftSpacing, true), Roi.POLYLINE);
 //			rightSeg = new PolygonRoi(rightSeg.getInterpolatedPolygon(rightSpacing, true), Roi.POLYLINE);
 			
+			comm.message("Interpolating left", VerbLevel.verb_debug);
 			leftSeg = getInterpolatedSegment(leftSeg, numMidPts+1);
+			comm.message("Interpolating right", VerbLevel.verb_debug);
 			rightSeg = getInterpolatedSegment(rightSeg, numMidPts+1);
 			
 			comm.message("LeftSeg has "+leftSeg.getNCoordinates()+" points", VerbLevel.verb_debug);
@@ -383,23 +388,26 @@ public class MaggotTrackPoint extends ImTrackPoint {
 
 		PolygonRoi retSeg = new PolygonRoi(origSegment.getInterpolatedPolygon(spacing, true), Roi.POLYLINE);
 		if (retSeg.getNCoordinates()!=numPts){
+			comm.message("Initial interpolation spacing was incorrect, there were "+retSeg.getNCoordinates()+"points", VerbLevel.verb_debug);
 			double changeFact;
 			if ((retSeg.getNCoordinates()-numPts)>0){ //too many points
 				//increase the spacing slightly, check
-				changeFact=1.05;
+				changeFact=1.01;
 			} else { //too few points
-				changeFact=.95;
+				changeFact=.99;
 			}
 			
-			while (retSeg.getNCoordinates()!= numPts && retSeg.getNCoordinates()>0 && retSeg.getNCoordinates()<2*numPts){
+			while (retSeg.getNCoordinates()!= numPts && retSeg.getNCoordinates()>0 && retSeg.getNCoordinates()<10*numPts){
 				spacing = spacing*changeFact;
 				retSeg = new PolygonRoi(origSegment.getInterpolatedPolygon(spacing, true), Roi.POLYLINE);
 			}
 			
 		}
 		if(retSeg.getNCoordinates()==numPts){
+			comm.message("Interpolated Segment was created with correct number of points", VerbLevel.verb_debug);
 			return retSeg;
 		} else {
+			comm.message("Segment could not be found with the proper number of coordinates (currently "+retSeg.getNCoordinates()+")", VerbLevel.verb_debug);
 			return origSegment;
 		}
 	}
@@ -432,7 +440,42 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	
 
 	
+	public void flipHT(){
 
+		if (!htValid){
+			comm.message("tried to flip HT, but HT is not valid.", VerbLevel.verb_debug);
+			return;
+		}
+		//Flip midline coords
+		float tempX;
+		float tempY;
+		FloatPolygon mid = midline.getFloatPolygon();
+		float[] midX = mid.xpoints;
+		float[] midY = mid.ypoints;
+		int nCoord = midline.getNCoordinates();
+		for(int i=0; i<nCoord; i++){
+			tempX = midX[i];
+			tempY = midY[i];
+			midX[i] = midX[nCoord-1-i];
+			midY[i] = midY[nCoord-1-i];
+			midX[nCoord-1-i] = tempX;
+			midY[nCoord-1-i] = tempY;
+		}
+		midline = new PolygonRoi(midX, midY, nCoord, Roi.POLYLINE);
+		
+		
+		//Swap H&T
+		int temp = headi;
+		headi = taili;
+		taili = temp;
+		
+		ContourPoint tempPt = head;
+		head = tail;
+		tail = tempPt;
+
+		
+		
+	}
 	
 
 	
@@ -446,7 +489,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		ImageProcessor pIm = CVUtils.padAndCenter(new ImagePlus("Point "+pointID, im), track.tb.ep.trackWindowWidth, track.tb.ep.trackWindowHeight, (int)x-rect.x, (int)y-rect.y);
 		int offX = rect.x-imOriginX;
 		int offY = rect.y-imOriginY;
-		return drawFeatures(pIm, offX, offY);
+		return drawFeatures(pIm, offX, offY); 
 		
 	}
 	
