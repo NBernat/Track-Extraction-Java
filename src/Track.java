@@ -76,11 +76,9 @@ public class Track {
 		maxWidth=0;
 		
 		points = new Vector<TrackPoint>();
-		isCollision = new Vector<Boolean>();
-//		collisions = new Vector<Collision>(); 
+		isCollision = new Vector<Boolean>(); 
 		
 		extendTrack(firstPt);
-//		points.add(firstPt);
 		
 		trackID = lastIDNum;
 		lastIDNum++;
@@ -111,25 +109,7 @@ public class Track {
 		
 	}
 	
-//	public void markCollision(int frameNum, Collision coll){
-//		
-//		int ptInd = frameNum-points.firstElement().frameNum;
-//		
-//		isCollision.set(ptInd, true);
-//		if (coll!=null){
-//			collisions.add(coll);
-//		}
-//	}
-//	
-//	public Collision getCollision(int frameNum){
-//		for (int i=1; i<=collisions.size(); i++){
-//			Collision colli = collisions.get(i);
-//			if (colli.startFrame<=frameNum && (frameNum<=colli.endFrame || colli.endFrame<0) ){
-//				return colli;
-//			}
-//		}
-//		return null;
-//	}
+
 	
 	///////////////////////////
 	// Distance methods

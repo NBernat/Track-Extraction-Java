@@ -100,7 +100,7 @@ public class TrackBuilder {
 	/**
 	 * Initialization of objects
 	 */
-	public void init(int frameNum, ImageStack IS){
+	private void init(int frameNum, ImageStack IS){
 		
 		//Set Auxillary objects
 		comm = new Communicator();
@@ -126,10 +126,14 @@ public class TrackBuilder {
 	// Track Building methods 
 	////////////////////////////
 	
+	public void run(){
+		buildTracks();
+	}
+	
 	/**
 	 * Constructs tracks from a series of images
 	 */
-	public void buildTracks(){
+	protected void buildTracks(){
 		
 		//Add frames to track objects
 		while (pe.nextFrameNum() <= pe.endFrameNum && pe.nextFrameNum() <= ep.endFrame) {
@@ -170,14 +174,7 @@ public class TrackBuilder {
 		//resolveCollisions();
 		finishedColIDs.addAll(activeColIDs);
 		activeColIDs.removeAll(finishedColIDs);
-		
-		
-//		if (trackMessage.verbosity>=VerbLevel.verb_debug){
-//		trackMessage.message("There are "+activeColIDs.size()+"+"+finishedColIDs.size()+" collisions", VerbLevel.verb_message);
-//			for (int i=0; i<finishedColIDs.size(); i++){
-//				trackMessage.message(finishedColIDs.get(i).collisionInfoSpill(), VerbLevel.verb_message);
-//			}	
-//		}
+
 		
 		if (ep.dispTrackInfo){
 			new TextWindow("Track info", trackMessage.outString, 500, 500);
@@ -667,10 +664,7 @@ public class TrackBuilder {
 			if (ind>=0) {//otherwise, it's a new collision and doesn't need to be checked
 				comm.message("Index of activeTracks: "+ind, VerbLevel.verb_debug);
 				CollisionTrack col = (CollisionTrack) activeTracks.get(ind);
-	//			TrackPoint colPt = col.matches.firstElement().getTopMatchPoint();
 				
-				
-				//TODO iterate through a collision track list
 				
 				Vector<TrackMatch> newMatches = col.tryToEndCollision(); 
 				
@@ -681,18 +675,6 @@ public class TrackBuilder {
 					matches.addAll(newMatches);
 					endedCols++;
 					
-	//				if (fixStatus==1) {
-	////					comm.message("Collision fixed at track "+col.collTrack.trackID+" by matching to nearby points", VerbLevel.verb_debug);
-	//				} else if (fixStatus==2) {
-	////					activePts.remove(colPt);
-	////					activePts.addAll(col.getMatchPoints());
-	////					comm.message("Collision fixed at track "+col.collTrack.trackID+" by splitting the collision point", VerbLevel.verb_debug);
-	//				}
-					
-					//End the collision, remove it from activeCollisions, and add the new matches to the match list
-	//				col.endCollision();
-	//				activeCollisions.remove(col);
-	//				matches.addAll(col.matches);
 				
 			}
 		}
@@ -704,61 +686,6 @@ public class TrackBuilder {
 	}
 	
 
-
-	
-	/**
-	 * Finds and releases collision events which have finished
-	 * @return number of collisions released
-	 */
-//	private int releaseFinishedCollisions(){
-//		
-//		Vector<Collision> finished = detectFinishedCollisions();
-//		int numFinishedCollisions = finished.size();
-//		ListIterator<Collision> cIter = finished.listIterator();
-//		while(cIter.hasNext()){
-//			releaseCollision(cIter.next());
-//		}
-//		
-//		return numFinishedCollisions;
-//		
-//	}
-	
-	
-	/**
-	 * Checks the active collisions for any finished events
-	 * @return Vector of finished collision objects
-	 */
-//	private Vector<Collision> detectFinishedCollisions(){
-//		Vector<Collision> finished = new Vector<Collision>();
-//		
-//		ListIterator<Collision> cIt = activeCollisions.listIterator();
-//		while(cIt.hasNext()){
-//			Collision col = cIt.next();
-//			if (col.hasFinsihed()){
-//				finished.add(col);
-//			}
-//		}
-//		
-//		return finished;
-//	}
-	
-	/**
-	 * Releases a collision by ending the event, adding the outgoing tracks to activeTracks, and storing the collision event for later processing 
-	 * @param col The collision to be released
-	 */
-//	private void releaseCollision(Collision col){
-//		
-//		//Tell the collision object that this is where to end it
-////		col.finishCollision(frameNum-pe.increment);
-//		//Add the newly started tracks to active tracks
-//		Vector<Track> newTracks = col.getOutTracks();
-//		activeTracks.addAll(newTracks);
-//		//Store the collision event for later processing
-//		finishedCollisions.add(col);
-//	}
-
-
-	
 
 
 	/**
@@ -908,15 +835,5 @@ public class TrackBuilder {
 	}
 	
 	
-//	public int findIndOfCollision(int colTrackID, Vector<Collision> collisionList){
-//		
-//		for (int i=0;i<collisionList.size();i++){
-//			if (collisionList.get(i).==collisionID){
-//				return i;
-//			}
-//		}
-//		return -1;
-//		
-//	}
 
 }

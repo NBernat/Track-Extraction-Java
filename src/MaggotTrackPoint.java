@@ -135,7 +135,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		
 		deriveMidline(numMidPts);
 		
-//		flipHT();
+//		invertMaggot(); 
 		
 	}
 	
@@ -438,14 +438,33 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		return contourStart;
 	}
 	
-
+	public int chooseOrientation(MaggotTrackPoint prevPt){
+		
+		
+		
+		return -1;
+		
+	}
 	
-	public void flipHT(){
-
+	
+	
+	public void invertMaggot(){
+		
+		PolygonRoi newMidline = invertMidline();
+		if(newMidline!=null){
+			midline = newMidline;
+		}
+		
+		flipHT();
+		
+	}
+	
+	public PolygonRoi invertMidline(){
 		if (!htValid){
 			comm.message("tried to flip HT, but HT is not valid.", VerbLevel.verb_debug);
-			return;
+			return null;
 		}
+		
 		//Flip midline coords
 		float tempX;
 		float tempY;
@@ -461,8 +480,16 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			midX[nCoord-1-i] = tempX;
 			midY[nCoord-1-i] = tempY;
 		}
-		midline = new PolygonRoi(midX, midY, nCoord, Roi.POLYLINE);
-		
+		PolygonRoi newMidline = new PolygonRoi(midX, midY, nCoord, Roi.POLYLINE);
+		return newMidline;
+	}
+	
+	public void flipHT(){
+
+		if (!htValid){
+			comm.message("tried to flip HT, but HT is not valid.", VerbLevel.verb_debug);
+			return;
+		}
 		
 		//Swap H&T
 		int temp = headi;
