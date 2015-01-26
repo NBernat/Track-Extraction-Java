@@ -16,7 +16,7 @@ public class MaggotTrackBuilder extends TrackBuilder {
 		for (int i=0; i<finishedTracks.size(); i++){
 			orientTrack(finishedTracks.get(i));  
 		}
-	}
+	} 
 
 	private void orientTrack(Track track){
 		if (ep.trackPointType!=2){//only do this if the correct
