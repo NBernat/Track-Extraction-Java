@@ -14,9 +14,13 @@ public class TrackPoint extends Point {
 	 */
 	private static final long serialVersionUID = 1L;
 	/**
-	 *Unique id for the point
+	 * Unique id for the point
 	 */
 	int pointID;
+	/**
+	 * Identitfies the point as a TRACKPOINT
+	 */
+	final int pointType = 0;
 	/**
 	 * X location of the point
 	 */

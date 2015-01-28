@@ -15,6 +15,11 @@ public class ImTrackPoint extends TrackPoint{
 	int imOriginX;
 	int imOriginY;
 	
+	/**
+	 * Identitfies the point as an IMTRACKPOINT
+	 */
+	final int pointType = 1;
+	
 //	int[] imOrigin;
 
 	ImTrackPoint(double x, double y, Rectangle rect, double area, int frame,

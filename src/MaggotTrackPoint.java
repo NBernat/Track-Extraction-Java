@@ -7,6 +7,7 @@ import ij.process.ImageProcessor;
 
 import java.awt.Color;
 import java.awt.Point;
+import java.awt.Polygon;
 import java.awt.Rectangle;
 //import java.util.Arrays;
 import java.util.Collections;
@@ -26,6 +27,11 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+	
+	/**
+	 * Identitfies the point as a MAGGOTTRACKPOINT
+	 */
+	final int pointType = 2;
 
 	MaggotTrackPoint prev;
 	MaggotTrackPoint next;
@@ -438,16 +444,38 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		return contourStart;
 	}
 	
+	
+	/**
+	 * Aligns the spine with the previous spine
+	 * @param prevPt The track to align to
+	 * @return Status: 1=flipped, 0=unflipped, -1=missing spine
+	 */
 	public int chooseOrientation(MaggotTrackPoint prevPt){
 		
-		
-		
-		return -1;
+		if (midline!=null && prevPt.midline!=null && midline.getNCoordinates()!=0 && prevPt.midline.getNCoordinates()!=0){
+			//Measure the total distance for each midline (flipped vs not flipped) 
+			double distUnchanged = spineDistSqr(prevPt.midline);
+			PolygonRoi flippedMid = prevPt.invertMidline();
+			double distChanged = spineDistSqr(flippedMid);
+			
+			//Choose the one with the lower distance
+			if (distChanged>distUnchanged){
+				invertMaggot();
+				return 1;//Changed
+			} else {
+				return 0;//Unchanged
+			}
+			
+		} else {
+			return -1;//Error
+		}
 		
 	}
 	
 	
-	
+	/**
+	 * Flips the midline, head, and tail
+	 */
 	public void invertMaggot(){
 		
 		PolygonRoi newMidline = invertMidline();
@@ -459,6 +487,10 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		
 	}
 	
+	/**
+	 * Tries to flip the midline
+	 * @return An inverted midline
+	 */
 	public PolygonRoi invertMidline(){
 		if (!htValid){
 			comm.message("tried to flip HT, but HT is not valid.", VerbLevel.verb_debug);
@@ -484,6 +516,9 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		return newMidline;
 	}
 	
+	/**
+	 * Swaps the location of the head and tail, if they exist
+	 */
 	public void flipHT(){
 
 		if (!htValid){
@@ -504,7 +539,30 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		
 	}
 	
+	/**
+	 * Measures the sum of the squared distance from each spine coordinate to the corresponding spine point on the given midline
+	 * @param othermidline The midline to be measured against
+	 * @return Sum of squared distances between spine coordinates
+	 */
+	public double spineDistSqr(PolygonRoi othermidline){
+		
+		if (midline!=null && othermidline!=null && midline.getNCoordinates()!=0 && othermidline.getNCoordinates()!=0 && midline.getNCoordinates()==othermidline.getNCoordinates()){
 
+			double totalDistSqr = 0;
+			
+			for (int i=0; i<numMidCoords; i++){
+				
+				totalDistSqr+= (midline.getXCoordinates()[i]-othermidline.getXCoordinates()[i])^2 + (midline.getYCoordinates()[i]-othermidline.getYCoordinates()[i])^2;
+				
+			}
+			
+			
+			return totalDistSqr;
+		} else {
+			return -1.0;	
+		}
+		
+	}
 	
 	
 	
@@ -520,7 +578,13 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		
 	}
 	
-	
+	/**
+	 * Returns an imageProcessor of trackPoint features drawn in color over a gray image
+	 * @param grayIm A grayscale image to be displayed
+	 * @param offX X offset of the TrackPoint coordinates compared to the origin of grayIm 
+	 * @param offY Y offset of the TrackPoint coordinates compared to the origin of grayIm
+	 * @return The trackpoint features drawn atop the grayscale image
+	 */
 	public ImageProcessor drawFeatures(ImageProcessor grayIm, int offX, int offY){
 		
 		ImageProcessor im = grayIm.convertToRGB();

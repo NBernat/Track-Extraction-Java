@@ -109,7 +109,13 @@ public class Track {
 		
 	}
 	
-
+	/**
+	 * Reloads the points as MaggotTrackPoints
+	 * @return
+	 */
+//	public int reloadAsMaggotTrack(){
+//		
+//	}
 	
 	///////////////////////////
 	// Distance methods

@@ -21,37 +21,28 @@ public class Track_Extractor implements PlugIn{
 	//ep= new ExtractionParameters()
 	
 	public void run(String arg) {
-		
-		//GUItest.main();
-		
+				
 		IJ.showStatus("Getting stack");
 		//IS = WindowManager.getCurrentImage();
 		IS = WindowManager.getCurrentWindow().getImagePlus().getImageStack();
+		//TODO Enforce the video type
 		if (IS == null) {
 			IJ.showMessage("Null ImagePlus");
 			return;
 		} 
-//		IJ.showMessage("Slices: "+IS.getNSlices()+"; Frames: "+IS.getNFrames());
-//		if (IS.getProcessor() != null) {
-//			IJ.showMessage("Is an ImageProcessor");
-//		} 
-//		if (IS.getProcessor(0)==null) {
-//			IJ.showMessage("Zero Null ");
-//		} 
-//		if (IS.getProcessor(1)==null) {
-//			IJ.showMessage("One Null ");
-//		}
+
 		
 		IJ.showStatus("Setting up TrackBuiling");
 		ep= new ExtractionParameters();
 		IJ.showStatus("Building Tracks");
 		
 		// 
-		tb = new TrackBuilder(IS, ep);
+		tb = new MaggotTrackBuilder(IS, ep);
 		
 		try {
 			
-			tb.buildTracks();
+//			tb.buildTracks();
+			tb.run();
 			
 			
 			GenericDialog gd = new GenericDialog("Track chooser");

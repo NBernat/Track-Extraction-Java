@@ -45,8 +45,8 @@ public class ExtractionParameters {
 	int showSampleData =2; 
 	int sampleInd = 10;
 	//TODO
-	int startFrame = 350;
-	int endFrame = 400;
+	int startFrame = 50;
+	int endFrame = 150;
 	//_frame_normalization_methodT fnm = _frame_normalization_methodT._frame_none;
 	//TODO
 	int trackWindowHeight = 50;
