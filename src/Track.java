@@ -96,6 +96,7 @@ public class Track {
 	 */
 	public void extendTrack(TrackPoint pt){
 		points.add(pt);
+		pt.track=this;
 //		pt.setTrack(this);
 		isCollision.addElement(false);
 		

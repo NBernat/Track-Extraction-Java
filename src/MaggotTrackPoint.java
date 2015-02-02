@@ -42,13 +42,13 @@ public class MaggotTrackPoint extends ImTrackPoint {
 //	PolygonRoi contour;
 	Vector<ContourPoint> cont;
 	
-	PolygonRoi midline;
-	
 	ContourPoint head;
 	int headi;
-//	ContourPoint mid;
 	ContourPoint tail;
 	int taili;
+	
+	PolygonRoi midline;
+	ContourPoint midpoint;
 	
 	int minX;
 	int minY;
@@ -373,11 +373,17 @@ public class MaggotTrackPoint extends ImTrackPoint {
 					midY[i-1] = (float) ((leftSeg.getYCoordinates()[i]+(int)leftSeg.getYBase()+rightSeg.getYCoordinates()[i]+(int)rightSeg.getYBase())/2.0);
 				}
 				
+				//Assign the midline
 				midline = new PolygonRoi(midX, midY, midX.length, Roi.POLYLINE); 
 				
+				//Assign the midpoint
+				int midi = midX.length/2;//don't need to add 1, b/c of zero indexing; e.g. (11 pts)/2=5, which is the 6th point
+				int midpointX = (int) ((leftSeg.getXCoordinates()[midi]+(int)leftSeg.getXBase()+rightSeg.getXCoordinates()[midi]+(int)rightSeg.getXBase())/2.0);
+				int midpointY = (int) ((leftSeg.getYCoordinates()[midi]+(int)leftSeg.getYBase()+rightSeg.getYCoordinates()[midi]+(int)rightSeg.getYBase())/2.0);
+				midpoint = new ContourPoint(midpointX, midpointY);
 				
 			} else {
-				midline=null;
+				midline=null; //TODO this causes an empty spine
 				comm.message("Segments have different numbers of Coordinates!!", VerbLevel.verb_error);
 			}
 			
@@ -458,8 +464,11 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			PolygonRoi flippedMid = prevPt.invertMidline();
 			double distChanged = spineDistSqr(flippedMid);
 			
+			track.tb.comm.message("Track "+track.trackID+" frame "+frameNum+": unchanged-"+Math.sqrt(distUnchanged)+" changed-"+Math.sqrt(distChanged), VerbLevel.verb_error);
+			
 			//Choose the one with the lower distance
-			if (distChanged>distUnchanged){
+			if (distChanged<distUnchanged){
+				track.tb.comm.message("Inverting", VerbLevel.verb_error);
 				invertMaggot();
 				return 1;//Changed
 			} else {
@@ -493,7 +502,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	 */
 	public PolygonRoi invertMidline(){
 		if (!htValid){
-			comm.message("tried to flip HT, but HT is not valid.", VerbLevel.verb_debug);
+			track.tb.comm.message("tried to flip HT, but HT is not valid.", VerbLevel.verb_debug);
 			return null;
 		}
 		
@@ -550,9 +559,10 @@ public class MaggotTrackPoint extends ImTrackPoint {
 
 			double totalDistSqr = 0;
 			
-			for (int i=0; i<numMidCoords; i++){
+			for (int i=0; i<midline.getNCoordinates(); i++){
 				
-				totalDistSqr+= (midline.getXCoordinates()[i]-othermidline.getXCoordinates()[i])^2 + (midline.getYCoordinates()[i]-othermidline.getYCoordinates()[i])^2;
+				totalDistSqr+= (midline.getXCoordinates()[i]+(int)midline.getXBase()-othermidline.getXCoordinates()[i]-(int)othermidline.getXBase())*(midline.getXCoordinates()[i]+(int)midline.getXBase()-othermidline.getXCoordinates()[i]-(int)othermidline.getXBase());
+				totalDistSqr+= (midline.getYCoordinates()[i]+(int)midline.getYBase()-othermidline.getYCoordinates()[i]-(int)othermidline.getYBase())*(midline.getYCoordinates()[i]+(int)midline.getYBase()-othermidline.getYCoordinates()[i]-(int)othermidline.getYBase());
 				
 			}
 			
@@ -564,7 +574,20 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		
 	}
 	
-	
+	/**
+	 * Calculates the dot product between the velocity and the body orientation of this maggot. 
+	 * @param prevPt The previous point in the track, used to calculate the velocity
+	 * @return Dot product between the velocity and the body orientation, or -1.0 if there is no midline/midpoint
+	 */
+	public double MaggotDotProduct(MaggotTrackPoint prevPt){
+		
+		if (midpoint==null){
+			return -1.0;
+		}
+		
+		//dot product of direction of movement and body direction 
+		return (x-prevPt.x)*(head.x-midpoint.x) + (y-prevPt.y)*(head.y-midpoint.y);
+	}
 	
 	public ImageProcessor getIm() {
 		imOriginX = (int)x-(track.tb.ep.trackWindowWidth/2)-1;

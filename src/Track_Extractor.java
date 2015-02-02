@@ -56,6 +56,8 @@ public class Track_Extractor implements PlugIn{
 			gd.addMessage("To close, X out of this box");
 			gd.addNumericField("Track", 1, 0);
 			
+			new TextWindow("Communicator Output", tb.comm.outString, 500, 500);
+			
 			while (!gd.wasCanceled()){
 				gd.showDialog();
 				//EXECUTE THIS ON "OKAY" PRESS
@@ -103,7 +105,7 @@ public class Track_Extractor implements PlugIn{
 				
 			}
 			
-			new TextWindow("Communicator Output", tb.comm.outString, 500, 500);
+//			new TextWindow("Communicator Output", tb.comm.outString, 500, 500);
 			
 //			if (ep.showSampleData>=1){
 //				int trackInd = ep.sampleInd;
