@@ -56,7 +56,9 @@ public class Track_Extractor implements PlugIn{
 			gd.addMessage("To close, X out of this box");
 			gd.addNumericField("Track", 1, 0);
 			
-			new TextWindow("Communicator Output", tb.comm.outString, 500, 500);
+			if (tb.comm.verbosity!=VerbLevel.verb_off && !tb.comm.outString.equals("")){
+				new TextWindow("Communicator Output", tb.comm.outString, 500, 500);
+			}
 			
 			while (!gd.wasCanceled()){
 				gd.showDialog();

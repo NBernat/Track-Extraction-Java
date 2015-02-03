@@ -26,6 +26,11 @@ public class Communicator {
 		this.verbosity = verbosity;
 	}
 	
+	public String toString(){
+		
+		return "Communicator at verbosity level "+verbosity.name()+lb+outString;
+	}
+	
 
 }
 

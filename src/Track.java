@@ -243,7 +243,7 @@ public class Track {
 			}
 				
 			//Show the stack
-			ImagePlus trackPlus = new ImagePlus("Track "+trackID ,trackStack);
+			ImagePlus trackPlus = new ImagePlus("Track "+trackID+": frames "+points.firstElement().frameNum+"-"+points.lastElement().frameNum ,trackStack);
 			trackPlus.show();
 //			TextWindow tWin = new TextWindow("Track "+trackID+" info", trStr, 500, 500);
 			

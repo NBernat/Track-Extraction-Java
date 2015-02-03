@@ -176,7 +176,7 @@ public class TrackBuilder {
 		activeColIDs.removeAll(finishedColIDs);
 
 		
-		if (ep.dispTrackInfo){
+		if (ep.dispTrackInfo && !trackMessage.outString.equals("")){
 			new TextWindow("Track info", trackMessage.outString, 500, 500);
 		}
 		

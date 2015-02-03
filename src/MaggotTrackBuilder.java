@@ -40,11 +40,10 @@ public class MaggotTrackBuilder extends TrackBuilder {
 			
 			MaggotTrackPoint pt;
 			MaggotTrackPoint prevPt = (MaggotTrackPoint)track.points.get(0);
-			int lastEndFrameAnalyzed=-1;
-//			int lastValidFrame = (prevPt.midline!= null && prevPt.midline.getNCoordinates()!=0) ? 0 : -1;
 			
 			int AMDSegStart = (prevPt.midline!= null && prevPt.midline.getNCoordinates()!=0) ? 0 : -1;
 			int AMDSegEnd = -1;
+			int lastEndFrameAnalyzed=-1;
 			
 			for (int i=1; i<track.points.size(); i++){
 			
@@ -56,13 +55,13 @@ public class MaggotTrackBuilder extends TrackBuilder {
 					
 					int orStat = pt.chooseOrientation(prevPt);
 					if (orStat<0){
-						comm.message("Orientation Failed, frame "+(i+ep.startFrame), VerbLevel.verb_error);
+						comm.message("Orientation Failed, frame "+(i+ep.startFrame), VerbLevel.verb_warning);
 					}
 					prevPt = pt;
 					
 					//Set the new start frame when the last segment has just been analyzed
 					//	->Because of initialization, this will happen on the first valid spine in the track
-					if (AMDSegEnd==lastEndFrameAnalyzed){//if (AMDSegStart==AMDSegEnd){
+					if (AMDSegEnd==lastEndFrameAnalyzed && AMDSegStart!=0){//if (AMDSegStart==AMDSegEnd){
 						AMDSegStart=i;
 					}
 					//Always set this as the last frame of the ending segment
@@ -73,7 +72,7 @@ public class MaggotTrackBuilder extends TrackBuilder {
 					//When the midline doesn't exist, analyze the previous segment of midlines
 					//But only if that segment has at least 2 points
 					
-					comm.message("Midline invalid, Track "+track.trackID+" frame "+(i+ep.startFrame), VerbLevel.verb_error);
+					comm.message("Midline invalid, Track "+track.trackID+" frame "+(i+ep.startFrame), VerbLevel.verb_message);
 					
 					//Analyze the direction of motion for the segment leading up to this frame, starting with lastEndFrameAnalyzed (or 0)
 					if ( (AMDSegEnd-AMDSegStart)>1 ){ //TODO && (AMDSegEnd-AMDSegStart)<AMDSegEnd (?)
@@ -114,13 +113,13 @@ public class MaggotTrackBuilder extends TrackBuilder {
 			return;
 		}
 		
-		comm.message("Analyzing midline direction: Track "+track.trackID+" "+(startInd+ep.startFrame)+"-"+(endInd+ep.startFrame), VerbLevel.verb_error);
+		comm.message("Analyzing midline direction: Track "+track.trackID+" "+(startInd+ep.startFrame)+"-"+(endInd+ep.startFrame), VerbLevel.verb_debug);
 		
 		double dpSum=0;
 		MaggotTrackPoint pt;
 		MaggotTrackPoint prevPt = (MaggotTrackPoint) track.points.get(startInd);
 		for (int i=startInd+1; i<=endInd; i++){
-			pt = (MaggotTrackPoint) track.points.get(startInd);
+			pt = (MaggotTrackPoint) track.points.get(i);
 			dpSum += pt.MaggotDotProduct(prevPt);
 			prevPt = pt;
 		} 
@@ -142,7 +141,7 @@ public class MaggotTrackBuilder extends TrackBuilder {
 	protected void flipSeg(Track track, int startInd, int endInd) {
 		for (int i=startInd; i<=endInd; i++){
 			MaggotTrackPoint pt = (MaggotTrackPoint) track.points.get(i);
-			pt.flipHT();
+			pt.invertMaggot();
 		}
 	}
 	

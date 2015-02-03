@@ -2,7 +2,6 @@ import ij.ImagePlus;
 import ij.gui.PolygonRoi;
 import ij.gui.Roi;
 import ij.gui.Wand;
-import ij.process.FloatPolygon;
 import ij.process.ImageProcessor;
 
 import java.awt.Color;
@@ -343,20 +342,10 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			comm.message("Segment PolygonRoi's created", VerbLevel.verb_debug);
 			
 			//Interpolate each into numMidPts points (divide by numMidPts+1)
-//			leftSeg.fitSpline();
-//			rightSeg.fitSpline();
-//			double leftSpacing = (leftSeg.getLength())/(numMidPts+1);
-//			double rightSpacing = (rightSeg.getLength())/(numMidPts+1);
-			
-//			leftSeg.fitSpline();
-//			rightSeg.fitSpline();
-//			leftSeg = new PolygonRoi(leftSeg.getInterpolatedPolygon(leftSpacing, true), Roi.POLYLINE);
-//			rightSeg = new PolygonRoi(rightSeg.getInterpolatedPolygon(rightSpacing, true), Roi.POLYLINE);
-			
 			comm.message("Interpolating left", VerbLevel.verb_debug);
-			leftSeg = getInterpolatedSegment(leftSeg, numMidPts+1);
+			leftSeg = getInterpolatedSegment(leftSeg, numMidPts+2);
 			comm.message("Interpolating right", VerbLevel.verb_debug);
-			rightSeg = getInterpolatedSegment(rightSeg, numMidPts+1);
+			rightSeg = getInterpolatedSegment(rightSeg, numMidPts+2);
 			
 			comm.message("LeftSeg has "+leftSeg.getNCoordinates()+" points", VerbLevel.verb_debug);
 			comm.message("RightSeg has "+rightSeg.getNCoordinates()+" points", VerbLevel.verb_debug);
@@ -368,7 +357,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			if (leftSeg.getNCoordinates()==rightSeg.getNCoordinates()){
 				midX = new float[leftSeg.getNCoordinates()-2];
 				midY = new float[leftSeg.getNCoordinates()-2];
-				for (int i=1;i<leftSeg.getNCoordinates()-1; i++){
+				for (int i=1;i<(leftSeg.getNCoordinates()-1); i++){
 					midX[i-1] = (float) ((leftSeg.getXCoordinates()[i]+(int)leftSeg.getXBase()+rightSeg.getXCoordinates()[i]+(int)rightSeg.getXBase())/2.0);
 					midY[i-1] = (float) ((leftSeg.getYCoordinates()[i]+(int)leftSeg.getYBase()+rightSeg.getYCoordinates()[i]+(int)rightSeg.getYBase())/2.0);
 				}
@@ -384,7 +373,8 @@ public class MaggotTrackPoint extends ImTrackPoint {
 				
 			} else {
 				midline=null; //TODO this causes an empty spine
-				comm.message("Segments have different numbers of Coordinates!!", VerbLevel.verb_error);
+				htValid=false;
+				comm.message("Frame "+frameNum+": Segments have different numbers of Coordinates, L="+leftSeg.getNCoordinates()+" R="+rightSeg.getNCoordinates(), VerbLevel.verb_message);
 			}
 			
 			
@@ -396,9 +386,10 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	
 	public PolygonRoi getInterpolatedSegment(PolygonRoi origSegment, int numPts){
 
-		double spacing = (origSegment.getLength())/numPts;
+		double spacing = (origSegment.getLength())/(numPts-1);
 
 		PolygonRoi retSeg = new PolygonRoi(origSegment.getInterpolatedPolygon(spacing, true), Roi.POLYLINE);
+		
 		if (retSeg.getNCoordinates()!=numPts){
 			comm.message("Initial interpolation spacing was incorrect, there were "+retSeg.getNCoordinates()+"points", VerbLevel.verb_debug);
 			double changeFact;
@@ -464,11 +455,11 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			PolygonRoi flippedMid = prevPt.invertMidline();
 			double distChanged = spineDistSqr(flippedMid);
 			
-			track.tb.comm.message("Track "+track.trackID+" frame "+frameNum+": unchanged-"+Math.sqrt(distUnchanged)+" changed-"+Math.sqrt(distChanged), VerbLevel.verb_error);
+			track.tb.comm.message("Track "+track.trackID+" frame "+frameNum+": unchanged-"+Math.sqrt(distUnchanged)+" changed-"+Math.sqrt(distChanged), VerbLevel.verb_debug);
 			
 			//Choose the one with the lower distance
 			if (distChanged<distUnchanged){
-				track.tb.comm.message("Inverting", VerbLevel.verb_error);
+				track.tb.comm.message("Inverting", VerbLevel.verb_debug);
 				invertMaggot();
 				return 1;//Changed
 			} else {
@@ -501,27 +492,29 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	 * @return An inverted midline
 	 */
 	public PolygonRoi invertMidline(){
-		if (!htValid){
-			track.tb.comm.message("tried to flip HT, but HT is not valid.", VerbLevel.verb_debug);
+		if (!htValid || midline==null || midline.getNCoordinates()==0){
+			if (track!=null){
+				track.tb.comm.message("tried to flip HT, but HT is not valid.", VerbLevel.verb_debug);
+			}
 			return null;
 		}
 		
-		//Flip midline coords
-		float tempX;
-		float tempY;
-		FloatPolygon mid = midline.getFloatPolygon();
-		float[] midX = mid.xpoints;
-		float[] midY = mid.ypoints;
-		int nCoord = midline.getNCoordinates();
+
+		Polygon mid = midline.getPolygon();
+		int[] midX = mid.xpoints;
+		int[] midY = mid.ypoints;
+		int nCoord = mid.npoints;
+		
+		int[] newmidX = new int[nCoord];
+		int[] newmidY = new int[nCoord];
+		
 		for(int i=0; i<nCoord; i++){
-			tempX = midX[i];
-			tempY = midY[i];
-			midX[i] = midX[nCoord-1-i];
-			midY[i] = midY[nCoord-1-i];
-			midX[nCoord-1-i] = tempX;
-			midY[nCoord-1-i] = tempY;
+			
+			newmidX[nCoord-1-i] = midX[i];
+			newmidY[nCoord-1-i] = midY[i];
+
 		}
-		PolygonRoi newMidline = new PolygonRoi(midX, midY, nCoord, Roi.POLYLINE);
+		PolygonRoi newMidline = new PolygonRoi(newmidX, newmidY, nCoord, Roi.POLYLINE);
 		return newMidline;
 	}
 	
@@ -582,11 +575,11 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	public double MaggotDotProduct(MaggotTrackPoint prevPt){
 		
 		if (midpoint==null){
-			return -1.0;
+			return 0;
 		}
 		
 		//dot product of direction of movement and body direction 
-		return (x-prevPt.x)*(head.x-midpoint.x) + (y-prevPt.y)*(head.y-midpoint.y);
+		return (x-prevPt.x)*(head.x-tail.x) + (y-prevPt.y)*(head.y-tail.y);
 	}
 	
 	public ImageProcessor getIm() {
@@ -656,6 +649,10 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		if (midline!=null){
 			for (int i=0; i<midline.getNCoordinates(); i++){
 				im.drawDot(midline.getXCoordinates()[i]+offX+(int)midline.getXBase(), midline.getYCoordinates()[i]+offY+(int)midline.getYBase());
+				
+				if (i==(midline.getNCoordinates()/2)){
+					im.setColor(Color.CYAN);
+				}
 				
 			}
 		}
