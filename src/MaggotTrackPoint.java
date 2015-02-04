@@ -2,11 +2,12 @@ import ij.ImagePlus;
 import ij.gui.PolygonRoi;
 import ij.gui.Roi;
 import ij.gui.Wand;
+import ij.process.FloatPolygon;
 import ij.process.ImageProcessor;
 
 import java.awt.Color;
 import java.awt.Point;
-import java.awt.Polygon;
+//import java.awt.Polygon;
 import java.awt.Rectangle;
 //import java.util.Arrays;
 import java.util.Collections;
@@ -500,13 +501,13 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		}
 		
 
-		Polygon mid = midline.getPolygon();
-		int[] midX = mid.xpoints;
-		int[] midY = mid.ypoints;
+		FloatPolygon mid = midline.getFloatPolygon();
+		float[] midX = mid.xpoints;
+		float[] midY = mid.ypoints;
 		int nCoord = mid.npoints;
 		
-		int[] newmidX = new int[nCoord];
-		int[] newmidY = new int[nCoord];
+		float[] newmidX = new float[nCoord];
+		float[] newmidY = new float[nCoord];
 		
 		for(int i=0; i<nCoord; i++){
 			

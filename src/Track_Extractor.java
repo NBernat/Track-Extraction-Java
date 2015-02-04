@@ -57,71 +57,37 @@ public class Track_Extractor implements PlugIn{
 			gd.addNumericField("Track", 1, 0);
 			
 			if (tb.comm.verbosity!=VerbLevel.verb_off && !tb.comm.outString.equals("")){
-				new TextWindow("Communicator Output", tb.comm.outString, 500, 500);
+				new TextWindow("Communicator Output", tb.comm.outString, 500, 500); 
 			}
 			
 			while (!gd.wasCanceled()){
 				gd.showDialog();
 				//EXECUTE THIS ON "OKAY" PRESS
+				
 				int num = (int)gd.getNextNumber();
 				
-				if (num>=0){
-					if (num<=tb.finishedTracks.size() && !gd.wasCanceled()){
-						int trackInd = tb.findIndOfTrack(num, tb.finishedTracks);
-						try {
-							Track track = tb.finishedTracks.get(trackInd);
-							track.playMovie();
-						} catch (Exception e) {
-							
-							StackTraceElement[] tr = e.getStackTrace();
-							String s = e.toString()+"\n";
-							for (int i=0; i<tr.length; i++){
-								s += tr[i].toString()+"\n";
-							}
-							
-							new TextWindow("Error", "Error playing trackID number "+num+"\n"+s, 500, 500);
+				if (num>=0 && num<=tb.finishedTracks.size() && !gd.wasCanceled()){
+					
+					int trackInd = tb.findIndOfTrack(num, tb.finishedTracks);
+					try {
+						Track track = tb.finishedTracks.get(trackInd);
+						track.playMovie();
+					} catch (Exception e) {
+						
+						StackTraceElement[] tr = e.getStackTrace();
+						String s = e.toString()+"\n";
+						for (int i=0; i<tr.length; i++){
+							s += tr[i].toString()+"\n";
 						}
-	//					TextWindow tw = new TextWindow("Match Spill for frame ", tb.matchSpills.get(track.points.lastElement().frameNum).outString, 500, 500);
+						
+						new TextWindow("Error", "Error playing trackID number "+num+"\n"+s, 500, 500);
 					}
-				} else{
-//					num = -1-num;//this makes it an index of collision tracks
-//					//TODO Search through the finishedCollisions for the specified collision
-//					if (num<=tb.finishedTracks.size() && !gd.wasCanceled()){
-//						int trackInd = tb.findIndOfTrack(num, tb.finishedTracks);
-//						try {
-//							Track track = tb.finishedTracks.get(trackInd);
-//							track.playMovie();
-//						} catch (Exception e) {
-//							
-//							StackTraceElement[] tr = e.getStackTrace();
-//							String s = e.toString()+"\n";
-//							for (int i=0; i<tr.length; i++){
-//								s += tr[i].toString()+"\n";
-//							}
-//							
-//							new TextWindow("Error", "Error playing trackID number "+num+"\n"+s, 500, 500);
-//						}
-////						TextWindow tw = new TextWindow("Match Spill for frame ", tb.matchSpills.get(track.points.lastElement().frameNum).outString, 500, 500);
-//					}
+
 				}
 				
 			}
 			
-//			new TextWindow("Communicator Output", tb.comm.outString, 500, 500);
-			
-//			if (ep.showSampleData>=1){
-//				int trackInd = ep.sampleInd;
-//				tb.comm.message("Number of Finished Tracks: "+tb.finishedTracks.size(), VerbLevel.verb_message);
-//				IJ.showStatus("Playing Track "+trackInd);
-//				tb.comm.message("Playing TrackID "+tb.finishedTracks.get(trackInd).trackID, VerbLevel.verb_message);
-//				tb.finishedTracks.get(trackInd).playMovie(trackInd);
-//	
-//				tb.comm.message("Completed successfully!", VerbLevel.verb_message);
-//				if (ep.showSampleData>=2){
-//					TextWindow tw = new TextWindow("Communicator Output", tb.comm.outString, 500, 500);
-//				}
-//			}
-//			
+
 			
 		}
 		catch (Exception e) {
