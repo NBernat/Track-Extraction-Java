@@ -2,13 +2,18 @@ import ij.ImagePlus;
 import ij.ImageStack;
 import ij.process.ImageProcessor;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.ListIterator;
 import java.util.Vector;
 
 
-public class Track {
+public class Track implements Serializable{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	/**
 	 * Constituent TrackPoints
 	 */
@@ -41,6 +46,7 @@ public class Track {
 //	Vector<Collision> collisions;
 	
 	
+	//TODO transient
 	private TrackMatch match;
 	
 	/**

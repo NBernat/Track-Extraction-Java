@@ -3,6 +3,11 @@ import ij.ImageStack;
 
 public class MaggotTrackBuilder extends TrackBuilder {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	public MaggotTrackBuilder(ImageStack IS, ExtractionParameters ep) {
 		super(IS, ep);
 	}

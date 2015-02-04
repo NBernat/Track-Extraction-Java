@@ -1,3 +1,4 @@
+import java.io.Serializable;
 import java.util.ListIterator;
 import java.util.Vector;
 
@@ -6,8 +7,12 @@ import java.util.Vector;
  * @author Natalie
  *
  */
-public class TrackMatch {
+public class TrackMatch implements Serializable {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	/**
 	 * The TrackBuilder which is using this TrackMatch
 	 */

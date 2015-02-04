@@ -2,7 +2,7 @@
 import ij.*;
 import ij.gui.Roi;
 import ij.measure.ResultsTable;
-import ij.plugin.ImageCalculator;
+//import ij.plugin.ImageCalculator;
 import ij.process.ImageProcessor;
 
 import java.awt.Rectangle;
@@ -19,7 +19,7 @@ public class PointExtractor {
 	/**
 	 * The stack of images to extract points from 
 	 */
-	ImageStack imageStack;
+//	ImageStack imageStack;
 	/**
 	 * Parameters used for extracting points
 	 */
@@ -34,7 +34,7 @@ public class PointExtractor {
 	 * <p>
 	 * See IJ_Props.txt for calculator function strings 
 	 */
-	ImageCalculator IC;
+//	ImageCalculator IC;
 	
 	/**
 	 * The points which were extracted in the last call to extractFrame() 
@@ -150,15 +150,16 @@ public class PointExtractor {
 	 */
 	private void init(int startFrame, ImageStack stack, Communicator comm, ExtractionParameters ep){
 		this.startFrameNum = startFrame;
-		imageStack = stack;
+//		imageStack = stack;
 		this.comm = comm;
 		this.ep = ep;
-		endFrameNum = imageStack.getSize()-1;//.getNFrames()-1;// 
+		endFrameNum = stack.getSize()-1;
+//		endFrameNum = imageStack.getSize()-1;//.getNFrames()-1;// 
 		increment = ep.increment;
 		lastFrameExtracted=-1;
 		isFirstRun=true;
 		fl = new FrameLoader(comm, stack);
-		IC = new ImageCalculator();
+//		IC = new ImageCalculator();
 		fnm = fl.fnm;
 	}
 	

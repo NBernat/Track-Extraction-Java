@@ -2,6 +2,7 @@ import ij.IJ;
 import ij.ImageStack;
 import ij.text.TextWindow;
 
+import java.io.Serializable;
 import java.util.ListIterator;
 import java.util.Vector;
 
@@ -10,9 +11,13 @@ import java.util.Vector;
  * @author Natalie Bernat
  *
  */
-public class TrackBuilder {
+public class TrackBuilder implements Serializable{
 
 		
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	////////////////////////////
 	// Ongoing track objects 
 	////////////////////////////

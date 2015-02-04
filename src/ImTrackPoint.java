@@ -1,5 +1,7 @@
 import ij.ImagePlus;
 import ij.gui.Roi;
+import ij.io.FileSaver;
+import ij.io.Opener;
 import ij.process.ImageProcessor;
 
 import java.awt.Rectangle;
@@ -12,6 +14,7 @@ public class ImTrackPoint extends TrackPoint{
 	 */
 	private static final long serialVersionUID = 1L;
 	ImageProcessor im;
+	byte[] serializableIm;
 	int imOriginX;
 	int imOriginY;
 	
@@ -61,5 +64,28 @@ public class ImTrackPoint extends TrackPoint{
 		im = frameIm.getProcessor().crop();//Does not affect frameIm's image
 		frameIm.setRoi(oldRoi);
 	}
+	
+	/**
+	 * Generates Serializable forms of any non-serializable ImageJ objects 
+	 * <p>
+	 * For ImTrackPoints, the image is converted to a byte array
+	 */
+	public void preSerialize(){
+		FileSaver fs = new FileSaver(new ImagePlus("ImTrackPoint "+pointID, im));
+		serializableIm = fs.serialize();
+	}
+	
+	/**
+	 * Recreates any non-serializable ImageJ objects 
+	 * <p>
+	 * For ImTrackPoints, the byte array is converted back into an ImageProcessor
+	 */
+	public void postDeserialize(){
+		Opener op = new Opener();
+		ImagePlus im2 = op.deserialize(serializableIm);
+		im = im2.getProcessor();		
+	}
+	
+	
 	
 }

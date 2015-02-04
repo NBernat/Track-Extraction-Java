@@ -10,6 +10,10 @@ public class CollisionTrack extends Track{
 //	Collision coll;
 	
 	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	/**
 	 * The tracks leading up to the collision
 	 */
 	Vector<Track> inTracks;	

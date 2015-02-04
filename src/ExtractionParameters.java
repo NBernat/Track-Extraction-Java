@@ -1,6 +1,13 @@
+import java.io.Serializable;
 
-public class ExtractionParameters {
+
+public class ExtractionParameters implements Serializable{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	/**
 	 * Max number of points stored in a TrackMatch object
 	 */

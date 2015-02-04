@@ -187,7 +187,7 @@ public class TrackPoint extends Point {
 	}
 	
 	public ImageProcessor getIm(){
-		ImageProcessor trPtIm = track.tb.pe.imageStack.getProcessor(frameNum).duplicate();
+		ImageProcessor trPtIm = track.tb.pe.fl.imageStack.getProcessor(frameNum).duplicate();
 		int newCornerX = (int)x - track.tb.ep.trackWindowWidth/2;
 		int newCornerY = (int)y - track.tb.ep.trackWindowHeight/2;
 		Rectangle newRect = new Rectangle(newCornerX, newCornerY, track.tb.ep.trackWindowWidth, track.tb.ep.trackWindowHeight);
@@ -259,7 +259,21 @@ public class TrackPoint extends Point {
 	public boolean equals(TrackPoint pt){
 		return pt.pointID==pointID;
 	}
-	//TODO draw methods, openCV?
-	//TODO to&from file?
-	//TODO gets&sets (area, cov)
+
+	
+	/**
+	 * Generates Serializable forms of any non-serializable ImageJ objects; for basic TrackPoints, nothing is done
+	 */
+	public void preSerialize(){
+		return;
+	}
+	
+	/**
+	 * Recreates any non-serializable ImageJ objects; for basic TrackPoints, nothing is done
+	 */
+	public void postDeserialize(){
+		return;
+	}
+	
+	
 }
