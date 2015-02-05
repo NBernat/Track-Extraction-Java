@@ -46,8 +46,7 @@ public class Track implements Serializable{
 //	Vector<Collision> collisions;
 	
 	
-	//TODO transient
-	private TrackMatch match;
+	private transient TrackMatch match;
 	
 	/**
 	 * Length of time to pause between frames, ie 1/frameRate, in ms
@@ -56,8 +55,11 @@ public class Track implements Serializable{
 	/**
 	 * Access to the TrackBuilder
 	 */
-	TrackBuilder tb;
-	
+	transient TrackBuilder tb;
+	/**
+	 * Access to the experiment
+	 */
+	Experiment exp;
 		
 	///////////////////////////
 	// Constructors
@@ -203,13 +205,7 @@ public class Track implements Serializable{
 		return points.lastElement();
 	}
 	
-	
-	
-	//TODO to&from disk?
-		
-	//TODO accessors: (get first last and nth, length, startFrame, endFrame,trackLen)
-	//TODO draw methods
-	//TODO playMovie method
+
 	
 	
 	public void playMovie() {
@@ -220,7 +216,9 @@ public class Track implements Serializable{
 		
 //		String trStr = "";
 		
-		tb.comm.message("This track has "+points.size()+"points", VerbLevel.verb_message);
+		if (tb!=null){
+			tb.comm.message("This track has "+points.size()+"points", VerbLevel.verb_message);
+		}
 		ListIterator<TrackPoint> tpIt = points.listIterator();
 		if (tpIt.hasNext()) {
 		
@@ -295,6 +293,28 @@ public class Track implements Serializable{
 	public boolean isCollisionTrack(){
 		return false;
 	}
+	
+	/**
+	 * Pre-Serializes all TrackPoints
+	 */
+	public void preSerialize(){
+		ListIterator<TrackPoint> tpIt = points.listIterator();
+		while (tpIt.hasNext()) {
+			tpIt.next().preSerialize();
+		}
+	}
+	
+	/**
+	 * Post-Deserializes all TrackPoints
+	 */
+	public void postDeserialize(){
+		ListIterator<TrackPoint> tpIt = points.listIterator();
+		while (tpIt.hasNext()) {
+			tpIt.next().postDeserialize();
+		}
+	}
+	
+	
 	
 		
 }

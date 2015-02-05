@@ -131,13 +131,16 @@ public class ExtractionParameters implements Serializable{
     //TODO
     int roiPadding = 0;
     
+    /**
+     * PLAYMOVIE NOT YET SUPPORTED FOR SAVED FILES WHEN TRACKPOINTTYPE=0
+     */
     int trackPointType = 2;
     
     
     
-	public ExtractionParameters(){
-		
-	}
+//	public ExtractionParameters(){
+//		
+//	}
 	
 	public boolean properPointSize(double area){
 		return (area>=minArea && area<=maxArea);

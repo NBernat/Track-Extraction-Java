@@ -769,7 +769,7 @@ public class TrackBuilder implements Serializable{
 	 * @param trackList The list to search through 
 	 * @return The index of list that can be used to access the query track (-1 if it's not found)
 	 */
-	public int findIndOfTrack(int trackID, Vector<Track> trackList){
+	public static int findIndOfTrack(int trackID, Vector<Track> trackList){
 		
 		for (int i=0;i<trackList.size();i++){
 			if (trackList.get(i).trackID==trackID){
@@ -838,6 +838,33 @@ public class TrackBuilder implements Serializable{
 		
 		return totalA/num; 
 	}
+	
+	
+	
+	public Experiment toExperiment(){
+		//Clean up the TrackBuilder
+		if (!activeTracks.isEmpty()){
+			finishedTracks.addAll(activeTracks);
+			activeTracks.removeAll(activeTracks);
+		}
+		if (!activeColIDs.isEmpty()){
+			finishedColIDs.addAll(activeColIDs);
+			activeColIDs.removeAll(finishedColIDs);
+		}
+		
+		//Create the Experiment
+		Experiment exp = new Experiment(this);
+		
+		//Attach the experiment to all the tracks 
+		ListIterator<Track> trIt = exp.tracks.listIterator();
+		while(trIt.hasNext()) {
+			trIt.next().exp = exp;
+		}
+		
+		
+		return exp;
+	}
+	
 	
 	
 

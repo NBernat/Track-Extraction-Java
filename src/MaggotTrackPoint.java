@@ -67,7 +67,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	private final double maxContourAngle = Math.PI/2.0;
 	private final int numMidCoords = 11;
 	
-	Communicator comm;
+	transient Communicator comm;
 	
 
 	MaggotTrackPoint(double x, double y, Rectangle rect, double area,
@@ -456,11 +456,15 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			PolygonRoi flippedMid = prevPt.invertMidline();
 			double distChanged = spineDistSqr(flippedMid);
 			
-			track.tb.comm.message("Track "+track.trackID+" frame "+frameNum+": unchanged-"+Math.sqrt(distUnchanged)+" changed-"+Math.sqrt(distChanged), VerbLevel.verb_debug);
+			if (track.tb!=null){
+				track.tb.comm.message("Track "+track.trackID+" frame "+frameNum+": unchanged-"+Math.sqrt(distUnchanged)+" changed-"+Math.sqrt(distChanged), VerbLevel.verb_debug);
+			}
 			
 			//Choose the one with the lower distance
 			if (distChanged<distUnchanged){
-				track.tb.comm.message("Inverting", VerbLevel.verb_debug);
+				if (track.tb!=null){
+					track.tb.comm.message("Inverting", VerbLevel.verb_debug);
+				}
 				invertMaggot();
 				return 1;//Changed
 			} else {
@@ -494,7 +498,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	 */
 	public PolygonRoi invertMidline(){
 		if (!htValid || midline==null || midline.getNCoordinates()==0){
-			if (track!=null){
+			if (track!=null && track.tb!=null){
 				track.tb.comm.message("tried to flip HT, but HT is not valid.", VerbLevel.verb_debug);
 			}
 			return null;
@@ -584,11 +588,11 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	}
 	
 	public ImageProcessor getIm() {
-		imOriginX = (int)x-(track.tb.ep.trackWindowWidth/2)-1;
-		imOriginY = (int)y-(track.tb.ep.trackWindowHeight/2)-1;
+		imOriginX = (int)x-(trackWindowWidth/2)-1;
+		imOriginY = (int)y-(trackWindowHeight/2)-1;
 		im.snapshot();
 //		ImageProcessor cIm = drawFeatures(im);
-		ImageProcessor pIm = CVUtils.padAndCenter(new ImagePlus("Point "+pointID, im), track.tb.ep.trackWindowWidth, track.tb.ep.trackWindowHeight, (int)x-rect.x, (int)y-rect.y);
+		ImageProcessor pIm = CVUtils.padAndCenter(new ImagePlus("Point "+pointID, im), trackWindowWidth, trackWindowHeight, (int)x-rect.x, (int)y-rect.y);
 		int offX = rect.x-imOriginX;
 		int offY = rect.y-imOriginY;
 		return drawFeatures(pIm, offX, offY); 

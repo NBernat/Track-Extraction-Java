@@ -13,7 +13,7 @@ public class FrameLoader {
 	/**
 	 * The stack of images from which the frames are loaded
 	 */
-	ImageStack imageStack;
+	ImageStack imageStack; 
 	/**
 	 * The last image that was loaded
 	 */

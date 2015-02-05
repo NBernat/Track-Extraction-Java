@@ -1,8 +1,8 @@
+import java.io.File;
+
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImageStack;
-//import ij.ImageStack;
-import ij.WindowManager;
 import ij.gui.GenericDialog;
 import ij.plugin.PlugIn;
 import ij.text.TextWindow;
@@ -10,22 +10,21 @@ import ij.text.TextWindow;
 
 public class Track_Extractor implements PlugIn{
 	
-	//TODO Set extraction parameters EXTRACTIONPARAMETERS
+	// Set extraction parameters EXTRACTIONPARAMETERS
 	ExtractionParameters ep; 
 	
-	//TODO Load the mmfs into an imagestack
+	// Load the mmfs into an imagestack
 	ImageStack IS;
 	
-	//TODO Build the tracks TRACKBUILDER
+	// Build the tracks TRACKBUILDER
 	TrackBuilder tb;
 	//ep= new ExtractionParameters()
 	
 	public void run(String arg) {
 				
+		/**
 		IJ.showStatus("Getting stack");
-		//IS = WindowManager.getCurrentImage();
 		IS = WindowManager.getCurrentWindow().getImagePlus().getImageStack();
-		//TODO Enforce the video type
 		if (IS == null) {
 			IJ.showMessage("Null ImagePlus");
 			return;
@@ -37,28 +36,53 @@ public class Track_Extractor implements PlugIn{
 		IJ.showStatus("Building Tracks");
 		
 		// 
-		tb = new MaggotTrackBuilder(IS, ep);
-		
+		if (ep.trackPointType>=2){
+			tb = new MaggotTrackBuilder(IS, ep);
+		} else {
+			tb = new TrackBuilder(IS, ep);
+		}
+		**/
 		try {
 			
-//			tb.buildTracks();
+			/**
 			tb.run();
 			
 			
+			//////
+			IJ.showStatus("Converting to Experiment");
+			Experiment exp = tb.toExperiment();
+			
+			//Save it to file...
+			IJ.showStatus("Saving file");
+			exp.save("C:\\Users\\Natalie\\Documents", "testSer");
+			String fname = exp.fname;
+			**/
+			
+			
+			String fname = "C:\\Users\\Natalie\\Documents"+File.separator+"testSer"+".ser";
+			IJ.showStatus("Opening File");
+			Experiment ex = Experiment.open(fname); 
+			//////
+			
+			///////////////////////////////////////////////////////////////////////
+			//OLD GUI
 			GenericDialog gd = new GenericDialog("Track chooser");
-			gd.addMessage("Choose a track: (0-"+(tb.finishedTracks.size()-1)+")");
-			String st = "CollisionTracks:";
-			for (int i=0; i<tb.finishedColIDs.size(); i++) {
-				st += " "+tb.finishedColIDs.get(i);
+			gd.addMessage("Choose a track: (0-"+(ex.tracks.size()-1)+")");
+			if (ex.collisionTrackIDs.size()>0){
+				String st = "CollisionTracks:";
+				for (int i=0; i<ex.collisionTrackIDs.size(); i++) {
+					st += " "+ex.collisionTrackIDs.get(i);
+				}
+				gd.addMessage(st);
 			}
-			gd.addMessage(st);
 			gd.addMessage("Then press enter");
 			gd.addMessage("To close, X out of this box");
 			gd.addNumericField("Track", 1, 0);
 			
-			if (tb.comm.verbosity!=VerbLevel.verb_off && !tb.comm.outString.equals("")){
+			if (tb!=null && tb.comm.verbosity!=VerbLevel.verb_off && !tb.comm.outString.equals("")){
 				new TextWindow("Communicator Output", tb.comm.outString, 500, 500); 
 			}
+		
 			
 			while (!gd.wasCanceled()){
 				gd.showDialog();
@@ -66,11 +90,13 @@ public class Track_Extractor implements PlugIn{
 				
 				int num = (int)gd.getNextNumber();
 				
-				if (num>=0 && num<=tb.finishedTracks.size() && !gd.wasCanceled()){
+//				if (num>=0 && num<=tb.finishedTracks.size() && !gd.wasCanceled()){
+				if (num>=0 && num<=ex.tracks.size() && !gd.wasCanceled()){
 					
-					int trackInd = tb.findIndOfTrack(num, tb.finishedTracks);
+					int trackInd = TrackBuilder.findIndOfTrack(num, ex.tracks);
 					try {
-						Track track = tb.finishedTracks.get(trackInd);
+						Track track = ex.tracks.get(trackInd);
+//						Track track = tb.finishedTracks.get(trackInd);
 						track.playMovie();
 					} catch (Exception e) {
 						
@@ -86,8 +112,19 @@ public class Track_Extractor implements PlugIn{
 				}
 				
 			}
+			//END OLD GUI
+			///////////////////////////////////////////////////////////////////////
 			
-
+			///////////////////////////////////////////////////////////////////////
+			//NEW GUI
+//			Experiment exp = tb.toExperiment();
+			//Feed this into the new GUI
+			
+			
+			
+			
+			//END NEW GUI
+			///////////////////////////////////////////////////////////////////////
 			
 		}
 		catch (Exception e) {
@@ -98,8 +135,10 @@ public class Track_Extractor implements PlugIn{
 				s += tr[i].toString()+"\n";
 			}
 			
-			tb.comm.message(s, VerbLevel.verb_error);
-			new TextWindow("Communicator Output: Error", tb.comm.outString, 500, 500);
+			if (tb!=null){
+				tb.comm.message(s, VerbLevel.verb_error);
+				new TextWindow("Communicator Output: Error", tb.comm.outString, 500, 500);
+			}
 		}
 		
 		

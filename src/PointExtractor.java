@@ -326,7 +326,7 @@ public class PointExtractor {
 						currentIm.setRoi(rect);
 						ImageProcessor im = currentIm.getProcessor().crop(); //does not affect currentIm
 						currentIm.setRoi(oldRoi);
-						iTPt.setImage(im);
+						iTPt.setImage(im, ep.trackWindowWidth, ep.trackWindowHeight);
 						tp.add(iTPt);
 						break;
 					case 2: //MaggotTrackPoint
@@ -339,7 +339,7 @@ public class PointExtractor {
 						currentIm.setRoi(rect);
 						ImageProcessor im2 = currentIm.getProcessor().crop(); //does not affect currentIm
 						currentIm.setRoi(roi);
-						mtPt.setImage(im2);
+						mtPt.setImage(im2, ep.trackWindowWidth, ep.trackWindowHeight);
 						mtPt.setStart((int)rt.getValue("XStart", row), (int)rt.getValue("YStart", row));
 						mtPt.extractFeatures();
 						tp.add(mtPt);

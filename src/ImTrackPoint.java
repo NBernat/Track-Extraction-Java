@@ -13,10 +13,13 @@ public class ImTrackPoint extends TrackPoint{
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	ImageProcessor im;
+	transient ImageProcessor im;
 	byte[] serializableIm;
 	int imOriginX;
 	int imOriginY;
+	
+	protected int trackWindowWidth;
+	protected int trackWindowHeight;
 	
 	/**
 	 * Identitfies the point as an IMTRACKPOINT
@@ -45,16 +48,22 @@ public class ImTrackPoint extends TrackPoint{
 		findAndStoreIm(frameIm);
 	}
 	
-	public void setImage(ImageProcessor im){
+//	public void setImage(ImageProcessor im){
+//		setImage(im, im.getWidth(), im.getHeight());
+//	}
+	
+	public void setImage (ImageProcessor im, int dispWidth, int dispHeight){
 		this.im = im;
+		trackWindowWidth = dispWidth;
+		trackWindowHeight = dispHeight;
 	}
 	
 	public ImageProcessor getIm(){
 		//pad the image
 //		track.tb.ep.trackWindowHeight;
-		imOriginX = (int)x-(track.tb.ep.trackWindowWidth/2)-1;
-		imOriginY = (int)y-(track.tb.ep.trackWindowHeight/2)-1;
-		return CVUtils.padAndCenter(new ImagePlus("Point "+pointID, im), track.tb.ep.trackWindowWidth, track.tb.ep.trackWindowHeight, (int)x-rect.x, (int)y-rect.y);
+		imOriginX = (int)x-(trackWindowWidth/2)-1;
+		imOriginY = (int)y-(trackWindowHeight/2)-1;
+		return CVUtils.padAndCenter(new ImagePlus("Point "+pointID, im), trackWindowWidth, trackWindowHeight, (int)x-rect.x, (int)y-rect.y);
 		 
 	}
 	
