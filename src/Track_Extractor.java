@@ -3,7 +3,7 @@ import java.io.File;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImageStack;
-import ij.gui.GenericDialog;
+//import ij.gui.GenericDialog;
 import ij.plugin.PlugIn;
 import ij.text.TextWindow;
 
@@ -62,8 +62,12 @@ public class Track_Extractor implements PlugIn{
 			String fname = "C:\\Users\\Natalie\\Documents"+File.separator+"testSer"+".ser";
 			IJ.showStatus("Opening File");
 			Experiment ex = Experiment.open(fname); 
-			//////
+			////// 
 			
+			ExperimentFrame exFrame = new ExperimentFrame(ex);
+			exFrame.run(null);
+			
+			/*
 			///////////////////////////////////////////////////////////////////////
 			//OLD GUI
 			GenericDialog gd = new GenericDialog("Track chooser");
@@ -115,6 +119,7 @@ public class Track_Extractor implements PlugIn{
 			//END OLD GUI
 			///////////////////////////////////////////////////////////////////////
 			
+			*/
 			///////////////////////////////////////////////////////////////////////
 			//NEW GUI
 //			Experiment exp = tb.toExperiment();

@@ -319,7 +319,7 @@ public class Track implements Serializable{
 	
 	public static String makeDescription(String ID, Vector<TrackPoint> pointList){
 		
-		String lb = System.lineSeparator();
+		String lb = "\n";//System.lineSeparator();
 		
 		String d = "";
 		d += "Track "+ID+lb+lb;
@@ -329,7 +329,7 @@ public class Track implements Serializable{
 			d += "Points("+pointList.size()+"):"+lb;
 			for (int i=0; i<pointList.size(); i++){
 				TrackPoint pt = pointList.get(i);
-				d += i+": ID="+pt.pointID+" ("+pt.x+","+pt.y+")"+lb;
+				d += i+": ID="+pt.pointID+" ("+(int)pt.x+","+(int)pt.y+")"+lb;
 			}
 		}else {
 			d += "Frames: "+lb+lb;
