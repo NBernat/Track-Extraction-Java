@@ -1,4 +1,9 @@
 import java.awt.BorderLayout;
+import java.util.ListIterator;
+import java.util.Vector;
+
+
+
 
 //import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -8,6 +13,7 @@ import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+
 
 
 public class ExperimentFrame extends JFrame{
@@ -52,17 +58,14 @@ public class ExperimentFrame extends JFrame{
 	
 	
 	/**
+	 * @throws Exception 
 	 * 
 	 */
-	public ExperimentFrame(String fname){
+	public ExperimentFrame(String fname) throws Exception{
 		//TODO check file name
 		
-		try {
-			ex = Experiment.open(fname);
-		} catch (Exception e) {
-			e.printStackTrace();
-			
-		} 
+		
+		ex = Experiment.open(fname);
 		
 		
 		
@@ -85,14 +88,14 @@ public class ExperimentFrame extends JFrame{
 		trackPanel = new TrackPanel();
 		
 		//Build the trackList and set selection handler
-		trackList = new JList(ex.tracks);
+		trackList = new JList(trackNames());
 		trackList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		trackList.addListSelectionListener(new ListSelectionListener() {
 			
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
 				
-				trackPanel.updateTrack((Track) trackList.getSelectedValue());
+				trackPanel.updateTrack(ex.tracks.get(trackList.getSelectedIndex()));
 				
 			}
 		});
@@ -104,9 +107,24 @@ public class ExperimentFrame extends JFrame{
 	}
 	
 	protected void showFrame(){
-		setSize(500, 300);
+		setSize(400, 300);
 		setTitle("Experiment "+ex.fname);
 		setVisible(true);
 	}
+	
+	protected Vector<String> trackNames(){
+		
+		Vector<String> names = new Vector<String>();
+		
+		ListIterator<Track> trIt = ex.tracks.listIterator();
+		while(trIt.hasNext()){
+			String name = "Track "+trIt.next().trackID;
+			names.add(name);
+		}
+		
+		return names;
+		
+	}
+	
 	
 }
