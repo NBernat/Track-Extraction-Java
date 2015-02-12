@@ -36,7 +36,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	MaggotTrackPoint prev;
 	MaggotTrackPoint next;
 	
-	private Point contourStart;
+	protected Point contourStart;
 	int nConPts;
 	
 //	PolygonRoi contour;
@@ -50,8 +50,8 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	PolygonRoi midline;
 	ContourPoint midpoint;
 	
-	int minX;
-	int minY;
+//	int minX;
+//	int minY;
 	
 	
 	int[] leftX;
@@ -64,22 +64,22 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	
 	boolean htValid;
 	
-	private final double maxContourAngle = Math.PI/2.0;
-	private final int numMidCoords = 11;
+	final double maxContourAngle = Math.PI/2.0;
+	final int numMidCoords = 11;
 	
 	transient Communicator comm;
 	
 
-	MaggotTrackPoint(double x, double y, Rectangle rect, double area,
-			double[] cov, int frame, int thresh) {
-		super(x, y, rect, area, cov, frame, thresh);
-	}
+//	MaggotTrackPoint(double x, double y, Rectangle rect, double area,
+//			double[] cov, int frame, int thresh) {
+//		super(x, y, rect, area, cov, frame, thresh);
+//	}
 
 	
-	MaggotTrackPoint(double x, double y, Rectangle rect, double area,
-			double[] cov, int frame, int ID, int thresh) {
-		super(x, y, rect, area, cov, frame, ID, thresh);
-	}
+//	MaggotTrackPoint(double x, double y, Rectangle rect, double area,
+//			double[] cov, int frame, int ID, int thresh) {
+//		super(x, y, rect, area, cov, frame, ID, thresh);
+//	}
 	
 	MaggotTrackPoint(double x, double y, Rectangle rect, double area,
 			int frame, int thresh) {
@@ -681,5 +681,31 @@ public class MaggotTrackPoint extends ImTrackPoint {
 //		}
 //		return s;
 //	}
+	
+	
+	public void copyInfoIntoBTP(BackboneTrackPoint btp){
+		btp.prev = prev;
+		btp.next = next;
+		btp.contourStart = contourStart;
+		btp.nConPts = nConPts;
+		btp.cont = cont;
+		btp.head = head;
+		btp.headi = headi;
+		btp.tail = tail;
+		btp.taili = taili;
+		btp.midline = midline;
+		btp.midpoint = midpoint;
+		btp.leftX = leftX;
+		btp.leftY = leftY;
+		btp.rightX = rightX;
+		btp.rightY = rightY;
+		btp.leftSeg = leftSeg;
+		btp.rightSeg = rightSeg;
+		btp.htValid = htValid;
+		btp.comm = comm;
+		
+	}
+	
+	
 		
 }

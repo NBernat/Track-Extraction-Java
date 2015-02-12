@@ -62,7 +62,9 @@ public class Track_Extractor implements PlugIn{
 			String fname = "C:\\Users\\Natalie\\Documents"+File.separator+"testSer"+".ser";
 			IJ.showStatus("Opening File");
 			Experiment ex = Experiment.open(fname); 
+			IJ.showStatus("Experiment Opened");
 			////// 
+			
 			
 			ExperimentFrame exFrame = new ExperimentFrame(ex);
 			exFrame.run(null);

@@ -74,14 +74,14 @@ public class TrackPoint extends Point {
 	TrackPoint(double x, double y, Rectangle rect, double area, int frame, int thresh) {
 	    init(x, y, rect, area, null, frame, ++lastIDNum, thresh);
 	}
-
-	TrackPoint (double x, double y, Rectangle rect, double area,  double[] cov, int frame, int thresh) {
-	     init(x, y, rect, area, cov, frame, ++lastIDNum, thresh);
-	 }
-
-	TrackPoint (double x, double y, Rectangle rect, double area, double[] cov, int frame, int ID, int thresh) {
-	     init(x, y, rect, area, cov, frame, ID, thresh);
-	 }
+//
+//	TrackPoint (double x, double y, Rectangle rect, double area,  double[] cov, int frame, int thresh) {
+//	     init(x, y, rect, area, cov, frame, ++lastIDNum, thresh);
+//	 }
+//
+//	TrackPoint (double x, double y, Rectangle rect, double area, double[] cov, int frame, int ID, int thresh) {
+//	     init(x, y, rect, area, cov, frame, ID, thresh);
+//	 }
 	
 	TrackPoint(TrackPoint point) {
 		init(point.x, point.y, (Rectangle)point.rect.clone(), point.area, point.covariance, point.frameNum, ++lastIDNum, thresh);

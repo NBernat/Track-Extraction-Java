@@ -33,15 +33,15 @@ public class ImTrackPoint extends TrackPoint{
 		super(x, y, rect, area, frame, thresh);
 	}
 
-	ImTrackPoint(double x, double y, Rectangle rect, double area, double[] cov,
-			int frame, int ID, int thresh) {
-		super(x, y, rect, area, cov, frame, ID, thresh);
-	}
+//	ImTrackPoint(double x, double y, Rectangle rect, double area, double[] cov,
+//			int frame, int ID, int thresh) {
+//		super(x, y, rect, area, cov, frame, ID, thresh);
+//	}
 
-	ImTrackPoint(double x, double y, Rectangle rect, double area, double[] cov,
-			int frame, int thresh) {
-		super(x, y, rect, area, cov, frame, thresh);
-	}
+//	ImTrackPoint(double x, double y, Rectangle rect, double area, double[] cov,
+//			int frame, int thresh) {
+//		super(x, y, rect, area, cov, frame, thresh);
+//	}
 	
 	ImTrackPoint(TrackPoint point, ImagePlus frameIm){
 		super(point);
