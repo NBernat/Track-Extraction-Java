@@ -684,6 +684,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	
 	
 	public void copyInfoIntoBTP(BackboneTrackPoint btp){
+		//Maggot fields
 		btp.prev = prev;
 		btp.next = next;
 		btp.contourStart = contourStart;
@@ -703,6 +704,17 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		btp.rightSeg = rightSeg;
 		btp.htValid = htValid;
 		btp.comm = comm;
+		
+		//ImTrackPoint fields
+		btp.im = im;
+		btp.serializableIm = serializableIm;
+		btp.imOriginX = imOriginX;
+		btp.imOriginY = imOriginY;
+		btp.trackWindowHeight = trackWindowHeight;
+		btp.trackWindowWidth = trackWindowWidth;
+		
+		//TrackPoint fields
+		//Set in constructor (x, y, rect, area, frame, thresh, etc)
 		
 	}
 	
