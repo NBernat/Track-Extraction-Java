@@ -30,8 +30,6 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	protected transient FloatPolygon bbOld;
 	protected transient FloatPolygon bbNew;
 	
-	private transient Vector<Point> targetPoints;
-	
 	
 	public BackboneTrackPoint(double x, double y, Rectangle rect, double area,
 			int frame, int thresh) {

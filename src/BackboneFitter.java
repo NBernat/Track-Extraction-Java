@@ -1,5 +1,4 @@
 import ij.process.FloatPolygon;
-
 import java.util.ListIterator;
 import java.util.Vector;
 
@@ -13,7 +12,7 @@ public class BackboneFitter {
 	
 	
 	/**
-	 * Parameters
+	 * Fitting parameters
 	 */
 	FittingParameters params;
 	
@@ -32,7 +31,11 @@ public class BackboneFitter {
 	 */
 	Vector<BackboneTrackPoint> BTPs;
 	
-
+	/**
+	 * The amount that each backbone in the track shifted during the last iteration that acted upon any given point
+	 */
+	private double[] shifts;
+	
 	/**
 	 * The final forces acting on each backbone point
 	 */
@@ -42,16 +45,20 @@ public class BackboneFitter {
 	 */
 	
 	
-	
+	/**
+	 * Constructs a backbone fitter
+	 */
 	public BackboneFitter(){
 		 
 		params = new FittingParameters();
 		
 		addForces();
 		
-		
 	}
 	
+	/**
+	 * Adds instances of each type of Force to the backbone fitter
+	 */
 	private void addForces(){
 		Forces = new Vector<Force>();
 		Forces.add(new ImageForce());
@@ -62,32 +69,48 @@ public class BackboneFitter {
 		Forces.add(new HTAttractionForce());
 	}
 	
+	/**
+	 * Fits backbones to the points in the given track. 
+	 * <p>
+	 * After fitting, the Vector of BackboneTrackPoints can be accessed via getBackbonePoints() 
+	 * @param tr
+	 */
 	public void fitTrack(Track tr){
+		
 		track = tr;
-		BTPs = new Vector<BackboneTrackPoint>(); 
-		if(track.points.get(0).pointType>=2){//TODO this whole type checking is a little clumsy, FIX IT
-			if(track.points.get(0).pointType==2){
-				for(int i=0; i<track.points.size(); i++){
-					//track.points.setElementAt(BackboneTrackPoint.convertMTPtoBTP((MaggotTrackPoint)track.points.get(i), params.numBBPts), i);
-					BackboneTrackPoint btp = BackboneTrackPoint.convertMTPtoBTP((MaggotTrackPoint)track.points.get(i), params.numBBPts);
-					BTPs.add(btp);
-				}
+		//Extract a list of the TrackPoints and convert them to BackboneTrackPoints to hold the new backbone info 
+		BTPs = new Vector<BackboneTrackPoint>();
+		if(track.points.get(0).pointType==2){
+			for(int i=0; i<track.points.size(); i++){
+				BackboneTrackPoint btp = BackboneTrackPoint.convertMTPtoBTP((MaggotTrackPoint)track.points.get(i), params.numBBPts);
+				BTPs.add(btp);
 			}
-			run();
+		} else {
+			//TODO reload the points as BTP
 		}
-		else{
-			//convert the points to mtp?
-			
-		}
+		
+		//Run the fitting algorithm
+		run();
+		//Tell the BackboneTrackPoints to store the final backbones
+		finalizeBackbones();
+		
 	}
 	
+	/**
+	 * Runs the fitting algorithm
+	 * <p>
+	 * An updating scheme is maintained, which alternates between fitting every point 
+	 * and fitting just the points which are still changing significantly
+	 */
 	protected void run(){
 		
+		//TODO: Write updating scheme. Maybe write it as a separate BBFUpdater
 		
-		//TODO Set update scheme variables
+		//KeepRunning-type trackers
 		boolean done = false;
 		boolean finalIterations = false;
 		
+		//Indices used to indicate which points should be relaxed
 		int[] defaultInds = new int[track.points.size()];
 		for(int i=0; i<defaultInds.length; i++) defaultInds[i]=i;
 		int[] inds = defaultInds;
@@ -96,86 +119,91 @@ public class BackboneFitter {
 		while(!done || finalIterations){
 			
 			//Work on the data
-			double shift = relaxBackbones(inds);
+			relaxBackbones(inds);
+			
+			//calcEnergies();
 			
 			//Maintain the updating scheme
+			//TODO
 			
 		}
-		
-		calcEnergies();//Store energies
-		finalizeBackbones();
-		
 		
 	}
 	
 	
-	//returns the total point shift from this relaxation step
-	private double relaxBackbones(int[] inds){
+	/**
+	 * Allows the backbones to relax to lower-energy conformations
+	 * @param inds The indices of the BTPs which should be relaxed 
+	 */
+	private void relaxBackbones(int[] inds){
 		
-		double shiftSum=0;
-		
-		//Loop through each backbone in the list
 		for(int i=0; i<inds.length; i++){
 			
-			int ind = inds[i];
-//			BackboneTrackPoint btp = BTPs.get(ind);
-			
-//			setSurroundingPointLists();
-//			btp.bbRelaxationStep(params, beforePts, afterPts);
-			bbRelaxationStep(ind);
-			
-//			shiftSum+=btp.calcPointShift();
+			//Relax each backbone
+			bbRelaxationStep(inds[i]);
 			
 		}
 		
-		return shiftSum;//TODO this might need to be a vector
 	}
 	
+	/**
+	 * Relaxes a backbone to a lower-energy conformation
+	 * @param btpInd Index of the BTP (in BTDs) to be processed
+	 */
 	private void bbRelaxationStep(int btpInd){
 		
-		Vector<FloatPolygon> targetSpines = getTargetSpines(btpInd);
-		calcNewBackbone(targetSpines);
+		//Get the lower-energy backbones for each individual force
+		Vector<FloatPolygon> targetSpines = getTargetBackbones(btpInd);
+		//Combine the single-force backbones into one
+		generateNewBackbone(targetSpines);
+		//Get the shift (and energy?) for use in updating scheme/display
+		shifts[btpInd] = BTPs.get(btpInd).calcPointShift();
 		
 	}
 	
-	
-	private Vector<FloatPolygon> getTargetSpines(int btpInd){
+	/**
+	 * Allows each force to act on the old backbone of the indicated BTP
+	 * @param btpInd Index of the backbone to relax
+	 * @return A vector of all relaxed backbones, in the same order as the list of forces 
+	 */
+	private Vector<FloatPolygon> getTargetBackbones(int btpInd){
 		Vector<FloatPolygon> targetSpines = new Vector<FloatPolygon>();
 		
-		//Iterate over Forces
+		//Store the backbones which are relaxed under individual forces
 		ListIterator<Force> fIt = Forces.listIterator();
 		while(fIt.hasNext()){
-			Force force = fIt.next();
-			FloatPolygon targSpine = force.getTargetPoints(btpInd, BTPs);
-			targetSpines.add(targSpine);
+			targetSpines.add(fIt.next().getTargetPoints(btpInd, BTPs));
 		}
 		
 		return targetSpines;
 		
 	}
 	
-	private void calcNewBackbone(Vector<FloatPolygon> targetSpines){
+	/**
+	 * Generates the new backbone using the individual-force-shifted spines and the weighting parameters
+	 * @param targetSpines
+	 */
+	private void generateNewBackbone(Vector<FloatPolygon> targetSpines){
 		
 	}
 	
-//	private void setSurroundingPointLists(){
-//		//Retrieve the lists of points before and after this one;
-//		beforePts.removeAllElements();
-//		//TODO ADD THEM ACCORDING TO THE PARAMETERS
-//		afterPts.removeAllElements();
-//		//TODO ADD THEM ACCORDING TO THE PARAMETERS
-//	}
-	
-	
-	private void calcEnergies(){
-		
-	}
+
 	
 	private void finalizeBackbones(){
 		ListIterator<BackboneTrackPoint> btpIt = BTPs.listIterator();
 		while(btpIt.hasNext()){
 			btpIt.next().finalizeBackbone();
 		}
+	}
+	
+	
+	
+	public Vector<BackboneTrackPoint> getBackbonePoints(){
+		return BTPs;
+	}
+	
+	public String getForceName(int ind){
+		return Forces.get(ind).getName();
 	}
 	
 	
