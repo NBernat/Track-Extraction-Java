@@ -3,7 +3,9 @@
 public class ImageForce extends Force {
 
 	
-	public ImageForce(){
+	public ImageForce(double[] weights){
+		super(weights, 1,"Image");
+		
 	}
 	
 	

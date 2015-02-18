@@ -2,7 +2,8 @@
 
 public class SpineLengthForce extends Force{
 	
-	public SpineLengthForce(){
+	public SpineLengthForce(double[] weights){
+		super(weights, 2, "Spine-Length");
 	}
 	
 	

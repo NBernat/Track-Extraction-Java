@@ -14,13 +14,33 @@ public class Force {
 	 */
 	final String name;
 	
-	public Force(){
+
+	protected double[] weights;
+	
+	
+	public Force(double[] weights){
 		type = -1;
 		name = "Null";
+		this.weights = weights;
+	}
+	
+	protected Force(double[] weights, int type, String name){
+		this.type = type;
+		this.name = name;
+		this.weights = weights;
+	}
+	
+	protected void init(){
+		
 	}
 	
 	public FloatPolygon getTargetPoints(int btpInd, Vector<BackboneTrackPoint> allBTPs){
 		return null;
+	}
+	
+
+	public double[] getWeights(){
+		return weights;
 	}
 	
 	public void getEnergies(BackboneTrackPoint BTP, Vector<BackboneTrackPoint> allBTPs){

@@ -1,7 +1,6 @@
 import ij.gui.PolygonRoi;
 import ij.process.FloatPolygon;
 
-import java.awt.Point;
 import java.awt.Rectangle;
 import java.util.Vector;
 
@@ -25,7 +24,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	int[] clusterInds;
 	int numBBPts;
 	
-	PolygonRoi backbone;
+	private PolygonRoi backbone;
 	
 	protected transient FloatPolygon bbOld;
 	protected transient FloatPolygon bbNew;
@@ -84,46 +83,9 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		backbone = new PolygonRoi(bbNew, PolygonRoi.POLYLINE);
 	}
 	
-	public void editBBNewPoint(int bbInd, int XorY, float val){
-		switch (XorY){
-			case 0:
-				bbNew.xpoints[bbInd]=val;
-				break;
-			case 1:
-				bbNew.ypoints[bbInd]=val;
-				break;
-		}
+	public void setBBNew(FloatPolygon newBackbone){
+		bbNew = newBackbone;
 	}
-	
-	public void editBBOldPoint(int bbInd, int XorY, float val){
-		switch (XorY){
-			case 0:
-				bbOld.xpoints[bbInd]=val;
-				break;
-			case 1:
-				bbOld.ypoints[bbInd]=val;
-				break;
-		}
-	}
-	
-	public void setBBOld(FloatPolygon replacement){
-		bbOld = replacement;
-	}
-	
-	public FloatPolygon getBBOld(){
-		return bbOld;
-	}
-
-	
-	public void setBBNew(FloatPolygon replacement){
-		bbNew = replacement;
-	}
-	
-	public FloatPolygon getBBNew(){
-		return bbNew;
-	}
-	
-	
 
 
 	/**

@@ -1,4 +1,6 @@
 import ij.process.FloatPolygon;
+
+import java.util.Arrays;
 import java.util.ListIterator;
 import java.util.Vector;
 
@@ -61,12 +63,12 @@ public class BackboneFitter {
 	 */
 	private void addForces(){
 		Forces = new Vector<Force>();
-		Forces.add(new ImageForce());
-		Forces.add(new SpineLengthForce());
-		Forces.add(new SpineSmoothForce());
-		Forces.add(new TimeLengthForce());
-		Forces.add(new TimeSmoothForce());
-		Forces.add(new HTAttractionForce());
+		Forces.add(new ImageForce(params.imageWeights));
+		Forces.add(new SpineLengthForce(params.spineLengthWeights));
+		Forces.add(new SpineSmoothForce(params.spineSmoothWeights));
+		Forces.add(new TimeLengthForce(params.timeLengthWeights));
+		Forces.add(new TimeSmoothForce(params.timeSmoothWeights));
+		Forces.add(new HTAttractionForce(params.HTAttractionWeights));
 	}
 	
 	/**
@@ -126,6 +128,8 @@ public class BackboneFitter {
 			//Maintain the updating scheme
 			//TODO
 			
+			//bbOld = bbNew
+			
 		}
 		
 	}
@@ -153,9 +157,9 @@ public class BackboneFitter {
 	private void bbRelaxationStep(int btpInd){
 		
 		//Get the lower-energy backbones for each individual force
-		Vector<FloatPolygon> targetSpines = getTargetBackbones(btpInd);
-		//Combine the single-force backbones into one
-		generateNewBackbone(targetSpines);
+		Vector<FloatPolygon> targetBackbones = getTargetBackbones(btpInd);
+		//Combine the single-force backbones into one, and set it as the new backbone
+		BTPs.get(btpInd).setBBNew(generateNewBackbone(targetBackbones));
 		//Get the shift (and energy?) for use in updating scheme/display
 		shifts[btpInd] = BTPs.get(btpInd).calcPointShift();
 		
@@ -167,15 +171,15 @@ public class BackboneFitter {
 	 * @return A vector of all relaxed backbones, in the same order as the list of forces 
 	 */
 	private Vector<FloatPolygon> getTargetBackbones(int btpInd){
-		Vector<FloatPolygon> targetSpines = new Vector<FloatPolygon>();
+		Vector<FloatPolygon> targetBackbones = new Vector<FloatPolygon>();
 		
 		//Store the backbones which are relaxed under individual forces
 		ListIterator<Force> fIt = Forces.listIterator();
 		while(fIt.hasNext()){
-			targetSpines.add(fIt.next().getTargetPoints(btpInd, BTPs));
+			targetBackbones.add(fIt.next().getTargetPoints(btpInd, BTPs));
 		}
 		
-		return targetSpines;
+		return targetBackbones;
 		
 	}
 	
@@ -183,11 +187,44 @@ public class BackboneFitter {
 	 * Generates the new backbone using the individual-force-shifted spines and the weighting parameters
 	 * @param targetSpines
 	 */
-	private void generateNewBackbone(Vector<FloatPolygon> targetSpines){
+	private FloatPolygon generateNewBackbone(Vector<FloatPolygon> targetBackbones){
+		
+		float[] zeros = new float[params.numBBPts];
+		Arrays.fill(zeros, 0);
+		
+		FloatPolygon newBackbone = new FloatPolygon(zeros, zeros);
+		float normFactors[] = new float[params.numBBPts];
+		
+		//Add each target backbone to the new background and gather the weighting factors for normalization
+		for (int tb=0; tb<targetBackbones.size(); tb++){
+			
+			float[] targetX = targetBackbones.get(tb).xpoints;
+			float[] targetY = targetBackbones.get(tb).ypoints;
+			double[] weights = Forces.get(tb).getWeights();
+			
+			for (int k=0; k<params.numBBPts; k++){
+				if (weights[k]!=0){
+					newBackbone.xpoints[k] += targetX[k]*weights[k];
+					newBackbone.ypoints[k] += targetY[k]*weights[k];
+					normFactors[k] += weights[k];
+				}
+			}
+			
+		}
+		
+		//Normalize each point
+		for(int k=0; k<params.numBBPts; k++){
+			newBackbone.xpoints[k] = newBackbone.xpoints[k]/normFactors[k];
+			newBackbone.ypoints[k] = newBackbone.ypoints[k]/normFactors[k];
+		}
+		
+		return newBackbone;
 		
 	}
 	
-
+	
+	
+	
 	
 	private void finalizeBackbones(){
 		ListIterator<BackboneTrackPoint> btpIt = BTPs.listIterator();
