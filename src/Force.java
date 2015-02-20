@@ -15,31 +15,29 @@ public class Force {
 	final String name;
 	
 
-	protected double[] weights;
+	protected float[] weights;
 	
 	
-	public Force(double[] weights){
+	public Force(float[] weights, float totalWeight){
 		type = -1;
 		name = "Null";
 		this.weights = weights;
+		for (int i=0; i<this.weights.length; i++) this.weights[i] = this.weights[i]*totalWeight;
 	}
 	
-	protected Force(double[] weights, int type, String name){
+	protected Force(float[] weights, float totalWeight, int type, String name){
 		this.type = type;
 		this.name = name;
 		this.weights = weights;
+		for (int i=0; i<this.weights.length; i++) this.weights[i] = this.weights[i]*totalWeight;
 	}
-	
-	protected void init(){
-		
-	}
-	
+
 	public FloatPolygon getTargetPoints(int btpInd, Vector<BackboneTrackPoint> allBTPs){
 		return null;
 	}
 	
 
-	public double[] getWeights(){
+	public float[] getWeights(){
 		return weights;
 	}
 	

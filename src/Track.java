@@ -79,6 +79,20 @@ public class Track implements Serializable{
 	}
 	
 	
+	public Track(Vector<BackboneTrackPoint> pts){
+		maxHeight=0;
+		maxWidth=0;
+		
+		points = new Vector<TrackPoint>();
+		points.addAll(pts);
+		isCollision = new Vector<Boolean>();
+//		collisions = new Vector<Collision>(); 
+		
+		trackID = lastIDNum;
+		lastIDNum++;
+
+	}
+	
 	public Track(TrackPoint firstPt, TrackBuilder tb){
 		maxHeight=0;
 		maxWidth=0;
@@ -241,28 +255,21 @@ public class Track implements Serializable{
 				point.setTrack(this);
 				
 				//Get the next image
-				trackStack.addSlice(point.getIm());
+				ImageProcessor img = point.getIm();
+//				img.
+				trackStack.addSlice(img);
 				
 //				trStr += point.infoSpill();
 			}
 				
 			//Show the stack
 			ImagePlus trackPlus = new ImagePlus("Track "+trackID+": frames "+points.firstElement().frameNum+"-"+points.lastElement().frameNum ,trackStack);
+			
+//			trackPlus.flatten();
 			trackPlus.show();
 //			TextWindow tWin = new TextWindow("Track "+trackID+" info", trStr, 500, 500);
 			
 		}
-	}
-	
-	public static void pause (int time)
-	{
-	     try                            //opens an exception handling statement
-	     {
-	          Thread.sleep(time);
-	     }
-	     catch(InterruptedException e)  //captures the exception
-	     {
-	     }
 	}
 	
 

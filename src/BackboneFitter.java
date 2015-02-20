@@ -1,4 +1,6 @@
+import ij.IJ;
 import ij.process.FloatPolygon;
+import ij.text.TextWindow;
 
 import java.util.Arrays;
 import java.util.ListIterator;
@@ -29,7 +31,7 @@ public class BackboneFitter {
 	Track track;
 	
 	/**
-	 * A List of the BbTP's, worked on during  
+	 * A List of the BbTP's, worked on during fitting algorithm
 	 */
 	Vector<BackboneTrackPoint> BTPs;
 	
@@ -46,6 +48,8 @@ public class BackboneFitter {
 	 * The final energy of each backbone point 
 	 */
 	
+	transient Communicator comm;
+	
 	
 	/**
 	 * Constructs a backbone fitter
@@ -54,21 +58,25 @@ public class BackboneFitter {
 		 
 		params = new FittingParameters();
 		
-		addForces();
+		int pass=0;
+		addForces(pass);
+		
+		comm = new Communicator();
+		comm.setVerbosity(VerbLevel.verb_debug);
 		
 	}
 	
 	/**
 	 * Adds instances of each type of Force to the backbone fitter
 	 */
-	private void addForces(){
+	private void addForces(int pass){
 		Forces = new Vector<Force>();
-		Forces.add(new ImageForce(params.imageWeights));
-		Forces.add(new SpineLengthForce(params.spineLengthWeights));
-		Forces.add(new SpineSmoothForce(params.spineSmoothWeights));
-		Forces.add(new TimeLengthForce(params.timeLengthWeights));
-		Forces.add(new TimeSmoothForce(params.timeSmoothWeights));
-		Forces.add(new HTAttractionForce(params.HTAttractionWeights));
+		Forces.add(new ImageForce(params.imageWeights, params.imageWeight));
+		Forces.add(new SpineLengthForce(params.spineLengthWeights, params.spineLengthWeight));
+		Forces.add(new SpineSmoothForce(params.spineSmoothWeights, params.spineSmoothWeight));
+		Forces.add(new TimeLengthForce(params.timeLengthWeights, params.timeLengthWeight[pass]));
+		Forces.add(new TimeSmoothForce(params.timeSmoothWeights, params.timeSmoothWeight[pass]));
+//		Forces.add(new HTAttractionForce(params.HTAttractionWeights));
 	}
 	
 	/**
@@ -82,19 +90,44 @@ public class BackboneFitter {
 		track = tr;
 		//Extract a list of the TrackPoints and convert them to BackboneTrackPoints to hold the new backbone info 
 		BTPs = new Vector<BackboneTrackPoint>();
-		if(track.points.get(0).pointType==2){
-			for(int i=0; i<track.points.size(); i++){
-				BackboneTrackPoint btp = BackboneTrackPoint.convertMTPtoBTP((MaggotTrackPoint)track.points.get(i), params.numBBPts);
-				BTPs.add(btp);
+		try{
+			if(track.points.get(0) instanceof MaggotTrackPoint){//track.points.get(0).pointType==2
+				for(int i=0; i<track.points.size(); i++){
+					comm.message("Getting mtp...", VerbLevel.verb_debug);
+					MaggotTrackPoint mtp = (MaggotTrackPoint)track.points.get(i);
+					if(mtp==null){
+						comm.message("Point "+i+" was not able to be cast", VerbLevel.verb_error);
+					} else{
+						mtp.comm=comm;
+					}
+					comm.message("Converting point "+i+" into a BTP", VerbLevel.verb_debug);
+					BackboneTrackPoint btp = BackboneTrackPoint.convertMTPtoBTP(mtp, params.numBBPts);
+					
+					if(btp==null){
+						comm.message("convertMTPtoBTP returned null, mtp.midline was null", VerbLevel.verb_debug);
+					} else{
+						comm.message("convertMTPtoBTP successful", VerbLevel.verb_debug);
+					}
+					
+					btp.bf = this;
+					BTPs.add(btp);
+				}
+				
+			} else {
+				comm.message("Never made any points", VerbLevel.verb_error);
+				//TODO reload the points as BTP
 			}
-		} else {
-			//TODO reload the points as BTP
+		}catch(Exception e){
+			comm.message(e.getMessage(), VerbLevel.verb_debug);
+		}
+		if (!comm.outString.equals("")){
+			new TextWindow("TrackFitter", comm.outString, 500, 500);
 		}
 		
 		//Run the fitting algorithm
 		run();
 		//Tell the BackboneTrackPoints to store the final backbones
-		finalizeBackbones();
+//		finalizeBackbones();
 		
 	}
 	
@@ -118,7 +151,7 @@ public class BackboneFitter {
 		int[] inds = defaultInds;
 
 		//Run iterative updates of backbones in track
-		while(!done || finalIterations){
+//		while(!done || finalIterations){
 			
 			//Work on the data
 			relaxBackbones(inds);
@@ -127,10 +160,12 @@ public class BackboneFitter {
 			
 			//Maintain the updating scheme
 			//TODO
+//			for(int i=0; i<BTPs.size(); i++){
+//				BTPs.get(i).setupForNextRelaxationStep();
+//			}
 			
-			//bbOld = bbNew
 			
-		}
+//		}
 		
 	}
 	
@@ -142,7 +177,7 @@ public class BackboneFitter {
 	private void relaxBackbones(int[] inds){
 		
 		for(int i=0; i<inds.length; i++){
-			
+			IJ.showStatus("Relaxing frame "+inds[i]);
 			//Relax each backbone
 			bbRelaxationStep(inds[i]);
 			
@@ -156,12 +191,14 @@ public class BackboneFitter {
 	 */
 	private void bbRelaxationStep(int btpInd){
 		
+		IJ.showStatus("Getting target backbones in frame "+btpInd);
 		//Get the lower-energy backbones for each individual force
 		Vector<FloatPolygon> targetBackbones = getTargetBackbones(btpInd);
 		//Combine the single-force backbones into one, and set it as the new backbone
+		IJ.showStatus("Setting bbNew in frame "+btpInd);
 		BTPs.get(btpInd).setBBNew(generateNewBackbone(targetBackbones));
 		//Get the shift (and energy?) for use in updating scheme/display
-		shifts[btpInd] = BTPs.get(btpInd).calcPointShift();
+//		shifts[btpInd] = BTPs.get(btpInd).calcPointShift();
 		
 	}
 	
@@ -192,33 +229,38 @@ public class BackboneFitter {
 		float[] zeros = new float[params.numBBPts];
 		Arrays.fill(zeros, 0);
 		
-		FloatPolygon newBackbone = new FloatPolygon(zeros, zeros);
+		float[] newX = new float[params.numBBPts];
+		Arrays.fill(newX, 0);
+		float[] newY = new float[params.numBBPts];
+		Arrays.fill(newY,  0);
 		float normFactors[] = new float[params.numBBPts];
+		Arrays.fill(normFactors, 0);
 		
-		//Add each target backbone to the new background and gather the weighting factors for normalization
+		IJ.showStatus("Gathering target backbones...");
+		//Add each target backbone to the new backbone and gather the weighting factors for normalization
 		for (int tb=0; tb<targetBackbones.size(); tb++){
 			
 			float[] targetX = targetBackbones.get(tb).xpoints;
 			float[] targetY = targetBackbones.get(tb).ypoints;
-			double[] weights = Forces.get(tb).getWeights();
+			float[] weights = Forces.get(tb).getWeights();
 			
 			for (int k=0; k<params.numBBPts; k++){
 				if (weights[k]!=0){
-					newBackbone.xpoints[k] += targetX[k]*weights[k];
-					newBackbone.ypoints[k] += targetY[k]*weights[k];
+					newX[k] += targetX[k]*weights[k];
+					newY[k] += targetY[k]*weights[k];
 					normFactors[k] += weights[k];
 				}
 			}
 			
 		}
-		
+		IJ.showStatus("Normalizing points");
 		//Normalize each point
 		for(int k=0; k<params.numBBPts; k++){
-			newBackbone.xpoints[k] = newBackbone.xpoints[k]/normFactors[k];
-			newBackbone.ypoints[k] = newBackbone.ypoints[k]/normFactors[k];
+			newX[k] = newX[k]/normFactors[k];
+			newY[k] = newY[k]/normFactors[k];
 		}
 		
-		return newBackbone;
+		return new FloatPolygon(newX, newY);
 		
 	}
 	
@@ -235,7 +277,7 @@ public class BackboneFitter {
 	
 	
 	
-	public Vector<BackboneTrackPoint> getBackbonePoints(){
+	public Vector<BackboneTrackPoint> getBackboneTrackPoints(){
 		return BTPs;
 	}
 	

@@ -42,13 +42,14 @@ public class MaggotTrackPoint extends ImTrackPoint {
 //	PolygonRoi contour;
 	Vector<ContourPoint> cont;
 	
-	ContourPoint head;
+	ContourPoint head; //RELATIVE TO IMAGE RECT
 	int headi;
-	ContourPoint tail;
+	ContourPoint tail; //RELATIVE TO IMAGE RECT
 	int taili;
 	
-	PolygonRoi midline;
-	ContourPoint midpoint;
+	//Head=0, tail=end 
+	PolygonRoi midline; //RELATIVE TO IMAGE RECT
+	ContourPoint midpoint; //RELATIVE TO IMAGE RECT
 	
 //	int minX;
 //	int minY;
@@ -97,7 +98,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		findHTMidline(maxContourAngle, numMidCoords);
 	}
 	
-	public void findContours(){
+	private void findContours(){
 		comm.message("Finding Contours", VerbLevel.verb_debug);
 		ImagePlus thrIm = new ImagePlus("", im.getBufferedImage());//copies image
 		ImageProcessor thIm = thrIm.getProcessor();
@@ -135,7 +136,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	
 
 
-	public void findHTMidline(double maxAngle, int numMidPts){
+	private void findHTMidline(double maxAngle, int numMidPts){
 		
 		findHT(maxAngle);
 		
@@ -145,7 +146,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		
 	}
 	
-	public void findHT(double maxAngle){
+	private void findHT(double maxAngle){
 		///////////////////////////////
 		///// Make a list of candidates 
 		///////////////////////////////
@@ -305,7 +306,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		
 	}
 	
-	public void deriveMidline(int numMidPts){
+	private void deriveMidline(int numMidPts){
 		
 		comm.message("Entering Midline creation", VerbLevel.verb_debug);
 		if(htValid && cont.get(headi)!=null && cont.get(taili)!=null){
@@ -356,11 +357,13 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			float[] midY;
 			
 			if (leftSeg.getNCoordinates()==rightSeg.getNCoordinates()){
+				FloatPolygon leftSegF = leftSeg.getFloatPolygon();
+				FloatPolygon rightSegF = rightSeg.getFloatPolygon();
 				midX = new float[leftSeg.getNCoordinates()-2];
 				midY = new float[leftSeg.getNCoordinates()-2];
 				for (int i=1;i<(leftSeg.getNCoordinates()-1); i++){
-					midX[i-1] = (float) ((leftSeg.getXCoordinates()[i]+(int)leftSeg.getXBase()+rightSeg.getXCoordinates()[i]+(int)rightSeg.getXBase())/2.0);
-					midY[i-1] = (float) ((leftSeg.getYCoordinates()[i]+(int)leftSeg.getYBase()+rightSeg.getYCoordinates()[i]+(int)rightSeg.getYBase())/2.0);
+					midX[i-1] = (leftSegF.xpoints[i]+rightSegF.xpoints[i])/2.0f;
+					midY[i-1] = (leftSegF.ypoints[i]+rightSegF.ypoints[i])/2.0f;
 				}
 				
 				//Assign the midline
@@ -368,8 +371,8 @@ public class MaggotTrackPoint extends ImTrackPoint {
 				
 				//Assign the midpoint
 				int midi = midX.length/2;//don't need to add 1, b/c of zero indexing; e.g. (11 pts)/2=5, which is the 6th point
-				int midpointX = (int) ((leftSeg.getXCoordinates()[midi]+(int)leftSeg.getXBase()+rightSeg.getXCoordinates()[midi]+(int)rightSeg.getXBase())/2.0);
-				int midpointY = (int) ((leftSeg.getYCoordinates()[midi]+(int)leftSeg.getYBase()+rightSeg.getYCoordinates()[midi]+(int)rightSeg.getYBase())/2.0);
+				int midpointX = (int) ((leftSeg.getXCoordinates()[midi]+leftSeg.getXBase()+rightSeg.getXCoordinates()[midi]+rightSeg.getXBase())/2.0);
+				int midpointY = (int) ((leftSeg.getYCoordinates()[midi]+leftSeg.getYBase()+rightSeg.getYCoordinates()[midi]+rightSeg.getYBase())/2.0);
 				midpoint = new ContourPoint(midpointX, midpointY);
 				
 			} else {
@@ -385,14 +388,14 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		
 	}
 	
-	public PolygonRoi getInterpolatedSegment(PolygonRoi origSegment, int numPts){
+	public static PolygonRoi getInterpolatedSegment(PolygonRoi origSegment, int numPts){
 
 		double spacing = (origSegment.getLength())/(numPts-1);
 
 		PolygonRoi retSeg = new PolygonRoi(origSegment.getInterpolatedPolygon(spacing, true), Roi.POLYLINE);
 		
 		if (retSeg.getNCoordinates()!=numPts){
-			comm.message("Initial interpolation spacing was incorrect, there were "+retSeg.getNCoordinates()+"points", VerbLevel.verb_debug);
+			//comm.message("Initial interpolation spacing was incorrect, there were "+retSeg.getNCoordinates()+"points", VerbLevel.verb_debug);
 			double changeFact;
 			if ((retSeg.getNCoordinates()-numPts)>0){ //too many points
 				//increase the spacing slightly, check
@@ -408,10 +411,10 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			
 		}
 		if(retSeg.getNCoordinates()==numPts){
-			comm.message("Interpolated Segment was created with correct number of points", VerbLevel.verb_debug);
+			//comm.message("Interpolated Segment was created with correct number of points", VerbLevel.verb_debug);
 			return retSeg;
 		} else {
-			comm.message("Segment could not be found with the proper number of coordinates (currently "+retSeg.getNCoordinates()+")", VerbLevel.verb_debug);
+			//comm.message("Segment could not be found with the proper number of coordinates (currently "+retSeg.getNCoordinates()+")", VerbLevel.verb_debug);
 			return origSegment;
 		}
 	}
@@ -496,7 +499,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	 * Tries to flip the midline
 	 * @return An inverted midline
 	 */
-	public PolygonRoi invertMidline(){
+	private PolygonRoi invertMidline(){
 		if (!htValid || midline==null || midline.getNCoordinates()==0){
 			if (track!=null && track.tb!=null){
 				track.tb.comm.message("tried to flip HT, but HT is not valid.", VerbLevel.verb_debug);
@@ -526,7 +529,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	/**
 	 * Swaps the location of the head and tail, if they exist
 	 */
-	public void flipHT(){
+	private void flipHT(){
 
 		if (!htValid){
 			comm.message("tried to flip HT, but HT is not valid.", VerbLevel.verb_debug);
@@ -606,7 +609,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	 * @param offY Y offset of the TrackPoint coordinates compared to the origin of grayIm
 	 * @return The trackpoint features drawn atop the grayscale image
 	 */
-	public ImageProcessor drawFeatures(ImageProcessor grayIm, int offX, int offY){
+	protected ImageProcessor drawFeatures(ImageProcessor grayIm, int offX, int offY){
 		
 		ImageProcessor im = grayIm.convertToRGB();
 				
@@ -684,7 +687,13 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	
 	
 	public void copyInfoIntoBTP(BackboneTrackPoint btp){
+		
+		if(comm!=null){
+			comm.message("Copying info from MTP"+pointID+" to BTP"+btp.pointID, VerbLevel.verb_debug);
+		}
+		
 		//Maggot fields
+		try{
 		btp.prev = prev;
 		btp.next = next;
 		btp.contourStart = contourStart;
@@ -712,10 +721,18 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		btp.imOriginY = imOriginY;
 		btp.trackWindowHeight = trackWindowHeight;
 		btp.trackWindowWidth = trackWindowWidth;
+		} catch(Exception e){
+			if(comm!=null){
+				comm.message(e.getMessage(), VerbLevel.verb_error);
+			}
+		}
+		
 		
 		//TrackPoint fields
 		//Set in constructor (x, y, rect, area, frame, thresh, etc)
-		
+		if(comm!=null){
+			comm.message("Copy successful", VerbLevel.verb_debug);
+		}
 	}
 	
 	

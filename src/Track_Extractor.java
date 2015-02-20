@@ -65,7 +65,12 @@ public class Track_Extractor implements PlugIn{
 			IJ.showStatus("Experiment Opened");
 			////// 
 			
-			
+			IJ.showStatus("Creating Backbone Fitter");
+			BackboneFitter bbf = new BackboneFitter();
+			IJ.showStatus("Fitting Track");
+			bbf.fitTrack(ex.tracks.get(0));
+			IJ.showStatus("Track fit!");
+			ex.tracks.add(new Track(bbf.BTPs));
 			ExperimentFrame exFrame = new ExperimentFrame(ex);
 			exFrame.run(null);
 			

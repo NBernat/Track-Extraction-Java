@@ -3,8 +3,8 @@
 public class HTAttractionForce extends Force {
 
 	
-	public HTAttractionForce(double[] weights){
-		super(weights, 6, "Head-Tail Attraction");
+	public HTAttractionForce(float[] weights, float totalWeight){
+		super(weights, totalWeight, 6, "Head-Tail Attraction");
 	}
 	
 	
