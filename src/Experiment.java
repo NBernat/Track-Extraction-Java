@@ -67,12 +67,12 @@ public class Experiment implements Serializable{
 	/**
 	 * Saves this Experiment in the specified dir+filename
 	 * @param dir The directory in which to save the file(; if empty, saves in current directory?)
-	 * @param filename The file name, to which the extension ".ser" will be added 
+	 * @param filename The file name including the extension
 	 */
 	public void save(String dir, String filename){
 		
 		//TODO CHECK THE DIR/FILENAME
-		fname = dir+File.separator+filename+".ser";
+		fname = dir+File.separator+filename;
 		File f = new File(fname);
 		
 		//Pre-serialize the tracks 

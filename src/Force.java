@@ -25,6 +25,8 @@ public class Force {
 		for (int i=0; i<this.weights.length; i++) this.weights[i] = this.weights[i]*totalWeight;
 	}
 	
+	
+	
 	protected Force(float[] weights, float totalWeight, int type, String name){
 		this.type = type;
 		this.name = name;
