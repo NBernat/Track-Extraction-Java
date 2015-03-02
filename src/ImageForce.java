@@ -32,8 +32,8 @@ public class ImageForce extends Force {
 		for (int pix=0; pix<btp.getNumPix(); pix++){
 			int k=btp.getClusterInds(pix);
 			
-			targetX[k] += btp.getMagPixI(pix)*btp.getMagPixX(pix);
-			targetY[k] += btp.getMagPixI(pix)*btp.getMagPixY(pix);
+			targetX[k] += btp.getMagPixI(pix)*(btp.getMagPixX(pix));
+			targetY[k] += btp.getMagPixI(pix)*(btp.getMagPixY(pix));
 			norm[k] += btp.getMagPixI(pix);
 		}
 		//Normalize the coordinates

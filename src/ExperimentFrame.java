@@ -244,7 +244,6 @@ class TrackPanel extends JPanel {
 		//Update the track
 		this.track = track;
 		//Update the message and scroll to the top
-//		descriptionPanel.getc
 		trackDescription.setText(track.description());
 		trackDescription.setCaretPosition(0);
 		

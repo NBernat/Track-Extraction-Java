@@ -1,4 +1,3 @@
-import ij.IJ;
 import ij.process.FloatPolygon;
 import ij.text.TextWindow;
 
@@ -18,7 +17,7 @@ public class BackboneFitter {
 	/**
 	 * Fitting parameters
 	 */
-	FittingParameters params;
+	private FittingParameters params;
 	
 	/**
 	 * Forces which act upon the backbones
@@ -39,6 +38,8 @@ public class BackboneFitter {
 	 * The amount that each backbone in the track shifted during the last iteration that acted upon any given point
 	 */
 	private double[] shifts;
+	
+	private BBFUpdateScheme updater;
 	
 	/**
 	 * The final forces acting on each backbone point
@@ -62,7 +63,7 @@ public class BackboneFitter {
 		addForces(pass);
 		
 		comm = new Communicator();
-		comm.setVerbosity(VerbLevel.verb_debug);
+		comm.setVerbosity(VerbLevel.verb_off);
 		
 	}
 	
@@ -88,8 +89,9 @@ public class BackboneFitter {
 	public void fitTrack(Track tr){
 		
 		track = tr;
-		//Extract a list of the TrackPoints and convert them to BackboneTrackPoints to hold the new backbone info 
 		BTPs = new Vector<BackboneTrackPoint>();
+		
+		//Extract a list of the TrackPoints and convert them to BackboneTrackPoints to hold the new backbone info
 		try{
 			if(track.points.get(0) instanceof MaggotTrackPoint){//track.points.get(0).pointType==2
 				for(int i=0; i<track.points.size(); i++){
@@ -120,14 +122,22 @@ public class BackboneFitter {
 		}catch(Exception e){
 			comm.message(e.getMessage(), VerbLevel.verb_debug);
 		}
-		if (!comm.outString.equals("")){
-			new TextWindow("TrackFitter", comm.outString, 500, 500);
-		}
+
+		//Set the updater
+		updater = new BBFUpdateScheme(BTPs.size());
+		shifts = new double[BTPs.size()];
 		
 		//Run the fitting algorithm
 		run();
-		//Tell the BackboneTrackPoints to store the final backbones
-//		finalizeBackbones();
+		
+		
+		//Show the fitting message, if necessary
+//		if (!comm.outString.equals("")){
+//			new TextWindow("TrackFitter", comm.outString, 500, 500);
+//		}
+		if (!updater.comm.outString.equals("")){
+			new TextWindow("TrackFitting Updater", updater.comm.outString, 500, 500);
+		}
 		
 	}
 	
@@ -138,34 +148,24 @@ public class BackboneFitter {
 	 * and fitting just the points which are still changing significantly
 	 */
 	protected void run(){
-		
-		//TODO: Write updating scheme. Maybe write it as a separate BBFUpdater
-		
-		//KeepRunning-type trackers
-		boolean done = false;
-		boolean finalIterations = false;
-		
-		//Indices used to indicate which points should be relaxed
-		int[] defaultInds = new int[track.points.size()];
-		for(int i=0; i<defaultInds.length; i++) defaultInds[i]=i;
-		int[] inds = defaultInds;
-
-		//Run iterative updates of backbones in track
-//		while(!done || finalIterations){
+		int iterCount = 0;
+		do {	
 			
-			//Work on the data
-			relaxBackbones(inds);
+			comm.message("Iteration number "+iterCount, VerbLevel.verb_debug);
+			iterCount++;
 			
-			//calcEnergies();
+			//Do a relaxation step
+			comm.message("Updating "+updater.inds2Update().length+" backbones", VerbLevel.verb_debug);
+			relaxBackbones(updater.inds2Update());
 			
-			//Maintain the updating scheme
-			//TODO
-//			for(int i=0; i<BTPs.size(); i++){
-//				BTPs.get(i).setupForNextRelaxationStep();
-//			}
+			//Setup for the next step
+			for(int i=0; i<BTPs.size(); i++){				
+				shifts[i] = BTPs.get(i).calcPointShift();
+				BTPs.get(i).setupForNextRelaxationStep();
+			}
 			
 			
-//		}
+		} while(updater.keepGoing(shifts)); 
 		
 	}
 	
@@ -177,7 +177,7 @@ public class BackboneFitter {
 	private void relaxBackbones(int[] inds){
 		
 		for(int i=0; i<inds.length; i++){
-			IJ.showStatus("Relaxing frame "+inds[i]);
+			comm.message("Relaxing frame "+inds[i], VerbLevel.verb_debug);
 			//Relax each backbone
 			bbRelaxationStep(inds[i]);
 			
@@ -191,11 +191,11 @@ public class BackboneFitter {
 	 */
 	private void bbRelaxationStep(int btpInd){
 		
-		IJ.showStatus("Getting target backbones in frame "+btpInd);
+//		IJ.showStatus("Getting target backbones in frame "+btpInd);
 		//Get the lower-energy backbones for each individual force
 		Vector<FloatPolygon> targetBackbones = getTargetBackbones(btpInd);
 		//Combine the single-force backbones into one, and set it as the new backbone
-		IJ.showStatus("Setting bbNew in frame "+btpInd);
+//		IJ.showStatus("Setting bbNew in frame "+btpInd);
 		BTPs.get(btpInd).setBBNew(generateNewBackbone(targetBackbones));
 		//Get the shift (and energy?) for use in updating scheme/display
 //		shifts[btpInd] = BTPs.get(btpInd).calcPointShift();
@@ -236,7 +236,7 @@ public class BackboneFitter {
 		float normFactors[] = new float[params.numBBPts];
 		Arrays.fill(normFactors, 0);
 		
-		IJ.showStatus("Gathering target backbones...");
+		comm.message("Gathering target backbones...", VerbLevel.verb_debug);
 		//Add each target backbone to the new backbone and gather the weighting factors for normalization
 		for (int tb=0; tb<targetBackbones.size(); tb++){
 			
@@ -253,7 +253,7 @@ public class BackboneFitter {
 			}
 			
 		}
-		IJ.showStatus("Normalizing points");
+		comm.message("Normalizing points", VerbLevel.verb_debug);
 		//Normalize each point
 		for(int k=0; k<params.numBBPts; k++){
 			newX[k] = newX[k]/normFactors[k];
@@ -268,7 +268,7 @@ public class BackboneFitter {
 	
 	
 	
-	private void finalizeBackbones(){
+	protected void finalizeBackbones(){
 		ListIterator<BackboneTrackPoint> btpIt = BTPs.listIterator();
 		while(btpIt.hasNext()){
 			btpIt.next().finalizeBackbone();

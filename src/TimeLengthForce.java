@@ -1,6 +1,4 @@
 import ij.process.FloatPolygon;
-import ij.text.TextWindow;
-
 import java.util.Arrays;
 import java.util.Vector;
 

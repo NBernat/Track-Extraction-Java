@@ -51,12 +51,6 @@ public class Track_Extractor implements PlugIn{
 			IJ.showStatus("Converting to Experiment");
 			Experiment exp = tb.toExperiment();
 			
-			//TODO put this in experiment frame vv
-			//Save it to file...
-//			IJ.showStatus("Saving file");
-//			exp.save("C:\\Users\\Natalie\\Documents", "testSer");
-//			String fname = exp.fname;
-			
 			ef = new ExperimentFrame(exp);
 			ef.run(null);
 			

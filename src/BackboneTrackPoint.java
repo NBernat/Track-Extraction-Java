@@ -1,13 +1,10 @@
 import ij.ImagePlus;
-import ij.gui.Line;
-import ij.gui.Overlay;
 import ij.gui.PolygonRoi;
 import ij.process.FloatPolygon;
 import ij.process.ImageProcessor;
 
 import java.awt.Color;
 import java.awt.Rectangle;
-import java.util.Vector;
 
 
 /**
@@ -65,6 +62,10 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	 */
 	private PolygonRoi backbone;
 	
+	/**
+	 * For plotting
+	 */
+	protected transient FloatPolygon bbInit;
 	/**
 	 * Temporary backbone used to fit the final backbone
 	 */
@@ -144,6 +145,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		if (initBB.getNCoordinates()!=numBBPts){
 			initBB = MaggotTrackPoint.getInterpolatedSegment(initBB, numPts);
 		}
+		bbInit = initBB.getFloatPolygon();
 		bbOld = initBB.getFloatPolygon();
 		
 	}
@@ -174,8 +176,8 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		for(int X=0; X<maskIm.getWidth(); X++){
 			for (int Y=0; Y<maskIm.getHeight(); Y++){
 				if(maskIm.getPixel(X,Y)>thresh){
-					MagPixX[numPix] = X+rect.x;
-					MagPixY[numPix] = Y+rect.y;
+					MagPixX[numPix] = X+rect.x+1;
+					MagPixY[numPix] = Y+rect.y+1;
 					MagPixI[numPix] = maskIm.getPixel(X, Y);
 					
 					numPix++;
@@ -221,7 +223,14 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 
 	public double calcPointShift(){
 		//Calculate the change between the old and new backbones
-		return -1.0;
+		double shift = 0;
+		for(int i=0; i<numBBPts; i++){
+			double xs = bbNew.xpoints[i]-bbOld.xpoints[i];
+			double ys = bbNew.ypoints[i]-bbOld.ypoints[i];
+			shift += (xs*xs)+(ys*ys);
+		}
+		
+		return shift;
 	}
 	
 
@@ -268,6 +277,16 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		return clusterInds[ind];
 	}
 	
+	public double getEnergy(){
+		//TODO 
+		return 0.0;
+	}
+	
+	
+	public PolygonRoi getBackbone(){
+		return backbone;
+	}
+	
 	public ImageProcessor getIm(){
 
 		int expandFac = 10;//TODO MOVE TO PARAMETERS
@@ -305,33 +324,36 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		
 //		im.drawRoi(midline);
 		
-//		Color[] colors = {Color.WHITE, Color.PINK, Color.MAGENTA, Color.RED, Color.ORANGE, Color.YELLOW, Color.GREEN, Color.CYAN, Color.BLUE};
-//		
-//		for (int i=0; i<numPix; i++){
-//			im.setColor(colors[clusterInds[i]]);
-//			im.drawOval((int)(expandFac*(MagPixX[i]-rect.x)+offX), (int)(expandFac*(MagPixY[i]-rect.y)+offY), 8, 8);
-//		}
+		Color[] colors = {Color.WHITE, Color.PINK, Color.MAGENTA, Color.RED, Color.ORANGE, Color.YELLOW, Color.GREEN, Color.CYAN, Color.BLUE};
 		
-//		FloatPolygon floatMidline = midline.getFloatPolygon();
-//		
-//		im.setColor(Color.YELLOW);
-//		if (midline!=null){
-//			for (int i=0; i<midline.getNCoordinates(); i++){
-//				int dotX = offX + (int)(expandFac*(floatMidline.xpoints[i]));//(int)((floatMidline.xpoints[i]+offX)*expandFac);
-//				int dotY = offY + (int)(expandFac*(floatMidline.ypoints[i]));
-////				im.drawOval(dotX-8, dotY-8, 16, 16);
+		for (int i=0; i<numPix; i++){
+			im.setColor(colors[clusterInds[i]]);
+			im.drawOval((int)(expandFac*(MagPixX[i]-rect.x)+offX)-1-5, (int)(expandFac*(MagPixY[i]-rect.y)+offY)-1-5, 2, 2);
+		}
+		
+		
+		
+		im.setColor(Color.BLUE);
+		if (midline!=null){
+			FloatPolygon floatMidline = midline.getFloatPolygon();
+			for (int i=0; i<midline.getNCoordinates(); i++){
+				int dotX = offX + (int)(expandFac*(floatMidline.xpoints[i]));
+				int dotY = offY + (int)(expandFac*(floatMidline.ypoints[i]));
+//				im.drawOval(dotX-8, dotY-8, 16, 16);
 //				im.drawOval(dotX-4, dotY-4, 8, 8);
-//			}
-//		}
+				im.drawDot(dotX, dotY);
+			}
+		}
 		
 		
 		im.setColor(Color.YELLOW);
-		if (bbOld!=null){
-			for (int i=0; i<bbOld.npoints; i++){
-				int dotX = offX + (int)(expandFac*(bbOld.xpoints[i]-rect.x));
-				int dotY = offY + (int)(expandFac*(bbOld.ypoints[i]-rect.y));
+		if (bbInit!=null){
+			for (int i=0; i<bbInit.npoints; i++){
+				int dotX = offX + (int)(expandFac*(bbInit.xpoints[i]-rect.x));
+				int dotY = offY + (int)(expandFac*(bbInit.ypoints[i]-rect.y));
 //				im.drawOval(dotX-8, dotY-8, 16, 16);
-				im.drawOval(dotX-4, dotY-4, 8, 8);
+				im.drawOval(dotX-1, dotY-1, 2, 2);
+//				im.drawDot(dotX, dotY);
 			}
 		}
 		
@@ -339,11 +361,11 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		
 //		
 		
-		im.setColor(Color.BLUE);
-		for (int i=0; i<(cont.size()-1); i++){
-			im.drawLine(expandFac*cont.get(i).x+offX, expandFac*cont.get(i).y+offY, expandFac*cont.get(i+1).x+offX, expandFac*cont.get(i+1).y+offY);
-		}
-		im.drawLine(expandFac*cont.get(cont.size()-1).x+offX, expandFac*cont.get(cont.size()-1).y+offY, expandFac*cont.get(0).x+offX, expandFac*cont.get(0).y+offY);
+//		im.setColor(Color.BLUE);
+//		for (int i=0; i<(cont.size()-1); i++){
+//			im.drawLine(expandFac*cont.get(i).x+offX, expandFac*cont.get(i).y+offY, expandFac*cont.get(i+1).x+offX, expandFac*cont.get(i+1).y+offY);
+//		}
+//		im.drawLine(expandFac*cont.get(cont.size()-1).x+offX, expandFac*cont.get(cont.size()-1).y+offY, expandFac*cont.get(0).x+offX, expandFac*cont.get(0).y+offY);
 		
 		
 //		int dotX = offX + (int)(expandFac*(floatMidline.xpoints[i]-rect.x));//(int)((floatMidline.xpoints[i]+offX)*expandFac);
@@ -351,14 +373,14 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		
 		
 		
-		im.setColor(Color.RED);
-		if (head!=null){
-			im.drawOval((int)expandFac*head.x+offX, (int)expandFac*head.y+offY, 5, 5);
-		}
-		im.setColor(Color.GREEN);
-		if (tail!=null){
-			im.drawOval((int)expandFac*tail.x+offX, (int)expandFac*tail.y+offY, 5, 5);
-		}
+//		im.setColor(Color.RED);
+//		if (head!=null){
+//			im.drawOval((int)expandFac*head.x+offX, (int)expandFac*head.y+offY, 5, 5);
+//		}
+//		im.setColor(Color.GREEN);
+//		if (tail!=null){
+//			im.drawOval((int)expandFac*tail.x+offX, (int)expandFac*tail.y+offY, 5, 5);
+//		}
 		
 		
 		//DRAW THE FORCES
@@ -366,37 +388,38 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		
 		
 		
-		Color[] colors = {Color.WHITE, Color.MAGENTA,Color.GREEN, Color.CYAN, Color.RED};
-		for(int f=0; f<bf.Forces.size(); f++){
-//		int f=4;
-			
-			im.setColor(colors[f]);
-			
-			FloatPolygon targetPts = bf.Forces.get(f).getTargetPoints(frameNum-bf.BTPs.firstElement().frameNum, bf.BTPs);
-			
-			if (targetPts!=null){
-				for (int i=0; i<targetPts.npoints; i++){
-					
-					int x1 = offX + (int)(expandFac*(bbOld.xpoints[i]-rect.x));
-					int y1 = offY + (int)(expandFac*(bbOld.ypoints[i]-rect.y));
-					int x2 = (int)(expandFac*(targetPts.xpoints[i]-rect.x)+offX);
-					int y2 = (int)(expandFac*(targetPts.ypoints[i]-rect.y)+offY);
-					
-					im.drawLine(x1, y1, x2, y2);
-//					im.drawDot((int)(expandFac*(targetPts.xpoints[i]-rect.x)+offX), (int)(expandFac*(targetPts.ypoints[i]-rect.y)+offY));
-					
-				}
-			}
-			
-		}
+//		Color[] colors = {Color.WHITE, Color.MAGENTA,Color.GREEN, Color.CYAN, Color.RED};
+//		for(int f=0; f<bf.Forces.size(); f++){
+////		int f=4;
+//			
+//			im.setColor(colors[f]);
+//			
+//			FloatPolygon targetPts = bf.Forces.get(f).getTargetPoints(frameNum-bf.BTPs.firstElement().frameNum, bf.BTPs);
+//			
+//			if (targetPts!=null){
+//				for (int i=0; i<targetPts.npoints; i++){
+//					
+//					int x1 = offX + (int)(expandFac*(bbNew.xpoints[i]-rect.x));
+//					int y1 = offY + (int)(expandFac*(bbNew.ypoints[i]-rect.y));
+//					int x2 = (int)(expandFac*(targetPts.xpoints[i]-rect.x)+offX);
+//					int y2 = (int)(expandFac*(targetPts.ypoints[i]-rect.y)+offY);
+//					
+//					im.drawLine(x1, y1, x2, y2);
+////					im.drawDot((int)(expandFac*(targetPts.xpoints[i]-rect.x)+offX), (int)(expandFac*(targetPts.ypoints[i]-rect.y)+offY));
+//					
+//				}
+//			}
+//			
+//		}
 		
 		im.setColor(Color.PINK);
+		im.drawOval(0, 0, 10, 10);
 		if (bbNew!=null){
 			for (int i=0; i<bbNew.npoints; i++){
 				int dotX = offX + (int)(expandFac*(bbNew.xpoints[i]-rect.x));
 				int dotY = offY + (int)(expandFac*(bbNew.ypoints[i]-rect.y));
 //				im.drawOval(dotX-8, dotY-8, 16, 16);
-				im.drawOval(dotX-4, dotY-4, 8, 8);
+				im.drawOval(dotX-4-5, dotY-4-5, 8, 8);
 			}
 		}
 		
@@ -411,15 +434,15 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		return im;
 	}
 	
-	private int getPlotXCoord(float xCoord, int offX, int expandFac){
-		
-		return (int)(offX + expandFac*(xCoord-rect.x));
-	}
-	
-	private int getPlotYCoord(float yCoord, int offY, int expandFac){
-		
-		return (int)(offY + expandFac*(yCoord-rect.x));
-	}
+//	private int getPlotXCoord(float xCoord, int offX, int expandFac){
+//		
+//		return (int)(offX + expandFac*(xCoord-rect.x));
+//	}
+//	
+//	private int getPlotYCoord(float yCoord, int offY, int expandFac){
+//		
+//		return (int)(offY + expandFac*(yCoord-rect.x));
+//	}
 	
 	
 }
