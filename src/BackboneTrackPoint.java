@@ -2,7 +2,6 @@ import ij.ImagePlus;
 import ij.gui.PolygonRoi;
 import ij.process.FloatPolygon;
 import ij.process.ImageProcessor;
-
 import java.awt.Color;
 import java.awt.Rectangle;
 
@@ -32,13 +31,13 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	 * <p>
 	 * Contains numPix valid elements
 	 */
-	private int[] MagPixX;
+	private float[] MagPixX;
 	/**
 	 * A list of X Coordinates of points that are considered as part of the maggot 
 	 * <p>
 	 * Contains numPix valid elements  
 	 */
-	private int[] MagPixY;
+	private float[] MagPixY;
 	/**
 	 * A list of Intensity values (0;255) corresponding to the MagPix points 
 	 * <p>
@@ -118,15 +117,29 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 			}
 			
 			btp.setInitialBB(new PolygonRoi(initBB, PolygonRoi.POLYLINE), numBBPts);
-			
-		} else{
-			return null;
+			btp.setMagPix();
+			btp.setVoronoiClusters();
 		}
-			
-		btp.setMagPix();
-		btp.setVoronoiClusters();
 		
 		return btp;
+	}
+	
+	protected void fillInMidline(PolygonRoi newMidline){
+		
+		if(newMidline!=null){
+			
+			midline = newMidline;
+
+			FloatPolygon initBB = newMidline.getFloatPolygon();
+			for(int i=0; i<initBB.npoints; i++){
+				initBB.xpoints[i] += rect.x;
+				initBB.ypoints[i] += rect.y;
+			}
+			
+			setInitialBB(new PolygonRoi(initBB, PolygonRoi.POLYLINE), numBBPts);
+			setMagPix();
+			setVoronoiClusters();
+		}
 	}
 	
 	
@@ -166,8 +179,8 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		//TODO MASK THE IMAGE SO IT ONLY SEES THE ONE MAGGOT
 		ImageProcessor maskIm = im;
 		
-		MagPixX = new int[maskIm.getWidth()*maskIm.getHeight()];
-		MagPixY = new int[maskIm.getWidth()*maskIm.getHeight()];
+		MagPixX = new float[maskIm.getWidth()*maskIm.getHeight()];
+		MagPixY = new float[maskIm.getWidth()*maskIm.getHeight()];
 		MagPixI = new int[maskIm.getWidth()*maskIm.getHeight()];
 		clusterInds = new int[maskIm.getWidth()*maskIm.getHeight()];
 		numPix = 0;
@@ -176,8 +189,8 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		for(int X=0; X<maskIm.getWidth(); X++){
 			for (int Y=0; Y<maskIm.getHeight(); Y++){
 				if(maskIm.getPixel(X,Y)>thresh){
-					MagPixX[numPix] = X+rect.x+1;
-					MagPixY[numPix] = Y+rect.y+1;
+					MagPixX[numPix] = 0.5f+X+rect.x;
+					MagPixY[numPix] = 0.5f+Y+rect.y;
 					MagPixI[numPix] = maskIm.getPixel(X, Y);
 					
 					numPix++;
@@ -261,11 +274,11 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		return numPix;
 	}
 	
-	public int getMagPixX(int ind){
+	public float getMagPixX(int ind){
 		return MagPixX[ind];
 	}
 
-	public int getMagPixY(int ind){
+	public float getMagPixY(int ind){
 		return MagPixY[ind];
 	}
 	
@@ -276,12 +289,6 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	public int getClusterInds(int ind){
 		return clusterInds[ind];
 	}
-	
-	public double getEnergy(){
-		//TODO 
-		return 0.0;
-	}
-	
 	
 	public PolygonRoi getBackbone(){
 		return backbone;
@@ -307,130 +314,111 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	}
 	
 	protected ImageProcessor drawFeatures(ImageProcessor grayIm, int offX, int offY, int expandFac){
+		
 		ImageProcessor im = grayIm.convertToRGB();
-//		Overlay overlay = new Overlay();
-//		midline.setColor(Color.YELLOW);
-//		overlay.add(midline);
-//		overlay.add(new Line(0.0,0.0,5.0,5.0));
-		
-//		im.drawOverlay(overlay);
-//		return im;
-		
-//		ImagePlus imp = new ImagePlus("", im);
-//		imp.setOverlay(overlay);
-//		imp.flatten();
-//		return imp.getProcessor();
 		
 		
-//		im.drawRoi(midline);
-		
+		//PIXEL CLUSTERS
 		Color[] colors = {Color.WHITE, Color.PINK, Color.MAGENTA, Color.RED, Color.ORANGE, Color.YELLOW, Color.GREEN, Color.CYAN, Color.BLUE};
 		
 		for (int i=0; i<numPix; i++){
 			im.setColor(colors[clusterInds[i]]);
-			im.drawOval((int)(expandFac*(MagPixX[i]-rect.x)+offX)-1-5, (int)(expandFac*(MagPixY[i]-rect.y)+offY)-1-5, 2, 2);
+			int circWid = 2;
+			im.drawOval((int)(expandFac*(MagPixX[i]-rect.x)+offX)-(circWid/2), (int)(expandFac*(MagPixY[i]-rect.y)+offY)-(circWid/2), circWid, circWid);
 		}
 		
 		
 		
+		//MIDLINE
 		im.setColor(Color.BLUE);
 		if (midline!=null){
 			FloatPolygon floatMidline = midline.getFloatPolygon();
 			for (int i=0; i<midline.getNCoordinates(); i++){
 				int dotX = offX + (int)(expandFac*(floatMidline.xpoints[i]));
 				int dotY = offY + (int)(expandFac*(floatMidline.ypoints[i]));
-//				im.drawOval(dotX-8, dotY-8, 16, 16);
-//				im.drawOval(dotX-4, dotY-4, 8, 8);
 				im.drawDot(dotX, dotY);
 			}
 		}
 		
 		
+		//INITIAL SPINE
 		im.setColor(Color.YELLOW);
 		if (bbInit!=null){
 			for (int i=0; i<bbInit.npoints; i++){
 				int dotX = offX + (int)(expandFac*(bbInit.xpoints[i]-rect.x));
 				int dotY = offY + (int)(expandFac*(bbInit.ypoints[i]-rect.y));
-//				im.drawOval(dotX-8, dotY-8, 16, 16);
-				im.drawOval(dotX-1, dotY-1, 2, 2);
+				int circWid = 2;
+				im.drawOval(dotX-(circWid/2), dotY-(circWid/2), circWid, circWid);
 //				im.drawDot(dotX, dotY);
 			}
 		}
 		
 		
-		
-//		
-		
-//		im.setColor(Color.BLUE);
-//		for (int i=0; i<(cont.size()-1); i++){
-//			im.drawLine(expandFac*cont.get(i).x+offX, expandFac*cont.get(i).y+offY, expandFac*cont.get(i+1).x+offX, expandFac*cont.get(i+1).y+offY);
-//		}
-//		im.drawLine(expandFac*cont.get(cont.size()-1).x+offX, expandFac*cont.get(cont.size()-1).y+offY, expandFac*cont.get(0).x+offX, expandFac*cont.get(0).y+offY);
-		
-		
-//		int dotX = offX + (int)(expandFac*(floatMidline.xpoints[i]-rect.x));//(int)((floatMidline.xpoints[i]+offX)*expandFac);
-//		int dotY = offX + (int)(expandFac*(floatMidline.ypoints[i]-rect.y));
+		/*
+		//CONTOUR
+		im.setColor(Color.BLUE);
+		for (int i=0; i<(cont.size()-1); i++){
+			im.drawLine(expandFac*cont.get(i).x+offX, expandFac*cont.get(i).y+offY, expandFac*cont.get(i+1).x+offX, expandFac*cont.get(i+1).y+offY);
+		}
+		im.drawLine(expandFac*cont.get(cont.size()-1).x+offX, expandFac*cont.get(cont.size()-1).y+offY, expandFac*cont.get(0).x+offX, expandFac*cont.get(0).y+offY);
+		*/
 		
 		
-		
-//		im.setColor(Color.RED);
-//		if (head!=null){
-//			im.drawOval((int)expandFac*head.x+offX, (int)expandFac*head.y+offY, 5, 5);
-//		}
-//		im.setColor(Color.GREEN);
-//		if (tail!=null){
-//			im.drawOval((int)expandFac*tail.x+offX, (int)expandFac*tail.y+offY, 5, 5);
-//		}
-		
-		
-		//DRAW THE FORCES
-//		im.setColor(Color.MAGENTA);
+		/* 
+		//HEAD AND TAIL
+		im.setColor(Color.RED);
+		if (head!=null){
+			im.drawOval((int)expandFac*head.x+offX, (int)expandFac*head.y+offY, 5, 5);
+		}
+		im.setColor(Color.GREEN);
+		if (tail!=null){
+			im.drawOval((int)expandFac*tail.x+offX, (int)expandFac*tail.y+offY, 5, 5);
+		}
+		*/
 		
 		
+		/*
+		//FORCES
+		Color[] colors = {Color.WHITE, Color.MAGENTA,Color.GREEN, Color.CYAN, Color.RED};
+		for(int f=0; f<bf.Forces.size(); f++){
+			
+			im.setColor(colors[f]);
+			
+			FloatPolygon targetPts = bf.Forces.get(f).getTargetPoints(frameNum-bf.BTPs.firstElement().frameNum, bf.BTPs);
+			
+			if (targetPts!=null){
+				for (int i=0; i<targetPts.npoints; i++){
+					
+					int x1 = offX + (int)(expandFac*(bbNew.xpoints[i]-rect.x));
+					int y1 = offY + (int)(expandFac*(bbNew.ypoints[i]-rect.y));
+					int x2 = (int)(expandFac*(targetPts.xpoints[i]-rect.x)+offX);
+					int y2 = (int)(expandFac*(targetPts.ypoints[i]-rect.y)+offY);
+					
+					im.drawLine(x1, y1, x2, y2);
+//					im.drawDot((int)(expandFac*(targetPts.xpoints[i]-rect.x)+offX), (int)(expandFac*(targetPts.ypoints[i]-rect.y)+offY));
+					
+				}
+			}
+			
+		}
+		*/
 		
-//		Color[] colors = {Color.WHITE, Color.MAGENTA,Color.GREEN, Color.CYAN, Color.RED};
-//		for(int f=0; f<bf.Forces.size(); f++){
-////		int f=4;
-//			
-//			im.setColor(colors[f]);
-//			
-//			FloatPolygon targetPts = bf.Forces.get(f).getTargetPoints(frameNum-bf.BTPs.firstElement().frameNum, bf.BTPs);
-//			
-//			if (targetPts!=null){
-//				for (int i=0; i<targetPts.npoints; i++){
-//					
-//					int x1 = offX + (int)(expandFac*(bbNew.xpoints[i]-rect.x));
-//					int y1 = offY + (int)(expandFac*(bbNew.ypoints[i]-rect.y));
-//					int x2 = (int)(expandFac*(targetPts.xpoints[i]-rect.x)+offX);
-//					int y2 = (int)(expandFac*(targetPts.ypoints[i]-rect.y)+offY);
-//					
-//					im.drawLine(x1, y1, x2, y2);
-////					im.drawDot((int)(expandFac*(targetPts.xpoints[i]-rect.x)+offX), (int)(expandFac*(targetPts.ypoints[i]-rect.y)+offY));
-//					
-//				}
-//			}
-//			
-//		}
 		
+		//BACKBONE
 		im.setColor(Color.PINK);
 		im.drawOval(0, 0, 10, 10);
 		if (bbNew!=null){
 			for (int i=0; i<bbNew.npoints; i++){
 				int dotX = offX + (int)(expandFac*(bbNew.xpoints[i]-rect.x));
 				int dotY = offY + (int)(expandFac*(bbNew.ypoints[i]-rect.y));
-//				im.drawOval(dotX-8, dotY-8, 16, 16);
-				im.drawOval(dotX-4-5, dotY-4-5, 8, 8);
+				int circWid = 8;
+				im.drawOval(dotX-(circWid/2), dotY-(circWid/2), circWid, circWid);
 			}
 		}
 		
 		
-//		im.setColor(Color.CYAN);
-//		im.setColor(Color.MAGENTA);
-//		im.setColor(Color.ORANGE);
-//		im.setColor(Color.WHITE);
 		
 		
-//		
 		return im;
 	}
 	

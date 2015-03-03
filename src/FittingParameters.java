@@ -3,6 +3,9 @@ public class FittingParameters {
 	
 	int numBBPts = 9;
 	
+	int[] grains = {8, 4, 1};
+	int smallGapMaxLen = 10;//The maximum gap length for which the previous midline will be carried forward (otherwise interpolate)
+	
 	float imageWeight = 1.0f;
 	float spineLengthWeight = .4f;
 	float spineSmoothWeight = .8f;
@@ -16,6 +19,7 @@ public class FittingParameters {
 	float[] timeLengthWeights = {1,1,1, 1,1,1, 1,1,1};
 	float[] timeSmoothWeights = {1,1,1, 1,1,1, 1,1,1};
 	float[] HTAttractionWeights = {1,0,0, 0,0,0, 0,0,1};
+	
 	
 	
 	public FittingParameters(){

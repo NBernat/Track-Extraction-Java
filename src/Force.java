@@ -43,11 +43,11 @@ public class Force {
 		return weights;
 	}
 	
-	public void getEnergies(BackboneTrackPoint BTP, Vector<BackboneTrackPoint> allBTPs){
+	public void getEnergy(int btpInd, Vector<BackboneTrackPoint> allBTPs){
 		
 	}
 	
-	public void getForces(BackboneTrackPoint BTP, Vector<BackboneTrackPoint> allBTPs){
+	public void getForce(int btpInd, Vector<BackboneTrackPoint> allBTPs){
 		
 	}
 	
