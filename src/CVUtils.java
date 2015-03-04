@@ -148,10 +148,6 @@ public class CVUtils {
 	
 
 
-	
-	//TODO 
-	//http://rsb.info.nih.gov/ij/developer/api/ij/measure/ResultsTable.html#ResultsTable()
-	//http://rsb.info.nih.gov/ij/developer/api/index.html?ij/plugin/filter/ParticleAnalyzer.html
 	/**
 	 * 
 	 * @param threshIm Thresholded image to analyze
@@ -228,6 +224,28 @@ public class CVUtils {
 		return retIm.getProcessor();
 		
 		
+		
+	}
+	
+	//TODO 
+	public static float[] interp1D(float first, float second, int numbetween){
+		
+		float[] between = new float[numbetween];
+		float dif = (second-first)/(numbetween+1);
+		for(int i=0; i<numbetween; i++) between[i]=first+dif*(i+1);
+		
+		return between;
+	}
+	
+	
+	//TODO 
+	public static float[] rotateCoord(float x, float y, double thetha){
+		
+		float[] newCoord = new float[2];
+		
+		
+		
+		return newCoord;
 		
 	}
 

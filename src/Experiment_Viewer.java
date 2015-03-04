@@ -64,7 +64,7 @@ public class Experiment_Viewer implements PlugIn{
 		BackboneFitter bbf = new BackboneFitter();
 		
 		IJ.showStatus("Fitting Track");
-		bbf.fitTrack(ex.tracks.get(0));
+		bbf.fitTrack(ex.tracks.get(1));
 		
 		IJ.showStatus("Track fit!");
 		ex.tracks.add(new Track(bbf.BTPs));

@@ -124,13 +124,23 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		return btp;
 	}
 	
-	protected void fillInMidline(PolygonRoi newMidline){
+	protected void fillInMidline(PolygonRoi newMidline, float[] prevOrigin){
 		
 		if(newMidline!=null){
 			
-			midline = newMidline;
+			//Correct the origin of the midline
+			FloatPolygon newMid = newMidline.getFloatPolygon();
+			float[] xmid = new float[newMid.npoints];
+			float[] ymid = new float[newMid.npoints];
+			float offX = prevOrigin[0]-rect.x;
+			float offY = prevOrigin[1]-rect.y;
+			for(int i=0; i<newMid.npoints; i++){
+				xmid[i] = newMid.xpoints[i]+offX;
+				ymid[i] = newMid.ypoints[i]+offY;
+			}
+			midline = new PolygonRoi(new FloatPolygon(xmid, ymid), PolygonRoi.POLYLINE);
 
-			FloatPolygon initBB = newMidline.getFloatPolygon();
+			FloatPolygon initBB = midline.getFloatPolygon();
 			for(int i=0; i<initBB.npoints; i++){
 				initBB.xpoints[i] += rect.x;
 				initBB.ypoints[i] += rect.y;
@@ -156,11 +166,17 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		numBBPts = numPts;
 		backbone = initBB;
 		if (initBB.getNCoordinates()!=numBBPts){
+			if(bf!=null){
+				bf.comm.message("initBB has "+initBB.getNCoordinates()+" coords; Interpolating segment", VerbLevel.verb_debug);
+			}
 			initBB = MaggotTrackPoint.getInterpolatedSegment(initBB, numPts);
 		}
+		
 		bbInit = initBB.getFloatPolygon();
 		bbOld = initBB.getFloatPolygon();
-		
+		if(bf!=null){
+			bf.comm.message("initBB sucessful", VerbLevel.verb_debug);
+		}
 	}
 	
 	/**
@@ -173,6 +189,9 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		
 		if(comm!=null){
 			comm.message("Setting MagPix", VerbLevel.verb_debug);
+		}
+		if(bf!=null){
+			bf.comm.message("Setting MagPix", VerbLevel.verb_debug);
 		}
 		
 		
@@ -214,6 +233,10 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	 * Finds the nearest backbone point to each maggot pixel, stores index of bbOld for each pixel in clusterInds
 	 */
 	private void setVoronoiClusters(){
+		
+		if(bf!=null){
+			bf.comm.message("Setting Voronoi clusters", VerbLevel.verb_debug);
+		}
 		
 		//For each maggot pixel, find the nearest backbone point
 		for (int pix=0; pix<numPix; pix++){

@@ -6,6 +6,8 @@ import java.util.Arrays;
 import java.util.ListIterator;
 import java.util.Vector;
 
+import sun.awt.windows.ThemeReader;
+
 /**
  * Fits backbones to a track of MaggotTrackPoints
  * 
@@ -63,7 +65,7 @@ public class BackboneFitter {
 		addForces(pass);
 
 		comm = new Communicator();
-		comm.setVerbosity(VerbLevel.verb_off);
+		comm.setVerbosity(VerbLevel.verb_debug);
 
 	}
 
@@ -98,6 +100,7 @@ public class BackboneFitter {
 		BTPs = new Vector<BackboneTrackPoint>();
 
 		// Extract the points, and move on (if successful)
+		comm.message("Generating BTPs", VerbLevel.verb_debug);
 		boolean noError = generateBTPs(1);
 		// boolean noError = true;
 		// TODO
@@ -114,14 +117,15 @@ public class BackboneFitter {
 			run();
 
 			// Show the fitting messages, if necessary
-			// if (!comm.outString.equals("")){
-			// new TextWindow("TrackFitter", comm.outString, 500, 500);
-			// }
+			 
 			if (!updater.comm.outString.equals("")) {
 				new TextWindow("TrackFitting Updater", updater.comm.outString,
 						500, 500);
 			}
 		}
+		if (!comm.outString.equals("")){
+			 new TextWindow("TrackFitter", comm.outString, 500, 500);
+			 }
 		// }
 	}
 
@@ -141,6 +145,7 @@ public class BackboneFitter {
 			if (track.points.get(0) instanceof MaggotTrackPoint) {// track.points.get(0).pointType==2
 
 				boolean[] emptyMidlines = extractTracks();
+				comm.message("Filling midlines", VerbLevel.verb_debug);
 				fillEmptyMidlines(emptyMidlines);
 				return true;
 
@@ -222,7 +227,14 @@ public class BackboneFitter {
 					++ptr;
 				while (emptyMidlines[ptr] && ptr < emptyMidlines.length);
 				// Fill the gap
+				comm.message("Filling gap at TP "+gapStart+"-"+(ptr-1), VerbLevel.verb_debug);
 				boolean noError = fillGap(gapStart, ptr - 1);
+				if(noError){
+					comm.message("Filled successfully", VerbLevel.verb_debug);
+				} else {
+					comm.message("Error filling gap", VerbLevel.verb_debug);
+				}
+				
 
 			} else {
 				++ptr;
@@ -250,26 +262,36 @@ public class BackboneFitter {
 	private boolean fillGap(int gapStart, int gapEnd) {
 
 		int gapLen = gapEnd - gapStart + 1;
-
+		comm.message("Filling gap of size "+gapLen, VerbLevel.verb_debug);
 		if (gapLen < params.smallGapMaxLen) {
 			// Set the
+			
 			PolygonRoi fillerMidline;
+			float[] origin;
 			if (gapStart != 0) {
 				fillerMidline = BTPs.get(gapStart - 1).midline;
+				float[] o = {BTPs.get(gapStart - 1).rect.x, BTPs.get(gapStart - 1).rect.y};
+				origin = o;
 			} else if (gapEnd != (BTPs.size() - 1)) {
 				fillerMidline = BTPs.get(gapEnd + 1).midline;
+				float[] o = {BTPs.get(gapEnd + 1).rect.x, BTPs.get(gapEnd + 1).rect.y};
+				origin = o;
 			} else {
 				return false;
 			}
 
 			for (int i = gapStart; i <= gapEnd; i++) {
-				BTPs.get(i).fillInMidline(fillerMidline);
+				BTPs.get(i).fillInMidline(fillerMidline, origin);
 			}
 
 		} else if (gapStart != 0 && gapEnd != (BTPs.size() - 1)) {
 
-			interpBackbones(gapStart - 1, gapEnd + 1);
-
+			Vector<FloatPolygon> newMids = interpBackbones(gapStart - 1, gapEnd + 1);
+			for (int i = gapStart; i <= gapEnd; i++) {
+				float[] origin = {0.0f,0.0f};
+				BTPs.get(i).fillInMidline(new PolygonRoi(newMids.get(i), PolygonRoi.POLYLINE), origin);
+			}
+			
 		} else {
 			return false;
 		}
@@ -277,39 +299,105 @@ public class BackboneFitter {
 		return true;
 	}
 
-	private void interpBackbones(int firstBTP, int endBTP) {
-
-		int totalNum = endBTP - firstBTP + 1;
+	private Vector<FloatPolygon> interpBackbones(int firstBTP, int endBTP) {
+		
+		//Copy the coordinates of the surrounding BTPs so that they can be manipulated
 		FloatPolygon bbFirst = BTPs.get(firstBTP).midline.getFloatPolygon();
 		FloatPolygon bbEnd = BTPs.get(endBTP).midline.getFloatPolygon();
-		float[] xbbfirst= new float[bbFirst.npoints];
-		float[] ybbfirst= new float[bbFirst.npoints];
-		float[] xbbend= new float[bbEnd.npoints];
-		float[] ybbend= new float[bbEnd.npoints];
-		for (int i=0; i<bbFirst.npoints; i++){
+		int numbbpts = bbFirst.npoints;
+		float[] xbbfirst= new float[numbbpts];
+		float[] ybbfirst= new float[numbbpts];
+		float[] xbbend= new float[numbbpts];
+		float[] ybbend= new float[numbbpts];
+		for (int i=0; i<numbbpts; i++){
 			xbbfirst[i] = bbFirst.xpoints[i]+BTPs.get(firstBTP).rect.x;
 			ybbfirst[i] = bbFirst.ypoints[i]+BTPs.get(firstBTP).rect.y;
 			xbbend[i] = bbEnd.xpoints[i]+BTPs.get(endBTP).rect.x;
 			ybbend[i] = bbEnd.ypoints[i]+BTPs.get(endBTP).rect.y;
 		}
 		
-		float[] xorigins = new float[totalNum-2];
-		float[] yorigins = new float[totalNum-2];
-		float[] angles = new float[totalNum-2];
+		int numnewbbs = endBTP - firstBTP - 1;
+		float start;
+		float end;
 		
-		// Find the initial shifts, aka origins of rotation (Interpolate the
-		// origins from the tail points); shift bbFirst/End
+		// Find the initial shifts, aka origins of rotation
+		float[] xorigins = new float[numnewbbs];
+		float[] yorigins = new float[numnewbbs];
+		start = xbbfirst[numbbpts-1];//tail of the first maggot
+		end = xbbend[numbbpts-1];//tail of the second maggot
+		xorigins = CVUtils.interp1D(start, end, xorigins.length);
+		start = ybbfirst[numbbpts-1];//tail of the first maggot
+		end = ybbend[numbbpts-1];//tail of the second maggot
+		yorigins = CVUtils.interp1D(start, end, yorigins.length);
+		
+		//Shift both maggots so that their tails are at the origin
+		for (int i=0; i<numbbpts; i++){
+			xbbfirst[i] = xbbfirst[i]-xbbfirst[numbbpts-1];
+			ybbfirst[i] = ybbfirst[i]-ybbfirst[numbbpts-1];
+
+			xbbend[i] = xbbend[i]-xbbend[numbbpts-1];
+			ybbend[i] = ybbend[i]-ybbend[numbbpts-1];
+		}
 		
 		
 		// Find the angles of rotations; rotate the bbFirst/End 
+		float[] angles = new float[numnewbbs];
+		start = (float)Math.atan2(ybbfirst[0], xbbfirst[0]);
+		end = (float)Math.atan2(ybbend[0], xbbend[0]);
+		float dif = (float)((end-start+2*Math.PI)%(2*Math.PI));
+		if( ((start-end+2*Math.PI)%(2*Math.PI))<dif ) dif = (float)((start-end+2*Math.PI)%(2*Math.PI));
+		dif = dif/(numnewbbs+1);
+		for(int j=0; j<angles.length; j++) angles[j]=start+dif*(j+1);
 		
-		// Find the initial coords 
-
-		// Perform the back rotations
+		//Rotate both maggots so that their heads are on the x axis
+		float[] newCoord;
+		for(int i=0; i<numbbpts; i++){
+			newCoord = CVUtils.rotateCoord(xbbfirst[i], ybbfirst[i], -start);
+			xbbfirst[i] = newCoord[0];
+			ybbfirst[i] = newCoord[1];
+			
+			newCoord = CVUtils.rotateCoord(xbbend[i], ybbend[i], -end);
+			xbbend[i] = newCoord[0];
+			ybbend[i] = newCoord[1];
+		}
 		
-		// Perform the back shifts
 		
-
+		//Generate the new midline coords
+		Vector<float[]> xnewbbs = new Vector<float[]>();
+		Vector<float[]> ynewbbs = new Vector<float[]>();
+		for (int j=0; j<numnewbbs; j++){
+			xnewbbs.add(new float[numbbpts]);
+			ynewbbs.add(new float[numbbpts]);
+		}
+		
+		
+		// Find the initial coords by interpolating between the shifted, rotated, initial backbones
+		for (int i=0; i<numbbpts; i++){
+			float[] xsubi = CVUtils.interp1D(xbbfirst[i], xbbend[i], numnewbbs);
+			float[] ysubi = CVUtils.interp1D(ybbfirst[i], ybbend[i], numnewbbs);
+			for (int j=0; j<numnewbbs;j++){//for each j'th backbone, fill in the i'th coordinate
+				xnewbbs.get(j)[i] = xsubi[j];
+				ynewbbs.get(j)[i] = ysubi[j];
+			}
+		}
+		
+		
+		// Perform the back rotations and shifts
+		for (int j=0; j<numnewbbs; j++){
+			for (int i=0; i<numbbpts; i++){
+				float[] newCrds = CVUtils.rotateCoord(xnewbbs.get(j)[i], ynewbbs.get(j)[i], angles[j]);
+				xnewbbs.get(j)[i] = newCrds[0]+xorigins[j];
+				ynewbbs.get(j)[i] = newCrds[1]+yorigins[j];
+			}
+		}
+		
+		//Generate the return objects
+		Vector<FloatPolygon> newMids = new Vector<FloatPolygon>();
+		for (int j=0; j<numnewbbs; j++){
+			newMids.add(new FloatPolygon(xnewbbs.get(j), ynewbbs.get(j)));
+		}
+		
+		return newMids;
 	}
 
 	/**

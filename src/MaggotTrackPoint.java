@@ -4,6 +4,7 @@ import ij.gui.Roi;
 import ij.gui.Wand;
 import ij.process.FloatPolygon;
 import ij.process.ImageProcessor;
+import ij.text.TextWindow;
 
 import java.awt.Color;
 import java.awt.Point;
@@ -390,6 +391,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	
 	public static PolygonRoi getInterpolatedSegment(PolygonRoi origSegment, int numPts){
 
+//		try{
 		double spacing = (origSegment.getLength())/(numPts-1);
 
 		PolygonRoi retSeg = new PolygonRoi(origSegment.getInterpolatedPolygon(spacing, true), Roi.POLYLINE);
@@ -417,6 +419,10 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			//comm.message("Segment could not be found with the proper number of coordinates (currently "+retSeg.getNCoordinates()+")", VerbLevel.verb_debug);
 			return origSegment;
 		}
+//		} catch (Exception e){
+//			new TextWindow("Interpolation error", "Error interpolating spine: \n"+e.getMessage(), 500, 500);
+//			return null;
+//		}
 	}
 	
 	
