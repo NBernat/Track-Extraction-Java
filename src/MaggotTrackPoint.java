@@ -4,19 +4,12 @@ import ij.gui.Roi;
 import ij.gui.Wand;
 import ij.process.FloatPolygon;
 import ij.process.ImageProcessor;
-import ij.text.TextWindow;
-
 import java.awt.Color;
 import java.awt.Point;
-//import java.awt.Polygon;
 import java.awt.Rectangle;
-//import java.util.Arrays;
 import java.util.Collections;
 import java.util.ListIterator;
 import java.util.Vector;
-
-//import com.sun.corba.se.impl.orbutil.closure.Constant;
-//import com.sun.org.apache.xerces.internal.impl.dv.ValidatedInfo;
 
 
 public class MaggotTrackPoint extends ImTrackPoint {

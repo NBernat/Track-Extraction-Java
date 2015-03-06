@@ -65,7 +65,7 @@ public class BBFUpdateScheme {
 		
 		
 		comm = new Communicator();
-		comm.setVerbosity(VerbLevel.verb_debug);
+		comm.setVerbosity(VerbLevel.verb_off);
 	}
 	
 	

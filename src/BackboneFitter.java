@@ -6,8 +6,6 @@ import java.util.Arrays;
 import java.util.ListIterator;
 import java.util.Vector;
 
-import sun.awt.windows.ThemeReader;
-
 /**
  * Fits backbones to a track of MaggotTrackPoints
  * 
@@ -19,7 +17,7 @@ public class BackboneFitter {
 	/**
 	 * Fitting parameters
 	 */
-	private FittingParameters params;
+	protected FittingParameters params;
 
 	/**
 	 * Forces which act upon the backbones
@@ -65,7 +63,7 @@ public class BackboneFitter {
 		addForces(pass);
 
 		comm = new Communicator();
-		comm.setVerbosity(VerbLevel.verb_debug);
+		comm.setVerbosity(VerbLevel.verb_off);
 
 	}
 
@@ -125,7 +123,7 @@ public class BackboneFitter {
 		}
 		if (!comm.outString.equals("")){
 			 new TextWindow("TrackFitter", comm.outString, 500, 500);
-			 }
+		 }
 		// }
 	}
 
@@ -299,7 +297,7 @@ public class BackboneFitter {
 		return true;
 	}
 
-	private Vector<FloatPolygon> interpBackbones(int firstBTP, int endBTP) {
+	protected Vector<FloatPolygon> interpBackbones(int firstBTP, int endBTP) {
 		
 		//Copy the coordinates of the surrounding BTPs so that they can be manipulated
 		FloatPolygon bbFirst = BTPs.get(firstBTP).midline.getFloatPolygon();
@@ -309,7 +307,7 @@ public class BackboneFitter {
 		float[] ybbfirst= new float[numbbpts];
 		float[] xbbend= new float[numbbpts];
 		float[] ybbend= new float[numbbpts];
-		for (int i=0; i<numbbpts; i++){
+		for (int i=0; i<numbbpts; i++){//Get the absolute coordinates
 			xbbfirst[i] = bbFirst.xpoints[i]+BTPs.get(firstBTP).rect.x;
 			ybbfirst[i] = bbFirst.ypoints[i]+BTPs.get(firstBTP).rect.y;
 			xbbend[i] = bbEnd.xpoints[i]+BTPs.get(endBTP).rect.x;

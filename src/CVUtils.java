@@ -6,9 +6,9 @@ import ij.ImagePlus;
 import ij.gui.Roi;
 import ij.measure.Measurements;
 import ij.measure.ResultsTable;
-//import ij.plugin.filter.GaussianBlur;
 import ij.plugin.filter.ParticleAnalyzer;
 import ij.process.Blitter;
+import ij.process.ByteProcessor;
 import ij.process.ImageProcessor;
 
 
@@ -242,10 +242,41 @@ public class CVUtils {
 	public static float[] rotateCoord(float x, float y, double thetha){
 		
 		float[] newCoord = new float[2];
-		
-		
-		
+		newCoord[0] = (float)(x*Math.cos(thetha)-y*Math.sin(thetha));
+		newCoord[1] = (float)(x*Math.sin(thetha)+y*Math.cos(thetha));
 		return newCoord;
+		
+	}
+	
+	
+	public static ImageProcessor plot(ImageProcessor im, float[] x, float[] y, Color color){
+		
+		int numCoords = x.length; 
+		if(y.length!=numCoords) return null;
+		
+		int width = 4000;
+		int height = 4000;
+		int originX = width/2;
+		int originY = height/2;
+		int expand = 100;
+		if (im==null){
+			BufferedImage raw = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+			ImagePlus pl = new ImagePlus();
+			pl.setImage(raw);
+			im = pl.getProcessor();
+		}
+		
+		im.setColor(color);
+		for(int i=0; i<numCoords; i++){
+			int xx = (int)(expand*x[i] + originX);
+			int yy = (int)(expand*y[i] + originY);
+			im.drawOval(xx, yy, 10,10);
+		}
+		
+		
+		
+		
+		return im;
 		
 	}
 
