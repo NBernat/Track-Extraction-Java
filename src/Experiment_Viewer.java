@@ -71,11 +71,17 @@ public class Experiment_Viewer implements PlugIn{
 		IJ.showStatus("Creating Backbone Fitter");
 		BackboneFitter bbf = new BackboneFitter();
 		
+		Track tr = ex.tracks.get(0);
+		for (int i=40; i<55; i++){
+			MaggotTrackPoint mtp = (MaggotTrackPoint)tr.points.get(i);  
+			mtp.midline=null;
+		}
+		ex.tracks.addElement(tr);
 		IJ.showStatus("Fitting Track");
-		bbf.fitTrack(ex.tracks.get(2));
+		bbf.fitTrack(tr);
 		
 		Track bbTrack = new Track(bbf.BTPs);
-		testInterpolator(bbf);
+//		testInterpolator(bbf);
 		
 		IJ.showStatus("Track fit!");
 		ex.tracks.add(bbTrack);
@@ -84,13 +90,11 @@ public class Experiment_Viewer implements PlugIn{
 		
 	}
 	
+	/*
 	private void testInterpolator(BackboneFitter bbf){
 		
 		int firstInd = 46;
 		int lastInd = 55;
-		Vector<FloatPolygon> mids = bbf.interpBackbones(firstInd, lastInd);
-		float[] prevOrigin = {0.0f, 0.0f};
-		Vector<PolygonRoi> newMidlines = new Vector<PolygonRoi>();
 		
 		
 		int firstBTP = firstInd;
@@ -196,19 +200,22 @@ public class Experiment_Viewer implements PlugIn{
 		for (int j=0; j<numnewbbs; j++){
 			for (int i=0; i<numbbpts; i++){
 				float[] newCrds = CVUtils.rotateCoord(xnewbbs.get(j)[i], ynewbbs.get(j)[i], angles[j]);
-				xnewbbs.get(j)[i] = newCrds[0];//+xorigins[j];
-				ynewbbs.get(j)[i] = newCrds[1];//+yorigins[j];
+				xnewbbs.get(j)[i] = newCrds[0]+xorigins[j]-760;
+				ynewbbs.get(j)[i] = newCrds[1]+yorigins[j]-910;
 			}
 		}
 		
 		
+		String q = "FIRST: ";for (int j=0; j<bbFirst.npoints; j++) q+="("+(bbFirst.xpoints[j]+BTPs.get(firstBTP).rect.x)+","+(bbFirst.ypoints[j]+BTPs.get(firstBTP).rect.y)+")";q+="\n";
 		for (int i=0; i<xnewbbs.size(); i++){
 			plot = CVUtils.plot(plot, xnewbbs.get(i), ynewbbs.get(i), Color.BLUE);
+			for (int j=0; j<xnewbbs.get(i).length; j++) q+="("+(xnewbbs.get(i)[j]+760)+","+(ynewbbs.get(i)[j]+910)+")";
+			q+="\n";
 		}
-		
-		
+		q += "LAST: ";for (int j=0; j<bbEnd.npoints; j++) q+="("+(bbEnd.xpoints[j]+BTPs.get(endBTP).rect.x)+","+(bbEnd.ypoints[j]+BTPs.get(endBTP).rect.y)+")";q+="\n";
+		new TextWindow("Manually Interpolated backbones", q, 500, 500);
 		ImagePlus imp = new ImagePlus("Interp ", plot);
-		imp.show();
+//		imp.show();
 		
 		
 		
@@ -221,35 +228,36 @@ public class Experiment_Viewer implements PlugIn{
 		
 		
 		
-		
+
+		Vector<FloatPolygon> mids = bbf.interpBackbones(firstInd, lastInd);
+		float[] prevOrigin = {0.0f, 0.0f};
+		Vector<PolygonRoi> newMidlines = new Vector<PolygonRoi>();
 		
 		String s = "";
 		for (int i=0; i<mids.size(); i++){
-			
-			
 			FloatPolygon newMid = mids.get(i);
 			FloatPolygon oldMid = bbf.BTPs.get(i+1).midline.getFloatPolygon();
-			
 			float[] xmid = new float[newMid.npoints];
 			float[] ymid = new float[newMid.npoints];
 			float offX = prevOrigin[0]-bbf.BTPs.get(i+firstBTP+1).rect.x;
 			float offY = prevOrigin[1]-bbf.BTPs.get(i+endBTP+1).rect.y;
+			
+			s+=i+" Offset=("+offX+","+offY+")\n";
 			s+="New: ";
+			
 			for(int j=0; j<newMid.npoints; j++){
 				xmid[j] = newMid.xpoints[j]+offX;
 				ymid[j] = newMid.ypoints[j]+offY;
-				s+= "("+xmid[j]+","+ymid[j]+") ";
+				s+= "("+(xmid[j]-offX)+","+(ymid[j]-offY)+") ";
 			}
 			newMidlines.add(new PolygonRoi(new FloatPolygon(xmid, ymid), PolygonRoi.POLYLINE));
 			s+="\n Old:";
 			for (int j=0; j<oldMid.npoints; j++){
-				xmid[j] = oldMid.xpoints[j];
-				ymid[j] = oldMid.ypoints[j];
+				xmid[j] = oldMid.xpoints[j]+bbf.BTPs.get(i+firstBTP+1).rect.x;
+				ymid[j] = oldMid.ypoints[j]+bbf.BTPs.get(i+firstBTP+1).rect.y;
 				s+= "("+xmid[j]+","+ymid[j]+") ";
 			}
 			s+="\n";
-			
-			
 		}
 		new TextWindow("Interpolated backbones", s, 500, 500);
 		
@@ -278,13 +286,13 @@ public class Experiment_Viewer implements PlugIn{
 			trackStack.addSlice(im);
 		}
 		ImagePlus trackPlus = new ImagePlus("BTPs",trackStack);
-		trackPlus.show();
+//		trackPlus.show();
 		
 		//getIm(boolean clusters, boolean mid, boolean initialBB, boolean contour, boolean ht, boolean forces, boolean backbone){
 		
 		
 	}
-	
+	*/
 	
 
 }

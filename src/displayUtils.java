@@ -80,6 +80,20 @@ public class displayUtils {
 	}
 	
 	
+	public static void drawMidlines(ImageProcessor im, Vector<PolygonRoi> midlines, int offX, int offY, int expandFac, Vector<Color> colors){
+		
+		for (int j=0; j<midlines.size(); j++){
+			im.setColor(colors.get(j));
+			FloatPolygon floatMidline = midlines.get(j).getFloatPolygon();
+			for (int i=0; i<midlines.get(j).getNCoordinates(); i++){
+				int dotX = offX + (int)(expandFac*(floatMidline.xpoints[i]));
+				int dotY = offY + (int)(expandFac*(floatMidline.ypoints[i]));
+				im.drawDot(dotX, dotY);
+			}
+		}
+	}
+	
+	
 	public static void drawBBInit(ImageProcessor im, FloatPolygon bbInit, int offX, int offY, Rectangle rect, int expandFac, Color color){
 		im.setColor(color);
 		if (bbInit!=null){

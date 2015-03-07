@@ -336,7 +336,7 @@ public class Track implements Serializable{
 			d += "Points("+pointList.size()+"):"+lb;
 			for (int i=0; i<pointList.size(); i++){
 				TrackPoint pt = pointList.get(i);
-				d += i+": ID="+pt.pointID+" ("+(int)pt.x+","+(int)pt.y+")"+lb;
+				d += i+": "+pt.getTPDescription()+lb;
 			}
 		}else {
 			d += "Frames: "+lb+lb;

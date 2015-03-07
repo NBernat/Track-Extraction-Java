@@ -2,8 +2,10 @@ import ij.ImagePlus;
 import ij.gui.PolygonRoi;
 import ij.process.FloatPolygon;
 import ij.process.ImageProcessor;
+
 import java.awt.Color;
 import java.awt.Rectangle;
+import java.util.Vector;
 
 
 /**
@@ -107,6 +109,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		mtp.copyInfoIntoBTP(btp);
 
 		//Make new stuff
+		btp.numBBPts = numBBPts; 
 		if(mtp.midline!=null){
 			
 			FloatPolygon initBB = mtp.midline.getFloatPolygon();
@@ -169,10 +172,15 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 			if(bf!=null){
 				bf.comm.message("initBB has "+initBB.getNCoordinates()+" coords; Interpolating segment", VerbLevel.verb_debug);
 			}
-			initBB = MaggotTrackPoint.getInterpolatedSegment(initBB, numPts);
+			initBB = MaggotTrackPoint.getInterpolatedSegment(initBB, numPts, true);
 		}
 		if(bf!=null){
-			bf.comm.message("initBB sucessful", VerbLevel.verb_debug);
+			if (initBB!=null){
+				bf.comm.message("initBB sucessful", VerbLevel.verb_debug);
+			} else{
+				bf.comm.message("initBB interpolation failed", VerbLevel.verb_debug);
+			}
+			
 		}
 		bbInit = initBB.getFloatPolygon();
 		bbOld = initBB.getFloatPolygon();
@@ -369,8 +377,10 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		int offY = trackWindowHeight*(expandFac/2) - ((int)y-rect.y)*expandFac;//rect.y-imOriginY;
 		
 		ImageProcessor im = pIm.convertToRGB();
-//		displayUtils.drawMidline(im, midline, offX, offY, expandFac, Color.YELLOW);
-		displayUtils.drawMidline(im, mid, offX, offY, expandFac, Color.RED);
+		Vector<PolygonRoi> mids = new Vector<PolygonRoi>();	mids.add(midline); mids.add(mid);
+		Vector<Color> colors = new Vector<Color>(); colors.add(Color.YELLOW); colors.add(Color.RED);
+		displayUtils.drawMidlines(im, mids, offX, offY, expandFac, colors);
+//		displayUtils.drawMidline(im, mid, offX, offY, expandFac, Color.RED);
 
 		
 		return im;

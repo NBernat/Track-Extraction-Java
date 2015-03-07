@@ -228,6 +228,10 @@ public class TrackPoint extends Point {
 		return s;
 	}
 	
+	public String getTPDescription(){
+		return "ID="+pointID+" ("+(int)x+","+(int)y+")";
+	}
+	
 //	public ImageProcessor getIm( )
 	
 //	public ImageWindow showTrackPoint(ImageWindow window){

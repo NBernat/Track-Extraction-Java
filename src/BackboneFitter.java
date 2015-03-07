@@ -63,7 +63,7 @@ public class BackboneFitter {
 		addForces(pass);
 
 		comm = new Communicator();
-		comm.setVerbosity(VerbLevel.verb_off);
+		comm.setVerbosity(VerbLevel.verb_debug);
 
 	}
 
@@ -186,8 +186,7 @@ public class BackboneFitter {
 
 			comm.message("Converting point " + i + " into a BTP",
 					VerbLevel.verb_debug);
-			BackboneTrackPoint btp = BackboneTrackPoint.convertMTPtoBTP(mtp,
-					params.numBBPts);
+			BackboneTrackPoint btp = BackboneTrackPoint.convertMTPtoBTP(mtp,params.numBBPts);
 
 			if (btp.midline == null) {
 				emptyMidlines[i] = true;
@@ -283,13 +282,15 @@ public class BackboneFitter {
 			}
 
 		} else if (gapStart != 0 && gapEnd != (BTPs.size() - 1)) {
-
+			comm.message("Filling large gap", VerbLevel.verb_debug);
 			Vector<FloatPolygon> newMids = interpBackbones(gapStart - 1, gapEnd + 1);
+			comm.message("Interpolation complete", VerbLevel.verb_debug);
 			for (int i = gapStart; i <= gapEnd; i++) {
 				float[] origin = {0.0f,0.0f};
-				BTPs.get(i).fillInMidline(new PolygonRoi(newMids.get(i), PolygonRoi.POLYLINE), origin);
+				PolygonRoi newMid = new PolygonRoi(newMids.get(i), PolygonRoi.POLYLINE);
+				BTPs.get(i).fillInMidline(newMid, origin);
 			}
-			
+			comm.message("Gap filled", VerbLevel.verb_debug);
 		} else {
 			return false;
 		}

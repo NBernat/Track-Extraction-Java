@@ -4,6 +4,8 @@ import ij.gui.Roi;
 import ij.gui.Wand;
 import ij.process.FloatPolygon;
 import ij.process.ImageProcessor;
+import ij.text.TextWindow;
+
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -383,39 +385,51 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	}
 	
 	public static PolygonRoi getInterpolatedSegment(PolygonRoi origSegment, int numPts){
+		return getInterpolatedSegment(origSegment, numPts, false);
+	}
+	
+	public static PolygonRoi getInterpolatedSegment(PolygonRoi origSegment, int numPts, boolean debug){
 
-//		try{
-		double spacing = (origSegment.getLength())/(numPts-1);
 
-		PolygonRoi retSeg = new PolygonRoi(origSegment.getInterpolatedPolygon(spacing, true), Roi.POLYLINE);
+		Communicator com = new Communicator();
+		com.setVerbosity(VerbLevel.verb_debug);
+		com.message("Interpolating Segment: "+numPts+"points", VerbLevel.verb_debug);
 		
-		if (retSeg.getNCoordinates()!=numPts){
-			//comm.message("Initial interpolation spacing was incorrect, there were "+retSeg.getNCoordinates()+"points", VerbLevel.verb_debug);
-			double changeFact;
-			if ((retSeg.getNCoordinates()-numPts)>0){ //too many points
-				//increase the spacing slightly, check
-				changeFact=1.01;
-			} else { //too few points
-				changeFact=.99;
+		try{	
+			double spacing = (origSegment.getLength())/(numPts-1);
+			com.message("Spacing is "+spacing, VerbLevel.verb_debug);
+			PolygonRoi retSeg = new PolygonRoi(origSegment.getInterpolatedPolygon(spacing, true), Roi.POLYLINE);
+			com.message("Initial retSeg has "+retSeg.getNCoordinates()+" points", VerbLevel.verb_debug);
+			int count = 0;
+			if (retSeg.getNCoordinates()!=numPts){
+				//comm.message("Initial interpolation spacing was incorrect, there were "+retSeg.getNCoordinates()+"points", VerbLevel.verb_debug);
+				count++;
+				double changeFact;
+				if ((retSeg.getNCoordinates()-numPts)>0){ //too many points
+					//increase the spacing slightly, check
+					changeFact=1.01;
+				} else { //too few points
+					changeFact=.99;
+				}
+				
+				while (retSeg.getNCoordinates()!= numPts && retSeg.getNCoordinates()>0 && retSeg.getNCoordinates()<10*numPts){
+					spacing = spacing*changeFact;
+					retSeg = new PolygonRoi(origSegment.getInterpolatedPolygon(spacing, true), Roi.POLYLINE);
+				}
+				
 			}
-			
-			while (retSeg.getNCoordinates()!= numPts && retSeg.getNCoordinates()>0 && retSeg.getNCoordinates()<10*numPts){
-				spacing = spacing*changeFact;
-				retSeg = new PolygonRoi(origSegment.getInterpolatedPolygon(spacing, true), Roi.POLYLINE);
+			com.message("After "+count+" shifts, retSeg has "+retSeg.getNCoordinates()+" points", VerbLevel.verb_debug);
+			if(retSeg.getNCoordinates()==numPts){
+				//comm.message("Interpolated Segment was created with correct number of points", VerbLevel.verb_debug);
+				return retSeg;
+			} else {
+				//comm.message("Segment could not be found with the proper number of coordinates (currently "+retSeg.getNCoordinates()+")", VerbLevel.verb_debug);
+				return origSegment;
 			}
-			
+		} catch (Exception e){
+			new TextWindow("Interpolation error", com.outString+"\nError interpolating spine: \n"+e.getMessage(), 500, 500);
+			return null;
 		}
-		if(retSeg.getNCoordinates()==numPts){
-			//comm.message("Interpolated Segment was created with correct number of points", VerbLevel.verb_debug);
-			return retSeg;
-		} else {
-			//comm.message("Segment could not be found with the proper number of coordinates (currently "+retSeg.getNCoordinates()+")", VerbLevel.verb_debug);
-			return origSegment;
-		}
-//		} catch (Exception e){
-//			new TextWindow("Interpolation error", "Error interpolating spine: \n"+e.getMessage(), 500, 500);
-//			return null;
-//		}
 	}
 	
 	
@@ -734,6 +748,10 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		}
 	}
 	
-	
+	public String getTPDescription(){
+		String s = super.getTPDescription();
+		if (midline==null) s+=" NULL MID";
+		return s;
+	}
 		
 }
