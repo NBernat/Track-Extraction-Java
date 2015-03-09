@@ -112,8 +112,12 @@ public class BackboneFitter {
 			shifts = new double[BTPs.size()];
 
 			// Run the fitting algorithm
+			try {
 			run();
-
+			} catch(Exception e){
+				comm.message("Error during BackboneFitter.run()\n"+e.getMessage(), VerbLevel.verb_debug);
+			} 
+			
 			// Show the fitting messages, if necessary
 			 
 			if (!updater.comm.outString.equals("")) {
@@ -284,14 +288,27 @@ public class BackboneFitter {
 		} else if (gapStart != 0 && gapEnd != (BTPs.size() - 1)) {
 			comm.message("Filling large gap", VerbLevel.verb_debug);
 			Vector<FloatPolygon> newMids = interpBackbones(gapStart - 1, gapEnd + 1);
-			comm.message("Interpolation complete", VerbLevel.verb_debug);
+			comm.message("Interpolation complete; Midlines:", VerbLevel.verb_debug);
+			for (int i=0; i<newMids.size(); i++){
+				FloatPolygon mid = newMids.get(i);
+				String s = "";
+				for (int j=0; j<mid.npoints; j++){
+					float xmid = mid.xpoints[j];
+					float ymid = mid.ypoints[j];
+					s+= "("+xmid+","+ymid+") ";
+				}
+				comm.message(s, VerbLevel.verb_debug);
+			}
 			for (int i = gapStart; i <= gapEnd; i++) {
 				float[] origin = {0.0f,0.0f};
-				PolygonRoi newMid = new PolygonRoi(newMids.get(i), PolygonRoi.POLYLINE);
+				PolygonRoi newMid = new PolygonRoi(newMids.get(i-gapStart), PolygonRoi.POLYLINE);
+				comm.message("Filling in midline "+i+"; new midline has "+newMid.getNCoordinates()+" pts", VerbLevel.verb_debug);
+				BTPs.get(i).bf = this;
 				BTPs.get(i).fillInMidline(newMid, origin);
 			}
 			comm.message("Gap filled", VerbLevel.verb_debug);
 		} else {
+			//TODO CLIP THE TRACK
 			return false;
 		}
 

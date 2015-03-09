@@ -143,15 +143,23 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 			}
 			midline = new PolygonRoi(new FloatPolygon(xmid, ymid), PolygonRoi.POLYLINE);
 
-			FloatPolygon initBB = midline.getFloatPolygon();
-			for(int i=0; i<initBB.npoints; i++){
-				initBB.xpoints[i] += rect.x;
-				initBB.ypoints[i] += rect.y;
+			for(int i=0; i<newMid.npoints; i++){
+				xmid[i] += rect.x;
+				ymid[i] += rect.y;
 			}
+			FloatPolygon initBB = new FloatPolygon(xmid, ymid);//midline.getFloatPolygon();
+//			for(int i=0; i<initBB.npoints; i++){
+//				initBB.xpoints[i] += rect.x;
+//				initBB.ypoints[i] += rect.y;
+//			}
 			
 			setInitialBB(new PolygonRoi(initBB, PolygonRoi.POLYLINE), numBBPts);
 			setMagPix();
-			setVoronoiClusters();
+			boolean anyUnset = setVoronoiClusters();
+			
+			if (bf!=null){
+				 if (anyUnset) bf.comm.message("Voronoi clusters went unset in frame "+frameNum, VerbLevel.verb_warning);
+			}
 		}
 	}
 	
@@ -240,7 +248,8 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	/**
 	 * Finds the nearest backbone point to each maggot pixel, stores index of bbOld for each pixel in clusterInds
 	 */
-	private void setVoronoiClusters(){
+	private boolean setVoronoiClusters(){
+		boolean anyUnset = false;
 		
 		if(bf!=null){
 			bf.comm.message("Setting Voronoi clusters", VerbLevel.verb_debug);
@@ -260,8 +269,11 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 					minInd = cl;
 				}
 			}
+			if (minInd==-1) anyUnset=true;
 			clusterInds[pix] = minInd;
 		}
+		
+		return anyUnset;
 	}
 
 

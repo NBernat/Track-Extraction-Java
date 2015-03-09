@@ -1,14 +1,6 @@
-import java.awt.Color;
-import java.util.Vector;
-
 import ij.IJ;
-import ij.ImagePlus;
-import ij.ImageStack;
-import ij.gui.PolygonRoi;
 import ij.io.OpenDialog;
 import ij.plugin.PlugIn;
-import ij.process.FloatPolygon;
-import ij.process.ImageProcessor;
 import ij.text.TextWindow;
 
 
@@ -71,7 +63,7 @@ public class Experiment_Viewer implements PlugIn{
 		IJ.showStatus("Creating Backbone Fitter");
 		BackboneFitter bbf = new BackboneFitter();
 		
-		Track tr = ex.tracks.get(0);
+		Track tr = ex.tracks.get(12);
 		for (int i=40; i<55; i++){
 			MaggotTrackPoint mtp = (MaggotTrackPoint)tr.points.get(i);  
 			mtp.midline=null;

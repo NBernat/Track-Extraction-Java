@@ -8,7 +8,6 @@ import ij.measure.Measurements;
 import ij.measure.ResultsTable;
 import ij.plugin.filter.ParticleAnalyzer;
 import ij.process.Blitter;
-import ij.process.ByteProcessor;
 import ij.process.ImageProcessor;
 
 
