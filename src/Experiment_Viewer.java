@@ -63,21 +63,23 @@ public class Experiment_Viewer implements PlugIn{
 		IJ.showStatus("Creating Backbone Fitter");
 		BackboneFitter bbf = new BackboneFitter();
 		
-		Track tr = ex.tracks.get(12);
-		for (int i=40; i<55; i++){
-			MaggotTrackPoint mtp = (MaggotTrackPoint)tr.points.get(i);  
-			mtp.midline=null;
+		int index = ex.getTrack(16);
+		if (index>=0){
+			Track tr = ex.tracks.get(index);
+//			for (int i=60; i<65; i++){
+//				MaggotTrackPoint mtp = (MaggotTrackPoint)tr.points.get(i);  
+//				mtp.midline=null;
+//			}
+			ex.tracks.addElement(tr);
+			IJ.showStatus("Fitting Track");
+			bbf.fitTrack(tr);
+			
+			Track bbTrack = new Track(bbf.BTPs);
+	//		testInterpolator(bbf);
+			
+			IJ.showStatus("Track fit!");
+			ex.tracks.add(bbTrack);
 		}
-		ex.tracks.addElement(tr);
-		IJ.showStatus("Fitting Track");
-		bbf.fitTrack(tr);
-		
-		Track bbTrack = new Track(bbf.BTPs);
-//		testInterpolator(bbf);
-		
-		IJ.showStatus("Track fit!");
-		ex.tracks.add(bbTrack);
-		
 		
 		
 	}

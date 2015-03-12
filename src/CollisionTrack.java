@@ -6,9 +6,6 @@ import java.util.Vector;
 public class CollisionTrack extends Track{
 
 	
-	//TODO
-//	Collision coll;
-	
 	/**
 	 * 
 	 */
@@ -27,19 +24,13 @@ public class CollisionTrack extends Track{
 	public CollisionTrack(TrackBuilder tb) {
 		super(tb);
 		colInit(null);
-		// TODO Auto-generated constructor stub
 	}
 	
 	
 	public CollisionTrack(TrackPoint firstPt, TrackBuilder tb) {
 		super(firstPt, tb);
 		colInit(null);
-		// TODO Auto-generated constructor stub
 	}
-
-//	public void setCollision(Collision c){
-//		coll = c;
-//	}
 	
 	public CollisionTrack(Vector<TrackMatch> collMatches, TrackBuilder tb) {
 		super(tb);
@@ -89,36 +80,52 @@ public class CollisionTrack extends Track{
 		 
 		tb.comm.message("Trying to end collision for track "+trackID, VerbLevel.verb_debug);
 		
-		//When the area of the maggot in a collision drops significantly 
-		if(getMatch()!=null){
-			double areaFrac = getMatch().areaChangeFrac(); 
-			tb.comm.message("Area Frac, point "+getMatch().getTopMatchPoint().pointID+": "+areaFrac, VerbLevel.verb_debug);
-			if (0<areaFrac && areaFrac<tb.ep.maxAreaFracForCollisionEnd){
-				//Find a nearby maggot using the most recent match 
-				//There's only one trackmatch, so look in just that one for an empty point
-				Vector<Integer> emptInds = getMatch().indsOfValidNonPrimaryEmptyMatches();
-				if (emptInds.size()>0) {
-					//Woo! it was found! Now fix the collision
-	//				endCollision();
-					Vector<TrackMatch> newMatches = splitColMatchIntoTwo(emptInds.firstElement());
-					
-					//Set the outTracks
-					ListIterator<TrackMatch> tmIt = newMatches.listIterator();
-					while (tmIt.hasNext()){
-						outTracks.addElement(tmIt.next().track);
-					}
-					
-					return newMatches;
-				}
-				} else {
-					tb.comm.message("No empty points were found nearby", VerbLevel.verb_debug);
-	//				return -2;
-				}
-				
+		 
+		if(getMatch()!=null){ //i.e. if this is not the first point in the track
 			
+			//Check the ratio of areas between the tentative next point and the last point in the collision
+			double areaFrac = getMatch().areaChangeFrac(); 
+			if(areaFrac>0){
+				tb.comm.message("Area Frac, point "+getMatch().getTopMatchPoint().pointID+": "+areaFrac, VerbLevel.verb_debug);
+				
+				//When the area of the maggot in a collision drops significantly
+				if (areaFrac<tb.ep.maxAreaFracForCollisionEnd){
+					//Find a nearby maggot using the most recent match 
+					//There's only one trackmatch, so look in just that one for an empty point
+					Vector<Integer> emptInds = getMatch().indsOfValidNonPrimaryEmptyMatches();
+					
+					if (emptInds.size()>0) {
+						//Woo! it was found! Now fix the collision
+						Vector<TrackMatch> newMatches = splitColMatchIntoTwo(emptInds.firstElement());
+						//Set the outTracks
+						ListIterator<TrackMatch> tmIt = newMatches.listIterator();
+						while (tmIt.hasNext()){
+							outTracks.addElement(tmIt.next().track);
+						}
+						return newMatches;
+						
+						
+					} else {
+						//The area dropped, but no points were found nearby  
+						tb.comm.message("No empty points were found nearby", VerbLevel.verb_debug);
+						
+						//TODO end the collision track, start new track (i.e. setup for trackBuilder machinery)
+						//Create a new track by generating a new match
+						Vector<TrackMatch> newMatches = new Vector<TrackMatch>();
+						TrackMatch newMatch = new TrackMatch(new Track(tb), getMatch());
+						newMatches.add(newMatch);
+						
+						//Clear the old match 
+						outTracks.add(newMatch.track);
+						getMatch().clearAllMatches();//End the collision track
+						
+						return newMatches;
+					}
+				}
+			}
 		}
-		return null; 
-//		return -1;
+		//If this is the first point, or if the area did not change significantly
+		return null;
 	}
 	
 	/**
@@ -164,6 +171,25 @@ public class CollisionTrack extends Track{
 		}
 		
 		return s;
+	}
+	
+	public String inAndOutString(){
+		String s = "";
+		s += "InTracks";
+		for (int i=0; i<inTracks.size(); i++){
+			s += " "+inTracks.get(i).trackID;
+		}
+		s += "\nOutTracks";
+		for (int i=0; i<outTracks.size(); i++){
+			s += " "+outTracks.get(i).trackID;
+		}
+		return s;
+		
+	}
+	
+	
+	public String description(){
+		return makeDescription(""+trackID, points, inAndOutString());
 	}
 	
 }

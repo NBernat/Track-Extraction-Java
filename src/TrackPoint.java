@@ -229,7 +229,7 @@ public class TrackPoint extends Point {
 	}
 	
 	public String getTPDescription(){
-		return "ID="+pointID+" ("+(int)x+","+(int)y+")";
+		return "Frame "+frameNum+" ID="+pointID+" ("+(int)x+","+(int)y+")";
 	}
 	
 //	public ImageProcessor getIm( )

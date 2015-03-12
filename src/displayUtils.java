@@ -98,11 +98,21 @@ public class displayUtils {
 		im.setColor(color);
 		if (bbInit!=null){
 			for (int i=0; i<bbInit.npoints; i++){
-				int dotX = offX + (int)(expandFac*(bbInit.xpoints[i]-rect.x));
-				int dotY = offY + (int)(expandFac*(bbInit.ypoints[i]-rect.y));
-				int circWid = 2;
-				im.drawOval(dotX-(circWid/2), dotY-(circWid/2), circWid, circWid);
-//				im.drawDot(dotX, dotY);
+				int x = (int)(expandFac*(bbInit.xpoints[i]-rect.x));
+				int y = (int)(expandFac*(bbInit.ypoints[i]-rect.y));
+				
+				if (!(x==0 && y==0)) {
+					int dotX = offX + x;
+					int dotY = offY + y;
+					int circWid = 2;
+					im.drawOval(dotX-(circWid/2), dotY-(circWid/2), circWid, circWid);
+	//				im.drawDot(dotX, dotY);
+				} else {
+					im.setColor(Color.RED);
+					im.drawOval(0, 0, 5, 5);
+					im.setColor(color);
+				}
+				
 			}
 		}
 	}
@@ -111,10 +121,19 @@ public class displayUtils {
 		im.setColor(color);
 		if (bbNew!=null){
 			for (int i=0; i<bbNew.npoints; i++){
-				int dotX = offX + (int)(expandFac*(bbNew.xpoints[i]-rect.x));
-				int dotY = offY + (int)(expandFac*(bbNew.ypoints[i]-rect.y));
-				int circWid = 8;
-				im.drawOval(dotX-(circWid/2), dotY-(circWid/2), circWid, circWid);
+				int x = (int)(expandFac*(bbNew.xpoints[i]-rect.x));
+				int y = (int)(expandFac*(bbNew.ypoints[i]-rect.y));
+				
+				if(!(x==0 && y==0)){
+					int dotX = offX + x;
+					int dotY = offY + y;
+					int circWid = 8;
+					im.drawOval(dotX-(circWid/2), dotY-(circWid/2), circWid, circWid);
+				} else {
+					im.setColor(Color.RED);
+					im.drawOval(0, 0, 5, 5);
+					im.setColor(color);
+				}
 			}
 		}
 	}

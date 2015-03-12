@@ -112,7 +112,7 @@ public class ExperimentFrame extends JFrame{
 	}
 	
 	protected void showFrame(){
-		setSize(400, 300);
+		setSize(450, 300);
 		setTitle("Experiment "+ex.fname);
 		setVisible(true);
 	}
@@ -175,7 +175,9 @@ public class ExperimentFrame extends JFrame{
 		
 		ListIterator<Track> trIt = ex.tracks.listIterator();
 		while(trIt.hasNext()){
-			String name = "Track "+trIt.next().trackID;
+			Track t = trIt.next();
+			String name = "Track "+t.trackID;
+			if (t instanceof CollisionTrack) name+="*";
 			names.add(name);
 		}
 		
@@ -250,8 +252,19 @@ class TrackPanel extends JPanel {
 	}
 	
 	public void playCurrentTrack(){
-		if (track!=null){
-			track.playMovie();
+		try{
+			if (track!=null){
+				track.playMovie();
+			}
+		} catch(Exception e){
+			String err = "";
+			StackTraceElement[] ste = e.getStackTrace();
+			for (int i=0; i<ste.length; i++){
+				err += ste[i].toString()+"\n";
+			}
+			
+			
+			new TextWindow("PlayMovie Error", "Could not play track "+track.trackID+" movie\n"+err+"\n", 500, 500);
 		}
 	}
 	

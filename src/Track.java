@@ -237,7 +237,7 @@ public class Track implements Serializable{
 		if (tpIt.hasNext()) {
 		
 			
-			TrackPoint point = points.firstElement();
+			TrackPoint point = tpIt.next();
 			point.setTrack(this);
 			
 			//Get the first image
@@ -324,19 +324,25 @@ public class Track implements Serializable{
 	
 	
 	
-	public static String makeDescription(String ID, Vector<TrackPoint> pointList){
+	protected static String makeDescription(String ID, Vector<TrackPoint> pointList, String addInfo){
 		
 		String lb = "\n";//System.lineSeparator();
 		
 		String d = "";
 		d += "Track "+ID+lb+lb;
+		
 		if (pointList!=null){
 			d += "Frames: ";
 			d += (pointList.size()>0) ? pointList.firstElement().frameNum+"-"+pointList.lastElement().frameNum+lb+lb : "X-X"+lb+lb;
+		}
+		
+		if(!addInfo.equals("")) d += addInfo+lb+lb;
+		
+		if (pointList!=null){
 			d += "Points("+pointList.size()+"):"+lb;
 			for (int i=0; i<pointList.size(); i++){
 				TrackPoint pt = pointList.get(i);
-				d += i+": "+pt.getTPDescription()+lb;
+				d += (i+1)+": "+pt.getTPDescription()+lb;
 			}
 		}else {
 			d += "Frames: "+lb+lb;
@@ -347,11 +353,11 @@ public class Track implements Serializable{
 	}
 	
 	public String description(){
-		return makeDescription(""+trackID, points);
+		return makeDescription(""+trackID, points, "");
 	}
 	
 	public static String emptyDescription(){
-		return makeDescription("X", null);
+		return makeDescription("X", null, "");
 	}
 		
 }

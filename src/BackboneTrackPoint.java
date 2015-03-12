@@ -155,11 +155,8 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 			
 			setInitialBB(new PolygonRoi(initBB, PolygonRoi.POLYLINE), numBBPts);
 			setMagPix();
-			boolean anyUnset = setVoronoiClusters();
+			setVoronoiClusters();
 			
-			if (bf!=null){
-				 if (anyUnset) bf.comm.message("Voronoi clusters went unset in frame "+frameNum, VerbLevel.verb_warning);
-			}
 		}
 	}
 	
@@ -248,8 +245,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	/**
 	 * Finds the nearest backbone point to each maggot pixel, stores index of bbOld for each pixel in clusterInds
 	 */
-	private boolean setVoronoiClusters(){
-		boolean anyUnset = false;
+	private void setVoronoiClusters(){
 		
 		if(bf!=null){
 			bf.comm.message("Setting Voronoi clusters", VerbLevel.verb_debug);
@@ -269,11 +265,14 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 					minInd = cl;
 				}
 			}
-			if (minInd==-1) anyUnset=true;
+			if (minInd==-1) {
+				bf.comm.message("Voronoi clusters went unset in frame "+frameNum, VerbLevel.verb_warning);
+				
+				
+			}
 			clusterInds[pix] = minInd;
 		}
 		
-		return anyUnset;
 	}
 
 
@@ -339,15 +338,8 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	
 	public ImageProcessor getIm(){
 
-		boolean clusters = false;
-		boolean mid = true;
-		boolean initialBB = true; 
-		boolean contour = false;
-		boolean ht = false;
-		boolean forces = false;
-		boolean backbone = true;
-		
-		return getIm(clusters, mid, initialBB, contour, ht, forces, backbone);
+		return getIm(MaggotDisplayParameters.clusters,MaggotDisplayParameters.mid, MaggotDisplayParameters.initialBB, 	
+				MaggotDisplayParameters.contour, MaggotDisplayParameters.ht, MaggotDisplayParameters.forces, MaggotDisplayParameters.backbone);
 		
 	}
 	
@@ -433,7 +425,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 				
 				FloatPolygon targetPts = bf.Forces.get(f).getTargetPoints(frameNum-bf.BTPs.firstElement().frameNum, bf.BTPs);
 				
-				if (targetPts!=null){
+				if (targetPts!=null && targetPts.npoints==bbNew.npoints){
 					for (int i=0; i<targetPts.npoints; i++){
 						
 						int x1 = offX + (int)(expandFac*(bbNew.xpoints[i]-rect.x));

@@ -673,7 +673,7 @@ public class TrackBuilder implements Serializable{
 				
 				Vector<TrackMatch> newMatches = col.tryToEndCollision(); 
 				
-				if (newMatches!=null && newMatches.size()>0){ //The collision was fixed! 
+				if (newMatches!=null && newMatches.size()>0){ //The collision was fixed! (or simply ended)
 					
 					finishedColIDs.add(colID);
 					activeColIDs.remove(colID);

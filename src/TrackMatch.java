@@ -356,7 +356,7 @@ public class TrackMatch implements Serializable {
 	 * @return Area of the top match point expressed as a fraction of the last pointin the track, or -1 if there are not enough points in the track
 	 */
 	public double areaChangeFrac(){
-		if (track.points.size()>0){
+		if (track.points.size()>0 && getTopMatchPoint()!=null){
 			
 			return (getTopMatchPoint().area)/(track.getEnd().area);
 			

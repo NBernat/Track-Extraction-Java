@@ -139,7 +139,14 @@ public class Experiment implements Serializable{
 		return ex;
 	}
 	
-	
+	public int getTrack(int trackNum){
+		
+		ListIterator<Track> trIt = tracks.listIterator();
+		while(trIt.hasNext()){
+			if(trIt.next().trackID==trackNum) return trIt.previousIndex();
+		}
+		return -1;
+	}
 	
 	
 	

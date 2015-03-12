@@ -6,6 +6,8 @@ import java.util.Arrays;
 import java.util.ListIterator;
 import java.util.Vector;
 
+import com.sun.xml.internal.bind.v2.schemagen.xmlschema.List;
+
 /**
  * Fits backbones to a track of MaggotTrackPoints
  * 
@@ -148,7 +150,8 @@ public class BackboneFitter {
 
 				boolean[] emptyMidlines = extractTracks();
 				comm.message("Filling midlines", VerbLevel.verb_debug);
-				fillEmptyMidlines(emptyMidlines);
+				Vector<Gap> gaps = makeGaps(emptyMidlines);
+				fillGaps(gaps);
 				return true;
 
 			} else {
@@ -207,6 +210,57 @@ public class BackboneFitter {
 		return emptyMidlines;
 	}
 
+	
+	private Vector<Gap> makeGaps(boolean[] emptyMidlines){
+		
+		Vector<Gap> gaps = new Vector<Gap>();
+		
+		//Build the gap list
+		int gapStart = -1;
+		int ptr = 0;
+		while (ptr < emptyMidlines.length) {
+
+			if (emptyMidlines[ptr]) {
+				gapStart = ptr;
+				// Find the end of the gap
+				do ++ptr; while (emptyMidlines[ptr] && ptr < emptyMidlines.length);
+				//Make a new gap
+				gaps.add(new Gap(gapStart, ptr-1));
+				
+			} else {
+				++ptr;
+			}
+		}
+
+		//Sanitize the gap list
+//		sanitizeGaps(gaps);
+		return gaps;
+	}
+	
+	private void sanitizeGaps(Vector<Gap> gaps){
+		
+		Gap prev;
+		Gap curr;
+		
+		ListIterator<Gap> gIt = gaps.listIterator();
+		curr = gIt.next();
+		while (gIt.hasNext()){
+			
+			prev = curr;
+			curr = gIt.next();
+			
+			if (prev.distBtwn(curr)<params.minValidSegmentLen){ 
+				prev.merge2Next(curr);
+				gIt.remove();
+			}
+						
+		}
+		
+		
+		
+	}
+	
+	
 	/**
 	 * Finds and fills all the empty midlines
 	 * 
@@ -214,33 +268,23 @@ public class BackboneFitter {
 	 *            A list of booleans indicating whether or not the midline in
 	 *            the corresponding BTP is empty
 	 */
-	private void fillEmptyMidlines(boolean[] emptyMidlines) {
+	private void fillGaps(Vector<Gap> gaps) {
 
-		int gapStart = -1;
-
-		int ptr = 0;
-		while (ptr < emptyMidlines.length) {
-
-			if (emptyMidlines[ptr]) {
-				gapStart = ptr;
-				// Find the end of the gap
-				do
-					++ptr;
-				while (emptyMidlines[ptr] && ptr < emptyMidlines.length);
-				// Fill the gap
-				comm.message("Filling gap at TP "+gapStart+"-"+(ptr-1), VerbLevel.verb_debug);
-				boolean noError = fillGap(gapStart, ptr - 1);
-				if(noError){
-					comm.message("Filled successfully", VerbLevel.verb_debug);
-				} else {
-					comm.message("Error filling gap", VerbLevel.verb_debug);
-				}
-				
-
+		
+		ListIterator<Gap> gIt = gaps.listIterator();
+		Gap g;
+		while(gIt.hasNext()){
+			g = gIt.next();
+			comm.message("Filling gap at TP "+g.start+"-"+g.end, VerbLevel.verb_debug);
+			boolean noError = fillGap(g.start, g.end);
+			if(noError){
+				comm.message("Filled successfully", VerbLevel.verb_debug);
 			} else {
-				++ptr;
+				comm.message("Error filling gap", VerbLevel.verb_debug);
 			}
 		}
+		
+		
 
 	}
 
@@ -361,7 +405,7 @@ public class BackboneFitter {
 		start = (float)Math.atan2(ybbfirst[0], xbbfirst[0]);
 		end = (float)Math.atan2(ybbend[0], xbbend[0]);
 		float dif = (float)((end-start+2*Math.PI)%(2*Math.PI));
-		if( ((start-end+2*Math.PI)%(2*Math.PI))<dif ) dif = (float)((start-end+2*Math.PI)%(2*Math.PI));
+		if( ((start-end+2*Math.PI)%(2*Math.PI))<dif ) dif = -(float)((start-end+2*Math.PI)%(2*Math.PI));
 		dif = dif/(numnewbbs+1);
 		for(int j=0; j<angles.length; j++) angles[j]=start+dif*(j+1);
 		
@@ -565,4 +609,28 @@ public class BackboneFitter {
 		return Forces.get(ind).getName();
 	}
 
+}
+
+class Gap{
+	
+	int start;
+	int end;
+	
+	public Gap(int s, int e){
+		start = s;
+		end = e;
+	}
+	
+	public int len(){
+		return end-start+1;
+	}
+	
+	public int distBtwn(Gap g2){
+		return g2.start-end-1;
+	}
+	
+	public void merge2Next(Gap gNext){
+		end = gNext.end;
+	}
+	
 }
