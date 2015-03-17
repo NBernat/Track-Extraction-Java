@@ -54,7 +54,7 @@ public class Track_Extractor implements PlugIn{
 			ef = new ExperimentFrame(exp);
 			ef.run(null);
 			
-			
+			new TextWindow("Communicator Output", tb.comm.outString, 500, 500);
 		}
 		catch (Exception e) {
 			

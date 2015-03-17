@@ -78,6 +78,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	
 	transient BackboneFitter bf;
 	
+	protected boolean artificialMid;
 	
 	/**
 	 * Constructs a BackboneTrackPoint
@@ -130,6 +131,8 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	protected void fillInMidline(PolygonRoi newMidline, float[] prevOrigin){
 		
 		if(newMidline!=null){
+			
+			artificialMid = true;
 			
 			//Correct the origin of the midline
 			FloatPolygon newMid = newMidline.getFloatPolygon();
@@ -448,6 +451,31 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		
 		return im;
 	}
+	
+	
+	public String getTPDescription(){
+		String s = super.getTPDescription();
+		if (artificialMid) s+=" filled mid";
+		return s;
+	}
+	
+	public double bbInitDist(FloatPolygon otherbb){
+		double totalDistSqr = 0;
+		
+		if (bbInit!=null && otherbb!=null && bbInit.npoints!=0 && otherbb.npoints!=0 && bbInit.npoints==otherbb.npoints){
+			
+			for (int i=0; i<bbInit.npoints; i++){
+				totalDistSqr+= (bbInit.xpoints[i]-otherbb.xpoints[i])*(bbInit.xpoints[i]-otherbb.xpoints[i]);
+				totalDistSqr+= (bbInit.ypoints[i]-otherbb.ypoints[i])*(bbInit.ypoints[i]-otherbb.ypoints[i]);
+			}
+			
+		} else {
+			return -1.0;	
+		}
+		
+		return Math.sqrt(totalDistSqr);
+	}
+	
 	
 //	private int getPlotXCoord(float xCoord, int offX, int expandFac){
 //		

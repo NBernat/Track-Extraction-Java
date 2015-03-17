@@ -1,12 +1,9 @@
 import ij.gui.PolygonRoi;
 import ij.process.FloatPolygon;
 import ij.text.TextWindow;
-
 import java.util.Arrays;
 import java.util.ListIterator;
 import java.util.Vector;
-
-import com.sun.xml.internal.bind.v2.schemagen.xmlschema.List;
 
 /**
  * Fits backbones to a track of MaggotTrackPoints
@@ -147,11 +144,23 @@ public class BackboneFitter {
 		// BackboneTrackPoints to hold the new backbone info
 		try {
 			if (track.points.get(0) instanceof MaggotTrackPoint) {// track.points.get(0).pointType==2
+				
 
+				comm.message("Extracting maggot tracks", VerbLevel.verb_debug);
 				boolean[] emptyMidlines = extractTracks();
+				
+				comm.message("Clearing flickers", VerbLevel.verb_debug);
+				clearFlickerMids(emptyMidlines);
+				
+				comm.message("Finding gaps", VerbLevel.verb_debug);
+				Vector<Gap> gaps = findGaps(emptyMidlines);
+				comm.message("Cleaning gaps", VerbLevel.verb_debug);
+				sanitizeGaps(gaps);
+				
+				
 				comm.message("Filling midlines", VerbLevel.verb_debug);
-				Vector<Gap> gaps = makeGaps(emptyMidlines);
 				fillGaps(gaps);
+				
 				return true;
 
 			} else {
@@ -202,6 +211,9 @@ public class BackboneFitter {
 			} else {
 				comm.message("convertMTPtoBTP successful", VerbLevel.verb_debug);
 			}
+			
+			//TODO make emptyMidlines[i] true when it's too far from the previous spine
+			
 
 			btp.bf = this;
 			BTPs.add(btp);
@@ -210,8 +222,36 @@ public class BackboneFitter {
 		return emptyMidlines;
 	}
 
+	private void clearFlickerMids(boolean[] emptyMidlines){
+		BackboneTrackPoint prevMag = null;
+		BackboneTrackPoint currMag;
+		double dist = -1;;
+		
+		int currInd = 0;
+		ListIterator<BackboneTrackPoint> btpIt = BTPs.listIterator();
+		while(btpIt.hasNext()){
+			
+			currMag = btpIt.next();
+			if(prevMag!=null) {
+				dist = currMag.bbInitDist(prevMag.bbInit);
+			} else {
+				dist = -1;
+			}
+			
+			if (dist>0 && dist>params.minFlickerDist) {
+				emptyMidlines[currInd] = true;
+				comm.message("Flicker at "+(currInd+BTPs.firstElement().frameNum), VerbLevel.verb_debug);
+			}
+			
+			prevMag = currMag;
+			currInd++;
+		}
+		
+		
+	}
 	
-	private Vector<Gap> makeGaps(boolean[] emptyMidlines){
+	
+	private Vector<Gap> findGaps(boolean[] emptyMidlines){
 		
 		Vector<Gap> gaps = new Vector<Gap>();
 		
@@ -221,6 +261,7 @@ public class BackboneFitter {
 		while (ptr < emptyMidlines.length) {
 
 			if (emptyMidlines[ptr]) {
+				comm.message("Gap starting at frame "+(ptr+BTPs.firstElement().frameNum), VerbLevel.verb_debug);
 				gapStart = ptr;
 				// Find the end of the gap
 				do ++ptr; while (emptyMidlines[ptr] && ptr < emptyMidlines.length);
@@ -232,28 +273,72 @@ public class BackboneFitter {
 			}
 		}
 
-		//Sanitize the gap list
-//		sanitizeGaps(gaps);
 		return gaps;
 	}
 	
 	private void sanitizeGaps(Vector<Gap> gaps){
 		
-		Gap prev;
-		Gap curr;
+				
+		if (gaps.size()>1){
+			
+			comm.message("Merging "+gaps.size()+" gaps", VerbLevel.verb_debug); 
+			
+			if (mergeGaps(gaps)) {
+				clearGaps(gaps);
+				MaggotTrackBuilder.orientMaggotTrack(track, comm);
+			}
+			
+			comm.message("After sanitizing, there are "+gaps.size()+" gaps", VerbLevel.verb_debug); 
+		
+		} else {
+			comm.message("Only one gap, no need to sanitize", VerbLevel.verb_debug);
+		}
+		
+	}
+	
+	private boolean mergeGaps(Vector<Gap> gaps){
+		
+		boolean clearGaps = false;
+		
+		Gap prevGap;
+		Gap currGap = null;
 		
 		ListIterator<Gap> gIt = gaps.listIterator();
-		curr = gIt.next();
-		while (gIt.hasNext()){
+		prevGap = gIt.next();//First gap
+		
+		do{
+			//Always advance the next gap
+			currGap = gIt.next();
 			
-			prev = curr;
-			curr = gIt.next();
+			comm.message("Checking gaps "+prevGap.start+"-"+prevGap.end+" & "+currGap.start+"-"+currGap.end, VerbLevel.verb_debug);
 			
-			if (prev.distBtwn(curr)<params.minValidSegmentLen){ 
-				prev.merge2Next(curr);
-				gIt.remove();
+			if (prevGap.distTo(currGap)<params.minValidSegmentLen){ 
+				comm.message("Merging gaps", VerbLevel.verb_debug);
+				prevGap.merge2Next(currGap); //Move currGap into prevGap
+				gIt.remove(); //Remove currGap from the list
+				//Do not advance prevGap, so you compare the next gap to the merged gap
+				clearGaps = true;
+			} else {
+				//Advance prevGap
+				prevGap = currGap;
 			}
-						
+			
+		} while (gIt.hasNext());
+		
+		return clearGaps;
+	}
+
+	private void clearGaps(Vector<Gap> gaps){
+		for (int i=0; i<gaps.size(); i++){
+			clearGapMidlines(gaps.get(i));
+		}
+	}
+	
+	private void clearGapMidlines(Gap gap){
+		
+		for (int i=gap.start; i<=gap.end; i++){
+			MaggotTrackPoint mtp = (MaggotTrackPoint) track.points.get(i);
+			mtp.midline = null;
 		}
 		
 		
@@ -261,7 +346,7 @@ public class BackboneFitter {
 	}
 	
 	
-	/**
+		/**
 	 * Finds and fills all the empty midlines
 	 * 
 	 * @param emptyMidlines
@@ -283,11 +368,8 @@ public class BackboneFitter {
 				comm.message("Error filling gap", VerbLevel.verb_debug);
 			}
 		}
-		
-		
-
 	}
-
+	
 	/**
 	 * Fills the specified gap in midlines. If the gap is small enough
 	 * (according to FittingParameters), the previous (or following midline) is
@@ -625,8 +707,13 @@ class Gap{
 		return end-start+1;
 	}
 	
-	public int distBtwn(Gap g2){
-		return g2.start-end-1;
+	public int distTo(Gap g2){
+		
+		if(g2.start<end){
+			return start-g2.end-1;//g2.distTo(this);
+		} else {
+			return g2.start-end-1;
+		}
 	}
 	
 	public void merge2Next(Gap gNext){
