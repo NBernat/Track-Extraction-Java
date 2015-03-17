@@ -2,6 +2,7 @@ import ij.ImagePlus;
 import ij.gui.PolygonRoi;
 import ij.process.FloatPolygon;
 import ij.process.ImageProcessor;
+import ij.text.TextWindow;
 
 import java.awt.Color;
 import java.awt.Rectangle;
@@ -420,28 +421,36 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		
 		//FORCES
 		if (forces) {
+			String status = "Frame "+frameNum+"\n";
 	//		displayUtils.drawForces(im, bbNew, bf.Forces, bf.BTPs, expandFac, expandFac, offX, offY, rect);
 			Color[] colors = {Color.WHITE, Color.MAGENTA,Color.GREEN, Color.CYAN, Color.RED};
-			for(int f=0; f<bf.Forces.size(); f++){
+			for(int f=0; f<(bf.Forces.size()-1); f++){
 				
 				im.setColor(colors[f]);
-				
-				FloatPolygon targetPts = bf.Forces.get(f).getTargetPoints(frameNum-bf.BTPs.firstElement().frameNum, bf.BTPs);
-				
-				if (targetPts!=null && targetPts.npoints==bbNew.npoints){
-					for (int i=0; i<targetPts.npoints; i++){
-						
-						int x1 = offX + (int)(expandFac*(bbNew.xpoints[i]-rect.x));
-						int y1 = offY + (int)(expandFac*(bbNew.ypoints[i]-rect.y));
-						int x2 = (int)(expandFac*(targetPts.xpoints[i]-rect.x)+offX);
-						int y2 = (int)(expandFac*(targetPts.ypoints[i]-rect.y)+offY);
-						
-						im.drawLine(x1, y1, x2, y2);
-	//					im.drawDot((int)(expandFac*(targetPts.xpoints[i]-rect.x)+offX), (int)(expandFac*(targetPts.ypoints[i]-rect.y)+offY));
-						
+				try{
+					status += bf.Forces.get(f).getName()+": ";
+					
+					FloatPolygon targetPts = bf.Forces.get(f).getTargetPoints(frameNum-bf.BTPs.firstElement().frameNum, bf.BTPs);
+					
+					if (targetPts!=null && targetPts.npoints==bbNew.npoints){
+						for (int i=0; i<targetPts.npoints; i++){
+							
+							int x1 = offX + (int)(expandFac*(bbNew.xpoints[i]-rect.x));
+							int y1 = offY + (int)(expandFac*(bbNew.ypoints[i]-rect.y));
+							int x2 = (int)(expandFac*(targetPts.xpoints[i]-rect.x)+offX);
+							int y2 = (int)(expandFac*(targetPts.ypoints[i]-rect.y)+offY);
+							status += "("+(targetPts.xpoints[i]-rect.x)+","+(targetPts.ypoints[i]-rect.y)+") ";
+							
+							im.drawLine(x1, y1, x2, y2);
+							im.drawOval(x2, y2, 2, 2);
+		//					im.drawDot((int)(expandFac*(targetPts.xpoints[i]-rect.x)+offX), (int)(expandFac*(targetPts.ypoints[i]-rect.y)+offY));
+							
+						}
 					}
+					status+="\n";
+				} catch (Exception e ){
+					new TextWindow("Plotting Error: Forces", status, 500, 500);
 				}
-				
 			}
 		}
 			

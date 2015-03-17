@@ -38,8 +38,10 @@ public class ImageForce extends Force {
 		}
 		//Normalize the coordinates
 		for (int k=0; k<numBBPts; k++){
-			targetX[k] = targetX[k]/norm[k];
-			targetY[k] = targetY[k]/norm[k];
+			if (norm[k]!=0){
+				targetX[k] = targetX[k]/norm[k];
+				targetY[k] = targetY[k]/norm[k];
+			} 
 		}
 		
 		

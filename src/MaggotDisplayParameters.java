@@ -6,7 +6,7 @@ public class MaggotDisplayParameters {
 	static boolean initialBB = true; 
 	static boolean contour = false;
 	static boolean ht = true;
-	static boolean forces = false;
+	static boolean forces = true;
 	static boolean backbone = true;
 	
 	

@@ -1,3 +1,5 @@
+import ij.IJ;
+
 
 /**
  * Provides a BackboneFitter with methods to implement the following updating scheme:
@@ -76,6 +78,8 @@ public class BBFUpdateScheme {
 	public boolean keepGoing(double[] shifts){
 		
 		totalCount++;
+		if (totalCount>15) comm.setVerbosity(VerbLevel.verb_off);
+		IJ.showStatus("Iteration "+totalCount);
 		currentSchemeCount++;
 		
 		comm.message("Checking keepGoing after iteration "+totalCount, VerbLevel.verb_debug);

@@ -657,7 +657,7 @@ public class BackboneFitter {
 			float[] weights = Forces.get(tb).getWeights();
 
 			for (int k = 0; k < params.numBBPts; k++) {
-				if (weights[k] != 0) {
+				if (weights[k] != 0 && targetX[k]!=0 && targetY[k]!=0) {
 					newX[k] += targetX[k] * weights[k];
 					newY[k] += targetY[k] * weights[k];
 					normFactors[k] += weights[k];
