@@ -421,6 +421,8 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		
 		//FORCES
 		if (forces) {
+			boolean error = false;
+			
 			String status = "Frame "+frameNum+"\n";
 	//		displayUtils.drawForces(im, bbNew, bf.Forces, bf.BTPs, expandFac, expandFac, offX, offY, rect);
 			Color[] colors = {Color.WHITE, Color.MAGENTA,Color.GREEN, Color.CYAN, Color.RED};
@@ -449,9 +451,13 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 					}
 					status+="\n";
 				} catch (Exception e ){
-					new TextWindow("Plotting Error: Forces", status, 500, 500);
+					error = true;
+//					new TextWindow("Plotting Error: Forces", status, 500, 500);
 				}
 			}
+			
+			if (error && track!=null && track.comm!=null) comm.message(status, VerbLevel.verb_error);
+			
 		}
 			
 			

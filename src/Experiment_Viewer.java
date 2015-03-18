@@ -66,7 +66,7 @@ public class Experiment_Viewer implements PlugIn{
 		int index = ex.getTrack(4);
 		if (index>=0){
 			Track tr = ex.tracks.get(index);
-//			for (int i=60; i<65; i++){
+//			for (int i=60; i<61; i++){
 //				MaggotTrackPoint mtp = (MaggotTrackPoint)tr.points.get(i);  
 //				mtp.midline=null;
 //			}

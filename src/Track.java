@@ -1,6 +1,7 @@
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.process.ImageProcessor;
+import ij.text.TextWindow;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -27,7 +28,7 @@ public class Track implements Serializable{
 	 * <p> 
 	 * Incremented each time a new track is made
 	 */
-	static int lastIDNum=0;
+	static int nextIDNum=0;
 	//isActive?
 	
 	/**
@@ -60,7 +61,10 @@ public class Track implements Serializable{
 	 * Access to the experiment
 	 */
 	Experiment exp;
-		
+	
+	transient Communicator comm;
+	
+	
 	///////////////////////////
 	// Constructors
 	///////////////////////////	
@@ -72,8 +76,8 @@ public class Track implements Serializable{
 		isCollision = new Vector<Boolean>();
 //		collisions = new Vector<Collision>(); 
 		
-		trackID = lastIDNum;
-		lastIDNum++;
+		trackID = nextIDNum;
+		nextIDNum++;
 		this.tb = tb;
 
 	}
@@ -88,9 +92,30 @@ public class Track implements Serializable{
 		isCollision = new Vector<Boolean>();
 //		collisions = new Vector<Collision>(); 
 		
-		trackID = lastIDNum;
-		lastIDNum++;
+		trackID = nextIDNum;
+		nextIDNum++;
 
+	}
+	
+	public Track(Vector<BackboneTrackPoint> pts, Track tr){
+		
+		nextIDNum = tr.getNextIDNum();
+		maxHeight = tr.maxHeight;
+		maxWidth = tr.maxWidth;
+		exp = tr.exp;
+		isCollision = tr.isCollision;
+		
+		points = new Vector<TrackPoint>();
+		points.addAll(pts);
+		for (int i=0; i<points.size(); i++){
+			points.get(i).track = this;
+		}
+		
+		
+		trackID = nextIDNum;
+		nextIDNum++;
+		
+		
 	}
 	
 	public Track(TrackPoint firstPt, TrackBuilder tb){
@@ -102,8 +127,8 @@ public class Track implements Serializable{
 		
 		extendTrack(firstPt);
 		
-		trackID = lastIDNum;
-		lastIDNum++;
+		trackID = nextIDNum;
+		nextIDNum++;
 		this.tb = tb;
 		
 	}
@@ -223,7 +248,10 @@ public class Track implements Serializable{
 	
 	
 	public void playMovie() {
+		comm = new Communicator();
 		playMovie(trackID);
+		
+		if (!comm.outString.equals("")) new TextWindow("PlayMovie Error", comm.outString, 500, 500); 
 	}
 	
 	public void playMovie(int labelInd){
@@ -298,6 +326,10 @@ public class Track implements Serializable{
 		return match;
 	}
 	
+	public int getNextIDNum(){
+		return nextIDNum;
+	}
+	
 	public boolean isCollisionTrack(){
 		return false;
 	}
@@ -359,5 +391,8 @@ public class Track implements Serializable{
 	public static String emptyDescription(){
 		return makeDescription("X", null, "");
 	}
+	
+
+	
 		
 }

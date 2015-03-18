@@ -472,13 +472,13 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			PolygonRoi flippedMid = prevPt.invertMidline();
 			double distChanged = spineDistSqr(flippedMid);
 			
-			if (track.tb!=null){
+			if (track!= null && track.tb!=null){
 				track.tb.comm.message("Track "+track.trackID+" frame "+frameNum+": unchanged-"+Math.sqrt(distUnchanged)+" changed-"+Math.sqrt(distChanged), VerbLevel.verb_debug);
 			}
 			
 			//Choose the one with the lower distance
 			if (distChanged<distUnchanged){
-				if (track.tb!=null){
+				if (track!= null && track.tb!=null){
 					track.tb.comm.message("Inverting", VerbLevel.verb_debug);
 				}
 				invertMaggot();

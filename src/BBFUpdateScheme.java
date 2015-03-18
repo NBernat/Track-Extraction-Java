@@ -78,10 +78,14 @@ public class BBFUpdateScheme {
 	public boolean keepGoing(double[] shifts){
 		
 		totalCount++;
-		if (totalCount>15) comm.setVerbosity(VerbLevel.verb_off);
-		IJ.showStatus("Iteration "+totalCount);
 		currentSchemeCount++;
 		
+		if (totalCount>15) comm.setVerbosity(VerbLevel.verb_error);
+		String status = "Iteration "+totalCount+" (";
+		if (updateAll) status+="all)"; else status += "top)";
+		if (finalIters) status += " (final)";
+		IJ.showStatus(status);
+				
 		comm.message("Checking keepGoing after iteration "+totalCount, VerbLevel.verb_debug);
 		
 		if(!finalIters){ //Update one of the Non-Final schemes
@@ -108,6 +112,7 @@ public class BBFUpdateScheme {
 			inds2Update = defaultInds;
 			if(totalCount>=maxIterations){
 				comm.message("Passed maxIterations", VerbLevel.verb_debug);
+				IJ.showMessage("Passed maxIterations");
 			} else{
 				comm.message("Converged (shifts:"+shifts[0]+","+shifts[1]+","+shifts[2]+",...)", VerbLevel.verb_debug);
 			}
@@ -192,6 +197,10 @@ public class BBFUpdateScheme {
 	}
 
 	
+	
+	public int getIterNum(){
+		return totalCount;
+	}
 	
 	public int[] inds2Update(){
 		return inds2Update;
