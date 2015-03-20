@@ -76,6 +76,12 @@ public class displayUtils {
 				int dotY = offY + (int)(expandFac*(floatMidline.ypoints[i]));
 				im.drawDot(dotX, dotY);
 			}
+		} else {
+			int size = 20;
+//			im.drawOval(0, 0, size, size);
+			
+			im.drawLine(0, 0, size, size);
+			im.drawLine(size, 0, 0, size);
 		}
 	}
 	

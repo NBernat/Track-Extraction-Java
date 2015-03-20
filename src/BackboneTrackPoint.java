@@ -112,44 +112,52 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 
 		//Make new stuff
 		btp.numBBPts = numBBPts; 
-		if(mtp.midline!=null){
-			
-			FloatPolygon initBB = mtp.midline.getFloatPolygon();
-
-			for(int i=0; i<initBB.npoints; i++){
-				initBB.xpoints[i] += btp.rect.x;
-				initBB.ypoints[i] += btp.rect.y;
-			}
-			
-			btp.setInitialBB(new PolygonRoi(initBB, PolygonRoi.POLYLINE), numBBPts);
-			btp.setMagPix();
-			btp.setVoronoiClusters();
-		}
+//		if(mtp.midline!=null){
+//			
+//			FloatPolygon initBB = mtp.midline.getFloatPolygon();
+//
+//			for(int i=0; i<initBB.npoints; i++){
+//				initBB.xpoints[i] += btp.rect.x;
+//				initBB.ypoints[i] += btp.rect.y;
+//			}
+//			
+//			btp.setInitialBB(new PolygonRoi(initBB, PolygonRoi.POLYLINE), numBBPts);
+//			btp.setMagPix();
+//			btp.setVoronoiClusters();
+//		}
 		
 		return btp;
 	}
 	
-	protected void fillInMidline(PolygonRoi newMidline, float[] prevOrigin){
+	protected void fillInBackboneInfo(PolygonRoi newMidline, float[] prevOrigin){
+		artificialMid = true;
+		setBackboneInfo(newMidline, prevOrigin);
+	}
+	
+	protected void setBackboneInfo(PolygonRoi newMidline, float[] prevOrigin){
 		
 		if(newMidline!=null){
-			
-			artificialMid = true;
 			
 			//Correct the origin of the midline
 			FloatPolygon newMid = newMidline.getFloatPolygon();
 			float[] xmid = new float[newMid.npoints];
 			float[] ymid = new float[newMid.npoints];
-			float offX = prevOrigin[0]-rect.x;
-			float offY = prevOrigin[1]-rect.y;
+//			float offX = prevOrigin[0]-rect.x;
+//			float offY = prevOrigin[1]-rect.y;
+//			for(int i=0; i<newMid.npoints; i++){
+//				xmid[i] = newMid.xpoints[i]+offX;
+//				ymid[i] = newMid.ypoints[i]+offY;
+//			}
+//			midline = new PolygonRoi(new FloatPolygon(xmid, ymid), PolygonRoi.POLYLINE);
+//			for(int i=0; i<newMid.npoints; i++){
+//				xmid[i] += rect.x;
+//				ymid[i] += rect.y;
+//			}
+			
+			//Gather absolute coordinates for the backbones
 			for(int i=0; i<newMid.npoints; i++){
-				xmid[i] = newMid.xpoints[i]+offX;
-				ymid[i] = newMid.ypoints[i]+offY;
-			}
-			midline = new PolygonRoi(new FloatPolygon(xmid, ymid), PolygonRoi.POLYLINE);
-
-			for(int i=0; i<newMid.npoints; i++){
-				xmid[i] += rect.x;
-				ymid[i] += rect.y;
+				xmid[i] = newMid.xpoints[i]+prevOrigin[0];
+				ymid[i] = newMid.ypoints[i]+prevOrigin[1];
 			}
 			FloatPolygon initBB = new FloatPolygon(xmid, ymid);//midline.getFloatPolygon();
 //			for(int i=0; i<initBB.npoints; i++){
@@ -470,7 +478,10 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	
 	public String getTPDescription(){
 		String s = super.getTPDescription();
-		if (artificialMid) s+=" filled mid";
+		
+		if (midline!=null && htValid) s+= "         ";
+				
+		if (artificialMid) s+=" M-f";
 		return s;
 	}
 	

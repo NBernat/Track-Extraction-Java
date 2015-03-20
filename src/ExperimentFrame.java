@@ -112,7 +112,7 @@ public class ExperimentFrame extends JFrame{
 	}
 	
 	protected void showFrame(){
-		setSize(450, 300);
+		setSize(550, 600);
 		setTitle("Experiment "+ex.fname);
 		setVisible(true);
 	}
@@ -216,7 +216,7 @@ class TrackPanel extends JPanel {
 		
 		//Build & add the description panel
 		trackDescription = new JTextArea(Track.emptyDescription());
-		trackDescription.setLineWrap(true);
+		trackDescription.setLineWrap(false);
 		descriptionPanel = new JScrollPane(trackDescription);
 		//TODO add save button to the 
 		

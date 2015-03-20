@@ -750,7 +750,12 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	
 	public String getTPDescription(){
 		String s = super.getTPDescription();
-		if (midline==null) s+=" NULL MID";
+		
+		if (midline==null || !htValid){
+			if (midline==null) s+=" M-X"; else s+="    ";
+			if (!htValid) s+= " HT-X"; else s+= "     ";
+		}
+		
 		return s;
 	}
 		

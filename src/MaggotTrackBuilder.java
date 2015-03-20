@@ -46,15 +46,15 @@ public class MaggotTrackBuilder extends TrackBuilder {
 			MaggotTrackPoint pt;
 			MaggotTrackPoint prevPt = (MaggotTrackPoint)track.points.get(0);
 			
-			int AMDSegStart = (prevPt.midline!= null && prevPt.midline.getNCoordinates()!=0) ? 0 : -1;
+			int AMDSegStart = (prevPt.midline!= null && prevPt.midline.getNCoordinates()!=0 && prevPt.htValid) ? 0 : -1;
 			int AMDSegEnd = -1;
 			
 			for (int i=1; i<track.points.size(); i++){
 			
 				pt = (MaggotTrackPoint)track.points.get(i);
 				
-				if (pt.midline!= null && pt.midline.getNCoordinates()!=0) {
-					//If a midline exists, align it with the last valid point
+				if (pt.midline!= null && pt.midline.getNCoordinates()!=0 && pt.htValid) {
+					//If a valid midline exists, align it with the last valid point
 					
 					int orStat = pt.chooseOrientation(prevPt);
 					if (orStat<0){
@@ -75,7 +75,7 @@ public class MaggotTrackBuilder extends TrackBuilder {
 					//When the midline doesn't exist, analyze the previous segment of midlines
 					//But only if that segment has at least 2 points
 					
-					if (comm!=null) comm.message("Midline invalid, Track "+track.trackID+" frame "+(i+track.points.firstElement().frameNum), VerbLevel.verb_error);
+					if (comm!=null) comm.message("Midline invalid, Track "+track.trackID+" frame "+(i+track.points.firstElement().frameNum), VerbLevel.verb_message);
 					
 					//Analyze the direction of motion for the segment leading up to this frame, starting with lastEndFrameAnalyzed (or 0)
 					if ( AMDSegStart!=-1 && (AMDSegEnd-AMDSegStart)>1 ){ //TODO && (AMDSegEnd-AMDSegStart)<AMDSegEnd (?)
@@ -116,7 +116,7 @@ public class MaggotTrackBuilder extends TrackBuilder {
 			return;
 		}
 		
-		if (comm!=null) comm.message("Analyzing midline direction: Track "+track.trackID+" "+(startInd+track.points.firstElement().frameNum)+"-"+(endInd+track.points.firstElement().frameNum), VerbLevel.verb_error);
+		if (comm!=null) comm.message("Analyzing midline direction: Track "+track.trackID+" "+(startInd+track.points.firstElement().frameNum)+"-"+(endInd+track.points.firstElement().frameNum), VerbLevel.verb_debug);
 		
 		double dpSum=0;
 		MaggotTrackPoint pt;
