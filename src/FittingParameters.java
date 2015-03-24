@@ -3,7 +3,7 @@ public class FittingParameters {
 	
 	int numBBPts = 9;
 	
-	int[] grains = {1};//{8, 4, 1};
+	int[] grains = {16, 8, 1};//{1};//
 	int smallGapMaxLen = 10;//The maximum gap length for which the previous midline will be carried forward (otherwise interpolate)
 	int minValidSegmentLen = 5;//The minimum segment length (in frames) which is situated between two midline gaps and which is considered valid
 	double minFlickerDist = numBBPts;//The minimum distance between spines which indicates an erroneous midline flicker 

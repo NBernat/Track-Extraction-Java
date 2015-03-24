@@ -1,3 +1,5 @@
+import java.util.Vector;
+
 import ij.ImageStack;
 
 
@@ -36,29 +38,36 @@ public class MaggotTrackBuilder extends TrackBuilder {
 	 * @param track Track to be oriented
 	 */
 	protected static void orientMaggotTrack(Track track, Communicator comm){
+		orientMaggotTrack(track.points, comm, track.trackID);
+	}
+		
+		
+	protected static void orientMaggotTrack(Vector<? extends TrackPoint> points, Communicator comm, int trackID){
+		
+		
 //		if (ep.trackPointType!=2){
 //			//Load points as MaggotTrack points
 //			
 //		}
 		
-		if (track.points!=null && track.points.size()>0 ){//&& track.points.get(0).pointType>=2
+		if (points!=null && points.size()>0 && (points.get(0) instanceof MaggotTrackPoint)){//&& track.points.get(0).pointType>=2
 			
 			MaggotTrackPoint pt;
-			MaggotTrackPoint prevPt = (MaggotTrackPoint)track.points.get(0);
+			MaggotTrackPoint prevPt = (MaggotTrackPoint)points.get(0);
 			
 			int AMDSegStart = (prevPt.midline!= null && prevPt.midline.getNCoordinates()!=0 && prevPt.htValid) ? 0 : -1;
 			int AMDSegEnd = -1;
 			
-			for (int i=1; i<track.points.size(); i++){
+			for (int i=1; i<points.size(); i++){
 			
-				pt = (MaggotTrackPoint)track.points.get(i);
+				pt = (MaggotTrackPoint)points.get(i);
 				
 				if (pt.midline!= null && pt.midline.getNCoordinates()!=0 && pt.htValid) {
 					//If a valid midline exists, align it with the last valid point
 					
 					int orStat = pt.chooseOrientation(prevPt);
 					if (orStat<0){
-						if (comm!=null) comm.message("Orientation Failed, frame "+(i+track.points.firstElement().frameNum), VerbLevel.verb_error);
+						if (comm!=null) comm.message("Orientation Failed, Track"+trackID+" frames "+(i+points.firstElement().frameNum), VerbLevel.verb_error);
 					}
 					prevPt = pt;
 					
@@ -75,11 +84,11 @@ public class MaggotTrackBuilder extends TrackBuilder {
 					//When the midline doesn't exist, analyze the previous segment of midlines
 					//But only if that segment has at least 2 points
 					
-					if (comm!=null) comm.message("Midline invalid, Track "+track.trackID+" frame "+(i+track.points.firstElement().frameNum), VerbLevel.verb_message);
+					if (comm!=null) comm.message("Midline invalid, frame "+(i+points.firstElement().frameNum), VerbLevel.verb_message);
 					
 					//Analyze the direction of motion for the segment leading up to this frame, starting with lastEndFrameAnalyzed (or 0)
 					if ( AMDSegStart!=-1 && (AMDSegEnd-AMDSegStart)>1 ){ //TODO && (AMDSegEnd-AMDSegStart)<AMDSegEnd (?)
-						analyzeMaggotDirection(track, AMDSegStart, AMDSegEnd, comm);
+						analyzeMaggotDirection(points, AMDSegStart, AMDSegEnd, comm, trackID);
 					}
 					
 					//Regardless, acknowledge the empty spine so that the next valid segment is analyzed correctly 
@@ -91,12 +100,13 @@ public class MaggotTrackBuilder extends TrackBuilder {
 			//Catch the case when there were no gaps, so the direction was never analyzed
 //			if (lastEndFrameAnalyzed==-1){
 				//Analyze the direction of motion for the whole track
-				analyzeMaggotDirection(track, AMDSegStart, AMDSegEnd, comm);
+				analyzeMaggotDirection(points, AMDSegStart, AMDSegEnd, comm, trackID);
 //			}
 			
 			
 		} else {
 			if (comm!=null) comm.message("Track was not oriented", VerbLevel.verb_error);
+			if (comm!=null && !(points.get(0) instanceof MaggotTrackPoint)) comm.message("TrackPoints not MTPs", VerbLevel.verb_error);
 		}
 		
 		
@@ -109,27 +119,27 @@ public class MaggotTrackBuilder extends TrackBuilder {
 	 * @param startInd Starting INDEX (not frame) to be oriented
 	 * @param endInd Ending  INDEX (not frame) to be oriented
 	 */
-	protected static void analyzeMaggotDirection(Track track, int startInd, int endInd, Communicator comm){
+	protected static void analyzeMaggotDirection(Vector<? extends TrackPoint> points, int startInd, int endInd, Communicator comm, int trackID){
 		
-		if (track.points.isEmpty() || startInd<0 || endInd<0 || startInd>=endInd){
-			track.tb.comm.message("Direction Analyisis Error: Track has "+track.points.size()+" points, startInd="+startInd+", endInd="+endInd, VerbLevel.verb_message);
+		if (points.isEmpty() || startInd<0 || endInd<0 || startInd>=endInd){
+			comm.message("Direction Analyisis Error: Track has "+points.size()+" points, startInd="+startInd+", endInd="+endInd, VerbLevel.verb_message);
 			return;
 		}
 		
-		if (comm!=null) comm.message("Analyzing midline direction: Track "+track.trackID+" "+(startInd+track.points.firstElement().frameNum)+"-"+(endInd+track.points.firstElement().frameNum), VerbLevel.verb_debug);
+		if (comm!=null) comm.message("Analyzing midline direction: Track "+trackID+" "+(startInd+points.firstElement().frameNum)+"-"+(endInd+points.firstElement().frameNum), VerbLevel.verb_debug);
 		
 		double dpSum=0;
 		MaggotTrackPoint pt;
-		MaggotTrackPoint prevPt = (MaggotTrackPoint) track.points.get(startInd);
+		MaggotTrackPoint prevPt = (MaggotTrackPoint) points.get(startInd);
 		for (int i=startInd+1; i<=endInd; i++){
-			pt = (MaggotTrackPoint) track.points.get(i);
+			pt = (MaggotTrackPoint) points.get(i);
 			dpSum += pt.MaggotDotProduct(prevPt);
 			prevPt = pt;
 		} 
 		
 		
 		if (dpSum<0){
-			flipSeg(track, startInd, endInd);
+			flipSeg(points, startInd, endInd);
 		}
 		
 		
@@ -141,9 +151,9 @@ public class MaggotTrackBuilder extends TrackBuilder {
 	 * @param startInd
 	 * @param endInd
 	 */
-	protected static void flipSeg(Track track, int startInd, int endInd) {
+	protected static void flipSeg(Vector<? extends TrackPoint> points, int startInd, int endInd) {
 		for (int i=startInd; i<=endInd; i++){
-			MaggotTrackPoint pt = (MaggotTrackPoint) track.points.get(i);
+			MaggotTrackPoint pt = (MaggotTrackPoint) points.get(i);
 			pt.invertMaggot();
 		}
 	}

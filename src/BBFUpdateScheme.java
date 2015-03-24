@@ -67,7 +67,7 @@ public class BBFUpdateScheme {
 		
 		
 		comm = new Communicator();
-		comm.setVerbosity(VerbLevel.verb_off);
+		comm.setVerbosity(VerbLevel.verb_warning);
 	}
 	
 	
@@ -111,8 +111,9 @@ public class BBFUpdateScheme {
 			currentSchemeCount = 0;
 			inds2Update = defaultInds;
 			if(totalCount>=maxIterations){
-				comm.message("Passed maxIterations", VerbLevel.verb_debug);
-				IJ.showMessage("Passed maxIterations");
+				comm.message("Passed maxIterations", VerbLevel.verb_warning);
+				
+				//IJ.showMessage("Passed maxIterations");
 			} else{
 				comm.message("Converged (shifts:"+shifts[0]+","+shifts[1]+","+shifts[2]+",...)", VerbLevel.verb_debug);
 			}

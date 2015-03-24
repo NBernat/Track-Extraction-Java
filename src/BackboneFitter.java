@@ -1,7 +1,6 @@
 import ij.gui.PolygonRoi;
 import ij.process.FloatPolygon;
 import ij.text.TextWindow;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
@@ -34,7 +33,7 @@ public class BackboneFitter {
 	/**
 	 * The list of empty midlines corresponding to the full list of trackpoints
 	 */
-	boolean[] emptyMidlines;
+//	boolean[] emptyMidlines;
 	
 	/**
 	 * A List of the BbTP's, worked on during fitting algorithm
@@ -110,16 +109,25 @@ public class BackboneFitter {
 
 		// Extract the points, and move on (if successful)
 		comm.message("Extracting maggot tracks", VerbLevel.verb_debug);
-		emptyMidlines = extractTrackPoints(tr);
 		
-		//If there was no error extraction points, run the different grain passes of the algorithm
-		if (emptyMidlines!=null) {
-			
+		if (extractTrackPoints(tr)) {
+			//If there was no error extraction points, run the different grain passes of the algorithm
 			boolean noError = true;
-			 for(int i=0; (i<params.grains.length && noError); i++){
-				 noError = doPass(params.grains[i]);
-			 }
-			 
+			for(int i=0; (i<params.grains.length && noError); i++){
+				noError = doPass(params.grains[i]);
+				if (!noError) {
+					pass++;
+					comm.message("Error on track "+tr.trackID+"("+track.trackID+") pass "+i+"(grain "+params.grains[i]+")", VerbLevel.verb_error); 
+				}
+				
+				
+				if (!comm.outString.equals("")){
+					 new TextWindow("TrackFitter", comm.outString, 500, 500);
+				 }
+				comm = new Communicator();
+				comm.setVerbosity(VerbLevel.verb_error);
+			}
+			
 			 
 		} else {
 			comm.message("Error extracting trackPoints from track", VerbLevel.verb_error);
@@ -143,11 +151,10 @@ public class BackboneFitter {
 	 * @return A list of booleans indicating whether or not the midline in the
 	 *         corresponding BTP is empty
 	 */
-	private boolean[] extractTrackPoints(Track tr) {
-		boolean[] emptyMidlines;
+	private boolean extractTrackPoints(Track tr) {
 		
+		boolean noerror=true;
 		try {
-			emptyMidlines = new boolean[tr.points.size()];
 	
 			if (tr.points.get(0) instanceof MaggotTrackPoint) {
 				for (int i = 0; i < tr.points.size(); i++) {
@@ -167,7 +174,6 @@ public class BackboneFitter {
 					BackboneTrackPoint btp = BackboneTrackPoint.convertMTPtoBTP(mtp,params.numBBPts);
 		
 					if (btp.midline == null) {
-						emptyMidlines[i] = true;
 						comm.message("mtp.midline was null", VerbLevel.verb_debug);
 		
 					} else {
@@ -189,11 +195,11 @@ public class BackboneFitter {
 						"Points were not maggotTrackPoints; no points were made",
 						VerbLevel.verb_error);
 				// TODO reload the points as BTP
-				emptyMidlines = null;
+				noerror=false;
 			}
 				
 		} catch (Exception e) {
-			emptyMidlines = null;
+			noerror=false;
 			
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
@@ -201,14 +207,15 @@ public class BackboneFitter {
 			comm.message(sw.toString(), VerbLevel.verb_error);
 		}
 
-		return emptyMidlines;
+		return noerror;
 	}
 
 	
 	private boolean doPass(int grain){
 				
+		//Set the BTPs for this pass's grain
 		comm.message("Generating BTPs at grain "+grain, VerbLevel.verb_debug);
-		
+		BTPs.removeAllElements();
 		boolean noError = generateBTPList(grain);
 		
 		if (noError) {
@@ -221,7 +228,7 @@ public class BackboneFitter {
 			// Run the fitting algorithm
 			try {
 				runFitter();
-				pass++;
+				
 			} catch(Exception e){
 				
 				noError = false;
@@ -232,11 +239,7 @@ public class BackboneFitter {
 				comm.message("Error during BackboneFitter.runFitter() at grain "+grain+"\n"+sw.toString(), VerbLevel.verb_debug);
 			} 
 			
-			// Show the fitting messages, if necessary
-			if (!updater.comm.outString.equals("")) {
-				new TextWindow("TrackFitting Updater, grain "+grain, updater.comm.outString,
-						500, 500);
-			}
+			
 		}
 		
 		return noError;
@@ -256,9 +259,9 @@ public class BackboneFitter {
 		try {
 			
 			comm.message("Sampling points", VerbLevel.verb_debug);
-			boolean[] sampledEmptyMids = sampleTrackPoints(grain);
-			addSpineInfo();
-			if (sampledEmptyMids!=null) cleanUpBTPs(sampledEmptyMids);
+			sampleTrackPoints(grain);
+			addBackboneInfo();
+//			if (sampledEmptyMids!=null) cleanUpBTPs(sampledEmptyMids);//TODO move this to the first pass
 			
 			return true;
 
@@ -277,26 +280,17 @@ public class BackboneFitter {
 	 * Stores a sampled list of backboneTrackPoints that are sampled at the given grain
 	 * @param grain Spacing between trackPoints
 	 */
-	private boolean[] sampleTrackPoints(int grain){
+	private void sampleTrackPoints(int grain){
 		
 		
-		boolean[] sampledEmptyMids = null;
 		int numTPs = track.points.size()/grain;
 		try {
-			sampledEmptyMids = new boolean[numTPs];
 			
 			for (int i=0; i<numTPs; i++){
 				
-//				if (params.isFirstPass(grain)){
 				BTPs.add((BackboneTrackPoint)track.points.get(i*grain));
-//				}
 				
-				
-				sampledEmptyMids[i] = emptyMidlines[i*grain];
 			}
-			
-			
-//			BTPs = new Vector<BackboneTrackPoint>();
 			
 			
 		} catch (Exception e){
@@ -306,11 +300,10 @@ public class BackboneFitter {
 			comm.message("Error sampling trackPoints\n"+sw.toString(), VerbLevel.verb_error);
 		}
 		
-		return sampledEmptyMids;
 	}
 
 	
-	private void addSpineInfo(){
+	private void addBackboneInfo(){
 		
 		float[] origin = new float[2];
 		
@@ -319,7 +312,12 @@ public class BackboneFitter {
 				origin[0] = BTPs.get(i).rect.x;
 				origin[1] = BTPs.get(i).rect.y;
 				BTPs.get(i).setBackboneInfo(BTPs.get(i).midline, origin);
+				comm.message("Adding backbone info to BTP "+i+"(frame "+BTPs.get(i).frameNum+")", VerbLevel.verb_debug);
 			}
+			
+			cleanUpBTPs(findEmptyMids(), params.minFlickerDist*params.grains[pass]);
+			
+			
 		} else {
 			
 			origin[0] = 0;
@@ -330,13 +328,12 @@ public class BackboneFitter {
 			
 			Vector<FloatPolygon> interpdBBs;
 			for (int i=(prev+1); i<BTPs.size(); i++){
-				
 				if(BTPs.get(i).getBackbone()!=null){
-					interpdBBs = interpBackbones(prev, i, BTPs.get(prev).getBackbone().getFloatPolygon(), BTPs.get(i).getBackbone().getFloatPolygon());
+					interpdBBs = interpBackbones(i-prev-1, origin, origin, BTPs.get(prev).getBackbone().getFloatPolygon(), BTPs.get(i).getBackbone().getFloatPolygon());
 					//fill in the midlines
 					for (int j=prev; j<i; j++){
 						BTPs.get(j).setBackboneInfo(new PolygonRoi(interpdBBs.get(j-prev), PolygonRoi.POLYLINE), origin);
-					}
+					} 
 					prev = i;
 				}
 			}
@@ -346,21 +343,35 @@ public class BackboneFitter {
 		}
 	}
 	
-	private void cleanUpBTPs(boolean[] sampledEmptyMids){
-		comm.message("Clearing flickers", VerbLevel.verb_debug);
-		clearFlickerMids(sampledEmptyMids);
+	private boolean[] findEmptyMids(){
 		
-		comm.message("Finding gaps", VerbLevel.verb_debug);
-		Vector<Gap> gaps = findGaps(sampledEmptyMids);
-		comm.message("Cleaning gaps", VerbLevel.verb_debug);
-		sanitizeGaps(gaps);
+		boolean[] sampledEmptyMids = new boolean[BTPs.size()];
 		
+		for (int i=0; i<BTPs.size(); i++){
+			sampledEmptyMids[i] = (BTPs.get(i).midline==null);
+		}
 		
-		comm.message("Filling midlines", VerbLevel.verb_debug);
-		fillGaps(gaps);
+		return sampledEmptyMids;
+		
 	}
 	
-	private void clearFlickerMids(boolean[] emptyMidlines){
+	private void cleanUpBTPs(boolean[] sampledEmptyMids, double flickerDist){
+		if(sampledEmptyMids!=null){
+			comm.message("Clearing flickers", VerbLevel.verb_debug);
+			clearFlickerMids(sampledEmptyMids, flickerDist);
+			
+			comm.message("Finding gaps", VerbLevel.verb_debug);
+			Vector<Gap> gaps = findGaps(sampledEmptyMids);
+			comm.message("Cleaning gaps", VerbLevel.verb_debug);
+			sanitizeGaps(gaps);
+			
+			
+			comm.message("Filling midlines", VerbLevel.verb_debug);
+			fillGaps(gaps);
+		}
+	}
+	
+	private void clearFlickerMids(boolean[] emptyMidlines, double minFlickerDist){
 		BackboneTrackPoint prevMag = null;
 		BackboneTrackPoint currMag;
 		double dist = -1;;
@@ -376,9 +387,11 @@ public class BackboneFitter {
 				dist = -1;
 			}
 			
-			if (dist>0 && dist>params.minFlickerDist) {
+			if (dist>0 && dist>minFlickerDist) {
 				emptyMidlines[currInd] = true;
-				comm.message("Flicker at "+(currInd+BTPs.firstElement().frameNum), VerbLevel.verb_debug);
+				String s="";
+				if (dist>0) s="too far"; else s="null dist";
+				comm.message("Flicker ("+s+") at "+(BTPs.get(currInd).frameNum), VerbLevel.verb_debug);
 			}
 			
 			prevMag = currMag;
@@ -402,7 +415,7 @@ public class BackboneFitter {
 				comm.message("Gap starting at frame "+(ptr+BTPs.firstElement().frameNum), VerbLevel.verb_debug);
 				gapStart = ptr;
 				// Find the end of the gap
-				do ++ptr; while (emptyMidlines[ptr] && ptr < emptyMidlines.length);
+				do ++ptr; while (ptr < emptyMidlines.length && emptyMidlines[ptr]);
 				//Make a new gap
 				gaps.add(new Gap(gapStart, ptr-1));
 				
@@ -423,7 +436,7 @@ public class BackboneFitter {
 			
 			if (mergeGaps(gaps)) {
 				clearGaps(gaps);
-				MaggotTrackBuilder.orientMaggotTrack(track, comm);
+				MaggotTrackBuilder.orientMaggotTrack(BTPs, comm, track.trackID);//TODO redo this as a method of a list of TP's
 			}
 			
 			comm.message("After sanitizing, there are "+gaps.size()+" gaps", VerbLevel.verb_debug); 
@@ -475,9 +488,10 @@ public class BackboneFitter {
 	private void clearGapMidlines(Gap gap){
 		
 		for (int i=gap.start; i<=gap.end; i++){
-			MaggotTrackPoint mtp = (MaggotTrackPoint) track.points.get(i);
-//			mtp.midline = null;
-			mtp.htValid = false;
+//			MaggotTrackPoint mtp = (MaggotTrackPoint) track.points.get(i);
+//			mtp.htValid = false;
+			BackboneTrackPoint btp = BTPs.get(i);
+			btp.htValid = false;
 		}
 		
 		
@@ -586,13 +600,15 @@ public class BackboneFitter {
 		FloatPolygon bbFirst = BTPs.get(firstBTP).midline.getFloatPolygon();
 		FloatPolygon bbEnd = BTPs.get(endBTP).midline.getFloatPolygon();
 
-		return interpBackbones(firstBTP, endBTP, bbFirst, bbEnd);
+		float[] firstO = {BTPs.get(firstBTP).rect.x, BTPs.get(firstBTP).rect.y};
+		float[] endO = {BTPs.get(endBTP).rect.x, BTPs.get(endBTP).rect.y};
+		
+		return interpBackbones(endBTP - firstBTP - 1, firstO, endO, bbFirst, bbEnd);
 	}
 	
 	
-	protected Vector<FloatPolygon> interpBackbones(int firstBTP, int endBTP, FloatPolygon bbFirst, FloatPolygon bbEnd) {
+	protected Vector<FloatPolygon> interpBackbones(int numnewbbs, float[] firstO, float[] endO, FloatPolygon bbFirst, FloatPolygon bbEnd) {
 		
-		int numnewbbs = endBTP - firstBTP - 1;
 		if (numnewbbs<1) return null;
 		
 		
@@ -603,10 +619,10 @@ public class BackboneFitter {
 		float[] xbbend= new float[numbbpts];
 		float[] ybbend= new float[numbbpts];
 		for (int i=0; i<numbbpts; i++){//Get the absolute coordinates
-			xbbfirst[i] = bbFirst.xpoints[i]+BTPs.get(firstBTP).rect.x;
-			ybbfirst[i] = bbFirst.ypoints[i]+BTPs.get(firstBTP).rect.y;
-			xbbend[i] = bbEnd.xpoints[i]+BTPs.get(endBTP).rect.x;
-			ybbend[i] = bbEnd.ypoints[i]+BTPs.get(endBTP).rect.y;
+			xbbfirst[i] = bbFirst.xpoints[i]+firstO[0];
+			ybbfirst[i] = bbFirst.ypoints[i]+firstO[1];
+			xbbend[i] = bbEnd.xpoints[i]+endO[0];
+			ybbend[i] = bbEnd.ypoints[i]+endO[1];
 		}
 		
 		float start;
@@ -716,7 +732,11 @@ public class BackboneFitter {
 				shifts[i] = BTPs.get(i).calcPointShift();
 				BTPs.get(i).setupForNextRelaxationStep();
 			}
-
+			
+			// Show the fitting messages, if necessary
+			if (!updater.comm.outString.equals("")) {
+				new TextWindow("TrackFitting Updater, pass "+pass, updater.comm.outString, 500, 500);
+			}
 		} while (updater.keepGoing(shifts));
 		
 		finalizeBackbones();
