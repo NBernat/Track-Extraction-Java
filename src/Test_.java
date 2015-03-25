@@ -19,9 +19,13 @@ import java.awt.Rectangle;
 //import javax.swing.JPanel;
 
 
+
+
 import ij.ImagePlus;
 //import ij.gui.GenericDialog;
 import ij.gui.ImageWindow;
+import ij.gui.Plot;
+import ij.gui.PlotWindow;
 import ij.gui.Wand;
 //import ij.process.ImageProcessor;
 import ij.plugin.PlugIn;
@@ -45,6 +49,62 @@ public class Test_  implements PlugIn {//extends JFrame
 
 	public static void main(String[] args) {
 		
+//		float[] x = new float[20];
+//		for(int i=0; i<x.length; i++) x[i]=i;
+//		float[] y = new float[20];
+//		for(int i=0; i<y.length; i++) y[i]=i;
+//		Plot plot = new Plot("The window title", "labels on the x-axis", "labels on the y-axis", x, y);
+//		plot.setLimits(0, 20, 0, 40);
+//		plot.setColor(Color.RED);
+//		plot.draw();
+//		float[] y2 = new float[20];
+//		for(int i=0; i<y2.length; i++) y2[i]=2*y[i];
+//		plot.addPoints(x,y2,Plot.LINE);
+//		plot.setColor(Color.yellow);
+//		plot.draw();
+//		plot.show();
+		
+		
+		// Some data to show
+        double[] x = { 1, 3, 4, 5, 6, 7, 8, 9, 11 };
+        double[] y = { 20, 5, -2, 3, 10, 12, 8, 3, 0 };
+        double[] y2 = { 18, 10, 3, 1, 7, 11, 11, 5, 2 };
+        double[] x3 = { 2, 10 };
+        double[] y3 = { 13, 3 };
+
+        // Initialize the plot with x/y
+        Plot plot = new Plot("Example plot", "x", "y", x, y);
+
+        // make some margin (xMin, xMax, yMin, yMax)
+        plot.setLimits(0, 12, -3, 21);
+
+        // Add x/y2 in blue; need to draw the previous data first
+        plot.draw();
+        plot.setColor(Color.BLUE);
+        plot.addPoints(x, y2, Plot.LINE);
+
+        // Add x3/y3 as circles instead of connected lines
+        plot.draw();
+        plot.setColor(Color.BLACK);
+        plot.addPoints(x3, y3, Plot.CIRCLE);
+
+        // Finally show it, but remember the window
+        PlotWindow window = plot.show();
+
+        // Wait 5 seconds
+        try { Thread.sleep(5000); } catch (InterruptedException e) {}
+
+        // Make a new plot and update the window
+        plot = new Plot("Example plot2", "x", "y", x, y2);
+        plot.setLimits(0, 12, -3, 21);
+        plot.draw();
+        plot.setColor(Color.GREEN);
+        plot.addPoints(x, y, Plot.CROSS);
+        plot.draw();
+        plot.setColor(Color.RED);
+        plot.addPoints(x3, y3, Plot.LINE);
+        window.drawPlot(plot);
+		
 //		Test_ frame = new Test_();
 //		
 //		frame.setTitle("Test frame!");
@@ -60,6 +120,7 @@ public class Test_  implements PlugIn {//extends JFrame
 		/////////////
 		// Generate some content
 		/////////////
+		/**
 		ImagePlus rawIm = new ImagePlus("C:/Users/Natalie/Downloads/Gr21a(3)@Chrimson(2)_BLUE_LIGHT_RANDOM_WALK_S2_112Hz_201406121247-1.jpg");
 		
 		//Get a maggot
@@ -97,7 +158,7 @@ public class Test_  implements PlugIn {//extends JFrame
 		imWin.add(txtPanel, BorderLayout.EAST);
 		imWin.setSize(800, 800);
 		imWin.pack();
-		
+		**/
 		
 		
 		

@@ -66,18 +66,20 @@ public class Experiment_Viewer implements PlugIn{
 		int num = ex.tracks.size();
 		for(int i=0; i<num; i++){
 			bbf = new BackboneFitter();
+			if (i==0) ex.setForces(bbf.Forces);
 //			int index = ex.getTrack(i);
 //			if (index>=0){
+				
 				Track tr = ex.tracks.get(i);
 		//			for (int i=60; i<61; i++){
 		//				MaggotTrackPoint mtp = (MaggotTrackPoint)tr.points.get(i);  
 		//				mtp.midline=null;
 		//			}
-				IJ.showStatus("Fitting Track");
+				IJ.showStatus("Fitting Track "+tr.trackID+" ("+i+"/"+num+")");
 				bbf.fitTrack(tr);
 //				ex.tracks.addElement(tr);
 				
-				Track bbTrack = new Track(bbf.BTPs);
+				Track bbTrack = new Track(bbf.BTPs, -tr.trackID);
 		//		testInterpolator(bbf);
 				
 				IJ.showStatus("Track fit!");

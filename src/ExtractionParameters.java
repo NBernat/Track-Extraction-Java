@@ -22,7 +22,7 @@ public class ExtractionParameters implements Serializable{
 	 * <p>
 	 * 2: Level 2, then comb through collisions after tracks are made 
 	 */
-	int collisionLevel = 1;
+	int collisionLevel = 0;
 	
 	/**
 	 *  Distance in pixels which indicates a collision
@@ -52,8 +52,8 @@ public class ExtractionParameters implements Serializable{
 	int showSampleData =2; 
 	int sampleInd = 10;
 	//TODO
-	int startFrame = 150;
-	int endFrame = 300;
+	int startFrame = 1;
+	int endFrame = 1000;
 	//_frame_normalization_methodT fnm = _frame_normalization_methodT._frame_none;
 	//TODO
 	int trackWindowHeight = 50;
@@ -62,7 +62,7 @@ public class ExtractionParameters implements Serializable{
 	
 	
 	int[] matchSpill = {};//{234,251,356,367};
-	boolean dispTrackInfo = true;
+	boolean dispTrackInfo = false;
 	
 	///////////////////////////
 	// Background Parameters

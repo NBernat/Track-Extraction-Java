@@ -259,6 +259,10 @@ public class FrameLoader {
 		
 	}
 	
+	public int getStackSize(){
+		return imageStack.getSize();
+	}
+	
 	
 }
 

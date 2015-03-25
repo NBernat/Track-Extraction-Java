@@ -1,7 +1,7 @@
 
 public class MaggotDisplayParameters {
 
-	static boolean clusters = true;
+	static boolean clusters = false;
 	static boolean mid = true;
 	static boolean initialBB = true; 
 	static boolean contour = false;
@@ -9,7 +9,7 @@ public class MaggotDisplayParameters {
 	static boolean forces = false;
 	static boolean backbone = true;
 	
-	
-	
+	//Image, SpineLength, SpineSmooth, TimeLength, TimeSmooth
+	static boolean[] showForce = {true, true, true, true, true};
 	
 }

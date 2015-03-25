@@ -225,14 +225,24 @@ class TrackPanel extends JPanel {
 		JButton playButton = new JButton("Play Track");
 		playButton.setSize(100, 40);
 		playButton.addActionListener(new ActionListener() {
-			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				playCurrentTrack();
 			}
 		});
+		
+		JButton plotButton = new JButton("Plot Track Energies");
+		plotButton.setSize(150, 40);
+		plotButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				plotCurrentTrackE();
+			}
+		});
+		//Build and add the play button 
 		buttonPanel = new JPanel();
 		buttonPanel.add(playButton);
+		buttonPanel.add(plotButton);
 		
 		
 		add(descriptionPanel, BorderLayout.CENTER);
@@ -248,7 +258,7 @@ class TrackPanel extends JPanel {
 		//Update the message and scroll to the top
 		trackDescription.setText(track.description());
 		trackDescription.setCaretPosition(0);
-		
+		//TODO Set ePlotPaneltrack
 	}
 	
 	public void playCurrentTrack(){
@@ -268,6 +278,30 @@ class TrackPanel extends JPanel {
 		}
 	}
 	
+	
+	public void plotCurrentTrackE(){
+		
+	}
+	
 }
+
+class EnergyPlotPanel{
+	
+	public EnergyPlotPanel(Track tr){
+		buildEPlotPanel();
+	}
+	
+	public void buildEPlotPanel(){
+		
+	}
+	
+	public void showPlot(){
+		
+	}
+	
+	
+	
+}
+
 
 

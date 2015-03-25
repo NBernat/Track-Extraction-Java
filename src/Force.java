@@ -43,8 +43,16 @@ public class Force {
 		return weights;
 	}
 	
-	public void getEnergy(int btpInd, Vector<BackboneTrackPoint> allBTPs){
-		
+	public float getEnergy(int btpInd, Vector<? extends TrackPoint> allBTPs){
+		if (allBTPs.firstElement() instanceof BackboneTrackPoint){
+			
+			//TODO get actual energy
+			return 0;
+			
+			
+		} else {
+			return -1;
+		}
 	}
 	
 	public void getForce(int btpInd, Vector<BackboneTrackPoint> allBTPs){

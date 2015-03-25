@@ -1,8 +1,10 @@
 import ij.ImagePlus;
 import ij.ImageStack;
+import ij.gui.Plot;
 import ij.process.ImageProcessor;
 import ij.text.TextWindow;
 
+import java.awt.Color;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.ListIterator;
@@ -83,7 +85,7 @@ public class Track implements Serializable{
 	}
 	
 	
-	public Track(Vector<BackboneTrackPoint> pts){
+	public Track(Vector<BackboneTrackPoint> pts, int ID){
 		maxHeight=0;
 		maxWidth=0;
 		
@@ -92,8 +94,7 @@ public class Track implements Serializable{
 		isCollision = new Vector<Boolean>();
 //		collisions = new Vector<Collision>(); 
 		
-		trackID = nextIDNum;
-		nextIDNum++;
+		trackID = ID;
 
 	}
 	
@@ -390,6 +391,44 @@ public class Track implements Serializable{
 	
 	public static String emptyDescription(){
 		return makeDescription("X", null, "");
+	}
+	
+	
+	public void showEnergyPlot(){
+		
+		Plot plot = new Plot("Example plot", "Frame", "Energy");
+		
+		if (exp!=null && exp.Forces!=null){
+			
+			//Get x coords
+			float[] frames = new float[points.size()];
+			int startframe = points.firstElement().frameNum;
+			for (int i=0; i<frames.length; i++){
+				frames[i] = startframe+i;
+			}
+			
+			Vector<float[]> energies = new Vector<float[]>();
+			for (int i=0; i<exp.Forces.size(); i++){
+				
+				float[] energy = new float[points.size()];
+				for (int j=0; j<frames.length; j++){
+					energy[j] = exp.Forces.get(i).getEnergy(j, points);;
+				}
+					
+				energies.add(energy);
+			}
+			
+			Color[] colors = {Color.WHITE, Color.MAGENTA,Color.GREEN, Color.CYAN, Color.RED};
+			for (int i=0; i<exp.Forces.size(); i++){
+				if (i<MaggotDisplayParameters.showForce.length && MaggotDisplayParameters.showForce[i])
+				plot.setColor(colors[i]);
+				plot.addPoints(frames, energies.get(i), Plot.LINE); 
+				plot.draw();
+			}
+			
+		}
+		
+		plot.show();
 	}
 	
 

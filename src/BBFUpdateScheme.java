@@ -81,10 +81,10 @@ public class BBFUpdateScheme {
 		currentSchemeCount++;
 		
 		if (totalCount>15) comm.setVerbosity(VerbLevel.verb_error);
-		String status = "Iteration "+totalCount+" (";
-		if (updateAll) status+="all)"; else status += "top)";
-		if (finalIters) status += " (final)";
-		IJ.showStatus(status);
+//		String status = "Iteration "+totalCount+" (";
+//		if (updateAll) status+="all)"; else status += "top)";
+//		if (finalIters) status += " (final)";
+//		IJ.showStatus(status);
 				
 		comm.message("Checking keepGoing after iteration "+totalCount, VerbLevel.verb_debug);
 		

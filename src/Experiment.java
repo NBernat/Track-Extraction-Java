@@ -32,7 +32,10 @@ public class Experiment implements Serializable{
 	 * List of tracks contained within the experiment
 	 */
 	Vector<Track> tracks;
-	
+	/**
+	 * 
+	 */
+	Vector<Force> Forces;
 	
 	/**
 	 * Constructs an Experiment object
@@ -148,6 +151,8 @@ public class Experiment implements Serializable{
 		return -1;
 	}
 	
-	
+	public void setForces(Vector<Force> Forces){
+		this.Forces = Forces;
+	}
 	
 }

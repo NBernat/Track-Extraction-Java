@@ -141,7 +141,8 @@ public class TrackBuilder implements Serializable{
 	protected void buildTracks(){
 		
 		//Add frames to track objects
-		while (pe.nextFrameNum() <= pe.endFrameNum && pe.nextFrameNum() <= ep.endFrame) {
+		while (pe.nextFrameNum() <= pe.fl.getStackSize()) {
+//		while (pe.nextFrameNum() <= pe.endFrameNum && pe.nextFrameNum() <= ep.endFrame) {
 			frameNum = pe.nextFrameNum();
 			if (frameNum%20 == 0){
 				IJ.showStatus("Building : Adding Frame "+frameNum+"...");
@@ -341,13 +342,16 @@ public class TrackBuilder implements Serializable{
 		} else {
 						
 			//if a point is assigned to more than one track, start a collision event
-			int numNewColl = detectNewCollisions();
-			comm.message("Number of new collisions in frame "+frameNum+": "+numNewColl, VerbLevel.verb_debug);
+			Vector<TrackMatch> newColMatches = detectNewCollisions();
+			comm.message("Number of new collisions in frame "+frameNum+": "+newColMatches.size(), VerbLevel.verb_debug);
 			
 			//Try to maintain number of incoming tracks in each collision by grabbing nearby tracks and splitting points 
 			int endedCols = endCollisions();
 			comm.message("Number of collisions ended in frame "+frameNum+": "+endedCols, VerbLevel.verb_debug);
 			
+			
+			
+			matches.addAll(newColMatches);
 			//if number incoming = number outgoing, finish
 //			int numFinishedCollisions = releaseFinishedCollisions();
 //			comm.message("Number of collisions ended in frame "+frameNum+": "+numFinishedCollisions, VerbLevel.verb_debug);
@@ -408,7 +412,7 @@ public class TrackBuilder implements Serializable{
 	 * Finds tracks that collide, tries to resolve them, and if they can't be fixed, creates a new Track and Collision 
 	 * @return The number of new collisions
 	 */
-	private int detectNewCollisions(){
+	private Vector<TrackMatch> detectNewCollisions(){
 		
 //		int numNewCollisions = 0;
 		Vector<TrackMatch> newColMatches = new Vector<TrackMatch>();
@@ -418,7 +422,7 @@ public class TrackBuilder implements Serializable{
 		while (mIt.hasNext()){
 			
 			TrackMatch match = mIt.next();
-			//CONCURRENT MODIFICATION ERROR: can't add elements until this is over?
+			//CONCURRENT MODIFICATION ERROR: can't add elements until this is over
 			
 			if (!match.track.isCollision.lastElement() && match.checkTopMatchForCollision()>0){
 
@@ -446,9 +450,9 @@ public class TrackBuilder implements Serializable{
 			}
 		}
 		
-		matches.addAll(newColMatches);
+//		matches.addAll(newColMatches);
 		
-		return newColMatches.size();
+		return newColMatches;
 	}
 	
 
@@ -660,7 +664,7 @@ public class TrackBuilder implements Serializable{
 		
 		
 		ListIterator<Integer> colIt = activeColIDs.listIterator();
-
+		Vector<Integer> toRemove = new Vector<Integer>();
 		while (colIt.hasNext()) {
 			
 			Integer colID = colIt.next();
@@ -676,15 +680,22 @@ public class TrackBuilder implements Serializable{
 				if (newMatches!=null && newMatches.size()>0){ //The collision was fixed! (or simply ended)
 					
 					finishedColIDs.add(colID);
-					activeColIDs.remove(colID);
+					//activeColIDs.remove(colID);
+					toRemove.add(colID);
 					matches.addAll(newMatches);
 					endedCols++;
 					
 				
+				}	
 			}
-		}
+			
+			
 			
 		}
+		for (int i=0; i<toRemove.size(); i++){
+			activeColIDs.remove(toRemove.get(i));
+		}
+		
 		
 		return endedCols;
 		
