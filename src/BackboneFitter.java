@@ -120,7 +120,8 @@ public class BackboneFitter {
 				noError = doPass(params.grains[i]);
 				if (!noError) {
 					pass++;
-					comm.message("Error on track "+tr.trackID+"("+track.trackID+") pass "+i+"(grain "+params.grains[i]+")", VerbLevel.verb_error); 
+					comm.message("Error on track "+tr.trackID+"("+track.trackID+") pass "+i+"(grain "+params.grains[i]+")", VerbLevel.verb_error);
+					track = null;
 				}
 				
 				
