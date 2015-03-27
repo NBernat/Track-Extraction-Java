@@ -141,8 +141,8 @@ public class TrackBuilder implements Serializable{
 	protected void buildTracks(){
 		
 		//Add frames to track objects
-		while (pe.nextFrameNum() <= pe.fl.getStackSize()) {
-//		while (pe.nextFrameNum() <= pe.endFrameNum && pe.nextFrameNum() <= ep.endFrame) {
+//		while (pe.nextFrameNum() <= pe.fl.getStackSize()) {
+		while (pe.nextFrameNum() <= pe.endFrameNum && pe.nextFrameNum() <= ep.endFrame) {
 			frameNum = pe.nextFrameNum();
 			if (frameNum%20 == 0){
 				IJ.showStatus("Building : Adding Frame "+frameNum+"...");

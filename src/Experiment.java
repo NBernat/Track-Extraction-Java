@@ -155,4 +155,9 @@ public class Experiment implements Serializable{
 		this.Forces = Forces;
 	}
 	
+	
+	public void replaceTrack(Track newTrack, int ind){
+		tracks.setElementAt(newTrack, ind);
+	}
+	
 }

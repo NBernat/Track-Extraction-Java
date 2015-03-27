@@ -1,14 +1,18 @@
+import ij.IJ;
 import ij.io.SaveDialog;
 import ij.text.TextWindow;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.ListIterator;
 import java.util.Vector;
+
+
 
 
 
@@ -150,13 +154,20 @@ public class ExperimentFrame extends JFrame{
 				Date date = new Date();
 				SaveDialog sd = new SaveDialog("Save Experiment", "ex"+df.format(date), ".ser");
 				
-				//Save the file 
-				try{
-					ex.save(sd.getDirectory(), sd.getFileName());
-				} catch (Exception exception){
-					new TextWindow("Error", "could not save experiment at the given directory\n"+exception.getMessage(), 500, 500);
-				}
 				
+				if (new File(sd.getDirectory(), sd.getFileName()).exists()) {
+					new TextWindow("Message", "That file name already exists", 500, 500);
+				} else {
+					//TODO enforce that the file doesn't already exist 
+					//Save the file 
+					try{
+						IJ.showStatus("Saving file...");
+						ex.save(sd.getDirectory(), sd.getFileName());
+						IJ.showStatus("File saved!");
+					} catch (Exception exception){
+						new TextWindow("Error", "could not save experiment at the given directory\n"+exception.getMessage(), 500, 500);
+					}
+				}
 			}
 		});
 		JPanel buttonPanel = new JPanel();
@@ -176,7 +187,7 @@ public class ExperimentFrame extends JFrame{
 		ListIterator<Track> trIt = ex.tracks.listIterator();
 		while(trIt.hasNext()){
 			Track t = trIt.next();
-			String name = "Track "+t.trackID;
+			String name = "Track "+t.trackID+" ("+t.points.size()+")";
 			if (t instanceof CollisionTrack) name+="*";
 			names.add(name);
 		}
@@ -285,23 +296,6 @@ class TrackPanel extends JPanel {
 	
 }
 
-class EnergyPlotPanel{
-	
-	public EnergyPlotPanel(Track tr){
-		buildEPlotPanel();
-	}
-	
-	public void buildEPlotPanel(){
-		
-	}
-	
-	public void showPlot(){
-		
-	}
-	
-	
-	
-}
 
 
 

@@ -23,7 +23,8 @@ public class Track_Extractor implements PlugIn{
 				
 		
 		IJ.showStatus("Getting stack");
-		IS = WindowManager.getCurrentWindow().getImagePlus().getImageStack();
+		
+		IS = getStack();
 		if (IS == null) {
 			IJ.showMessage("Null ImagePlus");
 			return;
@@ -71,6 +72,14 @@ public class Track_Extractor implements PlugIn{
 		}
 		
 		
+	}
+	
+	
+	public ImageStack getStack(){
+		
+		
+		
+		return WindowManager.getCurrentWindow().getImagePlus().getImageStack();
 	}
 	
 	public static void main(String[] args) {

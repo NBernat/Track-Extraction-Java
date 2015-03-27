@@ -15,7 +15,7 @@ public class Experiment_Viewer implements PlugIn{
 	public void run(String arg) {
 		
 		IJ.showStatus("Getting experiment");
-		getExperiment();
+		getExperiment(arg);
 		if (ex==null){
 			IJ.showStatus("Experiment was not opened");
 			return;
@@ -29,12 +29,19 @@ public class Experiment_Viewer implements PlugIn{
 		IJ.showStatus("Experiment shown in frame");
 		exFrame.run(null);
 		
+		ex = null;
+		exFrame = null;
+		
 	}
 	
 	
-	private void getExperiment(){
+	private void getExperiment(String arg){
 		if (ex==null||ex.tracks==null||ex.tracks.size()==0){
 			//open a browser box]
+			String path;
+			if(arg!=null && !arg.equals("")){
+				path = arg;
+			}else {
 			OpenDialog od = new OpenDialog("Choose a .ser file containing an experiment", null);
 			
 			String fileName = od.getFileName();
@@ -44,7 +51,9 @@ public class Experiment_Viewer implements PlugIn{
 			dir = dir.replace('\\', '/'); // Windows safe
 			if (!dir.endsWith("/")) dir += "/";
 			
-			String path = dir + fileName;
+			path = dir + fileName;
+			}
+			
 			
 			//try to open file
 			try {

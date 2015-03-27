@@ -105,12 +105,15 @@ public class BackboneFitter {
 	 */
 	public void fitTrack(Track tr) {
 
+		clearPrev();
+		
 		BTPs = new Vector<BackboneTrackPoint>();
 
 		// Extract the points, and move on (if successful)
 		comm.message("Extracting maggot tracks", VerbLevel.verb_debug);
 		
-		if (extractTrackPoints(tr)) {
+		
+		if (extractTrackPoints(tr)) {//ExtractTrackPoints creates the new track
 			//If there was no error extraction points, run the different grain passes of the algorithm
 			boolean noError = true;
 			for(int i=0; (i<params.grains.length && noError); i++){
@@ -128,7 +131,7 @@ public class BackboneFitter {
 				comm.setVerbosity(VerbLevel.verb_error);
 			}
 			
-			 
+				 
 		} else {
 			comm.message("Error extracting trackPoints from track", VerbLevel.verb_error);
 		}
@@ -143,6 +146,14 @@ public class BackboneFitter {
 		// }
 	}
 
+	
+	private void clearPrev(){
+		track = null;
+		BTPs = null;
+		shifts = null;
+		updater = null;
+		pass = 0;
+	}
 
 	/**
 	 * Creates a new track full of BTPs out of the points in the track
@@ -871,6 +882,11 @@ public class BackboneFitter {
 
 	public String getForceName(int ind) {
 		return Forces.get(ind).getName();
+	}
+	
+	
+	public Track getTrack(){
+		return track;
 	}
 
 }
