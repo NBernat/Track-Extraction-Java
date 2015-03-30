@@ -1,37 +1,8 @@
-import java.awt.BorderLayout;
 import java.awt.Color;
-//import java.awt.Dimension;
-//import java.awt.LayoutManager;
-//import java.awt.Graphics;
-import java.awt.Rectangle;
-//import java.awt.image.BufferedImage;
-
-
-
-
-
-
-
-
-
-
-//import javax.swing.JFrame;
-//import javax.swing.JPanel;
-
-
-
-
-import ij.ImagePlus;
-//import ij.gui.GenericDialog;
-import ij.gui.ImageWindow;
 import ij.gui.Plot;
 import ij.gui.PlotWindow;
-import ij.gui.Wand;
-//import ij.process.ImageProcessor;
 import ij.plugin.PlugIn;
 import ij.text.TextPanel;
-//import ij.text.TextWindow;
-//import ij.process.ImageProcessor;
 
 
 public class Test_  implements PlugIn {//extends JFrame

@@ -1,5 +1,3 @@
-import ij.IJ;
-
 
 /**
  * Provides a BackboneFitter with methods to implement the following updating scheme:

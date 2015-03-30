@@ -49,11 +49,11 @@ public class ExtractionParameters implements Serializable{
 	 * 1 = play track specified by sampleInd
 	 * 2 = 1, plus show ResultsTable & thresholded image of frame specified by sampleInd
 	 */
-	int showSampleData =2; 
+	int showSampleData =0; 
 	int sampleInd = 10;
 	//TODO
 	int startFrame = 1;
-	int endFrame = 5000;
+	int endFrame = 200;
 	//_frame_normalization_methodT fnm = _frame_normalization_methodT._frame_none;
 	//TODO
 	int trackWindowHeight = 50;

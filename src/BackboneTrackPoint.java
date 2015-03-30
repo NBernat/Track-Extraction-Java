@@ -2,7 +2,6 @@ import ij.ImagePlus;
 import ij.gui.PolygonRoi;
 import ij.process.FloatPolygon;
 import ij.process.ImageProcessor;
-import ij.text.TextWindow;
 
 import java.awt.Color;
 import java.awt.Rectangle;

@@ -76,9 +76,6 @@ public class Track_Extractor implements PlugIn{
 	
 	
 	public ImageStack getStack(){
-		
-		
-		
 		return WindowManager.getCurrentWindow().getImagePlus().getImageStack();
 	}
 	
