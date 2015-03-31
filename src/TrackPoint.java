@@ -201,6 +201,10 @@ public class TrackPoint extends Point {
 		
 	}
 	
+	public ImageProcessor getIm(MaggotDisplayParameters mdp){
+		return getIm();
+	}
+	
 	public void setNumMatches(int num){
 		numMatches = num;
 	}

@@ -8,6 +8,12 @@ public class ProcessingParameters {
 	 */
 	int minTrackLen = 80;//TODO set this when fp is set
 	
+	
+	/**
+	 * Closes the MMF window
+	 */
+	boolean closeMMF;
+	
 	/**
 	 * Displays an ExperimentFrame after extracting tracks 
 	 */

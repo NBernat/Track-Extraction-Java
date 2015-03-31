@@ -349,9 +349,19 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	
 	public ImageProcessor getIm(){
 
-		return getIm(MaggotDisplayParameters.clusters,MaggotDisplayParameters.mid, MaggotDisplayParameters.initialBB, 	
-				MaggotDisplayParameters.contour, MaggotDisplayParameters.ht, MaggotDisplayParameters.forces, MaggotDisplayParameters.backbone);
+		return getIm(MaggotDisplayParameters.DEFAULTclusters,MaggotDisplayParameters.DEFAULTmid, MaggotDisplayParameters.DEFAULTinitialBB, 	
+				MaggotDisplayParameters.DEFAULTcontour, MaggotDisplayParameters.DEFAULTht, MaggotDisplayParameters.DEFAULTforces, MaggotDisplayParameters.DEFAULTbackbone);
 		
+	}
+	
+	public ImageProcessor getIm(MaggotDisplayParameters mdp){
+		
+		if (mdp==null){
+			return getIm();
+		} else {
+			return getIm(mdp.clusters, mdp.mid, mdp.initialBB, 	
+				mdp.contour, mdp.ht, mdp.forces, mdp.backbone);
+		}
 	}
 	
 	

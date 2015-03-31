@@ -130,6 +130,7 @@ public class Experiment_Processor implements PlugIn{
 			IJ.showStatus("Opening MMF...");		
 			IJ.run("Import MMF", "path=["+new File(dir, filename).getPath()+"]");
 			mmfStack = WindowManager.getCurrentWindow().getImagePlus();
+//			if (prParams.closeMMF) WindowManager.getCurrentWindow().close();
 			IJ.showStatus("MMF open");
 			return true;
 		} catch (Exception e){

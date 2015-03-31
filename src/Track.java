@@ -250,12 +250,16 @@ public class Track implements Serializable{
 	
 	public void playMovie() {
 		comm = new Communicator();
-		playMovie(trackID);
+		playMovie(trackID, null);
 		
 		if (!comm.outString.equals("")) new TextWindow("PlayMovie Error", comm.outString, 500, 500); 
 	}
 	
-	public void playMovie(int labelInd){
+	public void playMovie(MaggotDisplayParameters mdp) {
+		playMovie(trackID, mdp);
+	}
+	
+	public void playMovie(int labelInd, MaggotDisplayParameters mdp){
 		
 //		String trStr = "";
 		
@@ -270,7 +274,12 @@ public class Track implements Serializable{
 			point.setTrack(this);
 			
 			//Get the first image
-			ImageProcessor firstIm = point.getIm();
+			ImageProcessor firstIm;
+			if (mdp!=null) {
+				firstIm = point.getIm(mdp);
+			} else{
+				firstIm = point.getIm();
+			}
 			
 			ImageStack trackStack = new ImageStack(firstIm.getWidth(), firstIm.getHeight());
 			
@@ -284,7 +293,12 @@ public class Track implements Serializable{
 				point.setTrack(this);
 				
 				//Get the next image
-				ImageProcessor img = point.getIm();
+				ImageProcessor img;
+				if (mdp!=null) {
+					img = point.getIm(mdp);
+				} else{
+					img = point.getIm();
+				}
 //				img.
 				trackStack.addSlice(img);
 				
@@ -420,7 +434,7 @@ public class Track implements Serializable{
 			
 			Color[] colors = {Color.WHITE, Color.MAGENTA,Color.GREEN, Color.CYAN, Color.RED};
 			for (int i=0; i<exp.Forces.size(); i++){
-				if (i<MaggotDisplayParameters.showForce.length && MaggotDisplayParameters.showForce[i])
+				if (i<MaggotDisplayParameters.DEFAULTshowForce.length && MaggotDisplayParameters.DEFAULTshowForce[i])
 				plot.setColor(colors[i]);
 				plot.addPoints(frames, energies.get(i), Plot.LINE); 
 				plot.draw();
