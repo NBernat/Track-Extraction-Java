@@ -182,12 +182,6 @@ public class TrackBuilder implements Serializable{
 		activeColIDs.removeAll(finishedColIDs);
 
 		
-		if (ep.dispTrackInfo && !trackMessage.outString.equals("")){
-			new TextWindow("Track info", trackMessage.outString, 500, 500);
-		}
-		
-
-		
 	}
 	
 	
@@ -876,7 +870,11 @@ public class TrackBuilder implements Serializable{
 		return exp;
 	}
 	
-	
+	public void showCommOutput(){
+		if (ep.dispTrackInfo && !trackMessage.outString.equals("")){
+			new TextWindow("Track info", trackMessage.outString, 500, 500);
+		}
+	}
 	
 
 }

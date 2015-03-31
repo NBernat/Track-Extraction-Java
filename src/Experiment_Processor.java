@@ -59,7 +59,7 @@ public class Experiment_Processor implements PlugIn{
 	
 	
 	/**
-	 * Set ups the processing 
+	 * Set ups the processing objects
 	 */
 	private void init(){
 		prParams = new ProcessingParameters();
@@ -148,7 +148,7 @@ public class Experiment_Processor implements PlugIn{
 		
 		try {
 			IJ.showStatus("Opening Experiment...");
-			ex = Experiment.open(new File(dir, filename).getPath()); 
+			ex = new Experiment(Experiment.open(new File(dir, filename).getPath())); 
 			IJ.showStatus("Experiment open");
 			return true;
 		} catch (Exception e){
@@ -198,7 +198,8 @@ public class Experiment_Processor implements PlugIn{
 			IJ.showStatus("Extracting tracks");
 			MaggotTrackBuilder tb = new MaggotTrackBuilder(mmfStack.getImageStack(), new ExtractionParameters());
 			tb.run();
-			ex = tb.toExperiment();
+			ex = new Experiment(tb.toExperiment());
+			tb.showCommOutput();
 			
 			//Show the extracted tracks
 			if(prParams.showMagEx){
@@ -238,6 +239,8 @@ public class Experiment_Processor implements PlugIn{
 			}
 		}
 		
+		bbf.showCommOutput();
+		
 		//Remove the tracks that couldn't be fit
 		for(Track t : toRemove){
 			ex.tracks.remove(t);
@@ -251,7 +254,7 @@ public class Experiment_Processor implements PlugIn{
 			ExperimentFrame exFrame = new ExperimentFrame(ex);
 			IJ.showStatus("Experiment shown in frame");
 			exFrame.run(null);
-		}
+		} 
 		
 	}
 	/**

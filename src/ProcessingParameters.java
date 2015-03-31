@@ -11,7 +11,7 @@ public class ProcessingParameters {
 	/**
 	 * Displays an ExperimentFrame after extracting tracks 
 	 */
-	boolean showMagEx = true;
+	boolean showMagEx = false;
 	/**
 	 * Displays an ExperimentFrame after fitting tracks 
 	 */

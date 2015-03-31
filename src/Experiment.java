@@ -60,10 +60,11 @@ public class Experiment implements Serializable{
 		this.tracks = tracks;
 	}
 	
-	/**
-	 * Constructs an experiment from a "*.ser" file
-	 * @param fname
-	 */
+	@SuppressWarnings("unchecked")
+	public Experiment(Experiment exOld){
+		init(exOld.fname, exOld.ep, exOld.collisionTrackIDs, (Vector<Track>)exOld.tracks.clone());
+		Forces = exOld.Forces;
+	}
 
 	
 	

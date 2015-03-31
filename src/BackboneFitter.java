@@ -125,11 +125,11 @@ public class BackboneFitter {
 				}
 				
 				
-				if (!comm.outString.equals("")){
-					 new TextWindow("TrackFitter", comm.outString, 500, 500);
-				 }
-				comm = new Communicator();
-				comm.setVerbosity(VerbLevel.verb_error);
+//				if (!comm.outString.equals("")){
+//					 new TextWindow("TrackFitter", comm.outString, 500, 500);
+//				 }
+//				comm = new Communicator();
+//				comm.setVerbosity(VerbLevel.verb_error);
 			}
 			
 				 
@@ -138,12 +138,7 @@ public class BackboneFitter {
 		}
 		
 		
-		if (!comm.outString.equals("")){
-			 new TextWindow("TrackFitter", comm.outString, 500, 500);
-		 }
-		if (!bbcomm.outString.equals("")){
-			new TextWindow("Backbone Generation", bbcomm.outString, 500, 500);
-		}
+		
 		// }
 	}
 
@@ -219,6 +214,7 @@ public class BackboneFitter {
 			comm.message(sw.toString(), VerbLevel.verb_error);
 		}
 
+		if (!noerror) track = null;
 		return noerror;
 	}
 
@@ -890,6 +886,16 @@ public class BackboneFitter {
 		return track;
 	}
 
+	public void showCommOutput(){
+		if (!comm.outString.equals("")){
+			 new TextWindow("TrackFitter", comm.outString, 500, 500);
+		 }
+		if (!bbcomm.outString.equals("")){
+			new TextWindow("Backbone Generation", bbcomm.outString, 500, 500);
+		}
+	}
+	
+	
 }
 
 class Gap{
