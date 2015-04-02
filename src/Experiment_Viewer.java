@@ -21,8 +21,8 @@ public class Experiment_Viewer implements PlugIn{
 			return;
 		}
 		
-		IJ.showStatus("Modifying experiment...");
-		modifyExperiment();
+//		IJ.showStatus("Modifying experiment...");
+//		modifyExperiment();
 		
 		IJ.showStatus("Making experiment frame");
 		exFrame = new ExperimentFrame(ex);

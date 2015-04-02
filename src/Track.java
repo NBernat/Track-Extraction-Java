@@ -54,7 +54,7 @@ public class Track implements Serializable{
 	/**
 	 * Length of time to pause between frames, ie 1/frameRate, in ms
 	 */
-	int frameLength = 71;//FrameRate=~14fps
+//	int frameLength = 71;//FrameRate=~14fps
 	/**
 	 * Access to the TrackBuilder
 	 */

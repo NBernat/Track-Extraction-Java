@@ -120,7 +120,11 @@ public class displayUtils {
 				}
 				
 			}
+		} else {
+			int ovalSize = 10;
+			im.drawOval(10-ovalSize/2, 10-ovalSize/2, ovalSize, ovalSize);
 		}
+		
 	}
 	
 	public static void drawBackbone(ImageProcessor im, FloatPolygon bbNew, int expandFac, int offX, int offY, Rectangle rect, Color color){
@@ -141,6 +145,9 @@ public class displayUtils {
 					im.setColor(color);
 				}
 			}
+		}else {
+			int ovalSize = 20;
+			im.drawOval(0, 0, ovalSize, ovalSize);
 		}
 	}
 	

@@ -320,7 +320,15 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	 * Stores the final backbone
 	 */
 	protected void finalizeBackbone(){
-		backbone = new PolygonRoi(bbNew, PolygonRoi.POLYLINE);
+		backbone = new PolygonRoi(bbOld, PolygonRoi.POLYLINE);
+		
+//		backboneX = new float[bbNew.npoints];
+//		backboneY = new float[bbNew.npoints];
+//		for (int i=0; i<bbNew.npoints; i++){
+//			backboneX[i] = bbNew.xpoints[i];
+//			backboneY[i] = bbNew.ypoints[i];
+//		}
+		
 	}
 	
 	public int getNumPix(){
@@ -365,7 +373,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	}
 	
 	
-	public ImageProcessor getIm(boolean clusters, boolean mid, boolean initialBB, boolean contour, boolean ht, boolean forces, boolean backbone){
+	public ImageProcessor getIm(boolean clusters, boolean mid, boolean initialBB, boolean contour, boolean ht, boolean forces, boolean bb){
 
 		int expandFac = 10;//TODO MOVE TO PARAMETERS
 		
@@ -382,7 +390,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		int offY = trackWindowHeight*(expandFac/2) - ((int)y-rect.y)*expandFac;//rect.y-imOriginY;
 		
 		
-		return drawFeatures(pIm, offX, offY, expandFac, clusters, mid, initialBB, contour, ht, forces, backbone); 
+		return drawFeatures(pIm, offX, offY, expandFac, clusters, mid, initialBB, contour, ht, forces, bb); 
 		
 	}
 	
@@ -411,7 +419,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		return im;
 	}
 	
-	protected ImageProcessor drawFeatures(ImageProcessor grayIm, int offX, int offY, int expandFac, boolean clusters, boolean mid, boolean initialBB, boolean contour, boolean ht, boolean forces, boolean backbone){
+	protected ImageProcessor drawFeatures(ImageProcessor grayIm, int offX, int offY, int expandFac, boolean clusters, boolean mid, boolean initialBB, boolean contour, boolean ht, boolean forces, boolean bb){
 		
 		ImageProcessor im = grayIm.convertToRGB();
 		
@@ -479,7 +487,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 			
 			
 		//BACKBONE
-		if (backbone) displayUtils.drawBackbone(im, bbNew, expandFac, offX, offY, rect, Color.PINK);
+		if (bb) displayUtils.drawBackbone(im, backbone.getFloatPolygon(), expandFac, offX, offY, rect, Color.PINK);
 		
 		return im;
 	}
@@ -511,6 +519,26 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		return Math.sqrt(totalDistSqr);
 	}
 	
+	
+//	public void preSerialize(){
+//		FileSaver fs = new FileSaver(new ImagePlus("ImTrackPoint "+pointID, im));
+//		serializableIm = fs.serialize();
+////		super.preSerialize();
+////		backboneX = new float[backbone.getNCoordinates()];
+////		backboneY = new float[backbone.getNCoordinates()];
+////		for (int i=0; i<backbone.getNCoordinates(); i++){
+////			backboneX[i] = backbone.getFloatPolygon().xpoints[i];
+////			backboneY[i] = backbone.getFloatPolygon().ypoints[i];
+////		}
+//	}
+//	
+//	public void postDeserialize(){
+//		Opener op = new Opener();
+//		ImagePlus im2 = op.deserialize(serializableIm);
+//		im = im2.getProcessor();
+////		super.postDeserialize();
+////		backbone = new PolygonRoi(backboneX, backboneY, PolygonRoi.POLYLINE);
+//	}
 	
 //	private int getPlotXCoord(float xCoord, int offX, int expandFac){
 //		

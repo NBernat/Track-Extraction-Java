@@ -20,33 +20,125 @@ public class Experiment_Processor implements PlugIn{
 	private String srcDir;
 	private String srcName;
 	private PrintWriter processLog;
-	
+	private String outputDir;
 	
 	private ImagePlus mmfStack;
 	private BackboneFitter bbf;
 	private Experiment ex;
 	
+//	private Clock clock;
+	private int indentLevel;
+	
+	//TODO command line invocation
+	/**
+	public void main(String[] args){
+		
+		
+		String arg0=null;
+		outputDir = null;
+		int i=0;
+		String s;		
+		while (i<args.length){
+			
+			s=args[i];
+			
+			if (s.equalsIgnoreCase("input")){
+				i++;
+				String[] out = findArgUnit(args, i);
+				if (out!=null){
+					arg0 = out[0];
+					i = Integer.parseInt(out[1]);
+				} else {
+					System.out.println("Invalid input directory name");
+				}
+			} else if (s.equalsIgnoreCase("outputdir")){
+				i++;
+				String[] out = findArgUnit(args, i);
+				if (out!=null){
+					outputDir = out[0];
+					i = Integer.parseInt(out[1]);
+				} else {
+					System.out.println("Invalid output directory name");
+				}
+				
+			}
+			
+			i++;
+		}
+		
+		//Open IJ
+		run(arg0);
+		
+		
+		
+		
+	}
+	
+	private String[] findArgUnit(String[] args, int startInd){
+		
+		if (args.length<=startInd){
+			return null;
+		} else {
+			String[] out = new String[2];
+			
+			//Check beginning
+			if (args[startInd].charAt(0) != '['){
+				return null;
+			}
+			
+			//Find end
+			String s="";
+			int i = startInd;
+			boolean endFound = false;
+			while (!endFound && i<args.length){
+				s += args[i];
+				if (s.charAt(s.length()-1)==']'){
+					endFound=true;
+				} else {
+					
+					i++;
+				}
+			}
+			
+			if (endFound){
+				return out;
+			} else {
+				return null;
+			}
+		}
+	}
+	
+	*/
 	
 	/**
 	 * Opens a file (via argument or dialog); extracts if needed, and fits tracks; saves extracted and fit tracks
 	 */
 	public void run(String arg0) {
-		
+		indentLevel=0;
+		//clock = Clock.tick();
+		setupLog();
+		log("Initiating processor");//TODO add tick
 		init();
 		
-		boolean success = (loadFile(arg0) && setupLog());
+		log("Loading File...");//TODO add tick
+		boolean success = (loadFile(arg0) );
 		try {
 			if(success){
-				
+				log("...success");//TODO add tick
 				if (ex==null){
 					extractTracks();
 					if (prParams.saveMagEx) saveOldTracks();
+					
+					//TODO release memory to OS? System.gc
 				}
 				
 				fitTracks();
 				if (prParams.saveFitEx) saveNewTracks();
-				
+				//TODO release memory to OS? System.gc
+			} else {
+				log("...no success");//TODO add tick
 			}
+			
 		} catch (Exception e){
 			
 		} finally {
@@ -72,6 +164,8 @@ public class Experiment_Processor implements PlugIn{
 	 * @param arg0 The complete filename, or null to open a file chooser dialog
 	 */
 	private boolean loadFile(String arg0){
+		indentLevel++;
+		
 		String fileName=null;
 		String dir=null;
 		
@@ -117,6 +211,7 @@ public class Experiment_Processor implements PlugIn{
 			success = false;
 		}
 		
+		indentLevel--;
 		return success;
 	}
 	/**
@@ -126,6 +221,7 @@ public class Experiment_Processor implements PlugIn{
 	 * @return Status of the file opening: true=successful
 	 */
 	private boolean openMMF(String dir, String filename){
+		indentLevel++;
 		try{
 			IJ.showStatus("Opening MMF...");		
 			IJ.run("Import MMF", "path=["+new File(dir, filename).getPath()+"]");
@@ -136,8 +232,9 @@ public class Experiment_Processor implements PlugIn{
 		} catch (Exception e){
 			new TextWindow("Error opening experiment", e.getMessage(), 500, 500);
 			return false;
+		} finally{
+			indentLevel--;
 		}
-		
 	}
 	/**
 	 * Loads an experiment into the processor from a .ser file
@@ -146,7 +243,7 @@ public class Experiment_Processor implements PlugIn{
 	 * @return Status of the file opening: true=successful
 	 */
 	private boolean openExp(String dir, String filename){
-		
+		indentLevel++;
 		try {
 			IJ.showStatus("Opening Experiment...");
 			ex = new Experiment(Experiment.open(new File(dir, filename).getPath())); 
@@ -155,8 +252,9 @@ public class Experiment_Processor implements PlugIn{
 		} catch (Exception e){
 			new TextWindow("Error opening experiment", e.getMessage(), 500, 500);
 			return false;
+		} finally{
+			indentLevel--;
 		}
-		
 	}
 	
 	
@@ -168,7 +266,7 @@ public class Experiment_Processor implements PlugIn{
 	 * @return Success of the creation of the log 
 	 */
 	private boolean setupLog(){
-		
+		indentLevel++;
 		try{
 			String[] logPathParts = prParams.setLogPath(srcDir, srcName);
 			processLog = new PrintWriter(new FileWriter(new File(logPathParts[0], logPathParts[1]).getPath(), true));
@@ -185,7 +283,11 @@ public class Experiment_Processor implements PlugIn{
 		} catch (Exception e){
 			new TextWindow("Log error", "Unable to create Processing Log file '"+srcName+"' in '"+srcDir+"'", 500, 500);
 			return false;
+		} finally{
+			indentLevel--;
 		}
+		
+		
 	}
 	
 	
@@ -193,7 +295,7 @@ public class Experiment_Processor implements PlugIn{
 	 * Runs track extraction on the imageStack
 	 */
 	private void extractTracks(){
-		
+		indentLevel++;
 		try {
 			//Extract the tracks
 			IJ.showStatus("Extracting tracks");
@@ -211,6 +313,8 @@ public class Experiment_Processor implements PlugIn{
 			
 		} catch  (Exception e){
 			new TextWindow("Error opening experiment", e.getMessage(), 500, 500);
+		} finally{
+			indentLevel--;
 		}
 		
 	}
@@ -218,7 +322,7 @@ public class Experiment_Processor implements PlugIn{
 	 * Replaces each track in the experiment with a backbone-fitted track
 	 */
 	private void fitTracks(){
-		
+		indentLevel++;
 		IJ.showStatus("Fitting Tracks...");
 		
 		Track tr;
@@ -256,7 +360,7 @@ public class Experiment_Processor implements PlugIn{
 			IJ.showStatus("Experiment shown in frame");
 			exFrame.run(null);
 		} 
-		
+		indentLevel--;
 	}
 	/**
 	 * Fits backbones to a Track of MaggotTrackPoints
@@ -264,8 +368,11 @@ public class Experiment_Processor implements PlugIn{
 	 * @return A track fit by the BackboneFitter
 	 */
 	private Track fitTrack(Track tr){
+		indentLevel++;
 		bbf.fitTrack(tr);
+		indentLevel--;
 		return bbf.getTrack();
+		
 	}
 
 	
@@ -273,20 +380,28 @@ public class Experiment_Processor implements PlugIn{
 	 * Saves the maggotTracks according to the naming convention defined in the Processing Parameters
 	 */
 	private void saveOldTracks(){
+		indentLevel++;
 		String[] pathParts = prParams.setMagExPath(srcDir, srcName);
 		ex.save(pathParts[0], pathParts[1]); 
+		indentLevel--;
 	}
 	/**
 	 * Saves the backboneTracks according to the naming convention defined in the Processing Parameters
 	 */
 	private void saveNewTracks(){
+		indentLevel++;
 		String[] pathParts = prParams.setFitExPath(srcDir, srcName);
-		ex.save(pathParts[0], pathParts[1]); 
+		ex.save(pathParts[0], pathParts[1]);
+		indentLevel--;
 	}
+	
+	private void log(String message){
+		String indent = "";
+		for (int i=0;i<indentLevel; i++) indent+="----";
+		processLog.println(indent+"Initiating processor");//TODO add tick
+	}
+	
 }
-
-
-
 
 
 

@@ -1,10 +1,14 @@
+import ij.IJ;
+
 import java.io.File;
 import java.io.FileInputStream;
 //import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 import java.io.Serializable;
+import java.io.StringWriter;
 import java.util.ListIterator;
 import java.util.Vector;
 
@@ -80,12 +84,14 @@ public class Experiment implements Serializable{
 		File f = new File(fname);
 		
 		//Pre-serialize the tracks 
+		IJ.showStatus("PreSerializing...");
 		ListIterator<Track> trIt = tracks.listIterator();
 		while (trIt.hasNext()){
 			trIt.next().preSerialize();
 		}
 		
 		//Serialize the Experiment
+		IJ.showStatus("Writing objects to file");
 		try {
 			
 			FileOutputStream fo = new FileOutputStream(f);
@@ -95,10 +101,14 @@ public class Experiment implements Serializable{
 			
 			oo.close();
 			fo.close();
-			
+			IJ.showStatus("Done writing objects to file");
 			
 		} catch (Exception e){
-			//TODO 
+			IJ.showStatus("Error writing objects to file");
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			e.printStackTrace(pw);
+			IJ.showMessage("Error saving experiment:\n"+sw.toString());
 			return;
 		}
 		
@@ -115,24 +125,17 @@ public class Experiment implements Serializable{
 	 */
 	public static Experiment open(String fname) throws Exception{
 		
+		Experiment ex;
+		
 		//TODO Check the extension
 		File f = new File(fname);
-		
-		//Deserialize the experiment
-		Experiment ex;
 			
+		//Deserialize the experiment
 		FileInputStream fi = new FileInputStream(f);
 		ObjectInputStream oi = new ObjectInputStream(fi);
-		
 		ex = (Experiment) oi.readObject();
-		
 		oi.close();
 		fi.close();
-		
-//			init(fname, ex.ep, ex.collisionTrackIDs, ex.tracks);
-			
-			
-		
 		
 		//PostDeserialize the tracks
 		ListIterator<Track> trIt = ex.tracks.listIterator();

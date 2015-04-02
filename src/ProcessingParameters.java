@@ -26,29 +26,32 @@ public class ProcessingParameters {
 	/**
 	 * Whether or not to automatically save the extracted tracks of MTPs
 	 */
-	boolean saveMagEx = false;
+	boolean saveMagEx = true;
 	/**
 	 * Whether or not to automatically save the fitted tracks of BTPs
 	 */
-	boolean saveFitEx = false;
+	boolean saveFitEx = true;
 	
 	
 	
-	public String[] setLogPath(String srcDir, String srcName){
-		String[] logPathParts = {srcDir, "ProcessingLog.txt"};
-		
+	public String[] setLogPath(String outDir, String srcName){
+		String[] logPathParts = {outDir, "ProcessingLog.txt"};
 		return logPathParts;
 	}
 	
-	public String[] setMagExPath(String srcDir, String srcName){
-		String[] MagExPathParts = {};
+	public String[] setMagExPath(String outDir, String srcName){
 		
+		StringBuilder name = new StringBuilder(srcName);
+		name.replace(name.lastIndexOf("."), name.length(), "_MTP.ser");
+		String[] MagExPathParts = {outDir, name.toString()};
 		return MagExPathParts;
 	}
 	
-	public String[] setFitExPath(String srcDir, String srcName){
-		String[] FitExPathParts = {};
-		
+	public String[] setFitExPath(String outDir, String srcName){
+
+		StringBuilder name = new StringBuilder(srcName);
+		name.replace(name.lastIndexOf("."), name.length(), "_BTP.ser");
+		String[] FitExPathParts = {outDir, name.toString()};
 		return FitExPathParts;
 	}
 	
