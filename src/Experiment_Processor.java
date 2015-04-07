@@ -26,7 +26,7 @@ public class Experiment_Processor implements PlugIn{
 	private BackboneFitter bbf;
 	private Experiment ex;
 	
-//	private Clock clock;
+	private TicToc runTime;
 	private int indentLevel;
 	
 	//TODO command line invocation
@@ -115,18 +115,24 @@ public class Experiment_Processor implements PlugIn{
 	 */
 	public void run(String arg0) {
 		indentLevel=0;
-		//clock = Clock.tick();
+		runTime = new TicToc();
+		runTime.tic();
+				
+				
 		setupLog();
-		log("Initiating processor");//TODO add tick
+		log("Initiating processor");
 		init();
 		
-		log("Loading File...");//TODO add tick
+		log("Loading File...");
 		boolean success = (loadFile(arg0) );
 		try {
 			if(success){
-				log("...success");//TODO add tick
+				log("...success");
 				if (ex==null){
+					
+					log("Loaded mmf; Extracting tracks...");
 					extractTracks();
+					log("...done");
 					if (prParams.saveMagEx) saveOldTracks();
 					
 					//TODO release memory to OS? System.gc
@@ -136,7 +142,7 @@ public class Experiment_Processor implements PlugIn{
 				if (prParams.saveFitEx) saveNewTracks();
 				//TODO release memory to OS? System.gc
 			} else {
-				log("...no success");//TODO add tick
+				log("...no success");
 			}
 			
 		} catch (Exception e){
@@ -398,10 +404,34 @@ public class Experiment_Processor implements PlugIn{
 	private void log(String message){
 		String indent = "";
 		for (int i=0;i<indentLevel; i++) indent+="----";
-		processLog.println(indent+"Initiating processor");//TODO add tick
+		processLog.println(runTime.tocSec()+indent+"Initiating processor");
 	}
 	
 }
 
 
+
+
+class TicToc{
+	
+	private long startTime;
+	
+	public TicToc(){
+		
+	}
+	
+	public void tic(){
+		startTime = System.currentTimeMillis();
+	}
+	
+	public long toc(){
+		return System.currentTimeMillis()-startTime;
+	}
+	
+	public long tocSec(){
+		return (toc())/1000;
+	}
+	
+	
+}
 

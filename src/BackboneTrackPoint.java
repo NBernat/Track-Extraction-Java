@@ -5,6 +5,8 @@ import ij.process.ImageProcessor;
 
 import java.awt.Color;
 import java.awt.Rectangle;
+import java.io.DataOutputStream;
+import java.io.PrintWriter;
 import java.util.Vector;
 
 
@@ -520,35 +522,38 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	}
 	
 	
-//	public void preSerialize(){
-//		FileSaver fs = new FileSaver(new ImagePlus("ImTrackPoint "+pointID, im));
-//		serializableIm = fs.serialize();
-////		super.preSerialize();
-////		backboneX = new float[backbone.getNCoordinates()];
-////		backboneY = new float[backbone.getNCoordinates()];
-////		for (int i=0; i<backbone.getNCoordinates(); i++){
-////			backboneX[i] = backbone.getFloatPolygon().xpoints[i];
-////			backboneY[i] = backbone.getFloatPolygon().ypoints[i];
-////		}
-//	}
-//	
-//	public void postDeserialize(){
-//		Opener op = new Opener();
-//		ImagePlus im2 = op.deserialize(serializableIm);
-//		im = im2.getProcessor();
-////		super.postDeserialize();
-////		backbone = new PolygonRoi(backboneX, backboneY, PolygonRoi.POLYLINE);
-//	}
+	public int toDisk(DataOutputStream dos, PrintWriter pw){
+		
+		//Write all ImTrackPoint data
+		super.toDisk(dos, pw);
+		
+		try {
+			//Write # of backbone points
+			dos.writeShort(backbone.getNCoordinates());
+			//Write backbone points
+			FloatPolygon bfp = backbone.getFloatPolygon();
+			for (int i=0; i<bfp.npoints; i++){
+				dos.writeFloat(bfp.xpoints[i]);
+				dos.writeFloat(bfp.ypoints[i]);
+			}
+			//Write artificial mid
+			dos.writeByte(artificialMid ? 1:0);
+		} catch (Exception e) {
+			if (pw!=null) pw.println("Error writing ImTrackPoint image for point "+pointID+"; aborting save");
+			return 1;
+		}
+		
+		return 0;
+	}
 	
-//	private int getPlotXCoord(float xCoord, int offX, int expandFac){
-//		
-//		return (int)(offX + expandFac*(xCoord-rect.x));
-//	}
-//	
-//	private int getPlotYCoord(float yCoord, int offY, int expandFac){
-//		
-//		return (int)(offY + expandFac*(yCoord-rect.x));
-//	}
+	public int sizeOnDisk(){
+		
+		int size = super.sizeOnDisk();
+		size += Short.SIZE + (2*backbone.getNCoordinates())*java.lang.Float.SIZE + Byte.SIZE;
+		
+		return size;
+	}
+
 	
 	
 }

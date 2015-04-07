@@ -5,6 +5,8 @@ import ij.io.Opener;
 import ij.process.ImageProcessor;
 
 import java.awt.Rectangle;
+import java.io.DataOutputStream;
+import java.io.PrintWriter;
 
 
 public class ImTrackPoint extends TrackPoint{
@@ -95,6 +97,30 @@ public class ImTrackPoint extends TrackPoint{
 		im = im2.getProcessor();		
 	}
 	
+	public int toDisk(DataOutputStream dos, PrintWriter pw){
+		
+		//Write all TrackPoint data
+		super.toDisk(dos, pw);
+		
+		//Image offest, width, and height already written in TrackPoint
+		
+		//Write image
+		try {
+			preSerialize();
+			dos.write(serializableIm);
+		} catch (Exception e) {
+			if (pw!=null) pw.println("Error writing ImTrackPoint image for point "+pointID+"; aborting save");
+			return 1;
+		}
+		
+		return 0;
+	}
 	
+	public int sizeOnDisk(){
+		
+		int size = super.sizeOnDisk();
+		size += serializableIm.length;
+		return size;
+	}
 	
 }

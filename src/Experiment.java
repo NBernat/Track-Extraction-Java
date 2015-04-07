@@ -1,5 +1,6 @@
 import ij.IJ;
 
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 //import java.io.FileNotFoundException;
@@ -71,6 +72,70 @@ public class Experiment implements Serializable{
 	}
 
 	
+	public int toDisk(DataOutputStream dos, PrintWriter pw){
+		
+		if (tracks.size()==0){
+			if (pw!=null) pw.println("No tracks in experiment; save aborted"); 
+			return 4;
+		}
+		
+		if (pw!=null) pw.println("Saving experiment to disk...");
+		
+		//Write the Experiment Type
+		try {
+			int code = getTypeCode();
+			if (code>=0){
+				dos.write(code);
+			} else {
+				if (pw!=null) pw.println("Invalid experiment code; save aborted");
+				return 3;
+			}
+		} catch (Exception e) {
+			if (pw!=null) pw.println("Error writing experiment type code; save aborted");
+			return 3;
+		}
+		
+		//Write the # of tracks
+		try {
+			dos.write(tracks.size());
+		} catch (Exception e) {
+			if (pw!=null) pw.println("Error writing # of tracks; save aborted");
+			return 2;
+		}
+		
+		//Write each track
+		try {
+			if (pw!=null) pw.println("Writing Tracks...");
+			for (Track tr : tracks){
+				if(tr.toDisk(dos,pw)!=0) {
+					if (pw!=null) pw.println("Error writing track "+tr.trackID+"; save aborted");
+					return 1; 
+				}
+			}
+		} catch (Exception e) {
+			if (pw!=null) pw.println("Error writing tracks; save aborted");
+			return 1;
+		}
+		
+		if (pw!=null) pw.println("Experiment Saved!");
+		return 0;
+	}
+	
+	private int getTypeCode(){
+		int trackType = -1;
+		
+		for (int i=0; (trackType<0 && i<tracks.size()); i++){
+			if(tracks.get(i).points.size()>0){
+				trackType = tracks.get(i).points.firstElement().pointType;
+			}
+		}
+		
+		if (trackType>=0){
+			trackType = (trackType<<8) + 0x01;
+		}
+		
+		return trackType;
+	}
 	
 	/**
 	 * Saves this Experiment in the specified dir+filename

@@ -5,6 +5,8 @@ import ij.process.ImageProcessor;
 import ij.text.TextWindow;
 
 import java.awt.Color;
+import java.io.DataOutputStream;
+import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.ListIterator;
@@ -347,6 +349,67 @@ public class Track implements Serializable{
 	
 	public boolean isCollisionTrack(){
 		return false;
+	}
+	
+	public int toDisk(DataOutputStream dos, PrintWriter pw){
+		
+		if (pw!=null) pw.println("Writing track "+trackID+"...");
+		
+		//Write the size in bytes in this track to disk
+		try {
+			int nBytes = sizeOnDisk();
+			if (nBytes>=0){
+				dos.write(nBytes);
+			} else {
+				if (pw!=null) pw.println("Error getting size of track "+trackID+"; aborting save");
+				return 3;
+			}
+		} catch (Exception e) {
+			if (pw!=null) pw.println("Error writing size of track "+trackID+"; aborting save");
+			return 3;
+		}
+		
+		//Write the # of points in this track to disk
+		try {
+			if (points.size()>=0){
+				dos.write(points.size());
+			} else {
+				if (pw!=null) pw.println("Error getting # of points in track "+trackID+"; aborting save");
+				return 2;
+			}
+		} catch (Exception e) {
+			if (pw!=null) pw.println("Error writing # of points in track "+trackID+"; aborting save");
+			return 2;
+		}
+		
+		//Write the points to disk
+		try {
+			for (TrackPoint tp : points){
+				if (tp.toDisk(dos,pw)!=0){
+					if (pw!=null) pw.println("Error writing TrackPoint "+tp.pointID+"; aborting save");
+					return 1;
+				}
+			}
+		} catch (Exception e) {
+			if (pw!=null) pw.println("Error writing points; aborting save");
+			return 1;
+		}
+		
+		if (pw!=null) pw.println("Track Saved!");
+		return 0;
+	}
+	
+	private int sizeOnDisk(){
+		
+		//Add the size of the "# of points" field (32-bit integer)
+		int size = Integer.SIZE/Byte.SIZE;
+		
+		//Add the size of each point
+		for (TrackPoint tp : points){
+			size += tp.sizeOnDisk();
+		}
+		
+		return size;
 	}
 	
 	/**

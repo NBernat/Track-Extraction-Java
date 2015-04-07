@@ -3,6 +3,8 @@ import ij.process.ImageProcessor;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.io.DataOutputStream;
+import java.io.PrintWriter;
 import java.util.ListIterator;
 import java.util.Vector;
 
@@ -283,5 +285,30 @@ public class TrackPoint extends Point {
 		return;
 	}
 	
+	public int toDisk(DataOutputStream dos, PrintWriter pw){
+		
+		//Write info
+		try {
+			dos.write(frameNum);
+			dos.writeDouble(x);
+			dos.writeDouble(y);
+			dos.writeDouble(rect.x);
+			dos.writeDouble(rect.y);
+			dos.writeDouble(rect.width);
+			dos.writeDouble(rect.height);
+			dos.writeDouble(area);
+			dos.writeInt(thresh);
+			
+		} catch (Exception e) {
+			if (pw!=null) pw.println("Error writing TrackPoint Info for point "+pointID+"; aborting save");
+			return 1;
+		}
+		
+		return 0;
+	}
+	
+	public int sizeOnDisk(){
+		return Integer.SIZE/Byte.SIZE + 8*(java.lang.Double.SIZE/Byte.SIZE);
+	}
 	
 }

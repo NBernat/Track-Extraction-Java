@@ -9,6 +9,8 @@ import ij.text.TextWindow;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.io.DataOutputStream;
+import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.ListIterator;
 import java.util.Vector;
@@ -25,7 +27,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	private static final long serialVersionUID = 1L;
 	
 	/**
-	 * Identitfies the point as a MAGGOTTRACKPOINT
+	 * Identifies the point as a MAGGOTTRACKPOINT
 	 */
 	final int pointType = 2;
 
@@ -758,5 +760,61 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		
 		return s;
 	}
+	
+	
+	public int toDisk(DataOutputStream dos, PrintWriter pw){
 		
+		//Write all ImTrackPoint data
+		super.toDisk(dos, pw);
+		
+		//Write 
+		try {
+			//Write htvalid
+			dos.writeByte(htValid ? 1:0);
+			
+			//Write # contour pts 
+			dos.writeInt(nConPts);
+			//Write contour
+			for (ContourPoint cp : cont){
+				if (cp.toDisk(dos, pw)>0){
+					if (pw!=null) pw.println("Error writing ContourPoint for MaggotTrackPoint "+pointID);
+					return 2;
+				}
+			}
+			
+			//Write head 
+			head.toDisk(dos, pw);
+			//Write mid
+			midpoint.toDisk(dos, pw);
+			//Write tail
+			tail.toDisk(dos, pw);
+			
+			//Write nmidpts
+			dos.writeInt(midline.getNCoordinates());
+			//Write the midline
+			FloatPolygon mfp = midline.getFloatPolygon();//Removes the "XBase"/"YBase" crap from PolygonRoi
+			for (int i=0; i<midline.getNCoordinates(); i++){
+				dos.writeFloat(mfp.xpoints[i]);
+				dos.writeFloat(mfp.ypoints[i]);
+			}
+			
+		} catch (Exception e) {
+			if (pw!=null) pw.println("Error writing ImTrackPoint image for point "+pointID+"; aborting save");
+			return 1;
+		}
+		
+		return 0;
+	}
+	
+	public int sizeOnDisk(){
+		
+		int size = super.sizeOnDisk();
+		//size+= ; 1 byte + (1 int + nConPts*sizeOfContourPoint) + (3*sizeOfContourPoint) + (1 int + 2*numMidlineCoords*sizeOfFloat)
+		// = 1 byte + 2 int + 2*numMidlineCoords float + (3+nContourPts) sizeOfContourPoint
+		size += 1 + 2*Integer.SIZE + (2*midline.getNCoordinates())*java.lang.Float.SIZE + (3*cont.size())*ContourPoint.sizeOnDisk();
+		
+		return size;
+	}
+	
+	
 }

@@ -1,4 +1,6 @@
 import java.awt.Point;
+import java.io.DataOutputStream;
+import java.io.PrintWriter;
 
 
 public class ContourPoint extends Point implements Comparable<ContourPoint> {
@@ -89,5 +91,21 @@ public class ContourPoint extends Point implements Comparable<ContourPoint> {
 		htCand = cand;
 	}
 	
+	public int toDisk(DataOutputStream dos, PrintWriter pw){
+		
+		//Write info
+		try {
+			dos.writeInt(x);
+			dos.writeInt(y);
+		} catch (Exception e) {
+			if (pw!=null) pw.println("Error writing ContourPoint Info");
+			return 1;
+		}
+		
+		return 0;
+	}
 	
+	public static int sizeOnDisk(){
+		return 2*Integer.SIZE;
+	}
 }
