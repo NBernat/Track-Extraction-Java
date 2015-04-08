@@ -5,6 +5,7 @@ import ij.io.Opener;
 import ij.process.ImageProcessor;
 
 import java.awt.Rectangle;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.PrintWriter;
 
@@ -28,31 +29,20 @@ public class ImTrackPoint extends TrackPoint{
 	 */
 	final int pointType = 1;
 	
-//	int[] imOrigin;
+	
+	public ImTrackPoint() {
+	}
 
 	ImTrackPoint(double x, double y, Rectangle rect, double area, int frame,
 			int thresh) {
 		super(x, y, rect, area, frame, thresh);
 	}
 
-//	ImTrackPoint(double x, double y, Rectangle rect, double area, double[] cov,
-//			int frame, int ID, int thresh) {
-//		super(x, y, rect, area, cov, frame, ID, thresh);
-//	}
-
-//	ImTrackPoint(double x, double y, Rectangle rect, double area, double[] cov,
-//			int frame, int thresh) {
-//		super(x, y, rect, area, cov, frame, thresh);
-//	}
 	
 	ImTrackPoint(TrackPoint point, ImagePlus frameIm){
 		super(point);
 		findAndStoreIm(frameIm);
 	}
-	
-//	public void setImage(ImageProcessor im){
-//		setImage(im, im.getWidth(), im.getHeight());
-//	}
 	
 	public void setImage (ImageProcessor im, int dispWidth, int dispHeight){
 		this.im = im;
@@ -107,6 +97,7 @@ public class ImTrackPoint extends TrackPoint{
 		//Write image
 		try {
 			preSerialize();
+			dos.writeInt(serializableIm.length);
 			dos.write(serializableIm);
 		} catch (Exception e) {
 			if (pw!=null) pw.println("Error writing ImTrackPoint image for point "+pointID+"; aborting save");
@@ -119,8 +110,42 @@ public class ImTrackPoint extends TrackPoint{
 	public int sizeOnDisk(){
 		
 		int size = super.sizeOnDisk();
-		size += serializableIm.length;
+		size += Integer.SIZE/Byte.SIZE + serializableIm.length;
 		return size;
 	}
+
+	public static ImTrackPoint fromDisk(DataInputStream dis, Track t){
+		
+		ImTrackPoint itp = new ImTrackPoint();
+		if (itp.loadFromDisk(dis,t)==0){
+			return itp;
+		} else {
+			return null;
+		}
+	}
+	
+	protected int loadFromDisk(DataInputStream dis, Track t){
+		
+		//Load all superclass info
+		if (super.loadFromDisk(dis, t)!=0){
+			return 1;
+		}
+		
+		//read new data: image
+		try {
+			int nbytes = dis.readInt();
+			serializableIm = new byte[nbytes];
+			if (dis.read(serializableIm)!=nbytes){
+				return 2;
+			}
+			postDeserialize();
+		} catch (Exception e) {
+			//if (pw!=null) pw.println("Error writing TrackPoint Info for point "+pointID+"; aborting save");
+			return 3;
+		}
+		
+		return 0;
+	}
+	
 	
 }

@@ -5,7 +5,9 @@ import ij.process.ImageProcessor;
 import ij.text.TextWindow;
 
 import java.awt.Color;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.Collections;
@@ -71,7 +73,12 @@ public class Track implements Serializable{
 	
 	///////////////////////////
 	// Constructors
-	///////////////////////////	
+	///////////////////////////
+	
+	public Track(){
+		
+	}
+	
 	public Track(TrackBuilder tb){
 		maxHeight=0;
 		maxWidth=0;
@@ -411,6 +418,99 @@ public class Track implements Serializable{
 		
 		return size;
 	}
+	
+	public static Track fromDisk(DataInputStream dis, int pointType, Experiment experiment){
+		
+		Track tr = new Track();
+		
+		//Set exp
+		tr.exp = experiment;
+		
+		//Set maxHeight/Width?
+		
+		//load data
+		if (tr.loadFromDisk(dis, pointType)==0){
+			return tr;
+		} else {
+			return null;
+		}
+	}
+	
+	private int loadFromDisk(DataInputStream dis, int pointType){
+		
+		//advance past size on disk
+		try {
+			dis.readInt();
+		} catch (Exception e) {
+			return 4;
+		}
+		
+		//Read nPts and then the points
+		try {
+			int nPts = dis.readInt();
+			
+			switch (pointType){
+				case 0: 
+					TrackPoint tp;
+					for (int i=0; i<nPts; i++){
+						//Load TrackPoints
+						tp = TrackPoint.fromDisk(dis, this);
+						if (tp!=null) {
+							points.addElement(tp);
+						} else {
+							return 3;
+						}
+					}
+					break;
+				case 1:
+					ImTrackPoint itp;
+					for (int i=0; i<nPts; i++){
+						//Load ImTrackPoints
+						itp = ImTrackPoint.fromDisk(dis, this);
+						if (itp!=null) {
+							points.addElement(itp);
+						} else {
+							return 3;
+						}
+					}
+					break;
+				case 2:
+					MaggotTrackPoint mtp;
+					for (int i=0; i<nPts; i++){
+						//Load MaggotTrackPoints
+						mtp = MaggotTrackPoint.fromDisk(dis, this);
+						if (mtp!=null) {
+							points.addElement(mtp);
+						} else {
+							return 3;
+						}
+					}
+					break;
+				case 3:
+					BackboneTrackPoint btp;
+					for (int i=0; i<nPts; i++){
+						//Load BackboneTrackPoints
+						btp = BackboneTrackPoint.fromDisk(dis, this);
+						if (btp!=null) {
+							points.add(btp);
+						} else {
+							return 3;
+						}
+					}
+					break;
+				default:
+					//Invalid point type
+					return 2;
+			}
+			
+		} catch (Exception e){
+			return 1;
+		}
+		
+		return 0;
+	}
+	
+	
 	
 	/**
 	 * Pre-Serializes all TrackPoints

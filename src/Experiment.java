@@ -1,5 +1,6 @@
 import ij.IJ;
 
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -41,6 +42,10 @@ public class Experiment implements Serializable{
 	 * 
 	 */
 	Vector<Force> Forces;
+	
+	public Experiment(){
+		
+	}
 	
 	/**
 	 * Constructs an Experiment object
@@ -137,6 +142,64 @@ public class Experiment implements Serializable{
 		return trackType;
 	}
 	
+	public static Experiment fromDisk(File f){
+		
+		
+		try {
+			Experiment ex = new Experiment();
+			//if (pw!=null) pw.println("Setting standard ");
+			ex.fname = f.getPath();
+			
+			//TODO Set forces  
+			//TODO Set ep: standard location?
+			
+			ex.loadFromDisk(new DataInputStream(new FileInputStream(f)));
+			return ex;
+		} catch (Exception e){
+			//if (pw!=null) pw.println("");
+			return null;
+		}
+		
+	}
+	
+	private void loadFromDisk(DataInputStream dis){
+		
+		int progress = -2;
+		try{
+			//Read the Experiment Type
+			int tpType = dis.readInt();
+			progress++;//=-1
+			
+			//Read the # of tracks
+			int numTracks = dis.readInt();
+			tracks = new Vector<Track>();
+			progress++;//=0
+			
+			//Read each track
+			progress = 0;
+			Track nextTrack;
+			for (int i=0; i<numTracks; i++){
+				
+				nextTrack = Track.fromDisk(dis, tpType, this);
+				if (nextTrack==null) return;
+				tracks.add(nextTrack);
+				
+				progress++;//= # of tracks loaded
+				
+				//TODO ask for garbage collection
+			}
+			
+			
+		} catch (Exception e){
+			//if (pw!=null) pw.println("");
+			System.out.println("Error: progress code "+progress);
+			return;
+		}
+		
+			
+	}
+	
+	
 	/**
 	 * Saves this Experiment in the specified dir+filename
 	 * @param dir The directory in which to save the file(; if empty, saves in current directory?)
@@ -190,7 +253,7 @@ public class Experiment implements Serializable{
 	 */
 	public static Experiment open(String fname) throws Exception{
 		
-		Experiment ex;
+		Experiment ex; 
 		
 		//TODO Check the extension
 		File f = new File(fname);
@@ -219,6 +282,12 @@ public class Experiment implements Serializable{
 		}
 		return -1;
 	}
+	
+	public void setDefaultForces(){
+		
+	}
+	
+	
 	
 	public void setForces(Vector<Force> Forces){
 		this.Forces = Forces;

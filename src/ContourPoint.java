@@ -1,4 +1,5 @@
 import java.awt.Point;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.PrintWriter;
 
@@ -20,6 +21,10 @@ public class ContourPoint extends Point implements Comparable<ContourPoint> {
 	double angle;
 	
 	boolean htCand;
+	
+	public ContourPoint(){
+		
+	}
 	
 	public ContourPoint(int x, int y){
 		this.x = x;
@@ -106,6 +111,33 @@ public class ContourPoint extends Point implements Comparable<ContourPoint> {
 	}
 	
 	public static int sizeOnDisk(){
-		return 2*Integer.SIZE;
+		return 2*Integer.SIZE/Byte.SIZE;
 	}
+	
+	public static ContourPoint fromDisk(DataInputStream dis){
+		
+		ContourPoint cp = new ContourPoint();
+		if (cp.loadFromDisk(dis)==0){
+			return cp;
+		} else {
+			return null;
+		}
+	}
+	
+	protected int loadFromDisk(DataInputStream dis){
+		
+		//read new data: image
+		try {
+			x = dis.readInt();
+			y = dis.readInt();
+			angle=java.lang.Double.POSITIVE_INFINITY;
+			
+		} catch (Exception e) {
+			return 1;
+		}
+		
+		return 0;
+	}
+	
+	
 }

@@ -9,6 +9,7 @@ import ij.text.TextWindow;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.PrintWriter;
 import java.util.Collections;
@@ -68,17 +69,8 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	
 	transient Communicator comm;
 	
-
-//	MaggotTrackPoint(double x, double y, Rectangle rect, double area,
-//			double[] cov, int frame, int thresh) {
-//		super(x, y, rect, area, cov, frame, thresh);
-//	}
-
-	
-//	MaggotTrackPoint(double x, double y, Rectangle rect, double area,
-//			double[] cov, int frame, int ID, int thresh) {
-//		super(x, y, rect, area, cov, frame, ID, thresh);
-//	}
+	public MaggotTrackPoint() {
+	}
 	
 	MaggotTrackPoint(double x, double y, Rectangle rect, double area,
 			int frame, int thresh) {
@@ -811,10 +803,80 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		int size = super.sizeOnDisk();
 		//size+= ; 1 byte + (1 int + nConPts*sizeOfContourPoint) + (3*sizeOfContourPoint) + (1 int + 2*numMidlineCoords*sizeOfFloat)
 		// = 1 byte + 2 int + 2*numMidlineCoords float + (3+nContourPts) sizeOfContourPoint
-		size += 1 + 2*Integer.SIZE + (2*midline.getNCoordinates())*java.lang.Float.SIZE + (3*cont.size())*ContourPoint.sizeOnDisk();
+		size += 1 + 2*Integer.SIZE/Byte.SIZE + (2*midline.getNCoordinates())*java.lang.Float.SIZE/Byte.SIZE + (3*cont.size())*ContourPoint.sizeOnDisk();
 		
 		return size;
 	}
 	
+	public static MaggotTrackPoint fromDisk(DataInputStream dis, Track t){
+		
+		MaggotTrackPoint mtp = new MaggotTrackPoint();
+		if (mtp.loadFromDisk(dis,t)==0){
+			return mtp;
+		} else {
+			return null;
+		}
+	}
+	
+	protected int loadFromDisk(DataInputStream dis, Track t){
+		
+		//Load all superclass info
+		if (super.loadFromDisk(dis, t)!=0){
+			return 1;
+		}
+		
+		//read new data
+		try {
+			//htvalid
+			htValid = dis.readByte()==1; 
+			
+			//nconpts, contour
+			nConPts = dis.readInt();
+			cont = new Vector<ContourPoint>();
+			ContourPoint cp;
+			for (int i=0; i<nConPts; i++){
+				cp = ContourPoint.fromDisk(dis);
+				if (cp!=null){
+					cont.add(cp);
+				} else {
+					return 2;
+				}
+			}
+						
+			//head,mid,tail
+			head = ContourPoint.fromDisk(dis);
+			if (head==null){
+				return 3;
+			}
+			midpoint = ContourPoint.fromDisk(dis);
+			if (midpoint==null){
+				return 4;
+			}
+			tail = ContourPoint.fromDisk(dis);
+			if (tail==null){
+				return 5;
+			}
+			
+			//nmidpts, midline
+			int nMidPts = dis.readInt();
+			if (nMidPts!=numMidCoords){
+				return 6;
+			}
+			float[] midX = new float[nMidPts];
+			float[] midY = new float[nMidPts];
+			for (int i=0; i<nMidPts; i++){
+				midX[i] = dis.readFloat();
+				midY[i] = dis.readFloat();
+			}
+			midline = new PolygonRoi(midX, midY, PolygonRoi.POLYLINE);
+			
+			
+		} catch (Exception e) {
+			//if (pw!=null) pw.println("Error writing TrackPoint Info for point "+pointID+"; aborting save");
+			return 7;
+		}
+		
+		return 0;
+	}
 	
 }

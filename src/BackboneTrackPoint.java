@@ -5,6 +5,7 @@ import ij.process.ImageProcessor;
 
 import java.awt.Color;
 import java.awt.Rectangle;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.PrintWriter;
 import java.util.Vector;
@@ -82,6 +83,10 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	
 	protected boolean artificialMid;
 	
+	public BackboneTrackPoint(){
+		
+	}
+	
 	/**
 	 * Constructs a BackboneTrackPoint
 	 * @param x
@@ -113,19 +118,6 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 
 		//Make new stuff
 		btp.numBBPts = numBBPts; 
-//		if(mtp.midline!=null){
-//			
-//			FloatPolygon initBB = mtp.midline.getFloatPolygon();
-//
-//			for(int i=0; i<initBB.npoints; i++){
-//				initBB.xpoints[i] += btp.rect.x;
-//				initBB.ypoints[i] += btp.rect.y;
-//			}
-//			
-//			btp.setInitialBB(new PolygonRoi(initBB, PolygonRoi.POLYLINE), numBBPts);
-//			btp.setMagPix();
-//			btp.setVoronoiClusters();
-//		}
 		
 		return btp;
 	}
@@ -143,17 +135,6 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 			FloatPolygon newMid = newMidline.getFloatPolygon();
 			float[] xmid = new float[newMid.npoints];
 			float[] ymid = new float[newMid.npoints];
-//			float offX = prevOrigin[0]-rect.x;
-//			float offY = prevOrigin[1]-rect.y;
-//			for(int i=0; i<newMid.npoints; i++){
-//				xmid[i] = newMid.xpoints[i]+offX;
-//				ymid[i] = newMid.ypoints[i]+offY;
-//			}
-//			midline = new PolygonRoi(new FloatPolygon(xmid, ymid), PolygonRoi.POLYLINE);
-//			for(int i=0; i<newMid.npoints; i++){
-//				xmid[i] += rect.x;
-//				ymid[i] += rect.y;
-//			}
 			
 			//Gather absolute coordinates for the backbones
 			for(int i=0; i<newMid.npoints; i++){
@@ -161,10 +142,6 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 				ymid[i] = newMid.ypoints[i]+prevOrigin[1];
 			}
 			FloatPolygon initBB = new FloatPolygon(xmid, ymid);//midline.getFloatPolygon();
-//			for(int i=0; i<initBB.npoints; i++){
-//				initBB.xpoints[i] += rect.x;
-//				initBB.ypoints[i] += rect.y;
-//			}
 			
 			setInitialBB(new PolygonRoi(initBB, PolygonRoi.POLYLINE), numBBPts);
 			setMagPix();
@@ -549,11 +526,42 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	public int sizeOnDisk(){
 		
 		int size = super.sizeOnDisk();
-		size += Short.SIZE + (2*backbone.getNCoordinates())*java.lang.Float.SIZE + Byte.SIZE;
+		size += Short.SIZE/Byte.SIZE + (2*backbone.getNCoordinates())*java.lang.Float.SIZE/Byte.SIZE+ Byte.SIZE/Byte.SIZE;
 		
 		return size;
 	}
 
+	public static BackboneTrackPoint fromDisk(DataInputStream dis, Track t){
+		
+		BackboneTrackPoint btp = new BackboneTrackPoint();
+		if (btp.loadFromDisk(dis,t)==0){
+			return btp;
+		} else {
+			return null;
+		}
+	}
 	
+	protected int loadFromDisk(DataInputStream dis, Track t){
+		
+		//Load all superclass info
+		if (super.loadFromDisk(dis, t)!=0){
+			return 1;
+		}
+		
+		//read new data
+		try {
+			//#bbpts
+			
+			//backbone
+			
+			//arificialmid
+			
+		} catch (Exception e) {
+			//if (pw!=null) pw.println("Error writing TrackPoint Info for point "+pointID+"; aborting save");
+			return 7;
+		}
+		
+		return 0;
+	}
 	
 }

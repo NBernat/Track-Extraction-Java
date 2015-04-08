@@ -3,6 +3,7 @@ import ij.process.ImageProcessor;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.PrintWriter;
 import java.util.ListIterator;
@@ -76,18 +77,15 @@ public class TrackPoint extends Point {
 	TrackPoint(double x, double y, Rectangle rect, double area, int frame, int thresh) {
 	    init(x, y, rect, area, null, frame, ++lastIDNum, thresh);
 	}
-//
-//	TrackPoint (double x, double y, Rectangle rect, double area,  double[] cov, int frame, int thresh) {
-//	     init(x, y, rect, area, cov, frame, ++lastIDNum, thresh);
-//	 }
-//
-//	TrackPoint (double x, double y, Rectangle rect, double area, double[] cov, int frame, int ID, int thresh) {
-//	     init(x, y, rect, area, cov, frame, ID, thresh);
-//	 }
 	
 	TrackPoint(TrackPoint point) {
 		init(point.x, point.y, (Rectangle)point.rect.clone(), point.area, point.covariance, point.frameNum, ++lastIDNum, thresh);
 	}
+	
+	TrackPoint(){
+		
+	}
+	
 	/**
 	 * Helper method for constructors 
 	 */
@@ -289,13 +287,13 @@ public class TrackPoint extends Point {
 		
 		//Write info
 		try {
-			dos.write(frameNum);
+			dos.writeInt(frameNum);
 			dos.writeDouble(x);
 			dos.writeDouble(y);
-			dos.writeDouble(rect.x);
-			dos.writeDouble(rect.y);
-			dos.writeDouble(rect.width);
-			dos.writeDouble(rect.height);
+			dos.writeInt(rect.x);
+			dos.writeInt(rect.y);
+			dos.writeInt(rect.width);
+			dos.writeInt(rect.height);
 			dos.writeDouble(area);
 			dos.writeInt(thresh);
 			
@@ -308,7 +306,38 @@ public class TrackPoint extends Point {
 	}
 	
 	public int sizeOnDisk(){
-		return Integer.SIZE/Byte.SIZE + 8*(java.lang.Double.SIZE/Byte.SIZE);
+		return 6*Integer.SIZE/Byte.SIZE + 3*java.lang.Double.SIZE/Byte.SIZE;
+	}
+	
+	public static TrackPoint fromDisk(DataInputStream dis, Track t){
+		
+		TrackPoint tp = new TrackPoint();
+		
+		if (tp.loadFromDisk(dis,t)==0){
+			return tp;
+		} else {
+			return null;
+		}
+	}
+	
+	protected int loadFromDisk(DataInputStream dis, Track t){
+		
+		track = t;
+		
+		try {
+			pointID=0;
+			frameNum = dis.readInt();
+			x = dis.readDouble();
+			y = dis.readDouble();
+			rect = new Rectangle(dis.readInt(), dis.readInt(), dis.readInt(), dis.readInt());
+			area = dis.readDouble();
+			thresh = dis.readInt();
+		} catch (Exception e) {
+			//if (pw!=null) pw.println("Error writing TrackPoint Info for point "+pointID+"; aborting save");
+			return 1;
+		}
+		
+		return 0;
 	}
 	
 }
