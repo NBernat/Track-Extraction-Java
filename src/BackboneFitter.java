@@ -69,7 +69,7 @@ public class BackboneFitter {
 		params = new FittingParameters();
 
 		pass = 0;
-		addForces();
+		Forces = params.getForces(pass);
 
 		comm = new Communicator();
 		comm.setVerbosity(VerbLevel.verb_error);
@@ -81,19 +81,19 @@ public class BackboneFitter {
 	/**
 	 * Adds instances of each type of Force to the backbone fitter
 	 */
-	private void addForces() {
-		Forces = new Vector<Force>();
-		Forces.add(new ImageForce(params.imageWeights, params.imageWeight));
-		Forces.add(new SpineLengthForce(params.spineLengthWeights,
-				params.spineLengthWeight));
-		Forces.add(new SpineSmoothForce(params.spineSmoothWeights,
-				params.spineSmoothWeight));
-		Forces.add(new TimeLengthForce(params.timeLengthWeights,
-				params.timeLengthWeight(pass)));
-		Forces.add(new TimeSmoothForce(params.timeSmoothWeights,
-				params.timeSmoothWeight(pass)));
-		// Forces.add(new HTAttractionForce(params.HTAttractionWeights));
-	}
+//	private void addForces() {
+//		Forces = new Vector<Force>();
+//		Forces.add(new ImageForce(params.imageWeights, params.imageWeight));
+//		Forces.add(new SpineLengthForce(params.spineLengthWeights,
+//				params.spineLengthWeight));
+//		Forces.add(new SpineSmoothForce(params.spineSmoothWeights,
+//				params.spineSmoothWeight));
+//		Forces.add(new TimeLengthForce(params.timeLengthWeights,
+//				params.timeLengthWeight(pass)));
+//		Forces.add(new TimeSmoothForce(params.timeSmoothWeights,
+//				params.timeSmoothWeight(pass)));
+//		// Forces.add(new HTAttractionForce(params.HTAttractionWeights));
+//	}
 
 	/**
 	 * Fits backbones to the points in the given track.
@@ -120,6 +120,7 @@ public class BackboneFitter {
 				noError = doPass(params.grains[i]);
 				if (!noError) {
 					pass++;
+					Forces = params.getForces(pass);
 					comm.message("Error on track "+tr.trackID+"("+track.trackID+") pass "+i+"(grain "+params.grains[i]+")", VerbLevel.verb_error);
 					track = null;
 				}

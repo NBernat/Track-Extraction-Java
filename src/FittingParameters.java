@@ -1,3 +1,5 @@
+import java.util.Vector;
+
 
 public class FittingParameters {
 	
@@ -39,4 +41,22 @@ public class FittingParameters {
 	public float timeSmoothWeight(int pass){
 		if (pass==0) return timeSmoothWeight[0]; else return timeSmoothWeight[1];
 	}
+	
+	
+	public Vector<Force> getForces(int pass) {
+		
+		Vector<Force> Forces = new Vector<Force>();
+		Forces.add(new ImageForce(imageWeights, imageWeight));
+		Forces.add(new SpineLengthForce(spineLengthWeights,
+				spineLengthWeight));
+		Forces.add(new SpineSmoothForce(spineSmoothWeights,
+				spineSmoothWeight));
+		Forces.add(new TimeLengthForce(timeLengthWeights,
+				timeLengthWeight(pass)));
+		Forces.add(new TimeSmoothForce(timeSmoothWeights,
+				timeSmoothWeight(pass)));
+		// Forces.add(new HTAttractionForce(params.HTAttractionWeights));
+		return Forces;
+	}
+	
 }

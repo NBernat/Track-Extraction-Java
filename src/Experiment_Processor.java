@@ -1,4 +1,6 @@
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.text.DateFormat;
@@ -116,30 +118,44 @@ public class Experiment_Processor implements PlugIn{
 	public void run(String arg0) {
 		indentLevel=0;
 		runTime = new TicToc();
-		runTime.tic();
+//		runTime.tic();
 				
 				
-		setupLog();
-		log("Initiating processor");
+//		log("Initiating processor");
 		init();
 		
-		log("Loading File...");
+//		log("Loading File...");
 		boolean success = (loadFile(arg0) );
 		try {
+			runTime.tic();
+			setupLog();
+			log("Initiated log entry");
 			if(success){
-				log("...success");
 				if (ex==null){
 					
 					log("Loaded mmf; Extracting tracks...");
 					extractTracks();
-					log("...done");
-					if (prParams.saveMagEx) saveOldTracks();
+					log("...done extracting tracks");
+					if (prParams.saveMagEx) {
+						log("Saving Maggot Tracks...");
+						saveOldTracks();
+						log("Done saving Maggot Tracks");
+					}
 					
 					//TODO release memory to OS? System.gc
 				}
 				
+				log("Fiting "+ex.tracks.size()+" Tracks...");
 				fitTracks();
-				if (prParams.saveFitEx) saveNewTracks();
+				log("...done fitting tracks");
+				if (prParams.saveFitEx) {
+					log("Saving backbone tracks...");
+					if (saveNewTracks()){
+						log("Done saving backbone tracks");
+					} else {
+						log("Error saving tracks");
+					}
+				}
 				//TODO release memory to OS? System.gc
 			} else {
 				log("...no success");
@@ -394,17 +410,30 @@ public class Experiment_Processor implements PlugIn{
 	/**
 	 * Saves the backboneTracks according to the naming convention defined in the Processing Parameters
 	 */
-	private void saveNewTracks(){
+	private boolean saveNewTracks(){
 		indentLevel++;
+		
 		String[] pathParts = prParams.setFitExPath(srcDir, srcName);
-		ex.save(pathParts[0], pathParts[1]);
+		File f = new File(pathParts[0]+File.separator+pathParts[1]);
+		
+		boolean status;
+		try{
+			ex.toDisk(new DataOutputStream(new FileOutputStream(f)), processLog);
+			status=true;
+		} catch(Exception e){
+			status=false;
+		}
+//		String[] pathParts = prParams.setFitExPath(srcDir, srcName);
+//		ex.save(pathParts[0], pathParts[1]);
+		
 		indentLevel--;
+		return status;
 	}
 	
 	private void log(String message){
 		String indent = "";
 		for (int i=0;i<indentLevel; i++) indent+="----";
-		processLog.println(runTime.tocSec()+indent+"Initiating processor");
+		processLog.println(runTime.tocSec()+indent+" "+message);
 	}
 	
 }

@@ -365,6 +365,7 @@ public class Track implements Serializable{
 		//Write the size in bytes in this track to disk
 		try {
 			int nBytes = sizeOnDisk();
+			if (pw!=null) pw.println("Size on disk: "+nBytes+" bytes");
 			if (nBytes>=0){
 				dos.write(nBytes);
 			} else {

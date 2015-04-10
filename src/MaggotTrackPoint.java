@@ -791,7 +791,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			}
 			
 		} catch (Exception e) {
-			if (pw!=null) pw.println("Error writing ImTrackPoint image for point "+pointID+"; aborting save");
+			if (pw!=null) pw.println("Error writing MaggotTrackPoint image for point "+pointID+"; aborting save");
 			return 1;
 		}
 		

@@ -516,7 +516,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 			//Write artificial mid
 			dos.writeByte(artificialMid ? 1:0);
 		} catch (Exception e) {
-			if (pw!=null) pw.println("Error writing ImTrackPoint image for point "+pointID+"; aborting save");
+			if (pw!=null) pw.println("Error writing BackboneTrackPoint image for point "+pointID+"; aborting save");
 			return 1;
 		}
 		
@@ -550,15 +550,24 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		
 		//read new data
 		try {
-			//#bbpts
+			//#bbPts
+			numBBPts = dis.readShort();
 			
 			//backbone
+			float[] bbX = new float[numBBPts];
+			float[] bbY = new float[numBBPts];
+			for (int i=0; i<numBBPts; i++){
+				bbX[i] = dis.readFloat();
+				bbY[i] = dis.readFloat();
+			}
+			backbone = new PolygonRoi(bbX,  bbY, PolygonRoi.POLYLINE);
 			
-			//arificialmid
+			//artificialMid
+			artificialMid = (dis.readByte()==1);
 			
 		} catch (Exception e) {
 			//if (pw!=null) pw.println("Error writing TrackPoint Info for point "+pointID+"; aborting save");
-			return 7;
+			return 2;
 		}
 		
 		return 0;

@@ -142,16 +142,15 @@ public class Experiment implements Serializable{
 		return trackType;
 	}
 	
-	public static Experiment fromDisk(File f){
+	public static Experiment fromDisk(File f, ExtractionParameters exParam, FittingParameters fp, PrintWriter pw){
 		
 		
 		try {
 			Experiment ex = new Experiment();
-			//if (pw!=null) pw.println("Setting standard ");
+			if (pw!=null) pw.println("Setting parameters... ");
 			ex.fname = f.getPath();
-			
-			//TODO Set forces  
-			//TODO Set ep: standard location?
+			ex.ep = exParam;
+			ex.Forces = fp.getForces(0);
 			
 			ex.loadFromDisk(new DataInputStream(new FileInputStream(f)));
 			return ex;
