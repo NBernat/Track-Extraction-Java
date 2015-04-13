@@ -52,8 +52,9 @@ public class ExtractionParameters implements Serializable{
 	int showSampleData =0; 
 	int sampleInd = 10;
 	//TODO
+	boolean subset = true;
 	int startFrame = 1;
-	int endFrame = 200;
+	int endFrame = 500;
 	//_frame_normalization_methodT fnm = _frame_normalization_methodT._frame_none;
 	//TODO
 	int trackWindowHeight = 50;

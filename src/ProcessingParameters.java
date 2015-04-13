@@ -26,11 +26,11 @@ public class ProcessingParameters {
 	/**
 	 * Whether or not to automatically save the extracted tracks of MTPs
 	 */
-	boolean saveMagEx = true;
+	boolean saveMagEx = false;
 	/**
 	 * Whether or not to automatically save the fitted tracks of BTPs
 	 */
-	boolean saveFitEx = true;
+	boolean saveFitEx = false;
 	
 	
 	
@@ -42,7 +42,7 @@ public class ProcessingParameters {
 	public String[] setMagExPath(String outDir, String srcName){
 		
 		StringBuilder name = new StringBuilder(srcName);
-		name.replace(name.lastIndexOf("."), name.length(), "_MTP.ser");
+		name.replace(name.lastIndexOf("."), name.length(), "_MTP.bin");
 		String[] MagExPathParts = {outDir, name.toString()};
 		return MagExPathParts;
 	}
@@ -50,7 +50,7 @@ public class ProcessingParameters {
 	public String[] setFitExPath(String outDir, String srcName){
 
 		StringBuilder name = new StringBuilder(srcName);
-		name.replace(name.lastIndexOf("."), name.length(), "_BTP.ser");
+		name.replace(name.lastIndexOf("."), name.length(), "_BTP.bin");
 		String[] FitExPathParts = {outDir, name.toString()};
 		return FitExPathParts;
 	}
