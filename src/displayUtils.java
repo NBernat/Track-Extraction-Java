@@ -10,7 +10,17 @@ import java.util.Vector;
 public class displayUtils {
 
 	
-	
+	public static void drawSegLines(ImageProcessor im, PolygonRoi seg1, PolygonRoi seg2, int expandFac, int offX, int offY, Color color){
+		im.setColor(color);
+		for (int i=0; i<seg1.getNCoordinates(); i++){
+			int dotX1 = offX + (int)(expandFac*(seg1.getFloatPolygon().xpoints[i]));
+			int dotY1 = offY + (int)(expandFac*(seg1.getFloatPolygon().ypoints[i]));
+			int dotX2 = offX + (int)(expandFac*(seg2.getFloatPolygon().xpoints[i]));
+			int dotY2 = offY + (int)(expandFac*(seg2.getFloatPolygon().ypoints[i]));
+			im.drawLine(dotX1, dotY1, dotX2, dotY2);
+		}
+		
+	}
 	
 	//Drawing methods 
 	
@@ -25,30 +35,6 @@ public class displayUtils {
 		}
 	}
 	
-//	public static void drawForces(ImageProcessor im, FloatPolygon bbNew, Vector<Force> forces, Vector<BackboneTrackPoint> BTPs, int frameNum, int expandFac, int offX, int offY, Rectangle rect){
-//		Color[] colors = {Color.WHITE, Color.MAGENTA,Color.GREEN, Color.CYAN, Color.RED};
-//		for(int f=0; f<forces.size(); f++){
-//			
-//			im.setColor(colors[f]);
-//			
-//			FloatPolygon targetPts = forces.get(f).getTargetPoints(frameNum-BTPs.firstElement().frameNum, BTPs);
-//			
-//			if (targetPts!=null){
-//				for (int i=0; i<targetPts.npoints; i++){
-//					
-//					int x1 = offX + (int)(expandFac*(bbNew.xpoints[i]-rect.x));
-//					int y1 = offY + (int)(expandFac*(bbNew.ypoints[i]-rect.y));
-//					int x2 = (int)(expandFac*(targetPts.xpoints[i]-rect.x)+offX);
-//					int y2 = (int)(expandFac*(targetPts.ypoints[i]-rect.y)+offY);
-//					
-//					im.drawLine(x1, y1, x2, y2);
-////					im.drawDot((int)(expandFac*(targetPts.xpoints[i]-rect.x)+offX), (int)(expandFac*(targetPts.ypoints[i]-rect.y)+offY));
-//					
-//				}
-//			}
-//			
-//		}
-//	}
 	
 	public static void drawContour(ImageProcessor im, Vector<ContourPoint> cont, int expandFac, int offX, int offY, Color color){
 		im.setColor(color);
@@ -74,7 +60,10 @@ public class displayUtils {
 			for (int i=0; i<midline.getNCoordinates(); i++){
 				int dotX = offX + (int)(expandFac*(floatMidline.xpoints[i]));
 				int dotY = offY + (int)(expandFac*(floatMidline.ypoints[i]));
-				im.drawDot(dotX, dotY);
+//				im.drawDot(dotX, dotY);
+				int circWid = 4;
+				im.drawOval(dotX-(circWid/2), dotY-(circWid/2), circWid, circWid);
+				
 			}
 		} else {
 			int size = 20;
@@ -110,7 +99,7 @@ public class displayUtils {
 				if (!(x==0 && y==0)) {
 					int dotX = offX + x;
 					int dotY = offY + y;
-					int circWid = 2;
+					int circWid = 6;
 					im.drawOval(dotX-(circWid/2), dotY-(circWid/2), circWid, circWid);
 	//				im.drawDot(dotX, dotY);
 				} else {

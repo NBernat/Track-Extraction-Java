@@ -407,11 +407,15 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		if (clusters) displayUtils.drawClusters(im, numPix, MagPixX, MagPixY, clusterInds, expandFac, offX, offY, rect);
 		
 		//MIDLINE
-		if (mid) displayUtils.drawMidline(im, midline, offX, offY, expandFac, Color.YELLOW);
+		if (mid) displayUtils.drawMidline(im, midline, offX, offY, expandFac, Color.MAGENTA);
 		
+		//LR SEGS: TEMP
+		if (initialBB) displayUtils.drawMidline(im, leftSeg, offX, offY, expandFac, Color.BLUE);
+		if (initialBB) displayUtils.drawMidline(im, rightSeg, offX, offY, expandFac, Color.BLUE);
+		if (initialBB) displayUtils.drawSegLines(im, leftSeg, rightSeg, expandFac, offX, offY, Color.BLUE);
 
 		//INITIAL SPINE
-		if (initialBB) displayUtils.drawBBInit(im, bbInit, offX, offY, rect, expandFac, Color.YELLOW);
+//		if (initialBB) displayUtils.drawBBInit(im, bbInit, offX, offY, rect, expandFac, Color.YELLOW);
 		
 		//CONTOUR
 		if (contour) displayUtils.drawContour(im, cont, expandFac, offX, offY, Color.BLUE);
@@ -466,7 +470,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 			
 			
 		//BACKBONE
-		if (bb) displayUtils.drawBackbone(im, backbone.getFloatPolygon(), expandFac, offX, offY, rect, Color.PINK);
+		if (bb) displayUtils.drawBackbone(im, backbone.getFloatPolygon(), expandFac, offX, offY, rect, Color.YELLOW);
 		
 		return im;
 	}
