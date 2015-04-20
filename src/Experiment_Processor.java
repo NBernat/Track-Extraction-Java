@@ -413,21 +413,22 @@ public class Experiment_Processor implements PlugIn{
 	private boolean saveNewTracks(){
 		indentLevel++;
 		
-		String[] pathParts = prParams.setFitExPath(srcDir, srcName);
-		File f = new File(pathParts[0]+File.separator+pathParts[1]);
-		
-		boolean status;
-		try{
-			ex.toDisk(new DataOutputStream(new FileOutputStream(f)), processLog);
-			status=true;
-		} catch(Exception e){
-			status=false;
-		}
 //		String[] pathParts = prParams.setFitExPath(srcDir, srcName);
-//		ex.save(pathParts[0], pathParts[1]);
+//		File f = new File(pathParts[0]+File.separator+pathParts[1]);
+//		
+//		boolean status;
+//		try{
+//			ex.toDisk(new DataOutputStream(new FileOutputStream(f)), processLog);
+//			status=true;
+//		} catch(Exception e){
+//			status=false;
+//		}
+		String[] pathParts = prParams.setFitExPath(srcDir, srcName);
+		ex.save(pathParts[0], pathParts[1]);
 		
 		indentLevel--;
-		return status;
+		return true;
+//		return status;
 	}
 	
 	private void log(String message){

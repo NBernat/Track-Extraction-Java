@@ -10,6 +10,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serializable;
+import java.io.StringWriter;
 import java.util.Collections;
 import java.util.ListIterator;
 import java.util.Vector;
@@ -364,29 +365,35 @@ public class Track implements Serializable{
 		
 		//Write the size in bytes in this track to disk
 		try {
-			int nBytes = sizeOnDisk();
+			if (pw!=null) pw.println("Getting track size");
+			int nBytes = sizeOnDisk(pw);
 			if (pw!=null) pw.println("Size on disk: "+nBytes+" bytes");
 			if (nBytes>=0){
-				dos.write(nBytes);
+				if (pw!=null) pw.println("Writing Track size");
+				dos.writeInt(nBytes);
 			} else {
-				if (pw!=null) pw.println("Error getting size of track "+trackID+"; aborting save");
+				if (pw!=null) pw.println("...Error getting size of track "+trackID+"; aborting save");
 				return 3;
 			}
 		} catch (Exception e) {
-			if (pw!=null) pw.println("Error writing size of track "+trackID+"; aborting save");
+			StringWriter sw = new StringWriter();
+			PrintWriter pw2 = new PrintWriter(sw);
+			e.printStackTrace(pw2);
+			if (pw!=null) pw.println(sw.toString());
+			if (pw!=null) pw.println("...Error writing size of track "+trackID+"; aborting save");
 			return 3;
 		}
 		
 		//Write the # of points in this track to disk
 		try {
 			if (points.size()>=0){
-				dos.write(points.size());
+				dos.writeInt(points.size());
 			} else {
-				if (pw!=null) pw.println("Error getting # of points in track "+trackID+"; aborting save");
+				if (pw!=null) pw.println("...Error getting # of points in track "+trackID+"; aborting save");
 				return 2;
 			}
 		} catch (Exception e) {
-			if (pw!=null) pw.println("Error writing # of points in track "+trackID+"; aborting save");
+			if (pw!=null) pw.println("...Error writing # of points in track "+trackID+"; aborting save");
 			return 2;
 		}
 		
@@ -394,28 +401,36 @@ public class Track implements Serializable{
 		try {
 			for (TrackPoint tp : points){
 				if (tp.toDisk(dos,pw)!=0){
-					if (pw!=null) pw.println("Error writing TrackPoint "+tp.pointID+"; aborting save");
+					if (pw!=null) pw.println("...Error writing TrackPoint "+tp.pointID+"; aborting save");
 					return 1;
 				}
 			}
 		} catch (Exception e) {
-			if (pw!=null) pw.println("Error writing points; aborting save");
+			if (pw!=null) pw.println("...Error writing points; aborting save");
 			return 1;
 		}
 		
-		if (pw!=null) pw.println("Track Saved!");
+		if (pw!=null) pw.println("...Track Saved!");
 		return 0;
 	}
 	
 	private int sizeOnDisk(){
+		return sizeOnDisk(null);
+	}
+	
+	private int sizeOnDisk(PrintWriter pw){
 		
 		//Add the size of the "# of points" field (32-bit integer)
 		int size = Integer.SIZE/Byte.SIZE;
+		if (pw!=null) pw.println("Size w/o points:"+size);
 		
 		//Add the size of each point
-		for (TrackPoint tp : points){
-			size += tp.sizeOnDisk();
+//		ListIterator<? extends TrackPoint> tpIt = points.listIterator();
+		for (int i=0; i<points.size(); i++){
+//		while (tpIt.hasNext()){
+			size += points.get(i).sizeOnDisk();
 		}
+		if (pw!=null) pw.println("Size w/ points:"+size);
 		
 		return size;
 	}

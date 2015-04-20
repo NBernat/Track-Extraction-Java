@@ -803,7 +803,9 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		int size = super.sizeOnDisk();
 		//size+= ; 1 byte + (1 int + nConPts*sizeOfContourPoint) + (3*sizeOfContourPoint) + (1 int + 2*numMidlineCoords*sizeOfFloat)
 		// = 1 byte + 2 int + 2*numMidlineCoords float + (3+nContourPts) sizeOfContourPoint
-		size += 1 + 2*Integer.SIZE/Byte.SIZE + (2*midline.getNCoordinates())*java.lang.Float.SIZE/Byte.SIZE + (3*cont.size())*ContourPoint.sizeOnDisk();
+		size += 1 + 2*Integer.SIZE/Byte.SIZE; 
+		size += (2*midline.getNCoordinates())*java.lang.Float.SIZE/Byte.SIZE;
+		size += (3*cont.size())*ContourPoint.sizeOnDisk();
 		
 		return size;
 	}

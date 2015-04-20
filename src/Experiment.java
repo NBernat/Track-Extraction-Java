@@ -14,6 +14,8 @@ import java.io.StringWriter;
 import java.util.ListIterator;
 import java.util.Vector;
 
+import com.sun.org.apache.bcel.internal.generic.INSTANCEOF;
+
 
 public class Experiment implements Serializable{
 
@@ -79,6 +81,14 @@ public class Experiment implements Serializable{
 	
 	public int toDisk(DataOutputStream dos, PrintWriter pw){
 		
+		//PRESERIALIZE
+		if (pw!=null) pw.println("Preserializing...");
+		ListIterator<? extends Track> trIt = tracks.listIterator();
+		while (trIt.hasNext()){
+			trIt.next().preSerialize();
+		}
+		if (pw!=null) pw.println("...Preserialization done");
+		
 		if (tracks.size()==0){
 			if (pw!=null) pw.println("No tracks in experiment; save aborted"); 
 			return 4;
@@ -90,39 +100,41 @@ public class Experiment implements Serializable{
 		try {
 			int code = getTypeCode();
 			if (code>=0){
+				if (pw!=null) pw.println("Writing type code ("+code+")");
 				dos.write(code);
 			} else {
 				if (pw!=null) pw.println("Invalid experiment code; save aborted");
 				return 3;
 			}
 		} catch (Exception e) {
-			if (pw!=null) pw.println("Error writing experiment type code; save aborted");
+			if (pw!=null) pw.println("...Error writing experiment type code; save aborted");
 			return 3;
 		}
 		
 		//Write the # of tracks
 		try {
+			if (pw!=null) pw.println("Writing track size ("+tracks.size()+")");
 			dos.write(tracks.size());
 		} catch (Exception e) {
-			if (pw!=null) pw.println("Error writing # of tracks; save aborted");
+			if (pw!=null) pw.println("...Error writing # of tracks; save aborted");
 			return 2;
 		}
 		
 		//Write each track
 		try {
-			if (pw!=null) pw.println("Writing Tracks...");
+			if (pw!=null) pw.println("Writing Tracks");
 			for (Track tr : tracks){
 				if(tr.toDisk(dos,pw)!=0) {
-					if (pw!=null) pw.println("Error writing track "+tr.trackID+"; save aborted");
+					if (pw!=null) pw.println("...Error writing track "+tr.trackID+"; save aborted");
 					return 1; 
 				}
 			}
 		} catch (Exception e) {
-			if (pw!=null) pw.println("Error writing tracks; save aborted");
+			if (pw!=null) pw.println("...Error writing tracks; save aborted");
 			return 1;
 		}
 		
-		if (pw!=null) pw.println("Experiment Saved!");
+		if (pw!=null) pw.println("...Experiment Saved!");
 		return 0;
 	}
 	
@@ -131,13 +143,24 @@ public class Experiment implements Serializable{
 		
 		for (int i=0; (trackType<0 && i<tracks.size()); i++){
 			if(tracks.get(i).points.size()>0){
-				trackType = tracks.get(i).points.firstElement().pointType;
+				
+				if (tracks.get(i).points.firstElement() instanceof BackboneTrackPoint){
+					return 3;
+				} else if (tracks.get(i).points.firstElement() instanceof MaggotTrackPoint){
+					return 2;
+				} else if (tracks.get(i).points.firstElement() instanceof ImTrackPoint){
+					return 1;
+				} else if (tracks.get(i).points.firstElement() instanceof TrackPoint){
+					return 0;
+				}
+				
+//				trackType = tracks.get(i).points.firstElement().pointType;
 			}
 		}
 		
-		if (trackType>=0){
-			trackType = (trackType<<8) + 0x01;
-		}
+//		if (trackType>=0){
+//			trackType = (trackType<<8) + 0x01;
+//		}
 		
 		return trackType;
 	}
@@ -153,6 +176,10 @@ public class Experiment implements Serializable{
 			ex.Forces = fp.getForces(0);
 			
 			ex.loadFromDisk(new DataInputStream(new FileInputStream(f)));
+			
+			
+			//TODO POSTDESERIALIZE
+			
 			return ex;
 		} catch (Exception e){
 			//if (pw!=null) pw.println("");

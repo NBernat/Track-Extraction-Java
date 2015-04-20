@@ -26,11 +26,11 @@ public class ProcessingParameters {
 	/**
 	 * Whether or not to automatically save the extracted tracks of MTPs
 	 */
-	boolean saveMagEx = false;
+	boolean saveMagEx = true;
 	/**
 	 * Whether or not to automatically save the fitted tracks of BTPs
 	 */
-	boolean saveFitEx = false;
+	boolean saveFitEx = true;
 	
 	
 	

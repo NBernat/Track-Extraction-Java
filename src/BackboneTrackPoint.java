@@ -514,9 +514,16 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 			dos.writeShort(backbone.getNCoordinates());
 			//Write backbone points
 			FloatPolygon bfp = backbone.getFloatPolygon();
+			float[] xp = backbone.getFloatPolygon().xpoints;
+			float[] yp = backbone.getFloatPolygon().ypoints;
+			
+			
 			for (int i=0; i<bfp.npoints; i++){
-				dos.writeFloat(bfp.xpoints[i]);
-				dos.writeFloat(bfp.ypoints[i]);
+				dos.writeFloat(xp[i]);
+				dos.writeFloat(yp[i]);
+				
+//				dos.writeFloat(bfp.xpoints[i]);
+//				dos.writeFloat(bfp.ypoints[i]);
 			}
 			//Write artificial mid
 			dos.writeByte(artificialMid ? 1:0);
