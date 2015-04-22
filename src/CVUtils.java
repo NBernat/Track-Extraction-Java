@@ -210,7 +210,8 @@ public class CVUtils {
 	
 	public static ImageProcessor padAndCenter(ImagePlus image, int newWidth, int newHeight, int centerX, int centerY){
 		
-		BufferedImage newIm = new BufferedImage(newWidth, newHeight, image.getBufferedImage().getType());
+		int type = image.getBufferedImage().getType();
+		BufferedImage newIm = new BufferedImage(newWidth, newHeight, type);
 		Graphics g = newIm.getGraphics();
 		g.setColor(Color.black);
 		g.fillRect(0,0,newWidth,newHeight);

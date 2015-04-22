@@ -12,6 +12,7 @@ import java.awt.Rectangle;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Collections;
 import java.util.ListIterator;
 import java.util.Vector;
@@ -31,6 +32,8 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	 * Identifies the point as a MAGGOTTRACKPOINT
 	 */
 	final int pointType = 2;
+	
+//	String dummyF;
 
 	MaggotTrackPoint prev;
 	MaggotTrackPoint next;
@@ -750,6 +753,8 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			if (!htValid) s+= " HT-X"; else s+= "     ";
 		}
 		
+//		if (dummyF!=null) s+="\n"+dummyF; else s+="\nnull";
+		
 		return s;
 	}
 	
@@ -765,33 +770,57 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			dos.writeByte(htValid ? 1:0);
 			
 			//Write # contour pts 
-			dos.writeInt(nConPts);
+			dos.writeInt(cont.size());
 			//Write contour
-			for (ContourPoint cp : cont){
+			for (int i=0; i<cont.size(); i++){
+				ContourPoint cp = cont.get(i);
 				if (cp.toDisk(dos, pw)>0){
-					if (pw!=null) pw.println("Error writing ContourPoint for MaggotTrackPoint "+pointID);
+					if (pw!=null) pw.println("Error writing ContourPoint "+i+"/"+cont.size()+" for MaggotTrackPoint "+pointID);
 					return 2;
 				}
 			}
 			
-			//Write head 
-			head.toDisk(dos, pw);
-			//Write mid
-			midpoint.toDisk(dos, pw);
-			//Write tail
-			tail.toDisk(dos, pw);
+		} catch (Exception e) {
+			if (pw!=null) pw.println("Error writing MaggotTrackPoint data (htvalid,contour) for point "+pointID+"; aborting save");
+			return 1;
+		}
+		
+		try{
+			if(htValid){
+				//Write head 
+				head.toDisk(dos, pw);
+				//Write mid
+				midpoint.toDisk(dos, pw);
+				//Write tail
+				tail.toDisk(dos, pw);
+			}
+		} catch (Exception e) {
+			if (pw!=null) pw.println("Error writing MaggotTrackPoint data(head,tail,mid) for point "+pointID+"; aborting save");
+			return 1;
+		}
+		
+		try{
 			
 			//Write nmidpts
-			dos.writeInt(midline.getNCoordinates());
-			//Write the midline
-			FloatPolygon mfp = midline.getFloatPolygon();//Removes the "XBase"/"YBase" crap from PolygonRoi
-			for (int i=0; i<midline.getNCoordinates(); i++){
-				dos.writeFloat(mfp.xpoints[i]);
-				dos.writeFloat(mfp.ypoints[i]);
+			if (midline!=null){
+				dos.writeInt(midline.getNCoordinates());
+				
+				//Write the midline
+				FloatPolygon mfp = midline.getFloatPolygon();//Removes the "XBase"/"YBase" crap from PolygonRoi
+				for (int i=0; i<midline.getNCoordinates(); i++){
+					dos.writeFloat(mfp.xpoints[i]);
+					dos.writeFloat(mfp.ypoints[i]);
+				}
+				
+			}else{
+				dos.writeInt(0);
 			}
 			
+			
 		} catch (Exception e) {
-			if (pw!=null) pw.println("Error writing MaggotTrackPoint image for point "+pointID+"; aborting save");
+			
+			
+			if (pw!=null) pw.println("Error writing MaggotTrackPoint data(midline) for point "+pointID+"; aborting save");
 			return 1;
 		}
 		
@@ -804,26 +833,31 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		//size+= ; 1 byte + (1 int + nConPts*sizeOfContourPoint) + (3*sizeOfContourPoint) + (1 int + 2*numMidlineCoords*sizeOfFloat)
 		// = 1 byte + 2 int + 2*numMidlineCoords float + (3+nContourPts) sizeOfContourPoint
 		size += 1 + 2*Integer.SIZE/Byte.SIZE; 
-		size += (2*midline.getNCoordinates())*java.lang.Float.SIZE/Byte.SIZE;
-		size += (3*cont.size())*ContourPoint.sizeOnDisk();
+		size += cont.size()*ContourPoint.sizeOnDisk();
+		if (htValid){
+			size += 3*ContourPoint.sizeOnDisk();
+		}
+		if (midline!=null){
+			size += (2*midline.getNCoordinates())*java.lang.Float.SIZE/Byte.SIZE;
+		}
 		
 		return size;
 	}
 	
-	public static MaggotTrackPoint fromDisk(DataInputStream dis, Track t){
+	public static MaggotTrackPoint fromDisk(DataInputStream dis, Track t, PrintWriter pw){
 		
 		MaggotTrackPoint mtp = new MaggotTrackPoint();
-		if (mtp.loadFromDisk(dis,t)==0){
+		if (mtp.loadFromDisk(dis,t,pw)==0){
 			return mtp;
 		} else {
 			return null;
 		}
 	}
 	
-	protected int loadFromDisk(DataInputStream dis, Track t){
+	protected int loadFromDisk(DataInputStream dis, Track t, PrintWriter pw){
 		
 		//Load all superclass info
-		if (super.loadFromDisk(dis, t)!=0){
+		if (super.loadFromDisk(dis,t,pw)!=0){
 			return 1;
 		}
 		
@@ -835,46 +869,56 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			//nconpts, contour
 			nConPts = dis.readInt();
 			cont = new Vector<ContourPoint>();
-			ContourPoint cp;
 			for (int i=0; i<nConPts; i++){
-				cp = ContourPoint.fromDisk(dis);
+				ContourPoint cp = ContourPoint.fromDisk(dis, pw);
 				if (cp!=null){
 					cont.add(cp);
 				} else {
+					if (pw!=null) pw.println("Error: null contour pt ("+i+"/"+nConPts+")");
 					return 2;
 				}
 			}
 						
 			//head,mid,tail
-			head = ContourPoint.fromDisk(dis);
-			if (head==null){
-				return 3;
-			}
-			midpoint = ContourPoint.fromDisk(dis);
-			if (midpoint==null){
-				return 4;
-			}
-			tail = ContourPoint.fromDisk(dis);
-			if (tail==null){
-				return 5;
+			if (htValid){
+				head = ContourPoint.fromDisk(dis);
+				if (head==null){
+					if (pw!=null) pw.println("Error: head null");
+					return 3;
+				}
+				midpoint = ContourPoint.fromDisk(dis);
+				if (midpoint==null){
+					if (pw!=null) pw.println("Error: midpoint null");
+					return 4;
+				}
+				tail = ContourPoint.fromDisk(dis);
+				if (tail==null){
+					if (pw!=null) pw.println("Error: tail null");
+					return 5;
+				}
 			}
 			
 			//nmidpts, midline
 			int nMidPts = dis.readInt();
-			if (nMidPts!=numMidCoords){
-				return 6;
+			if (nMidPts>0){
+				if (nMidPts!=numMidCoords){
+					if (pw!=null) pw.println("Error: improper num of midline coordinates ("+nMidPts+",not"+numMidCoords+")");
+					return 6;
+				}
+				float[] midX = new float[nMidPts];
+				float[] midY = new float[nMidPts];
+				for (int i=0; i<nMidPts; i++){
+					midX[i] = dis.readFloat();
+					midY[i] = dis.readFloat();
+				}
+				midline = new PolygonRoi(midX, midY, PolygonRoi.POLYLINE);
 			}
-			float[] midX = new float[nMidPts];
-			float[] midY = new float[nMidPts];
-			for (int i=0; i<nMidPts; i++){
-				midX[i] = dis.readFloat();
-				midY[i] = dis.readFloat();
-			}
-			midline = new PolygonRoi(midX, midY, PolygonRoi.POLYLINE);
-			
 			
 		} catch (Exception e) {
-			//if (pw!=null) pw.println("Error writing TrackPoint Info for point "+pointID+"; aborting save");
+			StringWriter sw = new StringWriter();
+			PrintWriter prw = new PrintWriter(sw);
+			e.printStackTrace(prw);
+			if (pw!=null) pw.println("Error reading MaggotTrackPoint Info: "+sw.toString());
 			return 7;
 		}
 		

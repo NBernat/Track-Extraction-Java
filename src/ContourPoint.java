@@ -2,6 +2,7 @@ import java.awt.Point;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 
 
 public class ContourPoint extends Point implements Comparable<ContourPoint> {
@@ -103,7 +104,10 @@ public class ContourPoint extends Point implements Comparable<ContourPoint> {
 			dos.writeInt(x);
 			dos.writeInt(y);
 		} catch (Exception e) {
-			if (pw!=null) pw.println("Error writing ContourPoint Info");
+			StringWriter sw = new StringWriter();
+			PrintWriter prw = new PrintWriter(sw);
+			e.printStackTrace(prw);
+			if (pw!=null) pw.println("Error writing ContourPoint Info:\n"+sw.toString());
 			return 1;
 		}
 		
@@ -115,9 +119,17 @@ public class ContourPoint extends Point implements Comparable<ContourPoint> {
 	}
 	
 	public static ContourPoint fromDisk(DataInputStream dis){
-		
 		ContourPoint cp = new ContourPoint();
 		if (cp.loadFromDisk(dis)==0){
+			return cp;
+		} else {
+			return null;
+		}
+	}
+	public static ContourPoint fromDisk(DataInputStream dis, PrintWriter pw){
+		
+		ContourPoint cp = new ContourPoint();
+		if (cp.loadFromDisk(dis, pw)==0){
 			return cp;
 		} else {
 			return null;
@@ -139,5 +151,33 @@ public class ContourPoint extends Point implements Comparable<ContourPoint> {
 		return 0;
 	}
 	
+
+	protected int loadFromDisk(DataInputStream dis, PrintWriter pw){
+		
+		//read new data: image
+		try {
+			x = dis.readInt();
+		} catch (Exception e) {
+			StringWriter sw = new StringWriter();
+			PrintWriter prw = new PrintWriter(sw);
+			e.printStackTrace(prw);
+			pw.println("X coord unreadable: "+sw.toString());
+			return 1;
+		}
+		try{
+			y = dis.readInt();
+		} catch (Exception e) {
+			StringWriter sw = new StringWriter();
+			PrintWriter prw = new PrintWriter(sw);
+			e.printStackTrace(prw);
+			pw.println("Y coord unreadable: "+sw.toString());
+			return 1;
+		}
+			angle=java.lang.Double.POSITIVE_INFINITY;
+			
+		
+		
+		return 0;
+	}
 	
 }

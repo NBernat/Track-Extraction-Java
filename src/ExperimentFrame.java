@@ -7,12 +7,15 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.ListIterator;
 import java.util.Vector;
+
 
 
 
@@ -310,14 +313,10 @@ class TrackPanel extends JPanel {
 				track.playMovie(mdp);
 			}
 		} catch(Exception e){
-			String err = "";
-			StackTraceElement[] ste = e.getStackTrace();
-			for (int i=0; i<ste.length; i++){
-				err += ste[i].toString()+"\n";
-			}
-			
-			
-			new TextWindow("PlayMovie Error", "Could not play track "+track.trackID+" movie\n"+err+"\n", 500, 500);
+			StringWriter sw = new StringWriter();
+			PrintWriter prw = new PrintWriter(sw);
+			e.printStackTrace(prw);
+			new TextWindow("PlayMovie Error", "Could not play track "+track.trackID+" movie\n"+sw.toString()+"\n", 500, 500);
 		}
 	}
 	

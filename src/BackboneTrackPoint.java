@@ -26,35 +26,35 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	 * Identifies the point as a BACKBONETRACKPOINT
 	 */
 	final int pointType = 3;
-	
+	 
 	/**
 	 * The number of pixels in the image considered as part of the maggot
 	 */
-	private int numPix;
+	private transient int numPix;
 	/**
 	 * A list of X Coordinates of points that are considered as part of the maggot 
 	 * <p>
 	 * Contains numPix valid elements
 	 */
-	private float[] MagPixX;
+	private transient float[] MagPixX;
 	/**
 	 * A list of X Coordinates of points that are considered as part of the maggot 
 	 * <p>
 	 * Contains numPix valid elements  
 	 */
-	private float[] MagPixY;
+	private transient float[] MagPixY;
 	/**
 	 * A list of Intensity values (0;255) corresponding to the MagPix points 
 	 * <p>
 	 * Contains numPix valid elements
 	 */
-	private int[] MagPixI;
+	private transient int[] MagPixI;
 	/**
 	 * A list of cluster indices (0;numBBpoints-1) corresponding to the nearest bbOld point to each MagPix point 
 	 * <p>
 	 * Contains numPix valid elements
 	 */
-	private int[] clusterInds;
+	private transient int[] clusterInds;
 	
 	/**
 	 * The number of points in the backbone
@@ -354,6 +354,10 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	
 	public ImageProcessor getIm(boolean clusters, boolean mid, boolean initialBB, boolean contour, boolean ht, boolean forces, boolean bb){
 
+		if (mid && MagPixX==null){
+			reloadMagPix();
+		}
+		
 		int expandFac = 10;//TODO MOVE TO PARAMETERS
 		
 		imOriginX = (int)x-(trackWindowWidth/2)-1;
@@ -371,6 +375,12 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		
 		return drawFeatures(pIm, offX, offY, expandFac, clusters, mid, initialBB, contour, ht, forces, bb); 
 		
+	}
+
+	public void reloadMagPix(){
+		setInitialBB(backbone, numBBPts);
+		setMagPix();
+		setVoronoiClusters();
 	}
 	
 	public ImageProcessor getImWithMidline(PolygonRoi mid){
@@ -543,20 +553,20 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		return size;
 	}
 
-	public static BackboneTrackPoint fromDisk(DataInputStream dis, Track t){
+	public static BackboneTrackPoint fromDisk(DataInputStream dis, Track t, PrintWriter pw){
 		
 		BackboneTrackPoint btp = new BackboneTrackPoint();
-		if (btp.loadFromDisk(dis,t)==0){
+		if (btp.loadFromDisk(dis,t,pw)==0){
 			return btp;
 		} else {
 			return null;
 		}
 	}
 	
-	protected int loadFromDisk(DataInputStream dis, Track t){
+	protected int loadFromDisk(DataInputStream dis, Track t, PrintWriter pw){
 		
 		//Load all superclass info
-		if (super.loadFromDisk(dis, t)!=0){
+		if (super.loadFromDisk(dis,t,pw)!=0){
 			return 1;
 		}
 		
@@ -578,7 +588,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 			artificialMid = (dis.readByte()==1);
 			
 		} catch (Exception e) {
-			//if (pw!=null) pw.println("Error writing TrackPoint Info for point "+pointID+"; aborting save");
+			if (pw!=null) pw.println("Error writing BackboneTrackPoint Info");
 			return 2;
 		}
 		

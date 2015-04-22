@@ -1,5 +1,6 @@
 import ij.IJ;
 
+import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -13,8 +14,6 @@ import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.ListIterator;
 import java.util.Vector;
-
-import com.sun.org.apache.bcel.internal.generic.INSTANCEOF;
 
 
 public class Experiment implements Serializable{
@@ -82,12 +81,12 @@ public class Experiment implements Serializable{
 	public int toDisk(DataOutputStream dos, PrintWriter pw){
 		
 		//PRESERIALIZE
-		if (pw!=null) pw.println("Preserializing...");
-		ListIterator<? extends Track> trIt = tracks.listIterator();
-		while (trIt.hasNext()){
-			trIt.next().preSerialize();
-		}
-		if (pw!=null) pw.println("...Preserialization done");
+//		if (pw!=null) pw.println("Preserializing...");
+//		ListIterator<Track> trIt = tracks.listIterator();
+//		while (trIt.hasNext()){
+//			trIt.next().preSerialize();
+//		}
+//		if (pw!=null) pw.println("...Preserialization done");
 		
 		if (tracks.size()==0){
 			if (pw!=null) pw.println("No tracks in experiment; save aborted"); 
@@ -96,12 +95,13 @@ public class Experiment implements Serializable{
 		
 		if (pw!=null) pw.println("Saving experiment to disk...");
 		
+		
 		//Write the Experiment Type
 		try {
 			int code = getTypeCode();
 			if (code>=0){
 				if (pw!=null) pw.println("Writing type code ("+code+")");
-				dos.write(code);
+				dos.writeInt(code);
 			} else {
 				if (pw!=null) pw.println("Invalid experiment code; save aborted");
 				return 3;
@@ -113,8 +113,8 @@ public class Experiment implements Serializable{
 		
 		//Write the # of tracks
 		try {
-			if (pw!=null) pw.println("Writing track size ("+tracks.size()+")");
-			dos.write(tracks.size());
+			if (pw!=null) pw.println("Writing # of tracks ("+tracks.size()+")");
+			dos.writeInt(tracks.size());
 		} catch (Exception e) {
 			if (pw!=null) pw.println("...Error writing # of tracks; save aborted");
 			return 2;
@@ -123,18 +123,29 @@ public class Experiment implements Serializable{
 		//Write each track
 		try {
 			if (pw!=null) pw.println("Writing Tracks");
-			for (Track tr : tracks){
+			
+			for (int j=0; j<tracks.size(); j++){
+				Track tr = tracks.get(j);
+				if (pw!=null) pw.println("Writing track number "+j+"("+tr.trackID+")");
 				if(tr.toDisk(dos,pw)!=0) {
 					if (pw!=null) pw.println("...Error writing track "+tr.trackID+"; save aborted");
 					return 1; 
 				}
 			}
+			
 		} catch (Exception e) {
-			if (pw!=null) pw.println("...Error writing tracks; save aborted");
+			if (pw!=null) pw.println("\n...Error writing tracks; save aborted");
 			return 1;
 		}
 		
-		if (pw!=null) pw.println("...Experiment Saved!");
+		try{
+			dos.writeInt(0);
+		} catch (Exception e){
+			if (pw!=null) pw.println("\n...Error writing end of file; save aborted");
+			return 1;
+		}
+		
+		if (pw!=null) pw.println("\n...Experiment Saved!");
 		return 0;
 	}
 	
@@ -165,39 +176,48 @@ public class Experiment implements Serializable{
 		return trackType;
 	}
 	
-	public static Experiment fromDisk(File f, ExtractionParameters exParam, FittingParameters fp, PrintWriter pw){
+	public static Experiment fromDisk(DataInputStream dis, String filename, ExtractionParameters exParam, FittingParameters fp, PrintWriter pw){
 		
 		
 		try {
 			Experiment ex = new Experiment();
-			if (pw!=null) pw.println("Setting parameters... ");
-			ex.fname = f.getPath();
+			if (pw!=null) pw.println("Setting parameters");
+			ex.fname = filename;
 			ex.ep = exParam;
 			ex.Forces = fp.getForces(0);
-			
-			ex.loadFromDisk(new DataInputStream(new FileInputStream(f)));
-			
-			
-			//TODO POSTDESERIALIZE
-			
+			if (pw!=null) pw.println("Loading from Disk... ");
+			ex.loadFromDisk(dis, pw);
+			if (pw!=null) pw.println("...load from disk complete");
+//			if (pw!=null) pw.println("PostDeserialization...");
+//			ListIterator<Track> trIt = ex.tracks.listIterator();
+//			while (trIt.hasNext()){
+//				trIt.next().postDeserialize();
+//			}
+//			if (pw!=null) pw.println("...PostDeserialization complete");
 			return ex;
 		} catch (Exception e){
 			//if (pw!=null) pw.println("");
+			StringWriter sw = new StringWriter();
+			PrintWriter prw = new PrintWriter(sw);
+			e.printStackTrace(prw);
+			if (pw!=null) pw.println("...error loading experiment from disk:\n"+sw.toString());
 			return null;
 		}
 		
 	}
 	
-	private void loadFromDisk(DataInputStream dis){
+	private void loadFromDisk(DataInputStream dis, PrintWriter pw){
 		
 		int progress = -2;
 		try{
 			//Read the Experiment Type
 			int tpType = dis.readInt();
+			pw.println("==> trackpoint type "+tpType);
 			progress++;//=-1
 			
 			//Read the # of tracks
 			int numTracks = dis.readInt();
+			pw.println("==> "+numTracks+" tracks");
 			tracks = new Vector<Track>();
 			progress++;//=0
 			
@@ -205,9 +225,14 @@ public class Experiment implements Serializable{
 			progress = 0;
 			Track nextTrack;
 			for (int i=0; i<numTracks; i++){
-				
-				nextTrack = Track.fromDisk(dis, tpType, this);
-				if (nextTrack==null) return;
+
+				pw.println("==> Track "+i+"/"+(numTracks-1));
+				nextTrack = Track.fromDisk(dis, tpType, this, pw);
+				if (nextTrack==null) {
+					pw.println("(null)");
+					return;
+				}
+//				pw.println(" ("+nextTrack.points.size()+"pts)");
 				tracks.add(nextTrack);
 				
 				progress++;//= # of tracks loaded
@@ -217,8 +242,7 @@ public class Experiment implements Serializable{
 			
 			
 		} catch (Exception e){
-			//if (pw!=null) pw.println("");
-			System.out.println("Error: progress code "+progress);
+			if (pw!=null) pw.println("Error: progress code "+progress);
 			return;
 		}
 		

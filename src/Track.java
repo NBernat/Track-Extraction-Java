@@ -386,6 +386,7 @@ public class Track implements Serializable{
 		
 		//Write the # of points in this track to disk
 		try {
+			if (pw!=null) pw.println("Writing #pts ("+points.size()+")");
 			if (points.size()>=0){
 				dos.writeInt(points.size());
 			} else {
@@ -399,12 +400,17 @@ public class Track implements Serializable{
 		
 		//Write the points to disk
 		try {
-			for (TrackPoint tp : points){
-				if (tp.toDisk(dos,pw)!=0){
-					if (pw!=null) pw.println("...Error writing TrackPoint "+tp.pointID+"; aborting save");
+			if (pw!=null) pw.println("Writing points...");
+			for (int i=0; i<points.size(); i++){
+				if (points.get(i).toDisk(dos,pw)!=0){
+					if (pw!=null) pw.println("...Error writing TrackPoint "+points.get(i).pointID+"; aborting save");
 					return 1;
 				}
+				if (i==(points.size()-1)){
+					pw.println("Last point in track "+trackID+" written");
+				}
 			}
+			if (pw!=null) pw.println("...done writing points");
 		} catch (Exception e) {
 			if (pw!=null) pw.println("...Error writing points; aborting save");
 			return 1;
@@ -422,58 +428,62 @@ public class Track implements Serializable{
 		
 		//Add the size of the "# of points" field (32-bit integer)
 		int size = Integer.SIZE/Byte.SIZE;
-		if (pw!=null) pw.println("Size w/o points:"+size);
+//		if (pw!=null) pw.println("Size w/o points:"+size);
 		
 		//Add the size of each point
-//		ListIterator<? extends TrackPoint> tpIt = points.listIterator();
 		for (int i=0; i<points.size(); i++){
-//		while (tpIt.hasNext()){
 			size += points.get(i).sizeOnDisk();
 		}
-		if (pw!=null) pw.println("Size w/ points:"+size);
+//		if (pw!=null) pw.println("Size w/ points:"+size);
 		
 		return size;
 	}
 	
-	public static Track fromDisk(DataInputStream dis, int pointType, Experiment experiment){
+	public static Track fromDisk(DataInputStream dis, int pointType, Experiment experiment, PrintWriter pw){
 		
 		Track tr = new Track();
-		
-		//Set exp
-		tr.exp = experiment;
 		
 		//Set maxHeight/Width?
 		
 		//load data
-		if (tr.loadFromDisk(dis, pointType)==0){
+		if (tr.loadFromDisk(dis, pointType, experiment, pw)==0){
+//			tr.postDeserialize();
 			return tr;
 		} else {
 			return null;
 		}
 	}
 	
-	private int loadFromDisk(DataInputStream dis, int pointType){
+	private int loadFromDisk(DataInputStream dis, int pointType, Experiment experiment, PrintWriter pw){
+		
+		points = new Vector<TrackPoint>();
+		exp = experiment;
+		trackID=nextIDNum++;
 		
 		//advance past size on disk
 		try {
-			dis.readInt();
+			int size = dis.readInt();
+			if (pw!=null) pw.println(size+" bytes to load...");
 		} catch (Exception e) {
+			if (pw!=null) pw.println("ERROR: Unable to advance past field 'size on disk'");
 			return 4;
 		}
 		
 		//Read nPts and then the points
 		try {
 			int nPts = dis.readInt();
+			if (pw!=null) pw.println(nPts+" Points to load...");
 			
 			switch (pointType){
 				case 0: 
 					TrackPoint tp;
 					for (int i=0; i<nPts; i++){
 						//Load TrackPoints
-						tp = TrackPoint.fromDisk(dis, this);
+						tp = TrackPoint.fromDisk(dis, this, pw);
 						if (tp!=null) {
 							points.addElement(tp);
 						} else {
+							if (pw!=null) pw.println("ERROR: null Trackpoint ("+i+"/"+(nPts-1)+")");
 							return 3;
 						}
 					}
@@ -482,10 +492,11 @@ public class Track implements Serializable{
 					ImTrackPoint itp;
 					for (int i=0; i<nPts; i++){
 						//Load ImTrackPoints
-						itp = ImTrackPoint.fromDisk(dis, this);
+						itp = ImTrackPoint.fromDisk(dis, this, pw);
 						if (itp!=null) {
 							points.addElement(itp);
 						} else {
+							if (pw!=null) pw.println("ERROR: null ImTrackpoint ("+i+"/"+(nPts-1)+")");
 							return 3;
 						}
 					}
@@ -494,10 +505,11 @@ public class Track implements Serializable{
 					MaggotTrackPoint mtp;
 					for (int i=0; i<nPts; i++){
 						//Load MaggotTrackPoints
-						mtp = MaggotTrackPoint.fromDisk(dis, this);
+						mtp = MaggotTrackPoint.fromDisk(dis, this, pw);
 						if (mtp!=null) {
 							points.addElement(mtp);
 						} else {
+							if (pw!=null) pw.println("ERROR: null MaggotTrackpoint ("+i+"/"+(nPts-1)+")");
 							return 3;
 						}
 					}
@@ -506,20 +518,28 @@ public class Track implements Serializable{
 					BackboneTrackPoint btp;
 					for (int i=0; i<nPts; i++){
 						//Load BackboneTrackPoints
-						btp = BackboneTrackPoint.fromDisk(dis, this);
+						btp = BackboneTrackPoint.fromDisk(dis, this, pw);
 						if (btp!=null) {
 							points.add(btp);
 						} else {
+							if (pw!=null) pw.println("ERROR: null BackboneTrackpoint ("+i+"/"+(nPts-1)+")");
 							return 3;
 						}
 					}
 					break;
 				default:
 					//Invalid point type
+					if (pw!=null) pw.println("ERROR: Invalid Point type ("+pointType+")");
 					return 2;
 			}
 			
+			if (pw!=null) pw.println("...done loading points");
+			
 		} catch (Exception e){
+			StringWriter sw = new StringWriter();
+			PrintWriter prw = new PrintWriter(sw);
+			e.printStackTrace(prw);
+			if (pw!=null) pw.println("ERROR: Unable to load points\n"+sw.toString());
 			return 1;
 		}
 		

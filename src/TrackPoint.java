@@ -309,23 +309,23 @@ public class TrackPoint extends Point {
 		return 6*Integer.SIZE/Byte.SIZE + 3*java.lang.Double.SIZE/Byte.SIZE;
 	}
 	
-	public static TrackPoint fromDisk(DataInputStream dis, Track t){
+	public static TrackPoint fromDisk(DataInputStream dis, Track t, PrintWriter pw){
 		
 		TrackPoint tp = new TrackPoint();
 		
-		if (tp.loadFromDisk(dis,t)==0){
+		if (tp.loadFromDisk(dis,t,pw)==0){
 			return tp;
 		} else {
 			return null;
 		}
 	}
 	
-	protected int loadFromDisk(DataInputStream dis, Track t){
+	protected int loadFromDisk(DataInputStream dis, Track t, PrintWriter pw){
 		
 		track = t;
+		pointID = ++lastIDNum;
 		
 		try {
-			pointID=0;
 			frameNum = dis.readInt();
 			x = dis.readDouble();
 			y = dis.readDouble();
@@ -333,7 +333,7 @@ public class TrackPoint extends Point {
 			area = dis.readDouble();
 			thresh = dis.readInt();
 		} catch (Exception e) {
-			//if (pw!=null) pw.println("Error writing TrackPoint Info for point "+pointID+"; aborting save");
+			if (pw!=null) pw.println("Error writing TrackPoint Info");
 			return 1;
 		}
 		

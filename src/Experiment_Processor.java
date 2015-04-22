@@ -1,8 +1,13 @@
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -32,85 +37,16 @@ public class Experiment_Processor implements PlugIn{
 	private int indentLevel;
 	
 	//TODO command line invocation
-	/**
 	public void main(String[] args){
-		
-		
-		String arg0=null;
-		outputDir = null;
-		int i=0;
-		String s;		
-		while (i<args.length){
 			
-			s=args[i];
-			
-			if (s.equalsIgnoreCase("input")){
-				i++;
-				String[] out = findArgUnit(args, i);
-				if (out!=null){
-					arg0 = out[0];
-					i = Integer.parseInt(out[1]);
-				} else {
-					System.out.println("Invalid input directory name");
-				}
-			} else if (s.equalsIgnoreCase("outputdir")){
-				i++;
-				String[] out = findArgUnit(args, i);
-				if (out!=null){
-					outputDir = out[0];
-					i = Integer.parseInt(out[1]);
-				} else {
-					System.out.println("Invalid output directory name");
-				}
-				
-			}
-			
-			i++;
-		}
-		
 		//Open IJ
-		run(arg0);
-		
-		
-		
-		
-	}
-	
-	private String[] findArgUnit(String[] args, int startInd){
-		
-		if (args.length<=startInd){
-			return null;
+		if (args.length==1){
+			run(args[0]);
 		} else {
-			String[] out = new String[2];
-			
-			//Check beginning
-			if (args[startInd].charAt(0) != '['){
-				return null;
-			}
-			
-			//Find end
-			String s="";
-			int i = startInd;
-			boolean endFound = false;
-			while (!endFound && i<args.length){
-				s += args[i];
-				if (s.charAt(s.length()-1)==']'){
-					endFound=true;
-				} else {
-					
-					i++;
-				}
-			}
-			
-			if (endFound){
-				return out;
-			} else {
-				return null;
-			}
+			System.out.println("Pass only one argument, with the name of the .mmf or .ser file");
 		}
 	}
 	
-	*/
 	
 	/**
 	 * Opens a file (via argument or dialog); extracts if needed, and fits tracks; saves extracted and fit tracks
@@ -134,28 +70,56 @@ public class Experiment_Processor implements PlugIn{
 				if (ex==null){
 					
 					log("Loaded mmf; Extracting tracks...");
-					extractTracks();
+					if (!extractTracks()) {
+						log("Error extracting tracks; aborting experiment_processor.");
+						return;
+					}
 					log("...done extracting tracks");
 					if (prParams.saveMagEx) {
 						log("Saving Maggot Tracks...");
 						saveOldTracks();
-						log("Done saving Maggot Tracks");
+						log("...done saving Maggot Tracks");
 					}
-					
+					IJ.showStatus("Done Saving MaggotTrackPoint Experiment");
 					//TODO release memory to OS? System.gc
 				}
 				
-				log("Fiting "+ex.tracks.size()+" Tracks...");
+				try{
+					log("Testing MagEx.fromDisk...");
+					testFromDisk(false, false, processLog);
+					log("...MagEx.fromDisk complete");
+				} catch (Exception exc){
+					StringWriter sw = new StringWriter();
+					PrintWriter pw = new PrintWriter(sw);
+					exc.printStackTrace(pw);
+					log ("...Error in MTP Experiment fromDisk:\n"+sw.toString());
+				}
+				
+//				ex = new Experiment(ex);
+				log("Fitting "+ex.tracks.size()+" Tracks...");
 				fitTracks();
 				log("...done fitting tracks");
 				if (prParams.saveFitEx) {
 					log("Saving backbone tracks...");
 					if (saveNewTracks()){
-						log("Done saving backbone tracks");
+						log("...done saving backbone tracks");
 					} else {
 						log("Error saving tracks");
 					}
+					IJ.showStatus("Done Saving BackboneTrackPoint Experiment");
 				}
+				
+				try{
+					log("Testing FitEx.fromDisk...");
+					testFromDisk(true, true, processLog);
+					log("...FitEx.fromDisk complete");
+				} catch (Exception exc){
+					StringWriter sw = new StringWriter();
+					PrintWriter pw = new PrintWriter(sw);
+					exc.printStackTrace(pw);
+					log ("...Error in BTP Experiment fromDisk:\n"+sw.toString());
+				}
+				
 				//TODO release memory to OS? System.gc
 			} else {
 				log("...no success");
@@ -167,10 +131,43 @@ public class Experiment_Processor implements PlugIn{
 			if (processLog!=null) processLog.close();
 		}
 		
+		log("Done Processing");
 		IJ.showStatus("Done Processing");
 		
 	}
 	
+	private void testFromDisk(boolean btpData, boolean buffered, PrintWriter pw){
+		
+		String[] pathParts;
+		if (btpData){
+			pathParts = prParams.setFitExPath(srcDir, srcName);
+		} else {
+			pathParts = prParams.setMagExPath(srcDir, srcName);
+		}
+		File f = new File(pathParts[0]+File.separator+pathParts[1]);
+		IJ.showStatus("Loading Experiment...");
+		if (pw!=null) pw.println("Loading experiment "+f.getPath());
+		try{
+			Experiment newEx;
+			if (buffered){
+				newEx = Experiment.fromDisk(new DataInputStream(new BufferedInputStream(new FileInputStream(f))), f.getPath(), new ExtractionParameters(), new FittingParameters(), pw);
+			} else {
+				newEx = Experiment.fromDisk(new DataInputStream(new FileInputStream(f)), f.getPath(), new ExtractionParameters(), new FittingParameters(), pw);
+			}
+			IJ.showStatus("...done loading experiment (showing in frame)");
+
+			if (pw!=null) pw.println("Opening frame...");
+			ExperimentFrame exFrame = new ExperimentFrame(newEx);
+			exFrame.run(null);
+
+			if (pw!=null) pw.println("...Frame open");
+		} catch (Exception e){
+			if(pw!=null) pw.println("Error loading experiment");
+			return;
+			
+		}
+		
+	}
 	
 	/**
 	 * Set ups the processing objects
@@ -252,7 +249,10 @@ public class Experiment_Processor implements PlugIn{
 			IJ.showStatus("MMF open");
 			return true;
 		} catch (Exception e){
-			new TextWindow("Error opening experiment", e.getMessage(), 500, 500);
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			e.printStackTrace(pw);
+			new TextWindow("Error opening experiment", sw.toString(), 500, 500);
 			return false;
 		} finally{
 			indentLevel--;
@@ -272,7 +272,10 @@ public class Experiment_Processor implements PlugIn{
 			IJ.showStatus("Experiment open");
 			return true;
 		} catch (Exception e){
-			new TextWindow("Error opening experiment", e.getMessage(), 500, 500);
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			e.printStackTrace(pw);
+			new TextWindow("Error opening experiment", sw.toString(), 500, 500);
 			return false;
 		} finally{
 			indentLevel--;
@@ -316,7 +319,7 @@ public class Experiment_Processor implements PlugIn{
 	/**
 	 * Runs track extraction on the imageStack
 	 */
-	private void extractTracks(){
+	private boolean extractTracks(){
 		indentLevel++;
 		try {
 			//Extract the tracks
@@ -334,11 +337,16 @@ public class Experiment_Processor implements PlugIn{
 			}
 			
 		} catch  (Exception e){
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			e.printStackTrace(pw);
+			log("Error opening experiment: \n"+sw.toString());
 			new TextWindow("Error opening experiment", e.getMessage(), 500, 500);
+			return false;
 		} finally{
 			indentLevel--;
 		}
-		
+		return true;
 	}
 	/**
 	 * Replaces each track in the experiment with a backbone-fitted track
@@ -403,8 +411,26 @@ public class Experiment_Processor implements PlugIn{
 	 */
 	private void saveOldTracks(){
 		indentLevel++;
+		
 		String[] pathParts = prParams.setMagExPath(srcDir, srcName);
-		ex.save(pathParts[0], pathParts[1]); 
+		File f = new File(pathParts[0]+File.separator+pathParts[1]);
+		log("Saving MaggotTrack experiment to "+f.getPath());
+		boolean status;
+		try{
+			ex.toDisk(new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f))), processLog);
+			status=true;
+		} catch(Exception e){
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			e.printStackTrace(pw);
+			log("Error saving experiment: \n"+sw.toString());
+			status=false;
+		}
+		
+//		log("Serialize...");
+//		ex.save(pathParts[0], "SerializedData.ser"); 
+//		log("...Serialize done");
+		
 		indentLevel--;
 	}
 	/**
@@ -413,18 +439,18 @@ public class Experiment_Processor implements PlugIn{
 	private boolean saveNewTracks(){
 		indentLevel++;
 		
-//		String[] pathParts = prParams.setFitExPath(srcDir, srcName);
-//		File f = new File(pathParts[0]+File.separator+pathParts[1]);
-//		
-//		boolean status;
-//		try{
-//			ex.toDisk(new DataOutputStream(new FileOutputStream(f)), processLog);
-//			status=true;
-//		} catch(Exception e){
-//			status=false;
-//		}
 		String[] pathParts = prParams.setFitExPath(srcDir, srcName);
-		ex.save(pathParts[0], pathParts[1]);
+		File f = new File(pathParts[0]+File.separator+pathParts[1]);
+		
+		boolean status;
+		try{
+			ex.toDisk(new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f))), processLog);
+			status=true;
+		} catch(Exception e){
+			status=false;
+		}
+//		String[] pathParts = prParams.setFitExPath(srcDir, srcName);
+//		ex.save(pathParts[0], pathParts[1]);
 		
 		indentLevel--;
 		return true;
