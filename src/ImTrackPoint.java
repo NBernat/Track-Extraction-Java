@@ -3,7 +3,6 @@ import ij.gui.Roi;
 import ij.io.FileSaver;
 import ij.io.Opener;
 import ij.process.ByteProcessor;
-import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 
 import java.awt.Rectangle;
@@ -53,8 +52,7 @@ public class ImTrackPoint extends TrackPoint{
 	}
 	
 	public ImageProcessor getIm(){
-		//pad the image
-//		track.tb.ep.trackWindowHeight;
+		//pad the image so be the same dimensions as the rest in the stack
 		imOriginX = (int)x-(trackWindowWidth/2)-1;
 		imOriginY = (int)y-(trackWindowHeight/2)-1;
 		return CVUtils.padAndCenter(new ImagePlus("Point "+pointID, im), trackWindowWidth, trackWindowHeight, (int)x-rect.x, (int)y-rect.y);
@@ -98,8 +96,6 @@ public class ImTrackPoint extends TrackPoint{
 		
 		//Write image
 		try {
-//			preSerialize();
-			
 			dos.writeByte(im.getWidth());
 			dos.writeByte(im.getHeight());
 			for (int j=0; j<im.getWidth(); j++){
@@ -108,11 +104,6 @@ public class ImTrackPoint extends TrackPoint{
 				}
 			}
 			
-			
-//			dos.writeInt(serializableIm.length);
-//			for (int i=0; i<serializableIm.length; i++){
-//				dos.writeByte(serializableIm[i]);
-//			}
 		} catch (Exception e) {
 			if (pw!=null) pw.println("Error writing ImTrackPoint image for point "+pointID+"; aborting save");
 			return 1;
@@ -125,15 +116,12 @@ public class ImTrackPoint extends TrackPoint{
 		
 		int size = super.sizeOnDisk();
 		size += (2+im.getWidth()*im.getHeight());//Size of byte=1
-//		size += Integer.SIZE/Byte.SIZE + serializableIm.length;
 		return size;
 	}
 
 	public static ImTrackPoint fromDisk(DataInputStream dis, Track t, PrintWriter pw){
 		
 		ImTrackPoint itp = new ImTrackPoint();
-		
-		//TRACKWINDOW W/H? TODO CHANGE THIS!!!!
 		
 		if (itp.loadFromDisk(dis,t,pw)==0){
 			return itp;
@@ -151,11 +139,6 @@ public class ImTrackPoint extends TrackPoint{
 		
 		//read new data: image
 		try {
-//			int nbytes = dis.readInt();
-//			serializableIm = new byte[nbytes];
-//			for (int i=0; i<serializableIm.length; i++){
-//				serializableIm[i] = dis.readByte();
-//			}
 			trackWindowWidth = t.exp.ep.trackWindowWidth;
 			trackWindowHeight = t.exp.ep.trackWindowHeight;
 			int w = dis.readByte();
@@ -171,11 +154,6 @@ public class ImTrackPoint extends TrackPoint{
 
 			im = imp.getProcessor();
 			
-//			if (dis.read(serializableIm)!=nbytes){
-//				if (pw!=null) pw.println("Error reading im");
-//				return 2;
-//			}
-//			postDeserialize();
 		} catch (Exception e) {
 			if (pw!=null) pw.println("Error writing ImTrackPoint Info");
 			return 3;

@@ -7,7 +7,6 @@ import ij.text.TextWindow;
 import java.awt.Color;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
@@ -36,7 +35,6 @@ public class Track implements Serializable{
 	 * Incremented each time a new track is made
 	 */
 	static int nextIDNum=0;
-	//isActive?
 	
 	/**
 	 * Maximum ROI height, for playing movies
@@ -51,15 +49,9 @@ public class Track implements Serializable{
 	
 	Vector<Boolean> isCollision;
 	
-//	Vector<Collision> collisions;
-	
 	
 	private transient TrackMatch match;
 	
-	/**
-	 * Length of time to pause between frames, ie 1/frameRate, in ms
-	 */
-//	int frameLength = 71;//FrameRate=~14fps
 	/**
 	 * Access to the TrackBuilder
 	 */
@@ -72,10 +64,6 @@ public class Track implements Serializable{
 	transient Communicator comm;
 	
 	
-	///////////////////////////
-	// Constructors
-	///////////////////////////
-	
 	public Track(){
 		
 	}
@@ -86,7 +74,6 @@ public class Track implements Serializable{
 		
 		points = new Vector<TrackPoint>();
 		isCollision = new Vector<Boolean>();
-//		collisions = new Vector<Collision>(); 
 		
 		trackID = nextIDNum;
 		nextIDNum++;
@@ -102,7 +89,6 @@ public class Track implements Serializable{
 		points = new Vector<TrackPoint>();
 		points.addAll(pts);
 		isCollision = new Vector<Boolean>();
-//		collisions = new Vector<Collision>(); 
 		
 		trackID = ID;
 
@@ -144,10 +130,6 @@ public class Track implements Serializable{
 		
 	}
 	
-	///////////////////////////
-	// Track building methods
-	///////////////////////////	
-	
 	/**
 	 * Adds the given point to the end of the Track
 	 * @param pt
@@ -167,18 +149,6 @@ public class Track implements Serializable{
 		}
 		
 	}
-	
-	/**
-	 * Reloads the points as MaggotTrackPoints
-	 * @return
-	 */
-//	public int reloadAsMaggotTrack(){
-//		
-//	}
-	
-	///////////////////////////
-	// Distance methods
-	///////////////////////////	
 	
 	/**
 	 * Finds the nearest point in a list to the last point in the track 
@@ -255,9 +225,6 @@ public class Track implements Serializable{
 		return points.lastElement();
 	}
 	
-
-	
-	
 	public void playMovie() {
 		comm = new Communicator();
 		playMovie(trackID, null);
@@ -270,8 +237,6 @@ public class Track implements Serializable{
 	}
 	
 	public void playMovie(int labelInd, MaggotDisplayParameters mdp){
-		
-//		String trStr = "";
 		
 		if (tb!=null){
 			tb.comm.message("This track has "+points.size()+"points", VerbLevel.verb_message);
@@ -295,8 +260,6 @@ public class Track implements Serializable{
 			
 			trackStack.addSlice(firstIm);
 			
-//			trStr += point.infoSpill();
-			
 			//Add the rest of the images to the movie
 			while(tpIt.hasNext()){
 				point = tpIt.next();
@@ -309,18 +272,13 @@ public class Track implements Serializable{
 				} else{
 					img = point.getIm();
 				}
-//				img.
 				trackStack.addSlice(img);
-				
-//				trStr += point.infoSpill();
 			}
 				
 			//Show the stack
 			ImagePlus trackPlus = new ImagePlus("Track "+trackID+": frames "+points.firstElement().frameNum+"-"+points.lastElement().frameNum ,trackStack);
 			
-//			trackPlus.flatten();
 			trackPlus.show();
-//			TextWindow tWin = new TextWindow("Track "+trackID+" info", trStr, 500, 500);
 			
 		}
 	}
@@ -428,13 +386,11 @@ public class Track implements Serializable{
 		
 		//Add the size of the "# of points" field (32-bit integer)
 		int size = Integer.SIZE/Byte.SIZE;
-//		if (pw!=null) pw.println("Size w/o points:"+size);
 		
 		//Add the size of each point
 		for (int i=0; i<points.size(); i++){
 			size += points.get(i).sizeOnDisk();
 		}
-//		if (pw!=null) pw.println("Size w/ points:"+size);
 		
 		return size;
 	}
@@ -443,11 +399,8 @@ public class Track implements Serializable{
 		
 		Track tr = new Track();
 		
-		//Set maxHeight/Width?
-		
 		//load data
 		if (tr.loadFromDisk(dis, pointType, experiment, pw)==0){
-//			tr.postDeserialize();
 			return tr;
 		} else {
 			return null;

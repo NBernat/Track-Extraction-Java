@@ -27,7 +27,6 @@ public class Experiment_Processor implements PlugIn{
 	private String srcDir;
 	private String srcName;
 	private PrintWriter processLog;
-	private String outputDir;
 	
 	private ImagePlus mmfStack;
 	private BackboneFitter bbf;
@@ -54,13 +53,9 @@ public class Experiment_Processor implements PlugIn{
 	public void run(String arg0) {
 		indentLevel=0;
 		runTime = new TicToc();
-//		runTime.tic();
 				
-				
-//		log("Initiating processor");
 		init();
 		
-//		log("Loading File...");
 		boolean success = (loadFile(arg0) );
 		try {
 			runTime.tic();
@@ -209,7 +204,6 @@ public class Experiment_Processor implements PlugIn{
 			
 			srcDir = dir;
 			srcName = fileName;
-			//TODO logPath = 
 			
 			IJ.showStatus("Loading file "+fileName);
 			
@@ -407,7 +401,7 @@ public class Experiment_Processor implements PlugIn{
 	/**
 	 * Saves the maggotTracks according to the naming convention defined in the Processing Parameters
 	 */
-	private void saveOldTracks(){
+	private boolean saveOldTracks(){
 		indentLevel++;
 		
 		String[] pathParts = prParams.setMagExPath(srcDir, srcName);
@@ -427,11 +421,8 @@ public class Experiment_Processor implements PlugIn{
 			status=false;
 		}
 		
-//		log("Serialize...");
-//		ex.save(pathParts[0], "SerializedData.ser"); 
-//		log("...Serialize done");
-		
 		indentLevel--;
+		return status;
 	}
 	/**
 	 * Saves the backboneTracks according to the naming convention defined in the Processing Parameters
@@ -451,14 +442,9 @@ public class Experiment_Processor implements PlugIn{
 		} catch(Exception e){
 			status=false;
 		}
-//		String[] pathParts = prParams.setFitExPath(srcDir, srcName);
-//		ex.save(pathParts[0], pathParts[1]);
-		
-		
 		
 		indentLevel--;
-		return true;
-//		return status;
+		return status;
 	}
 	
 	private void log(String message){

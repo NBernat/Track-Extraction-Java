@@ -1,11 +1,9 @@
 import ij.IJ;
 
-import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-//import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -80,13 +78,6 @@ public class Experiment implements Serializable{
 	
 	public int toDisk(DataOutputStream dos, PrintWriter pw){
 		
-		//PRESERIALIZE
-//		if (pw!=null) pw.println("Preserializing...");
-//		ListIterator<Track> trIt = tracks.listIterator();
-//		while (trIt.hasNext()){
-//			trIt.next().preSerialize();
-//		}
-//		if (pw!=null) pw.println("...Preserialization done");
 		
 		if (tracks.size()==0){
 			if (pw!=null) pw.println("No tracks in experiment; save aborted"); 
@@ -164,14 +155,8 @@ public class Experiment implements Serializable{
 				} else if (tracks.get(i).points.firstElement() instanceof TrackPoint){
 					return 0;
 				}
-				
-//				trackType = tracks.get(i).points.firstElement().pointType;
 			}
 		}
-		
-//		if (trackType>=0){
-//			trackType = (trackType<<8) + 0x01;
-//		}
 		
 		return trackType;
 	}
@@ -188,15 +173,8 @@ public class Experiment implements Serializable{
 			if (pw!=null) pw.println("Loading from Disk... ");
 			ex.loadFromDisk(dis, pw);
 			if (pw!=null) pw.println("...load from disk complete");
-//			if (pw!=null) pw.println("PostDeserialization...");
-//			ListIterator<Track> trIt = ex.tracks.listIterator();
-//			while (trIt.hasNext()){
-//				trIt.next().postDeserialize();
-//			}
-//			if (pw!=null) pw.println("...PostDeserialization complete");
 			return ex;
 		} catch (Exception e){
-			//if (pw!=null) pw.println("");
 			StringWriter sw = new StringWriter();
 			PrintWriter prw = new PrintWriter(sw);
 			e.printStackTrace(prw);
@@ -232,7 +210,6 @@ public class Experiment implements Serializable{
 					pw.println("(null)");
 					return;
 				}
-//				pw.println(" ("+nextTrack.points.size()+"pts)");
 				tracks.add(nextTrack);
 				
 				progress++;//= # of tracks loaded
@@ -331,10 +308,6 @@ public class Experiment implements Serializable{
 			if(trIt.next().trackID==trackNum) return trIt.previousIndex();
 		}
 		return -1;
-	}
-	
-	public void setDefaultForces(){
-		
 	}
 	
 	
