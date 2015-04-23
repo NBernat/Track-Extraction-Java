@@ -17,11 +17,11 @@ public class ProcessingParameters {
 	/**
 	 * Displays an ExperimentFrame after extracting tracks 
 	 */
-	boolean showMagEx = true;
+	boolean showMagEx = false;
 	/**
 	 * Displays an ExperimentFrame after fitting tracks 
 	 */
-	boolean showFitEx = true;
+	boolean showFitEx = false;
 	
 	/**
 	 * Whether or not to automatically save the extracted tracks of MTPs

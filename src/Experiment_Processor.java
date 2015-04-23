@@ -42,7 +42,7 @@ public class Experiment_Processor implements PlugIn{
 		//Open IJ
 		if (args.length==1){
 			run(args[0]);
-		} else {
+		} else { 
 			System.out.println("Pass only one argument, with the name of the .mmf or .ser file");
 		}
 	}
@@ -86,7 +86,7 @@ public class Experiment_Processor implements PlugIn{
 				
 				try{
 					log("Testing MagEx.fromDisk...");
-					testFromDisk(false, false, processLog);
+					testFromDisk(false, processLog);
 					log("...MagEx.fromDisk complete");
 				} catch (Exception exc){
 					StringWriter sw = new StringWriter();
@@ -111,7 +111,7 @@ public class Experiment_Processor implements PlugIn{
 				
 				try{
 					log("Testing FitEx.fromDisk...");
-					testFromDisk(true, true, processLog);
+					testFromDisk(true, processLog);
 					log("...FitEx.fromDisk complete");
 				} catch (Exception exc){
 					StringWriter sw = new StringWriter();
@@ -136,7 +136,7 @@ public class Experiment_Processor implements PlugIn{
 		
 	}
 	
-	private void testFromDisk(boolean btpData, boolean buffered, PrintWriter pw){
+	private void testFromDisk(boolean btpData, PrintWriter pw){
 		
 		String[] pathParts;
 		if (btpData){
@@ -148,12 +148,10 @@ public class Experiment_Processor implements PlugIn{
 		IJ.showStatus("Loading Experiment...");
 		if (pw!=null) pw.println("Loading experiment "+f.getPath());
 		try{
-			Experiment newEx;
-			if (buffered){
-				newEx = Experiment.fromDisk(new DataInputStream(new BufferedInputStream(new FileInputStream(f))), f.getPath(), new ExtractionParameters(), new FittingParameters(), pw);
-			} else {
-				newEx = Experiment.fromDisk(new DataInputStream(new FileInputStream(f)), f.getPath(), new ExtractionParameters(), new FittingParameters(), pw);
-			}
+			 
+			DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(f)));
+			Experiment newEx = Experiment.fromDisk(dis, f.getPath(), new ExtractionParameters(), new FittingParameters(), pw);
+			
 			IJ.showStatus("...done loading experiment (showing in frame)");
 
 			if (pw!=null) pw.println("Opening frame...");
@@ -417,8 +415,10 @@ public class Experiment_Processor implements PlugIn{
 		log("Saving MaggotTrack experiment to "+f.getPath());
 		boolean status;
 		try{
-			ex.toDisk(new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f))), processLog);
+			DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f))); 
+			ex.toDisk(dos, processLog);
 			status=true;
+			dos.close();
 		} catch(Exception e){
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
@@ -444,13 +444,17 @@ public class Experiment_Processor implements PlugIn{
 		
 		boolean status;
 		try{
-			ex.toDisk(new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f))), processLog);
+			DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f))); 
+			ex.toDisk(dos, processLog);
 			status=true;
+			dos.close();
 		} catch(Exception e){
 			status=false;
 		}
 //		String[] pathParts = prParams.setFitExPath(srcDir, srcName);
 //		ex.save(pathParts[0], pathParts[1]);
+		
+		
 		
 		indentLevel--;
 		return true;
