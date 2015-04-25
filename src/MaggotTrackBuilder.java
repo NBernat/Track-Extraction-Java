@@ -38,22 +38,132 @@ public class MaggotTrackBuilder extends TrackBuilder {
 	 * @param track Track to be oriented
 	 */
 	protected static void orientMaggotTrack(Track track, Communicator comm){
-		orientMaggotTrack(track.points, comm, track.trackID);
+		omt(track.points);
+//		orientMaggotTrack(track.points, comm, track.trackID);
 	}
 		
+	protected static void omt(Vector<? extends TrackPoint> points){
 		
+		Vector<Segment> segList = findSegments(points);
+		if (segList==null){
+			return;//Points are not MTPs 
+		}
+		
+		for(Segment seg: segList){
+			alignSegment(points, seg);
+		}
+		int i=0;
+		while (i<segList.size()){
+			i+=orientSegment(points, segList.get(i));
+		}
+		
+	}
+	
+	
+	protected static Vector<Segment> findSegments(Vector<? extends TrackPoint> points){
+		
+		Vector<Segment> segList = null; 
+		
+		if (points!=null && points.size()>0 && (points.get(0) instanceof MaggotTrackPoint)){
+			
+			segList = new Vector<Segment>();
+			
+			MaggotTrackPoint pt;
+			int i=0;
+			while (i<points.size()){
+				
+				pt = (MaggotTrackPoint)points.get(i);
+				
+				if (pt.midline!=null){//Find the segment starting here
+					
+					int segStart = i;
+					boolean notFound = true;
+					while (notFound && i<points.size()){
+						i++;
+						if (i==points.size() || ((MaggotTrackPoint)points.get(i)).midline==null){
+							//END SEGMENT
+							notFound = false;
+							Segment newSeg = new Segment(segStart, i-1);
+							if (segList.size()!=0){
+								newSeg.prevSeg = segList.lastElement();
+								segList.lastElement().nextSeg = newSeg;
+							}
+							segList.add(newSeg);
+						}
+					}
+				}//leave here with i->null midline (or after end)
+				
+				i++;//increment past null midline
+			}
+			
+		}
+		
+		return segList;
+	}
+	
+	protected static void alignSegment(Vector<? extends TrackPoint> points, Segment seg){
+		
+		MaggotTrackPoint prevPt = (MaggotTrackPoint) points.get(seg.start);
+		MaggotTrackPoint pt;
+		for (int i=(seg.start+1); i<=seg.end; i++){
+			pt = (MaggotTrackPoint) points.get(i);
+			pt.orientMTP(prevPt);
+			prevPt = pt;
+		} 
+	}
+	
+	protected static int orientSegment(Vector<? extends TrackPoint> points, Segment seg){
+
+		if(seg.length()>=2){
+			//Orient the segment to the direction of motion
+			double dpSum=0;
+			MaggotTrackPoint prevPt = (MaggotTrackPoint) points.get(seg.start);
+			MaggotTrackPoint pt;
+			for (int i=(seg.start+1); i<=seg.end; i++){
+				pt = (MaggotTrackPoint) points.get(i);
+				dpSum += pt.MaggotDotProduct(prevPt);
+				prevPt = pt;
+			}
+			
+			if (dpSum<0){
+				flipSeg(points, seg.start, seg.end);
+			}
+			
+			return 1;
+
+		} else {
+			
+			//1-point-long segment: try to orient it to the surrounding points
+			if (seg.prevSeg!=null){
+				//Align this point to the last point in the previous segment
+				((MaggotTrackPoint)points.get(seg.start)).orientMTP((MaggotTrackPoint)points.get(seg.prevSeg.end));
+				return 1;
+			} else if(seg.nextSeg!=null){
+				//Orient the next segment, then align this point to that segment
+				int num = orientSegment(points,seg.nextSeg);
+				int flip = ((MaggotTrackPoint)points.get(seg.start)).chooseOrientation((MaggotTrackPoint)points.get(seg.nextSeg.end),false);
+				if (flip==1){
+					((MaggotTrackPoint)points.get(seg.start)).invertMaggot();
+				}
+				return 1+num;
+			} else {
+				//Could not orient...must be a short weird track. Advance past this segment
+				return 1;
+			}
+			
+		}
+	}
+	
+	
+	
+	
 	protected static void orientMaggotTrack(Vector<? extends TrackPoint> points, Communicator comm, int trackID){
 		
 		
-//		if (ep.trackPointType!=2){
-//			//Load points as MaggotTrack points
-//			
-//		}
-		
 		if (points!=null && points.size()>0 && (points.get(0) instanceof MaggotTrackPoint)){//&& track.points.get(0).pointType>=2
 			
-			MaggotTrackPoint pt;
 			MaggotTrackPoint prevPt = (MaggotTrackPoint)points.get(0);
+			MaggotTrackPoint pt;
 			
 			int AMDSegStart = (prevPt.midline!= null && prevPt.midline.getNCoordinates()!=0 && prevPt.htValid) ? 0 : -1;
 			int AMDSegEnd = -1;
@@ -65,7 +175,7 @@ public class MaggotTrackBuilder extends TrackBuilder {
 				if (pt.midline!= null && pt.midline.getNCoordinates()!=0 && pt.htValid) {
 					//If a valid midline exists, align it with the last valid point
 					
-					int orStat = pt.chooseOrientation(prevPt);
+					int orStat = pt.orientMTP(prevPt);
 					if (orStat<0){
 						if (comm!=null) comm.message("Orientation Failed, Track"+trackID+" frames "+(i+points.firstElement().frameNum), VerbLevel.verb_error);
 					}
@@ -122,7 +232,7 @@ public class MaggotTrackBuilder extends TrackBuilder {
 	protected static void analyzeMaggotDirection(Vector<? extends TrackPoint> points, int startInd, int endInd, Communicator comm, int trackID){
 		
 		if (points.isEmpty() || startInd<0 || endInd<0 || startInd>=endInd){
-			comm.message("Direction Analyisis Error: Track has "+points.size()+" points, startInd="+startInd+", endInd="+endInd, VerbLevel.verb_message);
+			if (comm!=null) comm.message("Direction Analyisis Error: Track has "+points.size()+" points, startInd="+startInd+", endInd="+endInd, VerbLevel.verb_message);
 			return;
 		}
 		
@@ -160,4 +270,22 @@ public class MaggotTrackBuilder extends TrackBuilder {
 	
 	
 	
+}
+
+class Segment{
+	
+	int start;
+	int end;
+	
+	Segment prevSeg;
+	Segment nextSeg;
+	
+	public Segment(int s, int e){
+		start = s;
+		end = e;
+	}
+	
+	public int length(){
+		return start-end+1;
+	}
 }

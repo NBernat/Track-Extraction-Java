@@ -128,6 +128,11 @@ public class displayUtils {
 					int dotY = offY + y;
 					int circWid = 8;
 					im.drawOval(dotX-(circWid/2), dotY-(circWid/2), circWid, circWid);
+					
+					if (i==0){
+						im.drawOval(dotX-(circWid), dotY-(circWid), circWid*2, circWid*2);
+					}
+					
 				} else {
 					im.setColor(Color.RED);
 					im.drawOval(0, 0, 5, 5);

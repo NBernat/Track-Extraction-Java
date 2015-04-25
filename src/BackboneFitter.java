@@ -79,23 +79,6 @@ public class BackboneFitter {
 	}
 
 	/**
-	 * Adds instances of each type of Force to the backbone fitter
-	 */
-//	private void addForces() {
-//		Forces = new Vector<Force>();
-//		Forces.add(new ImageForce(params.imageWeights, params.imageWeight));
-//		Forces.add(new SpineLengthForce(params.spineLengthWeights,
-//				params.spineLengthWeight));
-//		Forces.add(new SpineSmoothForce(params.spineSmoothWeights,
-//				params.spineSmoothWeight));
-//		Forces.add(new TimeLengthForce(params.timeLengthWeights,
-//				params.timeLengthWeight(pass)));
-//		Forces.add(new TimeSmoothForce(params.timeSmoothWeights,
-//				params.timeSmoothWeight(pass)));
-//		// Forces.add(new HTAttractionForce(params.HTAttractionWeights));
-//	}
-
-	/**
 	 * Fits backbones to the points in the given track.
 	 * <p>
 	 * After fitting, the Vector of BackboneTrackPoints can be accessed via

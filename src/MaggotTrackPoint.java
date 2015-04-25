@@ -461,8 +461,13 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	 * @param prevPt The track to align to
 	 * @return Status: 1=flipped, 0=unflipped, -1=missing spine
 	 */
-	public int chooseOrientation(MaggotTrackPoint prevPt){
+	public int orientMTP(MaggotTrackPoint prevPt){
 		
+		return chooseOrientation(prevPt, true);
+		
+	}
+	
+	public int chooseOrientation(MaggotTrackPoint prevPt, boolean executeOrientation){
 		if (midline!=null && prevPt.midline!=null && midline.getNCoordinates()!=0 && prevPt.midline.getNCoordinates()!=0){
 			//Measure the total distance for each midline (flipped vs not flipped) 
 			double distUnchanged = spineDistSqr(prevPt.midline);
@@ -478,7 +483,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 				if (track!= null && track.tb!=null){
 					track.tb.comm.message("Inverting", VerbLevel.verb_debug);
 				}
-				invertMaggot();
+				if (executeOrientation) invertMaggot();
 				return 1;//Changed
 			} else {
 				return 0;//Unchanged
@@ -487,7 +492,6 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		} else {
 			return -1;//Error
 		}
-		
 	}
 	
 	

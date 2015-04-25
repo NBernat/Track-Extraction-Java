@@ -52,7 +52,7 @@ public class ExtractionParameters implements Serializable{
 	int showSampleData =0; 
 	int sampleInd = 10;
 	//TODO
-	boolean subset = false;
+	boolean subset = true;
 	int startFrame = 100;
 	int endFrame = 250;
 	//_frame_normalization_methodT fnm = _frame_normalization_methodT._frame_none;

@@ -14,8 +14,8 @@ public class BBFUpdateScheme {
 	/**
 	 * Parameters
 	 */
-	private final double convThres = .005;
-	private final int maxIterations = 200;
+	private final double convThres = .05;
+	private final int maxIterations = 300;
 	private final int allFramesIterations = 10;
 	private final int topOnlyIterations = 10;
 	private final int finalIterations = 10;

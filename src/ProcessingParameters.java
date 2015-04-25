@@ -21,7 +21,7 @@ public class ProcessingParameters {
 	/**
 	 * Displays an ExperimentFrame after fitting tracks 
 	 */
-	boolean showFitEx = false;
+	boolean showFitEx = true;
 	
 	/**
 	 * Whether or not to automatically save the extracted tracks of MTPs

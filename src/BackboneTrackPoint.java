@@ -434,7 +434,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		 
 		//HEAD AND TAIL
 		if (ht){
-			displayUtils.drawPoint(im, head, expandFac, offX, offY, Color.RED);
+			displayUtils.drawPoint(im, head, expandFac, offX, offY, Color.MAGENTA);
 			displayUtils.drawPoint(im, tail, expandFac, offX, offY, Color.GREEN);
 		}
 		
