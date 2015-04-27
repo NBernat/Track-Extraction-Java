@@ -35,6 +35,10 @@ public class Experiment_Processor implements PlugIn{
 	private TicToc runTime;
 	private int indentLevel;
 	
+	public Experiment_Processor(){
+		
+	}
+	
 	//TODO command line invocation
 	public void main(String[] args){
 			

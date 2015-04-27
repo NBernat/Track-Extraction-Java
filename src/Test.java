@@ -5,7 +5,7 @@ import ij.plugin.PlugIn;
 import ij.text.TextPanel;
 
 
-public class Test_ implements PlugIn {//extends JFrame
+public class Test implements PlugIn {//extends JFrame
 
 	
 	public int fld1;
@@ -179,7 +179,7 @@ public class Test_ implements PlugIn {//extends JFrame
 //	}
 	
 	
-	public Test_(int i, String s){
+	public Test(int i, String s){
 		
 		fld1 = i;
 		fld2 = s;

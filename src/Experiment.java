@@ -1,5 +1,6 @@
 import ij.IJ;
 
+import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -44,6 +45,24 @@ public class Experiment implements Serializable{
 	
 	public Experiment(){
 		
+	}
+	
+	public Experiment(String filename){
+		try {
+			fname = filename;
+			ep = new ExtractionParameters();
+//			Forces = ;
+			
+			//TODO use experiment_Processor functions
+			DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(new File(filename))));
+			
+			loadFromDisk(dis, null);
+		} catch (Exception e){
+			StringWriter sw = new StringWriter();
+			PrintWriter prw = new PrintWriter(sw);
+			e.printStackTrace(prw);
+			System.out.println(sw.toString());
+		}
 	}
 	
 	/**

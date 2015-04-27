@@ -39,7 +39,7 @@ public class TrackPoint extends Point {
 	/**
 	 * Index of the frame containing this point 
 	 */
-	int frameNum;
+	public int frameNum;
 	/**
 	 * Area inside the countour
 	 */
@@ -82,7 +82,7 @@ public class TrackPoint extends Point {
 		init(point.x, point.y, (Rectangle)point.rect.clone(), point.area, point.covariance, point.frameNum, ++lastIDNum, thresh);
 	}
 	
-	TrackPoint(){
+	public TrackPoint(){
 		
 	}
 	

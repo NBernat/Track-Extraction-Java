@@ -28,7 +28,7 @@ public class Track implements Serializable{
 	/**
 	 * Unique identifier for the track 
 	 */
-	int trackID;
+	public int trackID;
 	/**
 	 * Used to generate unique IDs for the TrackPoints
 	 * <p> 

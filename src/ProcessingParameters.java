@@ -12,7 +12,7 @@ public class ProcessingParameters {
 	/**
 	 * Closes the MMF window
 	 */
-	boolean closeMMF;
+	boolean closeMMF;//TODO set/use this 
 	
 	/**
 	 * Displays an ExperimentFrame after extracting tracks 
