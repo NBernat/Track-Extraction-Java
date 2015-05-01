@@ -16,6 +16,7 @@ import java.util.Vector;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.WindowManager;
+import ij.gui.ImageWindow;
 import ij.io.OpenDialog;
 import ij.plugin.PlugIn;
 import ij.text.TextWindow;
@@ -28,6 +29,8 @@ public class Experiment_Processor implements PlugIn{
 	private String srcName;
 	private PrintWriter processLog;
 	
+	
+	private ImageWindow mmfWin;
 	private ImagePlus mmfStack;
 	private BackboneFitter bbf;
 	private Experiment ex;
@@ -74,6 +77,10 @@ public class Experiment_Processor implements PlugIn{
 						return;
 					}
 					log("...done extracting tracks");
+					if (prParams.closeMMF && mmfWin!=null) {
+						log("Closing MMF Window");
+						mmfWin.close();
+					}
 					if (prParams.saveMagEx) {
 						log("Saving Maggot Tracks...");
 						saveOldTracks();
@@ -128,6 +135,7 @@ public class Experiment_Processor implements PlugIn{
 			
 		} finally {
 			if (processLog!=null) processLog.close();
+			if (prParams.closeMMF && mmfWin!=null) mmfWin.close();
 		}
 		
 		log("Done Processing");
@@ -194,6 +202,7 @@ public class Experiment_Processor implements PlugIn{
 			fileName = od.getFileName();
 			
 		} else {//...from the passed argument
+			System.out.println("Loading file "+arg0);
 			IJ.showStatus("Loading file "+arg0);
 			StringBuilder sb = new StringBuilder(arg0);
 			int sep = sb.lastIndexOf(System.getProperty("path.separator"));
@@ -240,8 +249,9 @@ public class Experiment_Processor implements PlugIn{
 		try{
 			IJ.showStatus("Opening MMF...");		
 			IJ.run("Import MMF", "path=["+new File(dir, filename).getPath()+"]");
-			mmfStack = WindowManager.getCurrentWindow().getImagePlus();
-//			if (prParams.closeMMF) WindowManager.getCurrentWindow().close();
+			mmfWin = WindowManager.getCurrentWindow();
+			mmfStack = mmfWin.getImagePlus();
+//			if (prParams.closeMMF) mmfWin.close();
 			IJ.showStatus("MMF open");
 			return true;
 		} catch (Exception e){
@@ -264,7 +274,7 @@ public class Experiment_Processor implements PlugIn{
 		indentLevel++;
 		try {
 			IJ.showStatus("Opening Experiment...");
-			ex = new Experiment(Experiment.open(new File(dir, filename).getPath())); 
+			ex = new Experiment(Experiment.deserialize(new File(dir, filename).getPath())); 
 			IJ.showStatus("Experiment open");
 			return true;
 		} catch (Exception e){

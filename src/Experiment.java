@@ -25,11 +25,11 @@ public class Experiment implements Serializable{
 	/**
 	 * Name of the original file? or the .ser file? 
 	 */
-	String fname;
+	public String fname;
 	/**
 	 * The extraction parameters used to extract this experiment
 	 */
-	ExtractionParameters ep;
+	public ExtractionParameters ep;
 	/**
 	 * List of IDs that contain CollisionTracks
 	 */
@@ -37,7 +37,7 @@ public class Experiment implements Serializable{
 	/**
 	 * List of tracks contained within the experiment
 	 */
-	Vector<Track> tracks;
+	public Vector<Track> tracks;
 	/**
 	 * 
 	 */
@@ -56,7 +56,8 @@ public class Experiment implements Serializable{
 			//TODO use experiment_Processor functions
 			DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(new File(filename))));
 			
-			loadFromDisk(dis, null);
+			loadFromDisk(dis, new PrintWriter(System.out));
+			System.out.println("Experiment loaded; "+tracks.size()+" tracks"); 
 		} catch (Exception e){
 			StringWriter sw = new StringWriter();
 			PrintWriter prw = new PrintWriter(sw);
@@ -159,7 +160,7 @@ public class Experiment implements Serializable{
 		return 0;
 	}
 	
-	private int getTypeCode(){
+	public int getTypeCode(){
 		int trackType = -1;
 		
 		for (int i=0; (trackType<0 && i<tracks.size()); i++){
@@ -204,17 +205,19 @@ public class Experiment implements Serializable{
 	}
 	
 	private void loadFromDisk(DataInputStream dis, PrintWriter pw){
-		
+		System.out.println("Loading from disk...");
 		int progress = -2;
 		try{
+
+			System.out.println("Loading from disk...");
 			//Read the Experiment Type
 			int tpType = dis.readInt();
-			pw.println("==> trackpoint type "+tpType);
+			if (pw!=null) pw.println("==> trackpoint type "+tpType);
 			progress++;//=-1
 			
 			//Read the # of tracks
 			int numTracks = dis.readInt();
-			pw.println("==> "+numTracks+" tracks");
+			if (pw!=null) pw.println("==> "+numTracks+" tracks");
 			tracks = new Vector<Track>();
 			progress++;//=0
 			
@@ -223,10 +226,10 @@ public class Experiment implements Serializable{
 			Track nextTrack;
 			for (int i=0; i<numTracks; i++){
 
-				pw.println("==> Track "+i+"/"+(numTracks-1));
+				if (pw!=null) pw.println("==> Track "+i+"/"+(numTracks-1));
 				nextTrack = Track.fromDisk(dis, tpType, this, pw);
 				if (nextTrack==null) {
-					pw.println("(null)");
+					if (pw!=null) pw.println("(null)");
 					return;
 				}
 				tracks.add(nextTrack);
@@ -235,10 +238,12 @@ public class Experiment implements Serializable{
 				
 				//TODO ask for garbage collection
 			}
-			
+
+			System.out.println("...done loading!");
 			
 		} catch (Exception e){
 			if (pw!=null) pw.println("Error: progress code "+progress);
+			System.out.println("...Error loading");
 			return;
 		}
 		
@@ -251,7 +256,7 @@ public class Experiment implements Serializable{
 	 * @param dir The directory in which to save the file(; if empty, saves in current directory?)
 	 * @param filename The file name including the extension
 	 */
-	public void save(String dir, String filename){
+	public void serialize(String dir, String filename){
 		
 		//TODO CHECK THE DIR/FILENAME
 		fname = dir+File.separator+filename;
@@ -297,7 +302,7 @@ public class Experiment implements Serializable{
 	 * @return
 	 * @throws Exception 
 	 */
-	public static Experiment open(String fname) throws Exception{
+	public static Experiment deserialize(String fname) throws Exception{
 		
 		Experiment ex; 
 		
@@ -319,6 +324,12 @@ public class Experiment implements Serializable{
 		
 		return ex;
 	}
+	
+	public String getFileName(){
+		return fname;
+	}
+	
+	
 	
 	public int getTrack(int trackNum){
 		

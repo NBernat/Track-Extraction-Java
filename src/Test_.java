@@ -1,4 +1,6 @@
+
 import java.awt.Color;
+
 import ij.gui.Plot;
 import ij.gui.PlotWindow;
 import ij.plugin.PlugIn;
@@ -178,6 +180,14 @@ public class Test_ implements PlugIn {//extends JFrame
 //		
 //	}
 	
+	
+	public String str(){
+		String ret = "";
+		for (int i=0; i<fld1; i++){
+			ret+=fld2;
+		}
+		return ret;
+	}
 	
 	public Test_(int i, String s){
 		

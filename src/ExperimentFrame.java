@@ -104,7 +104,7 @@ public class ExperimentFrame extends JFrame{
 	 */
 	public ExperimentFrame(String fname) throws Exception{
 		//TODO check file name
-		ex = Experiment.open(fname);
+		ex = Experiment.deserialize(fname);
 	}
 	
 	
@@ -188,7 +188,7 @@ public class ExperimentFrame extends JFrame{
 					//Save the file 
 					try{
 						IJ.showStatus("Saving file...");
-						ex.save(sd.getDirectory(), sd.getFileName());
+						ex.serialize(sd.getDirectory(), sd.getFileName());
 						IJ.showStatus("File saved!");
 					} catch (Exception exception){
 						new TextWindow("Error", "could not save experiment at the given directory\n"+exception.getMessage(), 500, 500);

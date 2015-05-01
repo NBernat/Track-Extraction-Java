@@ -1,6 +1,7 @@
 import java.util.Vector;
 
 import ij.ImageStack;
+import ij.text.TextWindow;
 
 
 public class MaggotTrackBuilder extends TrackBuilder {
@@ -38,25 +39,47 @@ public class MaggotTrackBuilder extends TrackBuilder {
 	 * @param track Track to be oriented
 	 */
 	protected static void orientMaggotTrack(Track track, Communicator comm){
-		omt(track.points);
-//		orientMaggotTrack(track.points, comm, track.trackID);
+//		omt(track);
+		orientMaggotTrack(track.points, comm, track.trackID);
 	}
 		
-	protected static void omt(Vector<? extends TrackPoint> points){
+	protected static void omt(Track track){
+
+		boolean debug = false; // (track.trackID<10 || track.points.size()<150);
+		
+		Vector<? extends TrackPoint> points = track.points;
 		
 		Vector<Segment> segList = findSegments(points);
 		if (segList==null){
 			return;//Points are not MTPs 
 		}
+		if (debug){
+			String s = "Track "+track.trackID+"\n";
+			for (int i=0; i<segList.size(); i++){
+				s += segList.get(i).start+"-"+segList.get(i).end+"\n";
+			}
+			if (segList.size()==0){
+				s+="Emtpy list";
+			} else {
+				
+			}
+			new TextWindow("Track "+track.trackID, s, 500, 500);
+			
+		}
 		
 		for(Segment seg: segList){
 			alignSegment(points, seg);
 		}
-		int i=0;
-		while (i<segList.size()){
-			i+=orientSegment(points, segList.get(i));
+		for(Segment seg: segList){
+			orientSegment(points, seg);
 		}
 		
+//		int i=0;
+//		while (i<segList.size()){
+//			orientSegment(points, segList.get(i));
+//			i++;
+//		}
+//		
 	}
 	
 	
@@ -74,7 +97,7 @@ public class MaggotTrackBuilder extends TrackBuilder {
 				
 				pt = (MaggotTrackPoint)points.get(i);
 				
-				if (pt.midline!=null){//Find the segment starting here
+				if (pt.midline!=null && pt.htValid){//Find the segment starting here
 					
 					int segStart = i;
 					boolean notFound = true;
@@ -97,7 +120,6 @@ public class MaggotTrackBuilder extends TrackBuilder {
 			}
 			
 		}
-		
 		return segList;
 	}
 	

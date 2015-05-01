@@ -58,7 +58,7 @@ public class Experiment_Viewer implements PlugIn{
 			//try to open file
 			try {
 				IJ.showStatus("Opening the experiment file");
-				ex = Experiment.open(path); 
+				ex = Experiment.deserialize(path); 
 			} catch (Exception e){
 				new TextWindow("Error opening experiment", e.getMessage(), 500, 500);
 			}

@@ -12,12 +12,12 @@ public class ProcessingParameters {
 	/**
 	 * Closes the MMF window
 	 */
-	boolean closeMMF;//TODO set/use this 
+	boolean closeMMF = true;//TODO set/use this 
 	
 	/**
 	 * Displays an ExperimentFrame after extracting tracks 
 	 */
-	boolean showMagEx = false;
+	boolean showMagEx = true;
 	/**
 	 * Displays an ExperimentFrame after fitting tracks 
 	 */
