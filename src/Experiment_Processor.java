@@ -80,6 +80,7 @@ public class Experiment_Processor implements PlugIn{
 					if (prParams.closeMMF && mmfWin!=null) {
 						log("Closing MMF Window");
 						mmfWin.close();
+						mmfWin=null;
 					}
 					if (prParams.saveMagEx) {
 						log("Saving Maggot Tracks...");
@@ -102,7 +103,7 @@ public class Experiment_Processor implements PlugIn{
 				}
 				
 //				ex = new Experiment(ex);
-				log("Fitting "+ex.tracks.size()+" Tracks...");
+				log("Fitting "+ex.getNumTracks()+" Tracks...");
 				fitTracks();
 				log("...done fitting tracks");
 				if (prParams.saveFitEx) {
@@ -135,7 +136,11 @@ public class Experiment_Processor implements PlugIn{
 			
 		} finally {
 			if (processLog!=null) processLog.close();
-			if (prParams.closeMMF && mmfWin!=null) mmfWin.close();
+			if (prParams.closeMMF && mmfWin!=null) {
+				mmfWin.close();
+				mmfWin=null;
+			}
+			
 		}
 		
 		log("Done Processing");
@@ -366,9 +371,9 @@ public class Experiment_Processor implements PlugIn{
 		Vector<Track> toRemove = new Vector<Track>();
 
 		//Fit each track that is long enough for the course passes
-		for (int i=0; i<ex.tracks.size(); i++){
-			tr = ex.tracks.get(i);
-			if (tr.points.size()>prParams.minTrackLen) {//Check track length
+		for (int i=0; i<ex.getNumTracks(); i++){
+			tr = ex.getTrackFromInd(i);
+			if (tr.getNumPoints()>prParams.minTrackLen) {//Check track length
 				newTr = fitTrack(tr);
 				if (newTr!=null){
 					ex.replaceTrack(newTr, i);
@@ -384,7 +389,7 @@ public class Experiment_Processor implements PlugIn{
 		
 		//Remove the tracks that couldn't be fit
 		for(Track t : toRemove){
-			ex.tracks.remove(t);
+			ex.removeTrack(t);
 		}
 		
 		IJ.showStatus("Done fitting tracks");

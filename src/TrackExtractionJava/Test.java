@@ -4,8 +4,6 @@ import java.awt.Color;
 
 import ij.gui.Plot;
 import ij.gui.PlotWindow;
-import ij.plugin.PlugIn;
-import ij.text.TextPanel;
 
 
 public class Test {//extends JFrame

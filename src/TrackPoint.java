@@ -1,16 +1,16 @@
 import ij.process.ImageProcessor;
 
 import java.awt.Color;
-import java.awt.Point;
 import java.awt.Rectangle;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.util.ListIterator;
 import java.util.Vector;
 
 
-public class TrackPoint extends Point {
+public class TrackPoint implements Serializable {
 
 	/**
 	 * 
@@ -19,7 +19,7 @@ public class TrackPoint extends Point {
 	/**
 	 * Unique id for the point
 	 */
-	int pointID;
+	protected int pointID;
 	/**
 	 * Identitfies the point as a TRACKPOINT
 	 */
@@ -27,27 +27,27 @@ public class TrackPoint extends Point {
 	/**
 	 * X location of the point
 	 */
-	double x;
+	protected double x;
 	/**
 	 * y location of the point
 	 */
-	double y;
+	protected double y;
 	/**
 	 * ROI containing this point
 	 */
-	Rectangle rect;
+	protected Rectangle rect;
 	/**
 	 * Index of the frame containing this point 
 	 */
-	public int frameNum;
+	protected int frameNum;
 	/**
 	 * Area inside the countour
 	 */
-	double area;
+	protected double area;
 	/**
 	 * Covariance matrix for the image
 	 */
-	double[] covariance; 
+	protected double[] covariance; 
 	/**
 	 * Used to generate unique IDs for the TrackPoints
 	 * <p> 
@@ -62,7 +62,7 @@ public class TrackPoint extends Point {
 	/**
 	 * The track to which this point belongs
 	 */
-	Track track;
+	protected Track track;
 	/*
 	 * The threshold value used to find this trackpoint
 	 */
@@ -89,7 +89,7 @@ public class TrackPoint extends Point {
 	/**
 	 * Helper method for constructors 
 	 */
-	public void init(double x, double y, Rectangle rect, double area, double[] cov, int frame, int ID, int thresh){
+	protected void init(double x, double y, Rectangle rect, double area, double[] cov, int frame, int ID, int thresh){
 		this.x = x;
 		this.y = y;
 		this.rect = rect;
@@ -132,7 +132,7 @@ public class TrackPoint extends Point {
 	 * @param list List of TrackPoints to search through
 	 * @return Closest point in the list to the query point
 	 */
-	public TrackPoint nearestInList2Pt(Vector<TrackPoint> list){
+	protected TrackPoint nearestInList2Pt(Vector<TrackPoint> list){
 		
 		if (list.isEmpty()){
 			return null;
@@ -160,7 +160,7 @@ public class TrackPoint extends Point {
 	 * @return Closest points (up to NPTS) in the list to the query point
 	 */
 	@SuppressWarnings("unchecked")
-	public Vector<TrackPoint> nearestNPts2Pt(Vector<TrackPoint> list, int nPts){
+	protected Vector<TrackPoint> nearestNPts2Pt(Vector<TrackPoint> list, int nPts){
 		Vector<TrackPoint> copyList = (Vector<TrackPoint>) list.clone();
 		Vector<TrackPoint> nearestPts = new Vector<TrackPoint>(); 
 		while(nearestPts.size()<nPts && copyList.size()>0){
@@ -182,7 +182,7 @@ public class TrackPoint extends Point {
 	 * @param ptC
 	 * @return Angle formed by the points A(this)C, in radians, from 0 to pi
 	 */
-	public double VertexAngle(TrackPoint ptA, TrackPoint ptC){
+	protected double VertexAngle(TrackPoint ptA, TrackPoint ptC){
 		return Math.acos(((x - ptA.x)*(x - ptC.x) + (y - ptA.y)*(y - ptC.y))/(dist(ptA)*dist(ptC)));
 	}
 	
@@ -205,22 +205,18 @@ public class TrackPoint extends Point {
 		return getIm();
 	}
 	
-	public void setNumMatches(int num){
+	protected void setNumMatches(int num){
 		numMatches = num;
 	}
 	
-	public int getNumMatches() {
+	protected int getNumMatches() {
 		return numMatches;
 	}
-	
-	public int getThresh(){
-		return thresh;
-	}
 		
-	public void setThresh(int thresh){
+	protected void setThresh(int thresh){
 		this.thresh = thresh;
 	}
-	public void setTrack(Track track){
+	protected void setTrack(Track track){
 		this.track = track;
 	}
 	
@@ -236,33 +232,6 @@ public class TrackPoint extends Point {
 		return "Frame "+frameNum+" ID="+pointID+" ("+(int)x+","+(int)y+")";
 	}
 	
-//	public ImageProcessor getIm( )
-	
-//	public ImageWindow showTrackPoint(ImageWindow window){
-//		return showTrackPoint(window, "Track point "+pointID);
-//	}
-//	
-//	
-//	public ImageWindow showTrackPoint(ImageWindow window, String label){
-//		ImageProcessor trPtIm = track.tb.pe.imageStack.getProcessor(frameNum).duplicate();
-//		trPtIm.setRoi(rect);
-//		ImageProcessor crIm = trPtIm.crop();
-//		//crIm.resize(crIm.getWidth()*tb.ep.trackZoomFac);
-//		ImagePlus img = new ImagePlus("", crIm);
-//		track.tb.comm.message("Showing Track point...", VerbLevel.verb_message);
-//		if (window==null){
-//			img.show();
-//			ImageWindow win = img.getWindow();
-//			win.setTitle(label);
-//			return win;
-//
-//		}else {
-//			window.setImage(img);
-//			//window.getCanvas().setMagnification(tb.ep.trackZoomFac);
-//			return window;
-//		}
-//	}
-	
 
 	public boolean equals(TrackPoint pt){
 		return pt.pointID==pointID;
@@ -272,14 +241,14 @@ public class TrackPoint extends Point {
 	/**
 	 * Generates Serializable forms of any non-serializable ImageJ objects; for basic TrackPoints, nothing is done
 	 */
-	public void preSerialize(){
+	protected void preSerialize(){
 		return;
 	}
 	
 	/**
 	 * Recreates any non-serializable ImageJ objects; for basic TrackPoints, nothing is done
 	 */
-	public void postDeserialize(){
+	protected void postDeserialize(){
 		return;
 	}
 	
@@ -338,6 +307,38 @@ public class TrackPoint extends Point {
 		}
 		
 		return 0;
+	}
+	public double getX(){
+		return x;
+	}
+	
+	public double getY(){
+		return y;
+	}
+	
+	public int getPointID(){
+		return pointID;
+	}
+	
+	public int getFrameNum(){
+		return frameNum;
+	}
+	
+	public double getArea(){
+		return area;
+	}
+	
+	public int getThresh(){
+		return thresh;
+	}
+	
+	public int[] getRect(){
+		int[] info = {rect.x, rect.y, rect.width, rect.height}; 
+		return info;
+	}
+	
+	public Track getTrack(){
+		return track;
 	}
 	
 }

@@ -22,29 +22,29 @@ public class Track implements Serializable{
 	 */
 	private static final long serialVersionUID = 1L;
 	/**
-	 * Constituent TrackPoints
-	 */
-	Vector<TrackPoint> points;
-	/**
-	 * Unique identifier for the track 
-	 */
-	public int trackID;
-	/**
 	 * Used to generate unique IDs for the TrackPoints
 	 * <p> 
 	 * Incremented each time a new track is made
 	 */
 	static int nextIDNum=0;
+	/**
+	 * Constituent TrackPoints
+	 */
+	protected Vector<TrackPoint> points;
+	/**
+	 * Unique identifier for the track 
+	 */
+	private int trackID;
 	
 	/**
 	 * Maximum ROI height, for playing movies
 	 */
-	int maxHeight;
+	private int maxHeight;
 	
 	/**
 	 * Maximum image height, for playing movies
 	 */
-	int maxWidth;
+	private int maxWidth;
 	
 	
 	Vector<Boolean> isCollision;
@@ -221,6 +221,38 @@ public class Track implements Serializable{
 	///////////////////////////
 	// Accessors
 	///////////////////////////	
+	
+	public int getTrackID(){
+		return trackID;
+	}
+	
+	public int getNumPoints(){
+		return points.size();
+	}
+	
+	public Vector<TrackPoint> getPoints(){
+		return points;
+	}
+	
+	public TrackPoint getPoint(int index){
+		if (index<0|| index>points.size()){
+			return null;
+		} else {
+			return points.get(index);
+		}
+	}
+
+	public TrackPoint getFramePoint(int frame){
+		if (frame<getStart().frameNum || frame>getEnd().frameNum){
+			return null;
+		} else {
+			return points.get(frame-getStart().frameNum);
+		}
+	}
+	
+	public TrackPoint getStart(){
+		return points.firstElement();
+	}
 	public TrackPoint getEnd(){
 		return points.lastElement();
 	}
@@ -316,6 +348,9 @@ public class Track implements Serializable{
 	public boolean isCollisionTrack(){
 		return false;
 	}
+
+	
+	
 	
 	public int toDisk(DataOutputStream dos, PrintWriter pw){
 		
@@ -377,10 +412,7 @@ public class Track implements Serializable{
 		if (pw!=null) pw.println("...Track Saved!");
 		return 0;
 	}
-	
-	private int sizeOnDisk(){
-		return sizeOnDisk(null);
-	}
+
 	
 	private int sizeOnDisk(PrintWriter pw){
 		
@@ -499,8 +531,6 @@ public class Track implements Serializable{
 		return 0;
 	}
 	
-	
-	
 	/**
 	 * Pre-Serializes all TrackPoints
 	 */
@@ -520,6 +550,11 @@ public class Track implements Serializable{
 			tpIt.next().postDeserialize();
 		}
 	}
+	
+	
+	
+	
+	
 	
 	
 	
@@ -564,7 +599,7 @@ public class Track implements Serializable{
 		
 		Plot plot = new Plot("Example plot", "Frame", "Energy");
 		
-		if (exp!=null && exp.Forces!=null){
+		if (exp!=null && exp.getForces()!=null){
 			
 			//Get x coords
 			float[] frames = new float[points.size()];
@@ -574,18 +609,18 @@ public class Track implements Serializable{
 			}
 			
 			Vector<float[]> energies = new Vector<float[]>();
-			for (int i=0; i<exp.Forces.size(); i++){
+			for (int i=0; i<exp.getForces().size(); i++){
 				
 				float[] energy = new float[points.size()];
 				for (int j=0; j<frames.length; j++){
-					energy[j] = exp.Forces.get(i).getEnergy(j, points);;
+					energy[j] = exp.getForces().get(i).getEnergy(j, points);;
 				}
 					
 				energies.add(energy);
 			}
 			
 			Color[] colors = {Color.WHITE, Color.MAGENTA,Color.GREEN, Color.CYAN, Color.RED};
-			for (int i=0; i<exp.Forces.size(); i++){
+			for (int i=0; i<exp.getForces().size(); i++){
 				if (i<MaggotDisplayParameters.DEFAULTshowForce.length && MaggotDisplayParameters.DEFAULTshowForce[i])
 				plot.setColor(colors[i]);
 				plot.addPoints(frames, energies.get(i), Plot.LINE); 

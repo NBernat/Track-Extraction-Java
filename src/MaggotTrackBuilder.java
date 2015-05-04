@@ -40,21 +40,21 @@ public class MaggotTrackBuilder extends TrackBuilder {
 	 */
 	protected static void orientMaggotTrack(Track track, Communicator comm){
 //		omt(track);
-		orientMaggotTrack(track.points, comm, track.trackID);
+		orientMaggotTrack(track.getPoints(), comm, track.getTrackID());
 	}
 		
 	protected static void omt(Track track){
 
 		boolean debug = false; // (track.trackID<10 || track.points.size()<150);
 		
-		Vector<? extends TrackPoint> points = track.points;
+		Vector<? extends TrackPoint> points = track.getPoints();
 		
 		Vector<Segment> segList = findSegments(points);
 		if (segList==null){
 			return;//Points are not MTPs 
 		}
 		if (debug){
-			String s = "Track "+track.trackID+"\n";
+			String s = "Track "+track.getTrackID()+"\n";
 			for (int i=0; i<segList.size(); i++){
 				s += segList.get(i).start+"-"+segList.get(i).end+"\n";
 			}
@@ -63,7 +63,7 @@ public class MaggotTrackBuilder extends TrackBuilder {
 			} else {
 				
 			}
-			new TextWindow("Track "+track.trackID, s, 500, 500);
+			new TextWindow("Track "+track.getTrackID(), s, 500, 500);
 			
 		}
 		

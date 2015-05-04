@@ -20,9 +20,6 @@ import java.util.Vector;
 
 public class MaggotTrackPoint extends ImTrackPoint {
 
-
-
-
 	/**
 	 * 
 	 */
@@ -35,19 +32,19 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	
 //	String dummyF;
 
-	MaggotTrackPoint prev;
-	MaggotTrackPoint next;
+	protected MaggotTrackPoint prev;
+	protected MaggotTrackPoint next;
 	
 	protected Point contourStart;
-	int nConPts;
+	protected int nConPts;
 	
 //	PolygonRoi contour;
-	Vector<ContourPoint> cont;
+	protected Vector<ContourPoint> cont;
 	
 	ContourPoint head; //RELATIVE TO IMAGE RECT
-	int headi;
+	transient int headi;
 	ContourPoint tail; //RELATIVE TO IMAGE RECT
-	int taili;
+	transient int taili;
 	
 	//Head=0, tail=end 
 	PolygonRoi midline; //RELATIVE TO IMAGE RECT
@@ -57,15 +54,15 @@ public class MaggotTrackPoint extends ImTrackPoint {
 //	int minY;
 	
 	
-	int[] leftX;
-	int[] leftY;
-	int[] rightX;
-	int[] rightY;
+	protected transient int[] leftX;
+	protected transient int[] leftY;
+	protected transient int[] rightX;
+	protected transient int[] rightY;
 	
-	PolygonRoi leftSeg;
-	PolygonRoi rightSeg;
+	protected transient PolygonRoi leftSeg;
+	protected transient PolygonRoi rightSeg;
 	
-	boolean htValid;
+	protected boolean htValid;
 	
 	final double maxContourAngle = Math.PI/2.0;
 	final int numMidCoords = 11;
@@ -81,12 +78,12 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	}
 
 	
-	public void setCommunicator(Communicator comm){
+	protected void setCommunicator(Communicator comm){
 		this.comm = comm;
 	}
 	
 
-	public void extractFeatures(){
+	protected void extractFeatures(){
 		findContours();
 		findHTMidline(maxContourAngle, numMidCoords);
 	}
@@ -385,7 +382,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		return getInterpolatedSegment(origSegment, numPts, false);
 	}
 	
-	public static PolygonRoi getInterpolatedSegment(PolygonRoi origSegment, int numPts, boolean debug){
+	protected static PolygonRoi getInterpolatedSegment(PolygonRoi origSegment, int numPts, boolean debug){
 
 
 		Communicator com = new Communicator();
@@ -437,17 +434,17 @@ public class MaggotTrackPoint extends ImTrackPoint {
      * linking behind causes the previous point to link ahead, but linking
      * ahead does not cause the next point to link behind
      */
-    public void linkBehind(MaggotTrackPoint prev) {
+	protected void linkBehind(MaggotTrackPoint prev) {
         this.prev = prev;
         if (prev != null) {
             prev.linkAhead(this);
         }
     }
-    public void linkAhead(MaggotTrackPoint next) {
+	protected void linkAhead(MaggotTrackPoint next) {
         this.next = next;
     }
     
-	public void setStart(int stX, int stY){
+    protected void setStart(int stX, int stY){
 		contourStart = new Point(stX, stY);
 	}
 
@@ -461,13 +458,13 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	 * @param prevPt The track to align to
 	 * @return Status: 1=flipped, 0=unflipped, -1=missing spine
 	 */
-	public int orientMTP(MaggotTrackPoint prevPt){
+	protected int orientMTP(MaggotTrackPoint prevPt){
 		
 		return chooseOrientation(prevPt, true);
 		
 	}
 	
-	public int chooseOrientation(MaggotTrackPoint prevPt, boolean executeOrientation){
+	protected int chooseOrientation(MaggotTrackPoint prevPt, boolean executeOrientation){
 		if (midline!=null && prevPt.midline!=null && midline.getNCoordinates()!=0 && prevPt.midline.getNCoordinates()!=0){
 			//Measure the total distance for each midline (flipped vs not flipped) 
 			double distUnchanged = spineDistSqr(prevPt.midline);
@@ -475,7 +472,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			double distChanged = spineDistSqr(flippedMid);
 			
 			if (track!= null && track.tb!=null){
-				track.tb.comm.message("Track "+track.trackID+" frame "+frameNum+": unchanged-"+Math.sqrt(distUnchanged)+" changed-"+Math.sqrt(distChanged), VerbLevel.verb_debug);
+				track.tb.comm.message("Track "+track.getTrackID()+" frame "+frameNum+": unchanged-"+Math.sqrt(distUnchanged)+" changed-"+Math.sqrt(distChanged), VerbLevel.verb_debug);
 			}
 			
 			//Choose the one with the lower distance
@@ -498,7 +495,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	/**
 	 * Flips the midline, head, and tail
 	 */
-	public void invertMaggot(){
+	protected void invertMaggot(){
 		
 		PolygonRoi newMidline = invertMidline();
 		if(newMidline!=null){
@@ -543,7 +540,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	/**
 	 * Swaps the location of the head and tail, if they exist
 	 */
-	private void flipHT(){
+	protected void flipHT(){
 
 		if (!htValid){
 			comm.message("tried to flip HT, but HT is not valid.", VerbLevel.verb_debug);
@@ -602,6 +599,47 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		
 		//dot product of direction of movement and body direction 
 		return (x-prevPt.x)*(head.x-tail.x) + (y-prevPt.y)*(head.y-tail.y);
+	}
+	
+	
+	public MaggotTrackPoint getPrev(){
+		return prev;
+	}
+	
+	public MaggotTrackPoint getNext(){
+		return next;
+	}
+	
+	public int getNumContourPoints(){
+		return nConPts;
+	}
+	
+	public Vector<ContourPoint> getContour(){
+		return cont;
+	}
+	
+	public ContourPoint getHead(){
+		return head;
+	}
+	
+	public ContourPoint getTail(){
+		return tail;
+	}
+	
+	public ContourPoint getMid(){
+		return midpoint;
+	}
+	
+	public PolygonRoi getMidline(){
+		return midline;
+	}
+	
+	public int getNumMidlineCoords(){
+		return midline.getNCoordinates();
+	}
+	
+	public boolean getHTValid(){
+		return htValid;
 	}
 	
 	public ImageProcessor getIm() {
@@ -700,7 +738,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 //	}
 	
 	
-	public void copyInfoIntoBTP(BackboneTrackPoint btp){
+	protected void copyInfoIntoBTP(BackboneTrackPoint btp){
 		
 		if(comm!=null){
 			comm.message("Copying info from MTP"+pointID+" to BTP"+btp.pointID, VerbLevel.verb_debug);

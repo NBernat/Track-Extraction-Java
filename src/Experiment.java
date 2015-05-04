@@ -25,23 +25,23 @@ public class Experiment implements Serializable{
 	/**
 	 * Name of the original file? or the .ser file? 
 	 */
-	public String fname;
+	private String fname;
 	/**
 	 * The extraction parameters used to extract this experiment
 	 */
-	public ExtractionParameters ep;
+	private ExtractionParameters ep;
 	/**
 	 * List of IDs that contain CollisionTracks
 	 */
-	Vector<Integer> collisionTrackIDs;
+//	Vector<Integer> collisionTrackIDs;
 	/**
 	 * List of tracks contained within the experiment
 	 */
-	public Vector<Track> tracks;
+	private Vector<Track> tracks;
 	/**
 	 * 
 	 */
-	Vector<Force> Forces;
+	private Vector<Force> Forces;
 	
 	public Experiment(){
 		
@@ -73,25 +73,28 @@ public class Experiment implements Serializable{
 	 * @param collisionTrackIDs
 	 * @param tracks
 	 */
-	public Experiment(String fname, ExtractionParameters ep, Vector<Integer> collisionTrackIDs, Vector<Track> tracks) {
-		init(fname, ep, collisionTrackIDs, tracks);
-	}
+//	public Experiment(String fname, ExtractionParameters ep, Vector<Integer> collisionTrackIDs, Vector<Track> tracks) {
+//		init(fname, ep, tracks);
+////		init(fname, ep, collisionTrackIDs, tracks);
+//	}
 	
 	public Experiment(TrackBuilder tb){
-		init("", tb.ep, tb.finishedColIDs, tb.finishedTracks);
+		init("", tb.ep,tb.finishedTracks);
+//		init("", tb.ep, tb.finishedColIDs, tb.finishedTracks);
 	}
 	
 	
-	public void init(String fname, ExtractionParameters ep, Vector<Integer> collisionTrackIDs, Vector<Track> tracks) {
+	private void init(String fname, ExtractionParameters ep, Vector<Track> tracks) {
 		this.fname = fname;
 		this.ep = ep;
-		this.collisionTrackIDs = collisionTrackIDs;
+//		this.collisionTrackIDs = collisionTrackIDs;
 		this.tracks = tracks;
 	}
 	
 	@SuppressWarnings("unchecked")
 	public Experiment(Experiment exOld){
-		init(exOld.fname, exOld.ep, exOld.collisionTrackIDs, (Vector<Track>)exOld.tracks.clone());
+		init(exOld.fname, exOld.ep, (Vector<Track>)exOld.tracks.clone());
+//		init(exOld.fname, exOld.ep, exOld.collisionTrackIDs, (Vector<Track>)exOld.tracks.clone());
 		Forces = exOld.Forces;
 	}
 
@@ -137,9 +140,9 @@ public class Experiment implements Serializable{
 			
 			for (int j=0; j<tracks.size(); j++){
 				Track tr = tracks.get(j);
-				if (pw!=null) pw.println("Writing track number "+j+"("+tr.trackID+")");
+				if (pw!=null) pw.println("Writing track number "+j+"("+tr.getTrackID()+")");
 				if(tr.toDisk(dos,pw)!=0) {
-					if (pw!=null) pw.println("...Error writing track "+tr.trackID+"; save aborted");
+					if (pw!=null) pw.println("...Error writing track "+tr.getTrackID()+"; save aborted");
 					return 1; 
 				}
 			}
@@ -160,26 +163,6 @@ public class Experiment implements Serializable{
 		return 0;
 	}
 	
-	public int getTypeCode(){
-		int trackType = -1;
-		
-		for (int i=0; (trackType<0 && i<tracks.size()); i++){
-			if(tracks.get(i).points.size()>0){
-				
-				if (tracks.get(i).points.firstElement() instanceof BackboneTrackPoint){
-					return 3;
-				} else if (tracks.get(i).points.firstElement() instanceof MaggotTrackPoint){
-					return 2;
-				} else if (tracks.get(i).points.firstElement() instanceof ImTrackPoint){
-					return 1;
-				} else if (tracks.get(i).points.firstElement() instanceof TrackPoint){
-					return 0;
-				}
-			}
-		}
-		
-		return trackType;
-	}
 	
 	public static Experiment fromDisk(DataInputStream dis, String filename, ExtractionParameters exParam, FittingParameters fp, PrintWriter pw){
 		
@@ -328,19 +311,63 @@ public class Experiment implements Serializable{
 	public String getFileName(){
 		return fname;
 	}
+
+	public int getTypeCode(){
+		int trackType = -1;
+		
+		for (int i=0; (trackType<0 && i<tracks.size()); i++){
+			if(tracks.get(i).getNumPoints()>0){
+				
+				if (tracks.get(i).getStart() instanceof BackboneTrackPoint){
+					return 3;
+				} else if (tracks.get(i).getStart() instanceof MaggotTrackPoint){
+					return 2;
+				} else if (tracks.get(i).getStart() instanceof ImTrackPoint){
+					return 1;
+				} else if (tracks.get(i).getStart() instanceof TrackPoint){
+					return 0;
+				}
+			}
+		}
+		
+		return trackType;
+	}
 	
+	public ExtractionParameters getEP(){
+		return ep;
+	}
 	
+	public int getNumTracks(){
+		if (tracks==null){
+			return -1;
+		}
+		return tracks.size();
+	}
 	
-	public int getTrack(int trackNum){
+	private int getTrackInd(int trackID){
 		
 		ListIterator<Track> trIt = tracks.listIterator();
 		while(trIt.hasNext()){
-			if(trIt.next().trackID==trackNum) return trIt.previousIndex();
+			if(trIt.next().getTrackID()==trackID) return trIt.previousIndex();
 		}
 		return -1;
 	}
 	
+	public Track getTrack(int trackID){
+		return tracks.get(getTrackInd(trackID));
+	}
 	
+	public Track getTrackFromInd(int i){
+		return tracks.get(i);
+	}
+	
+	public void removeTrack(Track t){
+		tracks.remove(t);
+	}
+	
+	public Vector<Force> getForces(){
+		return Forces;
+	}
 	
 	public void setForces(Vector<Force> Forces){
 		this.Forces = Forces;

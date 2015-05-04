@@ -227,7 +227,7 @@ public class TrackMatch implements Serializable {
 	 */
 //	public int findCollidingTrackMatch(Vector<TrackMatch> matches, int startInd){
 	public int findCollidingTrackMatch(Vector<TrackMatch> matches){
-		TB.comm.message("findCollidingTrackMatch called on track "+track.trackID, VerbLevel.verb_debug);
+		TB.comm.message("findCollidingTrackMatch called on track "+track.getTrackID(), VerbLevel.verb_debug);
 		int ind = -1;
 		boolean notFound = true;
 		if (matches.isEmpty()){
@@ -245,7 +245,7 @@ public class TrackMatch implements Serializable {
 				int curInd = tmIt.nextIndex();
 				TrackMatch mCheck = tmIt.next();
 				//If this is not the current match and the point is the same, then we found a winner! 
-				if (mCheck.getTopMatchPoint()!=null && mCheck.track.trackID!=track.trackID && mCheck.getTopMatchPoint().pointID==getTopMatchPoint().pointID) {
+				if (mCheck.getTopMatchPoint()!=null && mCheck.track.getTrackID()!=track.getTrackID() && mCheck.getTopMatchPoint().pointID==getTopMatchPoint().pointID) {
 					ind = curInd;
 					notFound = false;
 				}
@@ -308,7 +308,7 @@ public class TrackMatch implements Serializable {
 		comm.setVerbosity(VerbLevel.verb_debug);
 		
 		comm.message(" ", VerbLevel.verb_debug);
-		comm.message("TrackID: "+track.trackID+" ("+(int)track.points.lastElement().x+", "+(int)track.points.lastElement().y+")", VerbLevel.verb_debug);
+		comm.message("TrackID: "+track.getTrackID()+" ("+(int)track.getEnd().x+", "+(int)track.getEnd().y+")", VerbLevel.verb_debug);
 		for (int i=0; i<numStoredMatches; i++){
 			TrackPoint pt = matchPts[i];
 			String s = "MatchPt"+i+": point "+pt.pointID+", ("+(int)pt.x+","+(int)pt.y+"), ";
@@ -356,7 +356,7 @@ public class TrackMatch implements Serializable {
 	 * @return Area of the top match point expressed as a fraction of the last pointin the track, or -1 if there are not enough points in the track
 	 */
 	public double areaChangeFrac(){
-		if (track.points.size()>0 && getTopMatchPoint()!=null){
+		if (track.getNumPoints()>0 && getTopMatchPoint()!=null){
 			
 			return (getTopMatchPoint().area)/(track.getEnd().area);
 			

@@ -104,7 +104,7 @@ public class BackboneFitter {
 				if (!noError) {
 					pass++;
 					Forces = params.getForces(pass);
-					comm.message("Error on track "+tr.trackID+"("+track.trackID+") pass "+i+"(grain "+params.grains[i]+")", VerbLevel.verb_error);
+					comm.message("Error on track "+tr.getTrackID()+"("+track.getTrackID()+") pass "+i+"(grain "+params.grains[i]+")", VerbLevel.verb_error);
 					track = null;
 				}
 				
@@ -147,11 +147,11 @@ public class BackboneFitter {
 		boolean noerror=true;
 		try {
 	
-			if (tr.points.get(0) instanceof MaggotTrackPoint) {
-				for (int i = 0; i < tr.points.size(); i++) {
+			if (tr.getStart() instanceof MaggotTrackPoint) {
+				for (int i = 0; i < tr.getNumPoints(); i++) {
 		
 					comm.message("Getting mtp...", VerbLevel.verb_debug);
-					MaggotTrackPoint mtp = (MaggotTrackPoint) tr.points.get(i);
+					MaggotTrackPoint mtp = (MaggotTrackPoint) tr.getPoint(i);
 		
 					if (mtp == null) {
 						comm.message("Point " + i + " was not able to be cast",
@@ -275,12 +275,12 @@ public class BackboneFitter {
 	private void sampleTrackPoints(int grain){
 		
 		
-		int numTPs = track.points.size()/grain;
+		int numTPs = track.getNumPoints()/grain;
 		try {
 			
 			for (int i=0; i<numTPs; i++){
 				
-				BTPs.add((BackboneTrackPoint)track.points.get(i*grain));
+				BTPs.add((BackboneTrackPoint)track.getPoint(i*grain));
 				
 			}
 			
@@ -428,7 +428,7 @@ public class BackboneFitter {
 			
 			if (mergeGaps(gaps)) {
 				clearGaps(gaps);
-				MaggotTrackBuilder.orientMaggotTrack(BTPs, comm, track.trackID);//TODO redo this as a method of a list of TP's
+				MaggotTrackBuilder.orientMaggotTrack(BTPs, comm, track.getTrackID());//TODO redo this as a method of a list of TP's
 			}
 			
 			comm.message("After sanitizing, there are "+gaps.size()+" gaps", VerbLevel.verb_debug); 

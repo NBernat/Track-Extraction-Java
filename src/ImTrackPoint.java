@@ -18,9 +18,9 @@ public class ImTrackPoint extends TrackPoint{
 	 */
 	private static final long serialVersionUID = 1L;
 	transient ImageProcessor im;
-	byte[] serializableIm;
-	int imOriginX;
-	int imOriginY;
+	protected byte[] serializableIm;
+	protected int imOriginX;
+	protected int imOriginY;
 	
 	protected int trackWindowWidth;
 	protected int trackWindowHeight;
@@ -34,13 +34,13 @@ public class ImTrackPoint extends TrackPoint{
 	public ImTrackPoint() {
 	}
 
-	ImTrackPoint(double x, double y, Rectangle rect, double area, int frame,
+	public ImTrackPoint(double x, double y, Rectangle rect, double area, int frame,
 			int thresh) {
 		super(x, y, rect, area, frame, thresh);
 	}
 
 	
-	ImTrackPoint(TrackPoint point, ImagePlus frameIm){
+	public ImTrackPoint(TrackPoint point, ImagePlus frameIm){
 		super(point);
 		findAndStoreIm(frameIm);
 	}
@@ -71,7 +71,7 @@ public class ImTrackPoint extends TrackPoint{
 	 * <p>
 	 * For ImTrackPoints, the image is converted to a byte array
 	 */
-	public void preSerialize(){
+	protected void preSerialize(){
 		FileSaver fs = new FileSaver(new ImagePlus("ImTrackPoint "+pointID, im));
 		serializableIm = fs.serialize();
 	}
@@ -81,7 +81,7 @@ public class ImTrackPoint extends TrackPoint{
 	 * <p>
 	 * For ImTrackPoints, the byte array is converted back into an ImageProcessor
 	 */
-	public void postDeserialize(){
+	protected void postDeserialize(){
 		Opener op = new Opener();
 		ImagePlus im2 = op.deserialize(serializableIm);
 		im = im2.getProcessor();		
@@ -139,8 +139,8 @@ public class ImTrackPoint extends TrackPoint{
 		
 		//read new data: image
 		try {
-			trackWindowWidth = t.exp.ep.trackWindowWidth;
-			trackWindowHeight = t.exp.ep.trackWindowHeight;
+			trackWindowWidth = t.exp.getEP().trackWindowWidth;
+			trackWindowHeight = t.exp.getEP().trackWindowHeight;
 			int w = dis.readByte();
 			int h = dis.readByte();
 //			pw.println("Image ("+w+"x"+h+")");

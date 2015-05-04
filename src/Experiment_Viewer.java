@@ -36,7 +36,7 @@ public class Experiment_Viewer implements PlugIn{
 	
 	
 	private void getExperiment(String arg){
-		if (ex==null||ex.tracks==null||ex.tracks.size()==0){
+		if (ex==null||ex.getNumTracks()<1){
 			//open a browser box]
 			String path;
 			if(arg!=null && !arg.equals("")){
@@ -68,35 +68,35 @@ public class Experiment_Viewer implements PlugIn{
 	}
 	
 	//This is a TEMPORARY method to make life a little easier during development of the backbone fitter
-	private void modifyExperiment(){
-		IJ.showStatus("Creating Backbone Fitter");
-		BackboneFitter bbf;
-		
-		int num = ex.tracks.size();
-		for(int i=0; i<num; i++){
-			bbf = new BackboneFitter();
-			if (i==0) ex.setForces(bbf.Forces);
-//			int index = ex.getTrack(i);
-//			if (index>=0){
-				
-				Track tr = ex.tracks.get(i);
-		//			for (int i=60; i<61; i++){
-		//				MaggotTrackPoint mtp = (MaggotTrackPoint)tr.points.get(i);  
-		//				mtp.midline=null;
-		//			}
-				IJ.showStatus("Fitting Track "+tr.trackID+" ("+i+"/"+num+")");
-				bbf.fitTrack(tr);
-//				ex.tracks.addElement(tr);
-				
-				Track bbTrack = new Track(bbf.BTPs, -tr.trackID);
-		//		testInterpolator(bbf);
-				
-				IJ.showStatus("Track fit!");
-				ex.tracks.add(bbTrack);
-//			}
-		}
-		
-	}
+//	private void modifyExperiment(){
+//		IJ.showStatus("Creating Backbone Fitter");
+//		BackboneFitter bbf;
+//		
+//		int num = ex.tracks.size();
+//		for(int i=0; i<num; i++){
+//			bbf = new BackboneFitter();
+//			if (i==0) ex.setForces(bbf.Forces);
+////			int index = ex.getTrack(i);
+////			if (index>=0){
+//				
+//				Track tr = ex.tracks.get(i);
+//		//			for (int i=60; i<61; i++){
+//		//				MaggotTrackPoint mtp = (MaggotTrackPoint)tr.points.get(i);  
+//		//				mtp.midline=null;
+//		//			}
+//				IJ.showStatus("Fitting Track "+tr.trackID+" ("+i+"/"+num+")");
+//				bbf.fitTrack(tr);
+////				ex.tracks.addElement(tr);
+//				
+//				Track bbTrack = new Track(bbf.BTPs, -tr.trackID);
+//		//		testInterpolator(bbf);
+//				
+//				IJ.showStatus("Track fit!");
+//				ex.tracks.add(bbTrack);
+////			}
+//		}
+//		
+//	}
 	
 	/*
 	private void testInterpolator(BackboneFitter bbf){

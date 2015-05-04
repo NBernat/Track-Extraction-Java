@@ -78,7 +78,7 @@ public class CollisionTrack extends Track{
 	//TODO
 	public Vector<TrackMatch> tryToEndCollision(){
 		 
-		tb.comm.message("Trying to end collision for track "+trackID, VerbLevel.verb_debug);
+		tb.comm.message("Trying to end collision for track "+getTrackID(), VerbLevel.verb_debug);
 		
 		 
 		if(getMatch()!=null){ //i.e. if this is not the first point in the track
@@ -157,17 +157,17 @@ public class CollisionTrack extends Track{
 	}
 	
 	public String infoString(){
-		String s = "Collision Track "+trackID+": ";
-		if (points.size()>0){
-			s += "Frames "+points.firstElement().frameNum+"-"+points.lastElement().frameNum+"; ";
+		String s = "Collision Track "+getTrackID()+": ";
+		if (getNumPoints()>0){
+			s += "Frames "+getStart().frameNum+"-"+getEnd().frameNum+"; ";
 		}
 		s += "InTracks";
 		for (int i=0; i<inTracks.size(); i++){
-			s += " "+inTracks.get(i).trackID;
+			s += " "+inTracks.get(i).getTrackID();
 		}
 		s += "; OutTracks";
 		for (int i=0; i<outTracks.size(); i++){
-			s += " "+outTracks.get(i).trackID;
+			s += " "+outTracks.get(i).getTrackID();
 		}
 		
 		return s;
@@ -177,11 +177,11 @@ public class CollisionTrack extends Track{
 		String s = "";
 		s += "InTracks";
 		for (int i=0; i<inTracks.size(); i++){
-			s += " "+inTracks.get(i).trackID;
+			s += " "+inTracks.get(i).getTrackID();
 		}
 		s += "\nOutTracks";
 		for (int i=0; i<outTracks.size(); i++){
-			s += " "+outTracks.get(i).trackID;
+			s += " "+outTracks.get(i).getTrackID();
 		}
 		return s;
 		
@@ -189,7 +189,7 @@ public class CollisionTrack extends Track{
 	
 	
 	public String description(){
-		return makeDescription(""+trackID, points, inAndOutString());
+		return makeDescription(""+getTrackID(), getPoints(), inAndOutString());
 	}
 	
 }

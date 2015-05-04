@@ -13,37 +13,16 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.ListIterator;
 import java.util.Vector;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-//import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-//import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -143,7 +122,7 @@ public class ExperimentFrame extends JFrame{
 	
 	protected void showFrame(){
 		setSize(550, 600);
-		setTitle("Experiment "+ex.fname);
+		setTitle("Experiment "+ex.getFileName());
 		setVisible(true);
 	}
 	
@@ -162,7 +141,8 @@ public class ExperimentFrame extends JFrame{
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
 				
-				trackPanel.updateTrack(ex.tracks.get(trackList.getSelectedIndex()));
+				trackPanel.updateTrack(getCurrentTrack());//;ex.tracks.get(trackList.getSelectedIndex()));
+				//TODO change to get the track id 
 				
 			}
 		});
@@ -217,10 +197,12 @@ public class ExperimentFrame extends JFrame{
 		
 		Vector<String> names = new Vector<String>();
 		
-		ListIterator<Track> trIt = ex.tracks.listIterator();
-		while(trIt.hasNext()){
-			Track t = trIt.next();
-			String name = "Track "+t.trackID+" ("+t.points.size()+")";
+//		ListIterator<Track> trIt = ex.tracks.listIterator();
+//		while(trIt.hasNext()){
+		for (int i=0; i<ex.getNumTracks(); i++){
+					
+			Track t = ex.getTrackFromInd(i);//trIt.next();
+			String name = "Track "+t.getTrackID()+" ("+t.getNumPoints()+")";
 			if (t instanceof CollisionTrack) name+="*";
 			names.add(name);
 		}
@@ -229,6 +211,17 @@ public class ExperimentFrame extends JFrame{
 		
 	}
 	
+	protected int getCurrentTrackID(){
+		String name = (String) trackList.getSelectedValue();
+		int beforeInd = name.indexOf(" ");
+		int afterInd = name.indexOf(" ", beforeInd+1);
+		return Integer.valueOf(name.substring(beforeInd+1, afterInd-1));
+	}
+	
+	protected Track getCurrentTrack(){
+//		return ex.getTrack(getCurrentTrackID());
+		return ex.getTrackFromInd(trackList.getSelectedIndex());
+	}
 	
 }
 
@@ -316,7 +309,7 @@ class TrackPanel extends JPanel {
 			StringWriter sw = new StringWriter();
 			PrintWriter prw = new PrintWriter(sw);
 			e.printStackTrace(prw);
-			new TextWindow("PlayMovie Error", "Could not play track "+track.trackID+" movie\n"+sw.toString()+"\n", 500, 500);
+			new TextWindow("PlayMovie Error", "Could not play track "+track.getTrackID()+" movie\n"+sw.toString()+"\n", 500, 500);
 		}
 	}
 	

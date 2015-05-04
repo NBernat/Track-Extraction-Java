@@ -370,7 +370,7 @@ public class TrackBuilder implements Serializable{
 		while (tmIt.hasNext()){
 			
 			TrackMatch match = tmIt.next();
-			comm.message("Checking Track "+match.track.trackID+" for collisions..", VerbLevel.verb_debug);
+			comm.message("Checking Track "+match.track.getTrackID()+" for collisions..", VerbLevel.verb_debug);
 			
 			if (match.checkTopMatchForCollision()>0) {
 				comm.message("Collision found, "+match.getTopMatchPoint().getNumMatches()+" tracks matched to point", VerbLevel.verb_debug);
@@ -390,7 +390,7 @@ public class TrackBuilder implements Serializable{
 					comm.message("Clearing collsions", VerbLevel.verb_debug);
 					numEnded++;
 					TrackMatch endMatch = cmIt.next();
-					trackMessage.message("Track "+endMatch.track.trackID+" ended at frame "+(frameNum-1)+" for collision in frame "+frameNum, VerbLevel.verb_message);
+					trackMessage.message("Track "+endMatch.track.getTrackID()+" ended at frame "+(frameNum-1)+" for collision in frame "+frameNum, VerbLevel.verb_message);
 					endMatch.clearAllMatches(); 
 					
 				}
@@ -431,9 +431,9 @@ public class TrackBuilder implements Serializable{
 				colMatches.addAll(getCollisionMatches(match));
 				
 				if(colMatches.size()==1){
-					comm.message("Collision at point "+match.getTopMatchPoint().pointID+" in track "+match.track.trackID+" has no accompanying trackmatch!", VerbLevel.verb_error);
+					comm.message("Collision at point "+match.getTopMatchPoint().pointID+" in track "+match.track.getTrackID()+" has no accompanying trackmatch!", VerbLevel.verb_error);
 					match.getTopMatchPoint().setNumMatches(match.getTopMatchPoint().getNumMatches()-1);
-					trackMessage.message("Track "+match.track.trackID+" ended at frame "+(frameNum-1)+" for rogue collision in frame "+frameNum, VerbLevel.verb_message);
+					trackMessage.message("Track "+match.track.getTrackID()+" ended at frame "+(frameNum-1)+" for rogue collision in frame "+frameNum, VerbLevel.verb_message);
 					match.clearAllMatches();
 				} else {
 					
@@ -512,7 +512,7 @@ public class TrackBuilder implements Serializable{
 			CollisionTrack newCol = new CollisionTrack(colMatches, this);
 			fixCollisionMatches(newCol, colMatches);
 //			newCol.startCollision();
-			activeColIDs.add(newCol.trackID);
+			activeColIDs.add(newCol.getTrackID());
 			//add this trackID to list
 			retMatch = newCol.getMatch();//newCol.matches.firstElement();//
 //			matches.add(newCol.matches.firstElement());
@@ -615,8 +615,8 @@ public class TrackBuilder implements Serializable{
 		
 		if (splitPts.size()>0) {
 			//Decide which point goes with which track
-			TrackPoint ptA = colMatches.get(0).track.points.lastElement();
-			TrackPoint ptB = colMatches.get(1).track.points.lastElement();
+			TrackPoint ptA = colMatches.get(0).track.getEnd();
+			TrackPoint ptB = colMatches.get(1).track.getEnd();
 			Vector<TrackPoint> orderedPts = matchPtsToNearbyPts(ptA, ptB, splitPts);
 			//Replace the points in the TrackMatches
 			orderedPts.get(0).setNumMatches(orderedPts.get(0).getNumMatches()+1);
@@ -719,14 +719,14 @@ public class TrackBuilder implements Serializable{
 				trackMessage.message(match.track.infoString(), VerbLevel.verb_message);
 				activeTracks.remove(match.track);
 				
-			} else if (match.track.points.size()==0) {
+			} else if (match.track.getNumPoints()==0) {
 				//THIS IS IMPORTANT!
 				//if there's a new track created by a collision starting/ending, add it to activeTracks & remove the pt from points 
 				match.track.extendTrack(match.getTopMatchPoint());
 //				match.track.markCollision(frameNum, null);
 				
 				activeTracks.add(match.track);
-				activePts.remove(match.track.points.lastElement());
+				activePts.remove(match.track.getEnd());
 				
 			} else {
 				match.track.extendTrack(match.getTopMatchPoint());
@@ -737,7 +737,7 @@ public class TrackBuilder implements Serializable{
 				}
 				
 
-				activePts.remove(match.track.points.lastElement());
+				activePts.remove(match.track.getEnd());
 						
 				//activePts.remove(match.getTopMatchPoint());
 			}
@@ -780,7 +780,7 @@ public class TrackBuilder implements Serializable{
 	public static int findIndOfTrack(int trackID, Vector<Track> trackList){
 		
 		for (int i=0;i<trackList.size();i++){
-			if (trackList.get(i).trackID==trackID){
+			if (trackList.get(i).getTrackID()==trackID){
 				return i;
 			}
 		}
@@ -841,7 +841,7 @@ public class TrackBuilder implements Serializable{
 		ListIterator<Track> trIt = tr.listIterator();
 		while (trIt.hasNext()) {
 			num++;
-			totalA += trIt.next().points.lastElement().area;
+			totalA += trIt.next().getEnd().area;
 		}
 		
 		return totalA/num; 
@@ -864,9 +864,11 @@ public class TrackBuilder implements Serializable{
 		Experiment exp = new Experiment(this);
 		
 		//Attach the experiment to all the tracks 
-		ListIterator<Track> trIt = exp.tracks.listIterator();
-		while(trIt.hasNext()) {
-			trIt.next().exp = exp;
+//		ListIterator<Track> trIt = exp.tracks.listIterator();
+//		while(trIt.hasNext()) {
+		for (int i=0; i<exp.getNumTracks(); i++){
+			exp.getTrackFromInd(i).exp = exp;
+//			trIt.next().exp = exp;
 		}
 		
 		
