@@ -16,12 +16,12 @@ public class ContourPoint extends Point implements Comparable<ContourPoint> {
 //	int x;
 //	int y;
 	
-	ContourPoint prevPt;
-	ContourPoint nextPt;
+	public ContourPoint prevPt;
+	public ContourPoint nextPt;
 	
-	double angle;
+	public double angle;
 	
-	boolean htCand;
+	public boolean htCand;
 	
 	public ContourPoint(){
 		

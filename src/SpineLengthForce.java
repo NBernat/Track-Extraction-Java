@@ -15,7 +15,7 @@ public class SpineLengthForce extends Force{
 	public FloatPolygon getTargetPoints(int btpInd, Vector<BackboneTrackPoint> allBTPs){
 		
 		BackboneTrackPoint btp = allBTPs.get(btpInd);
-		int numBBPts = btp.numBBPts;
+		int numBBPts = btp.getNumBBPoints();
 
 		float[] targetX = new float[numBBPts];
 		Arrays.fill(targetX, 0);
@@ -28,12 +28,12 @@ public class SpineLengthForce extends Force{
 		targetX[k] = btp.bbOld.xpoints[k+1];
 		targetY[k] = btp.bbOld.ypoints[k+1];
 		//Set middle points
-		for (k=1; k<(btp.numBBPts-1); k++){
+		for (k=1; k<(btp.getNumBBPoints()-1); k++){
 			targetX[k] = .5f*(btp.bbOld.xpoints[k-1]+btp.bbOld.xpoints[k+1]);
 			targetY[k] = .5f*(btp.bbOld.ypoints[k-1]+btp.bbOld.ypoints[k+1]);
 		}
 		//Set tail end point
-		k=(btp.numBBPts-1);
+		k=(btp.getNumBBPoints()-1);
 		targetX[k] = btp.bbOld.xpoints[k-1];
 		targetY[k] = btp.bbOld.ypoints[k-1];
 		

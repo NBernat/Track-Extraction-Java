@@ -16,7 +16,7 @@ public class ImageForce extends Force {
 	public FloatPolygon getTargetPoints(int btpInd, Vector<BackboneTrackPoint> allBTPs){
 		
 		BackboneTrackPoint btp = allBTPs.get(btpInd);
-		int numBBPts = btp.numBBPts;
+		int numBBPts = btp.getNumBBPoints();
 		
 		float[] targetX = new float[numBBPts];
 		Arrays.fill(targetX, 0);

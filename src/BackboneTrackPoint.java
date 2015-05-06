@@ -59,7 +59,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	/**
 	 * The number of points in the backbone
 	 */
-	int numBBPts;
+	private int numBBPts;
 	
 	/**
 	 * The backbone of the maggot
@@ -330,8 +330,20 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		return clusterInds[ind];
 	}
 	
+	public int getNumBBPoints(){
+//		if (backbone!=null){
+//			return backbone.getNCoordinates();
+//		} else {
+			return numBBPts;
+//		}
+	}
+	
 	public PolygonRoi getBackbone(){
 		return backbone;
+	}
+	
+	public boolean getArtificialMid(){
+		return artificialMid;
 	}
 	
 	public ImageProcessor getIm(){

@@ -16,7 +16,7 @@ public class TimeLengthForce extends Force {
 		
 		
 		BackboneTrackPoint btp = allBTPs.get(btpInd);
-		int numBBPts = btp.numBBPts;
+		int numBBPts = btp.getNumBBPoints();
 
 		float[] targetX = new float[numBBPts];
 		Arrays.fill(targetX, 0);
@@ -26,17 +26,17 @@ public class TimeLengthForce extends Force {
 		
 		//The Diff's account for the differences in 
 		if (btpInd>0 && btpInd<(allBTPs.size()-1)){
-			for (int k=0; k<btp.numBBPts; k++){
+			for (int k=0; k<btp.getNumBBPoints(); k++){
 				targetX[k] = .5f*(allBTPs.get(btpInd-1).bbOld.xpoints[k]+allBTPs.get(btpInd+1).bbOld.xpoints[k]);
 				targetY[k] = .5f*(allBTPs.get(btpInd-1).bbOld.ypoints[k]+allBTPs.get(btpInd+1).bbOld.ypoints[k]);
 			}
 		} else if(btpInd==0){
-			for (int k=0; k<btp.numBBPts; k++){
+			for (int k=0; k<btp.getNumBBPoints(); k++){
 				targetX[k] = allBTPs.get(btpInd+1).bbOld.xpoints[k];
 				targetY[k] = allBTPs.get(btpInd+1).bbOld.ypoints[k];
 			}
 		}  else if (btpInd==(allBTPs.size()-1)){
-			for (int k=0; k<btp.numBBPts; k++){
+			for (int k=0; k<btp.getNumBBPoints(); k++){
 				targetX[k] = allBTPs.get(btpInd-1).bbOld.xpoints[k];
 				targetY[k] = allBTPs.get(btpInd-1).bbOld.ypoints[k];
 			}
