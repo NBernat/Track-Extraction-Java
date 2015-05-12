@@ -53,6 +53,10 @@ public class ImTrackPoint extends TrackPoint{
 		trackWindowHeight = dispHeight;
 	}
 	
+	public ImageProcessor getRawIm(){
+		return im;
+	}
+	
 	public ImageProcessor getIm(){
 		//pad the image so be the same dimensions as the rest in the stack
 		imOriginX = (int)x-(trackWindowWidth/2)-1;
