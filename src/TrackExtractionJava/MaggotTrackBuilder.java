@@ -31,21 +31,33 @@ public class MaggotTrackBuilder extends TrackBuilder {
 	 * Orients all the tracks so that all maggots have their head in the direction of motion
 	 */
 	protected void orientMaggots(){
+
+		Communicator c = new Communicator();
+		c.setVerbosity(VerbLevel.verb_off);
 		for (int i=0; i<finishedTracks.size(); i++){
-			orientMaggotTrack(finishedTracks.get(i), comm);  
+			orientMaggotTrack(finishedTracks.get(i), c);  
 		}
+		if (!c.outString.equals("")) new TextWindow("Orientation debugging output", c.outString, 500, 500);
 	} 
 
 	/**
 	 * Orients the maggots in a track in the direction of their motion
 	 * @param track Track to be oriented
 	 */
-	protected static void orientMaggotTrack(Track track, Communicator comm){
-//		omt(track);
-		orientMaggotTrack(track.getPoints(), comm, track.getTrackID());
+	protected static void orientMaggotTrack(Track track, Communicator c){
+		
+		omt(track, c);
+//		orientMaggotTrack(track.getPoints(), comm, track.getTrackID());
 	}
 		
+	
 	protected static void omt(Track track){
+		omt(track, null);
+	}
+	
+	protected static void omt(Track track, Communicator c){
+		
+		if (c!=null) c.message("Track "+track.getTrackID(), VerbLevel.verb_debug);
 
 		boolean debug = false; // (track.trackID<10 || track.points.size()<150);
 		
@@ -73,7 +85,9 @@ public class MaggotTrackBuilder extends TrackBuilder {
 			alignSegment(points, seg);
 		}
 		for(Segment seg: segList){
-			orientSegment(points, seg);
+//			orientSegment(points, seg);
+			if (c!=null) c.message("Orienting segment #"+segList.indexOf(seg)+"/"+segList.indexOf(segList.lastElement())+",  ("+seg.length()+"pts)", VerbLevel.verb_debug);
+			orientSegment(points, seg, c);
 		}
 		
 //		int i=0;
@@ -99,13 +113,14 @@ public class MaggotTrackBuilder extends TrackBuilder {
 				
 				pt = (MaggotTrackPoint)points.get(i);
 				
-				if (pt.midline!=null && pt.htValid){//Find the segment starting here
+				if (pt.midline!=null && pt.htValid){//Find the segment starting here && pt.midline.getNCoordinates()!=0
 					
 					int segStart = i;
 					boolean notFound = true;
 					while (notFound && i<points.size()){
 						i++;
-						if (i==points.size() || ((MaggotTrackPoint)points.get(i)).midline==null){
+						//pt2 = (MaggotTrackPoint)points.get(i);
+						if (i==points.size() || ((MaggotTrackPoint)points.get(i)).midline==null){// || pt2.midline.getNCoordinates()==0 || !pt2.htValid
 							//END SEGMENT
 							notFound = false;
 							Segment newSeg = new Segment(segStart, i-1);
@@ -136,7 +151,13 @@ public class MaggotTrackBuilder extends TrackBuilder {
 		} 
 	}
 	
+	
 	protected static int orientSegment(Vector<? extends TrackPoint> points, Segment seg){
+		return orientSegment(points, seg, null);
+	}
+
+	
+	protected static int orientSegment(Vector<? extends TrackPoint> points, Segment seg, Communicator c){
 
 		if(seg.length()>=2){
 			//Orient the segment to the direction of motion
@@ -150,7 +171,10 @@ public class MaggotTrackBuilder extends TrackBuilder {
 			}
 			
 			if (dpSum<0){
+				if (c!=null) c.message("Long segment, flipped", VerbLevel.verb_debug);
 				flipSeg(points, seg.start, seg.end);
+			} else {
+				if (c!=null) c.message("Long segment, unflipped", VerbLevel.verb_debug);
 			}
 			
 			return 1;
@@ -159,18 +183,24 @@ public class MaggotTrackBuilder extends TrackBuilder {
 			
 			//1-point-long segment: try to orient it to the surrounding points
 			if (seg.prevSeg!=null){
+				if (c!=null) c.message("Short segment, aligned to prev", VerbLevel.verb_debug);
 				//Align this point to the last point in the previous segment
 				((MaggotTrackPoint)points.get(seg.start)).orientMTP((MaggotTrackPoint)points.get(seg.prevSeg.end));
 				return 1;
 			} else if(seg.nextSeg!=null){
+				if (c!=null) c.message("Short segment, aligning to next...", VerbLevel.verb_debug);
 				//Orient the next segment, then align this point to that segment
 				int num = orientSegment(points,seg.nextSeg);
 				int flip = ((MaggotTrackPoint)points.get(seg.start)).chooseOrientation((MaggotTrackPoint)points.get(seg.nextSeg.end),false);
 				if (flip==1){
+					if (c!=null) c.message("...FLIPPED", VerbLevel.verb_debug);
 					((MaggotTrackPoint)points.get(seg.start)).invertMaggot();
+				} else{
+					if (c!=null) c.message("...UNFLIPPED", VerbLevel.verb_debug);
 				}
 				return 1+num;
 			} else {
+				if (c!=null) c.message("Short segment, UNORIENTED", VerbLevel.verb_debug);
 				//Could not orient...must be a short weird track. Advance past this segment
 				return 1;
 			}
@@ -310,6 +340,6 @@ class Segment{
 	}
 	
 	public int length(){
-		return start-end+1;
+		return end-start+1;
 	}
 }
