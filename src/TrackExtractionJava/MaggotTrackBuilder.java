@@ -38,7 +38,7 @@ public class MaggotTrackBuilder extends TrackBuilder {
 			orientMaggotTrack(finishedTracks.get(i), c);  
 		}
 		if (!c.outString.equals("")) new TextWindow("Orientation debugging output", c.outString, 500, 500);
-	} 
+	}
 
 	/**
 	 * Orients the maggots in a track in the direction of their motion
