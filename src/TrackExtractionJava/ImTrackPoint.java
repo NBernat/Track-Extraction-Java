@@ -19,7 +19,7 @@ public class ImTrackPoint extends TrackPoint{
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	transient ImageProcessor im;
+	transient protected ImageProcessor im;
 	protected byte[] serializableIm;
 	protected int imOriginX;
 	protected int imOriginY;

@@ -4,6 +4,7 @@ package TrackExtractionJava;
 import ij.*;
 import ij.gui.Roi;
 import ij.measure.ResultsTable;
+import ij.plugin.filter.ParticleAnalyzer;
 //import ij.plugin.ImageCalculator;
 import ij.process.ImageProcessor;
 
@@ -337,12 +338,14 @@ public class PointExtractor {
 						if (currentFrameNum!=frameNum){
 							loadFrame(frameNum);
 						}
+						mtPt.setStart((int)rt.getValue("XStart", row), (int)rt.getValue("YStart", row));
 						Roi roi = currentIm.getRoi();
 						currentIm.setRoi(rect);
 						ImageProcessor im2 = currentIm.getProcessor().crop(); //does not affect currentIm
 						currentIm.setRoi(roi);
+						//Set the image mask
+						mtPt.setMask(getMask(rt, row));
 						mtPt.setImage(im2, ep.trackWindowWidth, ep.trackWindowHeight);
-						mtPt.setStart((int)rt.getValue("XStart", row), (int)rt.getValue("YStart", row));
 						mtPt.extractFeatures();
 						tp.add(mtPt);
 						break;
@@ -360,6 +363,35 @@ public class PointExtractor {
 		
 		return tp;
 		
+	}
+	
+	protected ImageProcessor getMask(ResultsTable rt, int row){
+		
+		//Get info from table
+		double width = rt.getValueAsDouble(ResultsTable.ROI_WIDTH, row);
+		double height = rt.getValueAsDouble(ResultsTable.ROI_HEIGHT, row);
+		double boundX = rt.getValueAsDouble(ResultsTable.ROI_X, row);
+		double boundY = rt.getValueAsDouble(ResultsTable.ROI_Y, row);
+		Rectangle rect = new Rectangle((int)boundX-ep.roiPadding, (int)boundY-ep.roiPadding, (int)width+2*ep.roiPadding, (int)height+2*ep.roiPadding);
+		int startX = (int)(rt.getValue("XStart", row)-(boundX-ep.roiPadding));
+		int startY = (int)(rt.getValue("YStart", row)-(boundY-ep.roiPadding));
+		
+		//Get threshIm clip
+		Roi roi = threshIm.getRoi();
+		threshIm.setRoi(rect);
+		ImageProcessor im2 = threshIm.getProcessor().crop(); //does not affect currentIm
+		threshIm.setRoi(roi);
+		
+		//Get masked im IP from im2
+		//-->Snippet from http://rsb.info.nih.gov/ij/developer/source/ createMask(ImagePlus imp)
+		ImagePlus imp =new ImagePlus("ThreshIm for particle "+row,im2); 
+		IJ.doWand(imp, startX, startY, 0, null);//Particle is now in ROI
+		ImageProcessor ip = imp.getProcessor();
+        ip.setRoi(imp.getRoi());
+        ip.setValue(255);
+        ip.fill(ip.getMask());
+
+		return ip;
 	}
 	
 	

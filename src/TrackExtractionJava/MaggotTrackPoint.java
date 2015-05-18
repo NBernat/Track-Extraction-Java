@@ -54,7 +54,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	
 //	int minX;
 //	int minY;
-	
+	protected transient ImageProcessor mask;
 	
 	protected transient int[] leftX;
 	protected transient int[] leftY;
@@ -380,6 +380,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		
 	}
 	
+	
 	public static PolygonRoi getInterpolatedSegment(PolygonRoi origSegment, int numPts){
 		return getInterpolatedSegment(origSegment, numPts, false);
 	}
@@ -446,6 +447,10 @@ public class MaggotTrackPoint extends ImTrackPoint {
         this.next = next;
     }
     
+	protected void setMask(ImageProcessor mask){
+		this.mask = mask;
+	}
+	
     protected void setStart(int stX, int stY){
 		contourStart = new Point(stX, stY);
 	}
@@ -618,6 +623,20 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	
 	public Vector<ContourPoint> getContour(){
 		return cont;
+	}
+	
+	public PolygonRoi getContourRoi(){
+		
+		float[] x = new float[cont.size()];
+		float[] y = new float[cont.size()];
+		
+		for (int i=0; i<cont.size(); i++){
+			x[i] = cont.get(i).x;
+			y[i] = cont.get(i).y;
+		}
+		
+		PolygonRoi roi = new PolygonRoi(x, y, PolygonRoi.POLYGON);		
+		return roi;
 	}
 	
 	public ContourPoint getHead(){
