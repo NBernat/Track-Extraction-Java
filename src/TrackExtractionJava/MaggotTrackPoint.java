@@ -4,6 +4,7 @@ import ij.ImagePlus;
 import ij.gui.PolygonRoi;
 import ij.gui.Roi;
 import ij.gui.Wand;
+import ij.process.ByteProcessor;
 import ij.process.FloatPolygon;
 import ij.process.ImageProcessor;
 import ij.text.TextWindow;
@@ -637,6 +638,17 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		
 		PolygonRoi roi = new PolygonRoi(x, y, PolygonRoi.POLYGON);		
 		return roi;
+	}
+	
+	public ImageProcessor getMask(){
+		
+		ImageProcessor ip = new ByteProcessor(im.getWidth(), im.getHeight());
+		ip.setRoi(getContourRoi());
+		ip.setValue(255);
+		ip.fill(ip.getMask());
+		ip.erode();
+		
+		return ip;
 	}
 	
 	public ContourPoint getHead(){

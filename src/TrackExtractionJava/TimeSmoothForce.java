@@ -26,7 +26,11 @@ public class TimeSmoothForce extends Force {
 		
 		if (btpInd>1 && btpInd<(allBTPs.size()-2)){
 			for (int k=0; k<btp.getNumBBPoints(); k++){
-				targetX[k] = (2.0f/3.0f)*allBTPs.get(btpInd-1).bbOld.xpoints[k]+(2.0f/3.0f)*allBTPs.get(btpInd+1).bbOld.xpoints[k]-(1.0f/6.0f)*allBTPs.get(btpInd-2).bbOld.xpoints[k]-(1.0f/6.0f)*allBTPs.get(btpInd+2).bbOld.xpoints[k];
+				targetX[k] = (2.0f/3.0f)*allBTPs.get(btpInd-1).bbOld.xpoints[k];
+				targetX[k] +=(2.0f/3.0f)*allBTPs.get(btpInd+1).bbOld.xpoints[k];
+				targetX[k] -=(1.0f/6.0f)*allBTPs.get(btpInd-2).bbOld.xpoints[k];
+				FloatPolygon bbOld = allBTPs.get(btpInd+2).bbOld;
+				targetX[k] -=(1.0f/6.0f)*bbOld.xpoints[k];
 				targetY[k] = (2.0f/3.0f)*allBTPs.get(btpInd-1).bbOld.ypoints[k]+(2.0f/3.0f)*allBTPs.get(btpInd+1).bbOld.ypoints[k]-(1.0f/6.0f)*allBTPs.get(btpInd-2).bbOld.ypoints[k]-(1.0f/6.0f)*allBTPs.get(btpInd+2).bbOld.ypoints[k];
 			}
 		} else if(btpInd==0){

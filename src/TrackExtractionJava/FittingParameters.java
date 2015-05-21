@@ -11,6 +11,8 @@ public class FittingParameters {
 	int smallGapMaxLen = 10;//The maximum gap length for which the previous midline will be carried forward (otherwise interpolate)
 	int minValidSegmentLen = 5;//The minimum segment length (in frames) which is situated between two midline gaps and which is considered valid
 	double minFlickerDist = numBBPts;//The minimum distance between spines which indicates an erroneous midline flicker 
+	int gapDilation = 5;
+	boolean dilateToEdges = true;
 	
 	float imageWeight = 1.0f;
 	float spineLengthWeight = .3f;

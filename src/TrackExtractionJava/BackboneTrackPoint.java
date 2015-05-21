@@ -201,7 +201,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		
 		
 		//TODO MASK THE IMAGE SO IT ONLY SEES THE ONE MAGGOT
-		ImageProcessor maskIm = im;
+		ImageProcessor maskIm = getMask();
 		
 		MagPixX = new float[maskIm.getWidth()*maskIm.getHeight()];
 		MagPixY = new float[maskIm.getWidth()*maskIm.getHeight()];
@@ -212,7 +212,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		
 		for(int X=0; X<maskIm.getWidth(); X++){
 			for (int Y=0; Y<maskIm.getHeight(); Y++){
-				if(maskIm.getPixel(X,Y)>thresh){
+				if(maskIm.getPixel(X,Y)>thresh && im.getPixel(X, Y)>thresh){
 					MagPixX[numPix] = 0.5f+X+rect.x;
 					MagPixY[numPix] = 0.5f+Y+rect.y;
 					MagPixI[numPix] = maskIm.getPixel(X, Y);

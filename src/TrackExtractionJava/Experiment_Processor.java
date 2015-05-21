@@ -104,7 +104,7 @@ public class Experiment_Processor implements PlugIn{
 					log ("...Error in MTP Experiment fromDisk:\n"+sw.toString());
 				}
 				
-//				ex = new Experiment(ex);
+				ex = new Experiment(ex);
 				log("Fitting "+ex.getNumTracks()+" Tracks...");
 				fitTracks();
 				log("...done fitting tracks");

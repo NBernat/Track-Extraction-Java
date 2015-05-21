@@ -3,9 +3,10 @@ import java.awt.Color;
 
 import ij.gui.Plot;
 import ij.gui.PlotWindow;
+import ij.plugin.PlugIn;
 
 
-public class Test {//extends JFrame
+public class Test2_ implements PlugIn {//extends JFrame
 
 	
 	public int fld1;
@@ -178,6 +179,7 @@ public class Test {//extends JFrame
 //		
 //	}
 	
+	
 	public String str(){
 		String ret = "";
 		for (int i=0; i<fld1; i++){
@@ -186,7 +188,7 @@ public class Test {//extends JFrame
 		return ret;
 	}
 	
-	public Test(int i, String s){
+	public Test2_(int i, String s){
 		
 		fld1 = i;
 		fld2 = s;
@@ -264,6 +266,7 @@ public class Test {//extends JFrame
 	
 	
 	
+	@Override
 	public void run(String arg0) {
 		// TODO Auto-generated method stub
 		

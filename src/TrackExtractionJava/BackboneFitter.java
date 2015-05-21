@@ -358,7 +358,7 @@ public class BackboneFitter {
 			Vector<Gap> gaps = findGaps(sampledEmptyMids);
 			comm.message("Cleaning gaps", VerbLevel.verb_debug);
 			sanitizeGaps(gaps);
-			
+			MaggotTrackBuilder.orientMaggotTrack(BTPs, comm, track.getTrackID());
 			
 			comm.message("Filling midlines", VerbLevel.verb_debug);
 			fillGaps(gaps);
@@ -428,9 +428,11 @@ public class BackboneFitter {
 			
 			comm.message("Merging "+gaps.size()+" gaps", VerbLevel.verb_debug); 
 			
-			if (mergeGaps(gaps)) {
+			dilateGaps(gaps, params.gapDilation, params.minValidSegmentLen, track.getStart().frameNum, track.getEnd().frameNum, params.dilateToEdges);
+			
+			if (mergeGaps(gaps, params.minValidSegmentLen, comm)) {
 				clearGaps(gaps);
-				MaggotTrackBuilder.orientMaggotTrack(BTPs, comm, track.getTrackID());//TODO redo this as a method of a list of TP's
+//				MaggotTrackBuilder.orientMaggotTrack(BTPs, comm, track.getTrackID());
 			}
 			
 			comm.message("After sanitizing, there are "+gaps.size()+" gaps", VerbLevel.verb_debug); 
@@ -441,7 +443,23 @@ public class BackboneFitter {
 		
 	}
 	
-	private boolean mergeGaps(Vector<Gap> gaps){
+	protected static void dilateGaps(Vector<Gap> gaps, int dilation, int minValidSegmentLen, int startFrame, int endFrame, boolean dilateToEdges){
+		
+		for (Gap g : gaps){
+			g.start -= dilation;
+			g.end += dilation;
+		}
+		
+		if (gaps.firstElement().start<startFrame || ( dilateToEdges && (gaps.firstElement().start-startFrame)<minValidSegmentLen ) ){
+			gaps.firstElement().start=startFrame;
+		}
+		if (gaps.lastElement().end>endFrame || ( dilateToEdges && (endFrame-gaps.lastElement().end)<minValidSegmentLen ) ){
+			gaps.lastElement().end=endFrame;
+		}
+		
+	}
+	
+	protected static boolean mergeGaps(Vector<Gap> gaps, int minValidSegmentLen, Communicator comm){
 		
 		boolean clearGaps = false;
 		
@@ -455,10 +473,10 @@ public class BackboneFitter {
 			//Always advance the next gap
 			currGap = gIt.next();
 			
-			comm.message("Checking gaps "+prevGap.start+"-"+prevGap.end+" & "+currGap.start+"-"+currGap.end, VerbLevel.verb_debug);
+			if (comm!=null) comm.message("Checking gaps "+prevGap.start+"-"+prevGap.end+" & "+currGap.start+"-"+currGap.end, VerbLevel.verb_debug);
 			
-			if (prevGap.distTo(currGap)<params.minValidSegmentLen){ 
-				comm.message("Merging gaps", VerbLevel.verb_debug);
+			if (prevGap.distTo(currGap)<minValidSegmentLen || currGap.start<=prevGap.end){ 
+				if (comm!=null) comm.message("Merging gaps", VerbLevel.verb_debug);
 				prevGap.merge2Next(currGap); //Move currGap into prevGap
 				gIt.remove(); //Remove currGap from the list
 				//Do not advance prevGap, so you compare the next gap to the merged gap
@@ -909,6 +927,10 @@ class Gap{
 	
 	public void merge2Next(Gap gNext){
 		end = gNext.end;
+	}
+	
+	public String toString(){
+		return start+"-"+end;
 	}
 	
 }
