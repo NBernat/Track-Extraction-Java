@@ -2,7 +2,9 @@ package TrackExtractionJava;
 
 
 public class MaggotDisplayParameters {
-
+	
+	
+	static int DEFAULTexpandFac = 10;
 	static boolean DEFAULTclusters = false;
 	static boolean DEFAULTmid = true;
 	static boolean DEFAULTinitialBB = false; 
@@ -13,6 +15,7 @@ public class MaggotDisplayParameters {
 	//Image, SpineLength, SpineSmooth, TimeLength, TimeSmooth
 	static boolean[] DEFAULTshowForce = {true, true, true, true, true};
 	
+	int expandFac;
 	boolean clusters;
 	boolean mid;
 	boolean initialBB; 
@@ -30,6 +33,7 @@ public class MaggotDisplayParameters {
 	
 	
 	public void setToDefault(){
+		expandFac = DEFAULTexpandFac;
 		clusters = DEFAULTclusters;
 		mid = DEFAULTmid;
 		initialBB = DEFAULTinitialBB;
@@ -38,6 +42,17 @@ public class MaggotDisplayParameters {
 		forces = DEFAULTforces;
 		backbone = DEFAULTbackbone;
 		showForce = DEFAULTshowForce;
+	}
+	
+	public void setAllFalse(){
+		clusters = false;
+		mid = false;
+		initialBB = false;
+		contour = false;
+		ht = false;
+		forces = false;
+		backbone = false;
+
 	}
 	
 	public boolean getParam(String paramName){
@@ -76,6 +91,14 @@ public class MaggotDisplayParameters {
 		}else if (paramName.equalsIgnoreCase("backbone")){
 			backbone = value;
 		}
+	}
+	
+	public int getExpandFac(){
+		return expandFac;
+	}
+	
+	public void setExpandFac(int fac){
+		expandFac = fac;
 	}
 	
 }

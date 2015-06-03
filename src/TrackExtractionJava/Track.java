@@ -270,6 +270,51 @@ public class Track implements Serializable{
 		playMovie(trackID, mdp);
 	}
 	
+	public void playBlankMovie(){
+		MaggotDisplayParameters mdp = new MaggotDisplayParameters();
+		mdp.setAllFalse();
+		playMovie(trackID, mdp);
+
+	}
+	
+//	public void playRawMovie(){
+//		ListIterator<TrackPoint> tpIt = points.listIterator();
+//		if (tpIt.hasNext()) {
+//		
+//			
+//			TrackPoint point = tpIt.next();
+//			point.setTrack(this);
+//			
+//			//Get the first image
+//			ImageProcessor firstIm;
+//			
+//			firstIm = point.getRawIm();
+//			
+//			
+//			ImageStack trackStack = new ImageStack(firstIm.getWidth(), firstIm.getHeight());
+//			
+//			trackStack.addSlice(firstIm);
+//			
+//			//Add the rest of the images to the movie
+//			while(tpIt.hasNext()){
+//				point = tpIt.next();
+//				point.setTrack(this);
+//				
+//				//Get the next image
+//				ImageProcessor img;
+//				img = point.getRawIm();
+//				trackStack.addSlice(img);
+//			}
+//				
+//			//Show the stack
+//			ImagePlus trackPlus = new ImagePlus("Track "+trackID+": frames "+points.firstElement().frameNum+"-"+points.lastElement().frameNum ,trackStack);
+//			
+//			trackPlus.show();
+//			
+//		}
+//	}
+	
+	
 	public void playMovie(int labelInd, MaggotDisplayParameters mdp){
 		
 		if (tb!=null){

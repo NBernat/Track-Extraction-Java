@@ -1,7 +1,5 @@
 package TrackExtractionJava;
 
-import ij.ImagePlus;
-import ij.process.ImageProcessor;
 
 import java.util.Scanner;
 import java.util.Vector;
@@ -23,10 +21,9 @@ public class Test {//extends JFrame
 	public static void main(String[] args) {
 		
 		String inDir = "C:\\Users\\Natalie\\Documents\\TestJavaMat\\data\\201406122014";
-		ProcessingParameters prpa = new ProcessingParameters();
 		
 		System.out.println(inDir);
-		System.out.println(prpa.getOutFromInDir(inDir));
+		System.out.println(ProcessingParameters.getOutFromInDir(inDir));
 		
 		
 //		ImagePlus imp = new ImagePlus("C:\\Users\\Natalie\\Documents\\TestExProc\\unmaskTest.tif");

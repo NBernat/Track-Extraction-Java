@@ -4,7 +4,6 @@ package TrackExtractionJava;
 import ij.*;
 import ij.gui.Roi;
 import ij.measure.ResultsTable;
-import ij.plugin.filter.ParticleAnalyzer;
 //import ij.plugin.ImageCalculator;
 import ij.process.ImageProcessor;
 

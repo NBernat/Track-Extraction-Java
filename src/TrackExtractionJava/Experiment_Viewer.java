@@ -44,23 +44,29 @@ public class Experiment_Viewer implements PlugIn{
 			if(arg!=null && !arg.equals("")){
 				path = arg;
 			}else {
-			OpenDialog od = new OpenDialog("Choose a .ser file containing an experiment", null);
-			
-			String fileName = od.getFileName();
-			
-			String dir = od.getDirectory();
-			if (null == dir) return ; // dialog was canceled
-			dir = dir.replace('\\', '/'); // Windows safe
-			if (!dir.endsWith("/")) dir += "/";
-			
-			path = dir + fileName;
+				OpenDialog od = new OpenDialog("Choose a .ser file containing an experiment", null);
+				
+				String fileName = od.getFileName();
+				
+				String dir = od.getDirectory();
+				if (null == dir) return ; // dialog was canceled
+				dir = dir.replace('\\', '/'); // Windows safe
+				if (!dir.endsWith("/")) dir += "/";
+				
+				path = dir + fileName;
 			}
 			
 			
 			//try to open file
 			try {
-				IJ.showStatus("Opening the experiment file");
-				ex = Experiment.deserialize(path); 
+				String ext = path.substring(path.length()-3, path.length());
+				if (ext.equalsIgnoreCase("ser")){
+					IJ.showStatus("Opening the experiment file");
+					ex = Experiment.deserialize(path);
+				} else if (ext.equalsIgnoreCase("jav")){
+					ex =  Experiment.fromPath(path);
+				}
+				
 			} catch (Exception e){
 				new TextWindow("Error opening experiment", e.getMessage(), 500, 500);
 			}

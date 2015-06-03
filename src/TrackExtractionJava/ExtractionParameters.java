@@ -95,6 +95,8 @@ public class ExtractionParameters implements Serializable{
      * The global threshold value
      */
     double globalThreshValue = 20;
+    
+    boolean excludeEdges = true; 
     /**
      * The fraction from which the area of a maggot can deviate from the target area when splitting a point
      * <p>

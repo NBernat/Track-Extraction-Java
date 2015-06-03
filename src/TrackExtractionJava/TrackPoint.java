@@ -203,6 +203,17 @@ public class TrackPoint implements Serializable {
 		
 	}
 	
+	public ImageProcessor getRawIm(){
+		ImageProcessor trPtIm = track.tb.pe.fl.imageStack.getProcessor(frameNum).duplicate();
+		int newCornerX = (int)x - track.tb.ep.trackWindowWidth/2;
+		int newCornerY = (int)y - track.tb.ep.trackWindowHeight/2;
+		Rectangle newRect = new Rectangle(newCornerX, newCornerY, track.tb.ep.trackWindowWidth, track.tb.ep.trackWindowHeight);
+		trPtIm.setRoi(newRect);
+		trPtIm = trPtIm.crop();
+		return trPtIm;
+
+	}
+	
 	public ImageProcessor getIm(MaggotDisplayParameters mdp){
 		return getIm();
 	}

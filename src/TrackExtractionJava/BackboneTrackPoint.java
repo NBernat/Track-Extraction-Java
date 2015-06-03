@@ -350,7 +350,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	
 	public ImageProcessor getIm(){
 
-		return getIm(MaggotDisplayParameters.DEFAULTclusters,MaggotDisplayParameters.DEFAULTmid, MaggotDisplayParameters.DEFAULTinitialBB, 	
+		return getIm(MaggotDisplayParameters.DEFAULTexpandFac, MaggotDisplayParameters.DEFAULTclusters,MaggotDisplayParameters.DEFAULTmid, MaggotDisplayParameters.DEFAULTinitialBB, 	
 				MaggotDisplayParameters.DEFAULTcontour, MaggotDisplayParameters.DEFAULTht, MaggotDisplayParameters.DEFAULTforces, MaggotDisplayParameters.DEFAULTbackbone);
 		
 	}
@@ -360,19 +360,18 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		if (mdp==null){
 			return getIm();
 		} else {
-			return getIm(mdp.clusters, mdp.mid, mdp.initialBB, 	
+			return getIm(mdp.expandFac, mdp.clusters, mdp.mid, mdp.initialBB, 	
 				mdp.contour, mdp.ht, mdp.forces, mdp.backbone);
 		}
 	}
 	
 	
-	public ImageProcessor getIm(boolean clusters, boolean mid, boolean initialBB, boolean contour, boolean ht, boolean forces, boolean bb){
+	public ImageProcessor getIm(int expandFac, boolean clusters, boolean mid, boolean initialBB, boolean contour, boolean ht, boolean forces, boolean bb){
 
 		if (mid && MagPixX==null){
 			reloadMagPix();
 		}
 		
-		int expandFac = 10;//TODO MOVE TO PARAMETERS
 		
 		imOriginX = (int)x-(trackWindowWidth/2)-1;
 		imOriginY = (int)y-(trackWindowHeight/2)-1;

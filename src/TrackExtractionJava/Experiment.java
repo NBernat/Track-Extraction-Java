@@ -189,6 +189,34 @@ public class Experiment implements Serializable{
 		
 	}
 	
+	/**
+	 * Opens the experiment, assigns default parameters
+	 */
+	public static Experiment fromPath(String path){
+		
+		return fromPath(path, new ExtractionParameters(), new FittingParameters(), null);
+		
+	}
+	
+	public static Experiment fromPath(String path, ExtractionParameters exParam, FittingParameters fp, PrintWriter pw){
+		Experiment newEx;
+		try{
+			 
+			DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(new File(path))));
+			newEx = Experiment.fromDisk(dis, path, exParam, fp, pw);
+			dis.close();
+			
+			
+		} catch (Exception e){
+			if(pw!=null) pw.println("Error loading experiment");
+			return null;
+		}
+		
+		return newEx;
+	}
+	
+	
+	
 	private void loadFromDisk(DataInputStream dis, PrintWriter pw){
 		System.out.println("Loading from disk...");
 		int progress = -2;

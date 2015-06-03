@@ -424,6 +424,8 @@ public class TrackBuilder implements Serializable{
 			if (tm.checkTopMatchForCollision()>0){
 				
 				//try to rethreshold point
+				int npts = 2;
+				MaggotTrackPoint.splitPt2NPts((MaggotTrackPoint)tm.getTopMatchPoint(), npts, (int)tm.track.meanArea());
 				
 			}
 		}

@@ -568,6 +568,8 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		
 	}
 	
+	
+	
 	/**
 	 * Measures the sum of the squared distance from each spine coordinate to the corresponding spine point on the given midline
 	 * @param othermidline The midline to be measured against
@@ -698,7 +700,37 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		return htValid;
 	}
 	
-	public ImageProcessor getIm() {
+	public ImageProcessor getIm(){
+
+		return getIm(null);
+	}
+	
+	public ImageProcessor getIm(MaggotDisplayParameters mdp){
+
+		if (mdp==null){
+			mdp = new MaggotDisplayParameters();
+		}
+		
+		int expandFac = mdp.expandFac;
+		
+		imOriginX = (int)x-(trackWindowWidth/2)-1;
+		imOriginY = (int)y-(trackWindowHeight/2)-1;
+		im.snapshot();
+		
+		ImageProcessor bigIm = im.resize(im.getWidth()*expandFac);
+		
+		int centerX = (int)(x-rect.x)*(expandFac);
+		int centerY = (int)(y-rect.y)*(expandFac);
+		ImageProcessor pIm = CVUtils.padAndCenter(new ImagePlus("Point "+pointID, bigIm), expandFac*trackWindowWidth, expandFac*trackWindowHeight, centerX, centerY);
+		int offX = trackWindowWidth*(expandFac/2) - ((int)x-rect.x)*expandFac;//rect.x-imOriginX;
+		int offY = trackWindowHeight*(expandFac/2) - ((int)y-rect.y)*expandFac;//rect.y-imOriginY;
+		
+		
+		return drawFeatures(pIm, offX, offY, expandFac, mdp.mid, mdp.contour, mdp.ht); 
+		
+	}
+	
+	public ImageProcessor getImOLD() {
 		imOriginX = (int)x-(trackWindowWidth/2)-1;
 		imOriginY = (int)y-(trackWindowHeight/2)-1;
 		im.snapshot();
@@ -706,7 +738,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		ImageProcessor pIm = CVUtils.padAndCenter(new ImagePlus("Point "+pointID, im), trackWindowWidth, trackWindowHeight, (int)x-rect.x, (int)y-rect.y);
 		int offX = rect.x-imOriginX;
 		int offY = rect.y-imOriginY;
-		return drawFeatures(pIm, offX, offY); 
+		return drawFeaturesOLD(pIm, offX, offY); 
 		
 	}
 	
@@ -717,7 +749,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	 * @param offY Y offset of the TrackPoint coordinates compared to the origin of grayIm
 	 * @return The trackpoint features drawn atop the grayscale image
 	 */
-	protected ImageProcessor drawFeatures(ImageProcessor grayIm, int offX, int offY){
+	protected ImageProcessor drawFeaturesOLD(ImageProcessor grayIm, int offX, int offY){
 		
 		ImageProcessor im = grayIm.convertToRGB();
 				
@@ -782,6 +814,27 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			im.drawDot((int)tail.x+offX, (int)tail.y+offY);
 		}
 		
+		return im;
+	}
+	
+	protected ImageProcessor drawFeatures(ImageProcessor grayIm, int offX, int offY, int expandFac, boolean mid, boolean contour, boolean ht){
+		
+		ImageProcessor im = grayIm.convertToRGB();
+		
+		//MIDLINE
+		if (mid) displayUtils.drawMidline(im, midline, offX, offY, expandFac, Color.YELLOW);
+		
+		//CONTOUR
+		if (contour) displayUtils.drawContour(im, cont, expandFac, offX, offY, Color.BLUE);
+		
+		 
+		//HEAD AND TAIL
+		if (ht){
+			displayUtils.drawPoint(im, head, expandFac, offX, offY, Color.MAGENTA);
+			displayUtils.drawPoint(im, tail, expandFac, offX, offY, Color.GREEN);
+		}
+		
+			
 		return im;
 	}
 	
@@ -1022,5 +1075,20 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		
 		return 0;
 	}
+	
+	
+	public static Vector<MaggotTrackPoint> splitPt2NPts(MaggotTrackPoint mtp, int nPts, int targetArea){
+		
+		//try to find a threshold that gives the right # of pts
+//		int thr = CVUtils.findThreshforNumPts(mtp.im, ep, nPts, ep.minArea, ep.maxArea, targetArea)
+		
+//		if (thr<0){
+//			//Create 2 new points with watershed'ed ims
+//			
+//		}
+		
+		return null;
+	}
+	
 	
 }
