@@ -66,7 +66,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	/**
 	 * The backbone of the maggot
 	 */
-	private PolygonRoi backbone;
+	PolygonRoi backbone;
 	
 	/**
 	 * For plotting
@@ -340,8 +340,8 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 //		}
 	}
 	
-	public PolygonRoi getBackbone(){
-		return backbone;
+	public double[][] getBackbone(){
+		return CVUtils.fPoly2Array(backbone.getFloatPolygon(), rect.x, rect.y);
 	}
 	
 	public boolean getArtificialMid(){

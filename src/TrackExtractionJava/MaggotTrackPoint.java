@@ -626,6 +626,20 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		return cont;
 	}
 	
+	public int[][] getContourArray(){
+		
+		int[][] ar = new int[2][cont.size()];
+		
+		for (int i=0; i<cont.size(); i++){
+			ContourPoint cp = cont.get(i);
+			ar[0][i] = cp.x;
+			ar[1][i] = cp.y;
+		}
+		
+		
+		return ar;
+	}
+	
 	public PolygonRoi getContourRoi(){
 		
 		float[] x = new float[cont.size()];
@@ -651,16 +665,25 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		return ip;
 	}
 	
-	public ContourPoint getHead(){
-		return head;
+	public int[] getHead(){
+		int[] h = {head.x+rect.x, head.y+rect.y};
+		return h;
 	}
 	
-	public ContourPoint getTail(){
-		return tail;
+	public int[] getTail(){
+		int[] t = {tail.x+rect.x, tail.y+rect.y};
+		return t;
+//		return tail;
 	}
 	
-	public ContourPoint getMid(){
-		return midpoint;
+	public int[] getMid(){
+		int[] m = {midpoint.x+rect.x, midpoint.y+rect.y};
+		return m;
+//		return midpoint;
+	}
+	
+	public double[][] getMidlineArray(){
+		return CVUtils.fPoly2Array(midline.getFloatPolygon(), rect.x, rect.y);
 	}
 	
 	public PolygonRoi getMidline(){

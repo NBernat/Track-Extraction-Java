@@ -93,6 +93,7 @@ public class Experiment_Processor implements PlugIn{
 					//TODO release memory to OS? System.gc
 				}
 				
+				/*
 				try{
 					log("Testing MagEx.fromDisk...");
 					testFromDisk(false, processLog);
@@ -103,21 +104,25 @@ public class Experiment_Processor implements PlugIn{
 					exc.printStackTrace(pw);
 					log ("...Error in MTP Experiment fromDisk:\n"+sw.toString());
 				}
+				*/
 				
-				ex = new Experiment(ex);
-				log("Fitting "+ex.getNumTracks()+" Tracks...");
-				fitTracks();
-				log("...done fitting tracks");
-				if (prParams.saveFitEx) {
-					log("Saving backbone tracks...");
-					if (saveNewTracks()){
-						log("...done saving backbone tracks");
-					} else {
-						log("Error saving tracks");
+				if (prParams.doFitting){
+					ex = new Experiment(ex);
+					log("Fitting "+ex.getNumTracks()+" Tracks...");
+					fitTracks();
+					log("...done fitting tracks");
+					if (prParams.saveFitEx) {
+						log("Saving backbone tracks...");
+						if (saveNewTracks()){
+							log("...done saving backbone tracks");
+						} else {
+							log("Error saving tracks");
+						}
+						IJ.showStatus("Done Saving BackboneTrackPoint Experiment");
 					}
-					IJ.showStatus("Done Saving BackboneTrackPoint Experiment");
+					
 				}
-				
+				/*
 				try{
 					log("Testing FitEx.fromDisk...");
 					testFromDisk(true, processLog);
@@ -128,7 +133,7 @@ public class Experiment_Processor implements PlugIn{
 					exc.printStackTrace(pw);
 					log ("...Error in BTP Experiment fromDisk:\n"+sw.toString());
 				}
-				
+				*/
 				//TODO release memory to OS? System.gc
 			} else {
 				log("...no success");
@@ -165,7 +170,7 @@ public class Experiment_Processor implements PlugIn{
 			 
 			DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(f)));
 			Experiment newEx = Experiment.fromDisk(dis, f.getPath(), new ExtractionParameters(), new FittingParameters(), pw);
-			
+			dis.close();
 			IJ.showStatus("...done loading experiment (showing in frame)");
 
 			if (pw!=null) pw.println("Opening frame...");
@@ -173,6 +178,8 @@ public class Experiment_Processor implements PlugIn{
 			exFrame.run(null);
 
 			if (pw!=null) pw.println("...Frame open");
+			
+			
 		} catch (Exception e){
 			if(pw!=null) pw.println("Error loading experiment");
 			return;

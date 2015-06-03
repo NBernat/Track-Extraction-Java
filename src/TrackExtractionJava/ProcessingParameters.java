@@ -10,6 +10,7 @@ public class ProcessingParameters {
 	 */
 	int minTrackLen = 80;//TODO set this when fp is set
 	
+	boolean doFitting = true;
 	
 	/**
 	 * Closes the MMF window
@@ -34,7 +35,17 @@ public class ProcessingParameters {
 	 */
 	boolean saveFitEx = true;
 	
-	
+	public static String getOutFromInDir(String inDir){
+		
+		StringBuilder out = new StringBuilder(inDir);
+		
+		String dataStr = "data";
+		String exStr = "extracted";
+		int ind = out.lastIndexOf(dataStr);
+		out.replace(ind, ind+dataStr.length(), exStr);
+				
+		return out.toString();
+	}
 	
 	public String[] setLogPath(String outDir, String srcName){
 		String[] logPathParts = {outDir, "ProcessingLog.txt"};
@@ -44,7 +55,7 @@ public class ProcessingParameters {
 	public String[] setMagExPath(String outDir, String srcName){
 		
 		StringBuilder name = new StringBuilder(srcName);
-		name.replace(name.lastIndexOf("."), name.length(), "_MTP.bin");
+		name.replace(name.lastIndexOf("."), name.length(), "_MTP.jav");
 		String[] MagExPathParts = {outDir, name.toString()};
 		return MagExPathParts;
 	}
@@ -52,7 +63,7 @@ public class ProcessingParameters {
 	public String[] setFitExPath(String outDir, String srcName){
 
 		StringBuilder name = new StringBuilder(srcName);
-		name.replace(name.lastIndexOf("."), name.length(), "_BTP.bin");
+		name.replace(name.lastIndexOf("."), name.length(), ".jav");
 		String[] FitExPathParts = {outDir, name.toString()};
 		return FitExPathParts;
 	}

@@ -135,20 +135,27 @@ public class TrackMatch implements Serializable {
 	 */
 	public int cutPointsByDistance(double distCut){
 		int numInvalidated = 0;
+		int topInd = getTopMatchInd();
 		
 		int i=0;
 		while (i<matchPts.length){
 			if (dist2MatchPts[i]>distCut){
-				if (i==getTopMatchInd()){
-					matchPts[i].setNumMatches(matchPts[i].getNumMatches()-1);
-				}
+				
 				validMatch[i] = 0;
+				
+				if (i==topInd){
+					matchPts[topInd].setNumMatches(matchPts[topInd].getNumMatches()-1);
+					topInd = getTopMatchInd();
+					matchPts[topInd].setNumMatches(matchPts[topInd].getNumMatches()+1);
+				}
+				//INCREMENT NUM MATCHES OF THE NEXT VALID PT??
 			}
 			i++;
 		}
 		
 		return numInvalidated;
 	}
+	
 	
 	/**
 	 * Moves point data from one index to another

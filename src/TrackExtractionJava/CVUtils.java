@@ -10,10 +10,25 @@ import ij.measure.Measurements;
 import ij.measure.ResultsTable;
 import ij.plugin.filter.ParticleAnalyzer;
 import ij.process.Blitter;
+import ij.process.FloatPolygon;
 import ij.process.ImageProcessor;
 
 
 public class CVUtils {
+	
+	public static double[][] fPoly2Array(FloatPolygon fp, int offX, int offY){
+		
+		double[][] ar = new double[2][fp.npoints];
+		for (int i=0; i<fp.npoints; i++){
+			ar[0][i] = fp.xpoints[i]+offX;
+			ar[1][i] = fp.ypoints[i]+offY;
+		}
+		
+		return ar;
+	}
+	
+	
+	
 
 	//rethreshold to a specified number of regions
 	

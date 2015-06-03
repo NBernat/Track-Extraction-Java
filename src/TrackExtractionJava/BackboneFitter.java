@@ -322,8 +322,8 @@ public class BackboneFitter {
 			
 			Vector<FloatPolygon> interpdBBs;
 			for (int i=(prev+1); i<BTPs.size(); i++){
-				if(BTPs.get(i).getBackbone()!=null){
-					interpdBBs = interpBackbones(i-prev-1, origin, origin, BTPs.get(prev).getBackbone().getFloatPolygon(), BTPs.get(i).getBackbone().getFloatPolygon());
+				if(BTPs.get(i).backbone!=null){
+					interpdBBs = interpBackbones(i-prev-1, origin, origin, BTPs.get(prev).backbone.getFloatPolygon(), BTPs.get(i).backbone.getFloatPolygon());
 					//fill in the midlines
 					for (int j=prev; j<i; j++){
 						BTPs.get(j).setBackboneInfo(new PolygonRoi(interpdBBs.get(j-prev), PolygonRoi.POLYLINE), origin);

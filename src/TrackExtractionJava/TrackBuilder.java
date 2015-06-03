@@ -329,28 +329,40 @@ public class TrackBuilder implements Serializable{
 	
 	
 	/**
-	 * Maintains the collision structures by adding new collisions, trying basic methods of fixing current colllions, and ending finished collisions 
+	 * Maintains the collision structures by adding new collisions, trying basic methods of fixing current collisions, and ending finished collisions 
 	 */
 	private void manageCollisions(){
 		
 		if (ep.collisionLevel==0){
+			//End all tracks involved in a collision
+			
+			int numEnded = endNewCollisions();
+			comm.message("Tracks ended due to collision: "+numEnded, VerbLevel.verb_debug);
+			
+		} else if(ep.collisionLevel==1) {
+			//Try to resolve collisions via rethresholding, THEN end remaining collisions
+			avoidCollisions();
 			
 			int numEnded = endNewCollisions();
 			comm.message("Tracks ended due to collision: "+numEnded, VerbLevel.verb_debug);
 			
 		} else {
-						
+			//Try above, then track collision events
+			
+			//FOR LATER COLLISION TRACKING
+			avoidOrCreateCollisions();
+			
 			//if a point is assigned to more than one track, start a collision event
-			Vector<TrackMatch> newColMatches = detectNewCollisions();
-			comm.message("Number of new collisions in frame "+frameNum+": "+newColMatches.size(), VerbLevel.verb_debug);
+//			Vector<TrackMatch> newColMatches = detectNewCollisions();
+//			comm.message("Number of new collisions in frame "+frameNum+": "+newColMatches.size(), VerbLevel.verb_debug);
+//			
+//			//Try to maintain number of incoming tracks in each collision by grabbing nearby tracks and splitting points 
+//			int endedCols = endCollisions();
+//			comm.message("Number of collisions ended in frame "+frameNum+": "+endedCols, VerbLevel.verb_debug);
 			
-			//Try to maintain number of incoming tracks in each collision by grabbing nearby tracks and splitting points 
-			int endedCols = endCollisions();
-			comm.message("Number of collisions ended in frame "+frameNum+": "+endedCols, VerbLevel.verb_debug);
 			
 			
-			
-			matches.addAll(newColMatches);
+//			matches.addAll(newColMatches);
 			//if number incoming = number outgoing, finish
 //			int numFinishedCollisions = releaseFinishedCollisions();
 //			comm.message("Number of collisions ended in frame "+frameNum+": "+numFinishedCollisions, VerbLevel.verb_debug);
@@ -405,6 +417,41 @@ public class TrackBuilder implements Serializable{
 		comm.message("Ended "+numEnded+" Collision tracks", VerbLevel.verb_debug);
 		return numEnded;
 	}
+	
+	
+	private void avoidCollisions(){
+		for (TrackMatch tm : matches){
+			if (tm.checkTopMatchForCollision()>0){
+				
+				//try to rethreshold point
+				
+			}
+		}
+	}
+	
+	
+	
+	//MEANT FOR LATER, DURING COLLISION TRACKING
+	private void avoidOrCreateCollisions(){
+		
+		for (TrackMatch tm : matches){
+			if (tm.checkTopMatchForCollision()>0){
+				CollisionTrack ct = avoidOrCreateCollision(tm);
+				if (ct!=null){
+					//TODO add to list of collisions
+				}
+			}
+		}
+		
+		
+	}
+	
+	private CollisionTrack avoidOrCreateCollision(TrackMatch tm){
+		
+		//TODO
+		return null;
+	}
+	
 	
 	
 	/**
@@ -656,12 +703,7 @@ public class TrackBuilder implements Serializable{
 	private int endCollisions(){
 		
 		int endedCols = 0;
-
-		
-//		ListIterator<T>
-		
-		
-		
+	
 		ListIterator<Integer> colIt = activeColIDs.listIterator();
 		Vector<Integer> toRemove = new Vector<Integer>();
 		while (colIt.hasNext()) {
@@ -734,9 +776,9 @@ public class TrackBuilder implements Serializable{
 				match.track.extendTrack(match.getTopMatchPoint());
 				//If the track is in a collision, mark the new point 
 				//THIS MAY BE MODIFIED vvvv
-				if (match.track.isCollision.get(match.track.isCollision.size()-1)){
+//				if (match.track.isCollision.get(match.track.isCollision.size()-1)){
 //					match.track.markCollision(frameNum, null);
-				}
+//				}
 				
 
 				activePts.remove(match.track.getEnd());
@@ -761,11 +803,11 @@ public class TrackBuilder implements Serializable{
 		while (tpIt.hasNext()) {
 			TrackPoint pt = tpIt.next();
 			comm.message("Getting num of matches for point "+pt.pointID, VerbLevel.verb_debug);
-			if (pt.getNumMatches()==0) {
+			
 				comm.message("Adding a new track", VerbLevel.verb_debug);
 				activeTracks.addElement(new Track(pt, this));
 				numNew++;
-			} else {
+			if (pt.getNumMatches()!=0) {
 				comm.message("TrackPoint "+pt.pointID+" has TrackMatches, but remained active after matches were added to tracks", VerbLevel.verb_warning);
 			}
 		}
