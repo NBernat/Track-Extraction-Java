@@ -10,7 +10,7 @@ public class ProcessingParameters {
 	 */
 	int minTrackLen = 80;//TODO set this when fp is set
 	
-	boolean doFitting = true;
+	boolean doFitting = false;
 	
 	/**
 	 * Closes the MMF window

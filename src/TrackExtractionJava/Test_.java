@@ -18,7 +18,7 @@ public class Test_ implements PlugIn {//extends JFrame
 		//Get the info from the track
 		String path = "C:\\Users\\Natalie\\Documents\\TestExProc\\Collision testing\\berlin@berlin__LIGHT_RANDOM_WALK_S1_112Hz_201402121807_MTP.jav";
 		Experiment ex = Experiment.fromPath(path);
-		Track tr = ex.getTrack(7);
+		Track tr = ex.getTrack(0);
 		MaggotTrackPoint tp = (MaggotTrackPoint)tr.getPoint(0);
 		ExtractionParameters ep = new ExtractionParameters();
 		ep.excludeEdges = false;

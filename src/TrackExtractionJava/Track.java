@@ -65,6 +65,8 @@ public class Track implements Serializable{
 	
 	transient Communicator comm;
 	
+	String otherInfo = "";
+	
 	
 	public Track(){
 		
@@ -634,7 +636,7 @@ public class Track implements Serializable{
 	}
 	
 	public String description(){
-		return makeDescription(""+trackID, points, "");
+		return makeDescription(""+trackID, points, otherInfo);
 	}
 	
 	public static String emptyDescription(){

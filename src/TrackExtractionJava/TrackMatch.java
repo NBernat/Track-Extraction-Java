@@ -84,6 +84,21 @@ public class TrackMatch implements Serializable {
 		
 	}
 	
+	/**
+	 * Constructs a singleton match
+	 * @param tr
+	 * @param pt
+	 * @param maxDist
+	 */
+	public TrackMatch(Track tr, TrackPoint pt, double maxDist){
+		init(tr,1,null);
+		matchPts[0] = pt;
+		dist2MatchPts[0] = tr.distFromEnd(pt);
+		validMatch[0] = (dist2MatchPts[0]<=maxDist)? 1:0;
+		track.setMatch(this);
+		
+	}
+	
 	public void init(Track track, int numMatches, TrackBuilder TB){
 		this.track = track;
 		matchPts = new TrackPoint[numMatches];
@@ -127,6 +142,69 @@ public class TrackMatch implements Serializable {
 		matchPts[0].setNumMatches(matchPts[0].getNumMatches()+1);
 			
 	}
+	
+	@SuppressWarnings("unchecked")
+	public static Vector<TrackMatch> matchNPts2NTracks(Vector <? extends TrackPoint> pts, Vector<Track> tracks, double maxDist){
+		
+		if (pts.size()!=tracks.size()){
+			return null;
+		}
+		
+		if (tracks.size()==1){
+			Vector<TrackMatch> matches = new Vector<TrackMatch>();
+			matches.add(new TrackMatch(tracks.firstElement(), pts.firstElement(), maxDist));
+			return matches;
+		} else if (tracks.size()==2){
+			Vector<TrackMatch> matches = new Vector<TrackMatch>();
+			//compare each
+			double dist1 = tracks.get(0).distFromEnd(pts.get(0))+tracks.get(1).distFromEnd(pts.get(1));
+			double dist2 = tracks.get(0).distFromEnd(pts.get(1))+tracks.get(1).distFromEnd(pts.get(0));
+			if (dist1<dist2){
+				matches.add(new TrackMatch(tracks.get(0), pts.get(0), maxDist));
+				matches.add(new TrackMatch(tracks.get(1), pts.get(1), maxDist));
+			} else{
+				matches.add(new TrackMatch(tracks.get(0), pts.get(1), maxDist));
+				matches.add(new TrackMatch(tracks.get(1), pts.get(0), maxDist));
+			}
+			return matches;
+		} else {
+			//This is not optimal bc it makes a lot of TrackMatch objects that get thrown away, but this case rarely happens often so...yeah
+			
+			//"Match" the first track to the i'th point, then find the matches for the remaining subset; take the min total dist
+			Vector<Track> subTracks = (Vector<Track>)tracks.clone();
+			subTracks.remove(0);
+
+			Vector<TrackMatch> bestMatches = new Vector<TrackMatch>();
+			int bestInd=-1;
+			double minDist = Double.MAX_VALUE;
+
+			Vector<TrackPoint> subPts;
+			double dist;
+			for (int i=0; i<pts.size(); i++){
+				subPts = (Vector<TrackPoint>)pts.clone();
+				subPts.remove(i);
+				Vector<TrackMatch> subMatches = matchNPts2NTracks(subPts, subTracks, maxDist);
+				dist = totalDist(subMatches) + tracks.firstElement().distFromEnd(pts.get(i));
+				if (dist<minDist){
+					bestInd = i;
+					bestMatches = subMatches;
+				}
+			}
+			
+			bestMatches.add(new TrackMatch(tracks.firstElement(), pts.get(bestInd), maxDist));
+			return bestMatches;
+		}
+		
+	}
+	
+	public static double totalDist(Vector<TrackMatch> matches){
+		double d = 0;
+		for (TrackMatch m : matches){
+			d+=m.track.distFromEnd(m.getTopMatchPoint());
+		}
+		return d;
+	}
+	
 	
 	/**
 	 *  Marks as invalid matches that are farther than DISTCUT away from the track 
@@ -172,6 +250,14 @@ public class TrackMatch implements Serializable {
 		dist2MatchPts[toIndex] = dist2MatchPts[fromIndex];
 		validMatch[toIndex] = validMatch[fromIndex];
 		
+	}
+	
+	public static Vector<Track> getTracks(Vector<TrackMatch> matches){
+		Vector<Track> t = new Vector<Track>();
+		for(TrackMatch m: matches){
+			t.add(m.track);
+		}
+		return t;
 	}
 	
 	/**

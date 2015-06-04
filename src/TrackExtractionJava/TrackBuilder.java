@@ -342,9 +342,7 @@ public class TrackBuilder implements Serializable{
 		} else if(ep.collisionLevel==1) {
 			//Try to resolve collisions via rethresholding, THEN end remaining collisions
 			avoidCollisions();
-			
-			int numEnded = endNewCollisions();
-			comm.message("Tracks ended due to collision: "+numEnded, VerbLevel.verb_debug);
+			endNewCollisions();
 			
 		} else {
 			//Try above, then track collision events
@@ -388,11 +386,10 @@ public class TrackBuilder implements Serializable{
 			
 			if (match.checkTopMatchForCollision()>0) {
 				comm.message("Collision found, "+match.getTopMatchPoint().getNumMatches()+" tracks matched to point", VerbLevel.verb_debug);
+				
 				//Collect the info from the tracks in collisions
 				Vector<TrackMatch> colMatches= new Vector<TrackMatch>();
-				
 				colMatches.add(match);
-				
 				//Find all the additional tracks in the collision
 				int numColliding = match.getTopMatchPoint().getNumMatches();
 				comm.message("Collision has "+numColliding+" tracks", VerbLevel.verb_debug);
@@ -405,8 +402,11 @@ public class TrackBuilder implements Serializable{
 					numEnded++;
 					TrackMatch endMatch = cmIt.next();
 					trackMessage.message("Track "+endMatch.track.getTrackID()+" ended at frame "+(frameNum-1)+" for collision in frame "+frameNum, VerbLevel.verb_message);
+					endMatch.track.otherInfo += "Ended for collision at frame "+(frameNum-1)+"\nCollision parties: "+colMatches.get(0).track.getTrackID();
+					for (int j=1; j<colMatches.size(); j++){
+						endMatch.track.otherInfo += ", "+colMatches.get(j).track.getTrackID();
+					}
 					endMatch.clearAllMatches(); 
-					
 				}
 				if (numEnded>0) {
 					comm.message("Done clearing collisions", VerbLevel.verb_debug);
@@ -422,16 +422,38 @@ public class TrackBuilder implements Serializable{
 	private void avoidCollisions(){
 		for (TrackMatch tm : matches){
 			if (tm.checkTopMatchForCollision()>0){
-				
-				//try to rethreshold point
-				int npts = 2;
-				MaggotTrackPoint.splitPt2NPts((MaggotTrackPoint)tm.getTopMatchPoint(), npts, (int)tm.track.meanArea());
-				
+				rethreshCollision(tm);
 			}
 		}
 	}
 	
-	
+	private boolean rethreshCollision(TrackMatch tm){
+		
+		//try to rethreshold point
+		int npts = tm.getTopMatchPoint().numMatches;
+		Vector<MaggotTrackPoint> newPts = MaggotTrackPoint.splitPt2NPts((MaggotTrackPoint)tm.getTopMatchPoint(), npts, (int)tm.track.meanArea());
+		
+		if (newPts!=null){
+			
+			//Find all the track[matche]s in the collision
+			Vector<TrackMatch> colMatches= new Vector<TrackMatch>();
+			colMatches.add(tm);
+			colMatches.addAll(getCollisionMatches(tm));
+			
+			//Match points to tracks so as to minimize total dist between pairs
+			Vector<TrackMatch> newMatches = TrackMatch.matchNPts2NTracks(newPts, TrackMatch.getTracks(colMatches), ep.maxMatchDist);
+			
+			//Remove old point from activePts, add new points
+			activePts.remove(tm.getTopMatchPoint());
+			activePts.addAll(newPts);
+			matches.addAll(newMatches);
+			matches.removeAll(colMatches);
+			
+			return true;//Successfully avoided collision
+		} else {
+			return false;//Did not avoid collision
+		}
+	}
 	
 	//MEANT FOR LATER, DURING COLLISION TRACKING
 	private void avoidOrCreateCollisions(){
