@@ -1,8 +1,15 @@
 package TrackExtractionJava;
 
 
+import java.io.File;
+import java.util.Vector;
+
+import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
+import ij.WindowManager;
+import ij.gui.ImageWindow;
+import ij.measure.ResultsTable;
 import ij.plugin.PlugIn;
 import ij.process.ImageProcessor;
 import ij.text.TextWindow;
@@ -15,10 +22,13 @@ public class Test_ implements PlugIn {//extends JFrame
 
 	public static void main(String[] args) {
 
+		//////////////
+		// TEST FINDTHRESHFORNUMPTS
+		//////////////
 		//Get the info from the track
 		String path = "C:\\Users\\Natalie\\Documents\\TestExProc\\Collision testing\\berlin@berlin__LIGHT_RANDOM_WALK_S1_112Hz_201402121807_MTP.jav";
 		Experiment ex = Experiment.fromPath(path);
-		Track tr = ex.getTrack(0);
+		Track tr = ex.getTrack(7);
 		MaggotTrackPoint tp = (MaggotTrackPoint)tr.getPoint(0);
 		ExtractionParameters ep = new ExtractionParameters();
 		ep.excludeEdges = false;
@@ -51,11 +61,36 @@ public class Test_ implements PlugIn {//extends JFrame
 		ImageProcessor thIm2 = im.duplicate();
 		thIm2.threshold(thFor2Mags);
 		is.addSlice(thIm2);
-		
 		//Show the stack
 		ImagePlus imp = new ImagePlus("Thresholding; target area ="+targetArea+"; auto val ="+thFor2Mags, is);
 		imp.show();
 		
+		//////////////
+		// TEST SPLITPT2NPTS
+		//////////////
+		//tp
+		IJ.showStatus("Opening MMF...");	
+		String dir = "C:\\Users\\Natalie\\Documents\\TestExProc\\Collision testing";
+		String filename = "berlin@berlin__LIGHT_RANDOM_WALK_S1_112Hz_201402121807.mmf";
+		IJ.run("Import MMF", "path=["+new File(dir, filename).getPath()+"]");
+		ImageWindow mmfWin = WindowManager.getCurrentWindow();
+		ImagePlus mmfStack = mmfWin.getImagePlus();
+		PointExtractor pe = new PointExtractor(mmfStack.getStack(), null, ep);
+		
+		//Find points in thIm2
+//		ResultsTable rt = CVUtils.findPoints(new ImagePlus("",thIm2), ep, false);//, tp.rect
+		
+//		new TextWindow("New Points", ""+rt.getCounter()+" new points", 500, 500);
+		
+		//Make points from ^^ (set thresh = thr)
+//		pe.rt2TrackPoints(rt, tp.frameNum, thFor2Mags);
+		
+		Vector<TrackPoint> splitPts = MaggotTrackPoint.splitPt2NPts(tp, 2, (int)tr.getPoint(tr.getNumPoints()-1).area, pe, ep);
+		if (splitPts!=null){
+			for (TrackPoint p : splitPts){
+				new ImageWindow(new ImagePlus("", p.getIm()));
+			}
+		}
 		
 	}
 	

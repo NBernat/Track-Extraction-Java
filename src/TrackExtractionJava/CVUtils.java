@@ -2,12 +2,14 @@ package TrackExtractionJava;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 
 import ij.ImagePlus;
 import ij.gui.Roi;
 import ij.measure.Measurements;
 import ij.measure.ResultsTable;
+import ij.plugin.filter.Analyzer;
 import ij.plugin.filter.ParticleAnalyzer;
 import ij.process.FloatPolygon;
 import ij.process.ImageProcessor;
@@ -133,18 +135,28 @@ public class CVUtils {
 
 	}
 	
-	
-
-
 	/**
 	 * 
 	 * @param threshIm Thresholded image to analyze
 	 * @param ep Extraction Parameters
 	 * @return A ResultsTable with the appropriate info
+	 * @return
 	 */
 	static ResultsTable findPoints(ImagePlus threshIm, ExtractionParameters ep, boolean showResults) {
+		return findPoints(threshIm, null, ep, showResults);
+	}
+
+	/**
+	 * Generates a ResultsTable filled with the points in the image. Note that all coordinates are RELATIVE TO THE IMAGE
+	 * @param threshIm Thresholded image to analyze
+	 * @param ep Extraction Parameters
+	 * @return A ResultsTable with the appropriate info
+	 */
+	static ResultsTable findPoints(ImagePlus threshIm, Rectangle analysisRect, ExtractionParameters ep, boolean showResults) {
 		
-		int options = getPointFindingOptions(showResults, ep.excludeEdges, ep.trackPointType>=2);
+		
+		boolean excludeEdges = analysisRect==null && ep.excludeEdges;
+		int options = getPointFindingOptions(showResults, excludeEdges, ep.trackPointType>=2);
 		int measurements = getPointFindingMeasurements();
 		ResultsTable rt = new ResultsTable();
 		
@@ -152,7 +164,11 @@ public class CVUtils {
 		
 		//Populate the results table
 		Roi r = threshIm.getRoi();
-		threshIm.deleteRoi();
+		if (analysisRect!=null){
+			threshIm.setRoi(analysisRect);
+		} else {
+			threshIm.deleteRoi();
+		}
 		partAn.analyze(threshIm);
 		threshIm.setRoi(r);
 		return rt;

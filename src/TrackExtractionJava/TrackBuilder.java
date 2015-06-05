@@ -431,7 +431,7 @@ public class TrackBuilder implements Serializable{
 		
 		//try to rethreshold point
 		int npts = tm.getTopMatchPoint().numMatches;
-		Vector<MaggotTrackPoint> newPts = MaggotTrackPoint.splitPt2NPts((MaggotTrackPoint)tm.getTopMatchPoint(), npts, (int)tm.track.meanArea());
+		Vector<TrackPoint> newPts = MaggotTrackPoint.splitPt2NPts((MaggotTrackPoint)tm.getTopMatchPoint(), npts, (int)tm.track.meanArea(), pe, ep);
 		
 		if (newPts!=null){
 			
@@ -684,25 +684,25 @@ public class TrackBuilder implements Serializable{
 		for(int i=0; i<colMatches.size(); i++){
 			trList.add(colMatches.get(i).track);
 		}
-		Vector<TrackPoint> splitPts = pe.splitPoint(badPt, colMatches.size(), (int) meanAreaOfTracks(trList));
+//		Vector<TrackPoint> splitPts = pe.splitPoint(badPt, colMatches.size(), (int) meanAreaOfTracks(trList));
 		
-		if (splitPts.size()>0) {
-			//Decide which point goes with which track
-			TrackPoint ptA = colMatches.get(0).track.getEnd();
-			TrackPoint ptB = colMatches.get(1).track.getEnd();
-			Vector<TrackPoint> orderedPts = matchPtsToNearbyPts(ptA, ptB, splitPts);
-			//Replace the points in the TrackMatches
-			orderedPts.get(0).setNumMatches(orderedPts.get(0).getNumMatches()+1);
-			colMatches.get(0).replaceMatch(1, orderedPts.get(0));
-			orderedPts.get(1).setNumMatches(orderedPts.get(1).getNumMatches()+1);
-			colMatches.get(1).replaceMatch(1, orderedPts.get(1));
-			
-			//Manage the points in the trackbuilder objects
-			activePts.remove(badPt);
-			activePts.addAll(orderedPts);
-			
-			return true;
-		}
+//		if (splitPts.size()>0) {
+//			//Decide which point goes with which track
+//			TrackPoint ptA = colMatches.get(0).track.getEnd();
+//			TrackPoint ptB = colMatches.get(1).track.getEnd();
+//			Vector<TrackPoint> orderedPts = matchPtsToNearbyPts(ptA, ptB, splitPts);
+//			//Replace the points in the TrackMatches
+//			orderedPts.get(0).setNumMatches(orderedPts.get(0).getNumMatches()+1);
+//			colMatches.get(0).replaceMatch(1, orderedPts.get(0));
+//			orderedPts.get(1).setNumMatches(orderedPts.get(1).getNumMatches()+1);
+//			colMatches.get(1).replaceMatch(1, orderedPts.get(1));
+//			
+//			//Manage the points in the trackbuilder objects
+//			activePts.remove(badPt);
+//			activePts.addAll(orderedPts);
+//			
+//			return true;
+//		}
 		
 		
 		return false;

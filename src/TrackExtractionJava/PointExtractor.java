@@ -72,7 +72,7 @@ public class PointExtractor {
 	
 	
 	/**
-	 * Object that retrieves frame from image
+	 * Object that retrieves frame from imagestack
 	 */
 	FrameLoader fl;
 	/**
@@ -89,7 +89,7 @@ public class PointExtractor {
 	/**
 	 * The current region of analysis
 	 */
-	Rectangle analysisRegion;
+	private Rectangle analysisRect;
 	/**
 	 * The image being processed
 	 */
@@ -226,7 +226,7 @@ public class PointExtractor {
 			currentIm = new ImagePlus("Frame "+frameNum,fl.returnIm);
 		}
 		assert (currentIm!=null);
-		analysisRegion = fl.ar;
+		analysisRect = fl.ar;
 				
 		comm.message("Thresholding image to zero...", VerbLevel.verb_debug);
 		defaultThresh();
@@ -248,11 +248,16 @@ public class PointExtractor {
 
 	}
 	
+	
+	public void extractPoints(int frameNum) {
+		extractPoints(frameNum, (int)ep.globalThreshValue);
+	}
+	
 	/**
 	 * Extracts points from the specified frame, storing them in extractedPoints
 	 * @param frameNum
 	 */
-	public void extractPoints(int frameNum) {
+	public void extractPoints(int frameNum, int thresh) {
 		
 		if (currentFrameNum!= frameNum){
 			loadFrame(frameNum);
@@ -269,7 +274,7 @@ public class PointExtractor {
 //	    comm.message("Frame "+currentFrameNum+": "+pointTable.getCounter()+" points in ResultsTable", VerbLevel.verb_message);
 //	    
 //	    extractedPoints = CVUtils.rt2TrackPoints(pointTable, currentFrameNum, comm, ep);
-	    extractedPoints = findPtsInIm(threshIm, (int) ep.globalThreshValue, showResults);
+	    extractedPoints = findPtsInIm(threshIm, thresh, showResults);
 	    
 	    
 	    String s = "Frame "+currentFrameNum+": Extracted "+extractedPoints.size()+" new points";
@@ -277,12 +282,18 @@ public class PointExtractor {
 	    		
 	}
 	
-	public Vector<TrackPoint> findPtsInIm(ImagePlus im, int thresh, boolean showResults){
-		pointTable = CVUtils.findPoints(im, ep, showResults);
+	private Vector<TrackPoint> findPtsInIm(ImagePlus im, int thresh, boolean showResults){
+		
+//		boolean excl = ep.excludeEdges;
+//		ep.excludeEdges = false;
+		pointTable = CVUtils.findPoints(im, analysisRect, ep, showResults);
+//		ep.excludeEdges = excl;
+		
+		
 		if (showResults) {
 			comm.message("Frame "+currentFrameNum+": "+pointTable.getCounter()+" points in ResultsTable", VerbLevel.verb_message);
 	    }
-		//Vector<TrackPoint> pts = CVUtils.rt2TrackPoints(pointTable, currentFrameNum, comm, ep, thresh);
+
 		Vector<TrackPoint> pts = rt2TrackPoints(pointTable, currentFrameNum, thresh);
 		return pts;
 	}
@@ -400,6 +411,7 @@ public class PointExtractor {
 	 * @param numDesiredPts the number of points which "should" be in that image
 	 * @return The new points if a threshold was found, otherwise an empty list 
 	 */
+	/**
 	public Vector<TrackPoint> splitPoint(TrackPoint point, int numDesiredPts, int targetArea){
 		
 		Vector<TrackPoint> newPoints = new Vector<TrackPoint>();
@@ -410,9 +422,9 @@ public class PointExtractor {
 		crIm.setRoi(point.rect);
 		crIm.getProcessor().crop();
 		//Try to find the threshold (CVUtils)
-		int minArea = (int) (targetArea*(1-ep.fracChangeForSplitting));
-		int maxArea = (int) (targetArea*(1+ep.fracChangeForSplitting));
-		int newThres = CVUtils.findThreshforNumPts(crIm, ep, numDesiredPts, minArea, maxArea, targetArea);
+//		int minArea = (int) (targetArea*(1-ep.fracChangeForSplitting));
+//		int maxArea = (int) (targetArea*(1+ep.fracChangeForSplitting));
+		int newThres = CVUtils.findThreshforNumPts(crIm, ep, numDesiredPts, (int)ep.minArea, (int)ep.maxArea, targetArea);
 		if (newThres>0){
 			//Threshold the image
 			crIm.getProcessor().threshold(newThres);
@@ -431,7 +443,7 @@ public class PointExtractor {
 		
 		return newPoints;
 	}
-
+	*/
 	
 	/**
 	 * Returns the extracted points
@@ -439,6 +451,14 @@ public class PointExtractor {
 	 */
 	public Vector<TrackPoint> getPoints(){
 		return extractedPoints;
+	}
+	
+	
+	public void setAnalysisRect(Rectangle r){
+		analysisRect = r;
+	}
+	public Rectangle getAnalysisRect(){
+		return analysisRect;
 	}
 	
 	

@@ -4,6 +4,7 @@ import ij.ImagePlus;
 import ij.gui.PolygonRoi;
 import ij.gui.Roi;
 import ij.gui.Wand;
+import ij.measure.ResultsTable;
 import ij.process.ByteProcessor;
 import ij.process.FloatPolygon;
 import ij.process.ImageProcessor;
@@ -1077,15 +1078,32 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	}
 	
 	
-	public static Vector<MaggotTrackPoint> splitPt2NPts(MaggotTrackPoint mtp, int nPts, int targetArea){
+	public static Vector<TrackPoint> splitPt2NPts(MaggotTrackPoint mtp, int nPts, int targetArea, PointExtractor pe, ExtractionParameters ep){
 		
 		//try to find a threshold that gives the right # of pts
-//		int thr = CVUtils.findThreshforNumPts(mtp.im, ep, nPts, ep.minArea, ep.maxArea, targetArea)
+		int thr = CVUtils.findThreshforNumPts(new ImagePlus("",mtp.im), ep, nPts, (int)ep.minArea, (int)ep.maxArea, targetArea);
 		
-//		if (thr<0){
-//			//Create 2 new points with watershed'ed ims
+		if (thr<0){
+			
+			Rectangle ar = pe.getAnalysisRect();
+			pe.setAnalysisRect(mtp.rect);
+			pe.extractPoints(mtp.frameNum, thr);
+			pe.setAnalysisRect(ar);
+//			Vector<TrackPoint> newPts = 
+			return pe.getPoints();
+			//Create 2 new points with watershed'ed ims
+//			ImageProcessor thIm = mtp.im.duplicate();
+//			thIm.threshold(thr);
 //			
-//		}
+//			//Find points in thIm
+//			ResultsTable rt = CVUtils.findPoints(new ImagePlus("",thIm), mtp.rect, ep, false);
+//			
+//			//Make points from ^^ (set thresh = thr)
+//			return pe.rt2TrackPoints(rt, mtp.frameNum, thr);
+			
+			
+			
+		}
 		
 		return null;
 	}
