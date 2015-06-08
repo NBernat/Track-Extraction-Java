@@ -13,6 +13,7 @@ import ij.plugin.filter.Analyzer;
 import ij.plugin.filter.ParticleAnalyzer;
 import ij.process.FloatPolygon;
 import ij.process.ImageProcessor;
+import ij.text.TextWindow;
 
 
 public class CVUtils {
@@ -65,6 +66,8 @@ public class CVUtils {
 	 */
 	static int findThreshforNumPts(ImagePlus image, ExtractionParameters ep, int numPts, int minArea, int maxArea, int targetArea, int minTh, int maxThres){
 
+		String debS = "";
+		
 	    boolean excl = ep.excludeEdges;
 	    ep.excludeEdges = false;
 		
@@ -77,23 +80,27 @@ public class CVUtils {
 	    int bestThres = -1;
 	    double goodness, bestGoodness = -200*numPts;
 	    for (int j=minTh; j<=maxThres; j++) {
+	    	
 	    	ImageProcessor thrIm = image.getProcessor().duplicate();
 	    	thrIm.threshold(j);
 	    	int ct = countNonZero(image);
-	    	if (ct<minTotal) {
-	    		break;
-	    	}
-	    	if (ct <= maxTotal){
+	    	
+	    	debS+="thresh="+j+", numAbove0="+ct+"; ";
+	    	
 	    		goodness = findGoodness(new ImagePlus("", thrIm), ep, numPts, minArea, maxArea, targetArea);
+	    		debS+="goodness="+goodness;
 	    		if (goodness > bestGoodness) {
+	    			debS+="; BEST";
 	    			bestGoodness = goodness;
 	    			bestThres = j;
 	        	}
-	    	}
+	    	debS+="\n";
 	    }
 
 	    ep.excludeEdges = excl;
-		
+
+	    new TextWindow("ThreshFinder debugger", debS, 500, 500);
+	    
 		return bestThres;
 	}
 	
@@ -165,7 +172,7 @@ public class CVUtils {
 		//Populate the results table
 		Roi r = threshIm.getRoi();
 		if (analysisRect!=null){
-			threshIm.setRoi(analysisRect);
+			threshIm.getProcessor().setRoi(analysisRect);
 		} else {
 			threshIm.deleteRoi();
 		}

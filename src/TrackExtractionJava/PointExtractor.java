@@ -10,6 +10,8 @@ import ij.process.ImageProcessor;
 import java.awt.Rectangle;
 import java.util.Vector;
 
+import com.sun.org.apache.xpath.internal.operations.And;
+
 
 /**
  * Extracts TrakPoints from an image
@@ -89,7 +91,7 @@ public class PointExtractor {
 	/**
 	 * The current region of analysis
 	 */
-	private Rectangle analysisRect;
+	Rectangle analysisRect;
 	/**
 	 * The image being processed
 	 */
@@ -222,15 +224,15 @@ public class PointExtractor {
 			comm.message("Frame Loader returned error", VerbLevel.verb_warning);
 			return 2;
 		} else {
-			comm.message("No error from frame loader when loading frame "+frameNum+" in pe.loadFrame", VerbLevel.verb_debug);
+			if (comm!=null) comm.message("No error from frame loader when loading frame "+frameNum+" in pe.loadFrame", VerbLevel.verb_debug);
 			currentIm = new ImagePlus("Frame "+frameNum,fl.returnIm);
 		}
 		assert (currentIm!=null);
 		analysisRect = fl.ar;
 				
-		comm.message("Thresholding image to zero...", VerbLevel.verb_debug);
+		if (comm!=null) comm.message("Thresholding image to zero...", VerbLevel.verb_debug);
 		defaultThresh();
-		comm.message("...finished thresholding image to zero", VerbLevel.verb_debug);
+		if (comm!=null) comm.message("...finished thresholding image to zero", VerbLevel.verb_debug);
 		
 		return 0;
 	}
@@ -243,11 +245,15 @@ public class PointExtractor {
 	void defaultThresh() {
 		
 		threshIm = new ImagePlus("Thresh im Frame "+currentFrameNum, currentIm.getProcessor().getBufferedImage());
-//		threshIm = (ImagePlus) currentIm.clone();
 		threshIm.getProcessor().threshold((int) ep.globalThreshValue);
 
 	}
 	
+	void rethresh(int thresh){
+		if (comm!=null) comm.message("Rethresholding to "+thresh, VerbLevel.verb_debug);
+		threshIm = new ImagePlus("Thresh im Frame "+currentFrameNum, currentIm.getProcessor().getBufferedImage());
+		threshIm.getProcessor().threshold(thresh);
+	}
 	
 	public void extractPoints(int frameNum) {
 		extractPoints(frameNum, (int)ep.globalThreshValue);
@@ -262,23 +268,22 @@ public class PointExtractor {
 		if (currentFrameNum!= frameNum){
 			loadFrame(frameNum);
 		}
+		if (thresh!=ep.globalThreshValue){
+			rethresh(thresh);
+		}
 		
-	    comm.message("extract points called", VerbLevel.verb_debug);
+		if (comm!=null) comm.message("extract points called", VerbLevel.verb_debug);
 	    
 	    boolean showResults =  ep.showSampleData>=2 && ep.sampleInd==frameNum;
 	    if (showResults) {
 	    	threshIm.show();
 	    }
-	    //
-//	    pointTable = CVUtils.findPoints(threshIm, ep, showResults);
-//	    comm.message("Frame "+currentFrameNum+": "+pointTable.getCounter()+" points in ResultsTable", VerbLevel.verb_message);
-//	    
-//	    extractedPoints = CVUtils.rt2TrackPoints(pointTable, currentFrameNum, comm, ep);
+
 	    extractedPoints = findPtsInIm(threshIm, thresh, showResults);
 	    
 	    
 	    String s = "Frame "+currentFrameNum+": Extracted "+extractedPoints.size()+" new points";
-	    comm.message(s, VerbLevel.verb_message);
+	    if (comm!=null) comm.message(s, VerbLevel.verb_message);
 	    		
 	}
 	
@@ -291,7 +296,7 @@ public class PointExtractor {
 		
 		
 		if (showResults) {
-			comm.message("Frame "+currentFrameNum+": "+pointTable.getCounter()+" points in ResultsTable", VerbLevel.verb_message);
+			if (comm!=null) comm.message("Frame "+currentFrameNum+": "+pointTable.getCounter()+" points in ResultsTable", VerbLevel.verb_message);
 	    }
 
 		Vector<TrackPoint> pts = rt2TrackPoints(pointTable, currentFrameNum, thresh);
@@ -311,10 +316,10 @@ public class PointExtractor {
 		
 		Vector<TrackPoint> tp = new Vector<TrackPoint>();
 		
-		for (int row=1; row<rt.getCounter(); row++) {
-			comm.message("Gathering info for Point "+row+" from ResultsTable", VerbLevel.verb_debug);
+		for (int row=0; row<rt.getCounter(); row++) {
+			if (comm!=null) comm.message("Gathering info for Point "+row+" from ResultsTable", VerbLevel.verb_debug);
 			double area = rt.getValueAsDouble(ResultsTable.AREA, row);
-			comm.message("Point "+row+": area="+area, VerbLevel.verb_debug);
+			if (comm!=null) comm.message("Point "+row+": area="+area, VerbLevel.verb_debug);
 			double x = rt.getValueAsDouble(ResultsTable.X_CENTROID, row);
 			double y = rt.getValueAsDouble(ResultsTable.Y_CENTROID, row);
 			double width = rt.getValueAsDouble(ResultsTable.ROI_WIDTH, row);
@@ -326,7 +331,7 @@ public class PointExtractor {
 			//Rectangle rect = new Rectangle((int)x-ep.roiPadding, (int)y-ep.roiPadding, (int)2*ep.roiPadding, (int)2*ep.roiPadding);
 			
 			
-			comm.message("Converting Point "+row+" "+"("+(int)x+","+(int)y+")"+"to TrackPoint", VerbLevel.verb_debug);
+			if (comm!=null) comm.message("Converting Point "+row+" "+"("+(int)x+","+(int)y+")"+"to TrackPoint", VerbLevel.verb_debug);
 			if (ep.properPointSize(area)) {
 				
 				switch (ep.trackPointType){
@@ -362,11 +367,11 @@ public class PointExtractor {
 					default:
 						TrackPoint newPt = new TrackPoint(x,y,rect,area,frameNum,thresh); 
 						tp.add(newPt);
-						comm.message("Point "+row+" has pointID "+newPt.pointID, VerbLevel.verb_debug);
+						if (comm!=null) comm.message("Point "+row+" has pointID "+newPt.pointID, VerbLevel.verb_debug);
 				}
 				
 			} else{
-				comm.message("Point was not proper size: not made into a point", VerbLevel.verb_debug);
+				if (comm!=null) comm.message("Point was not proper size: not made into a point", VerbLevel.verb_debug);
 			}
 			
 		}
@@ -455,7 +460,22 @@ public class PointExtractor {
 	
 	
 	public void setAnalysisRect(Rectangle r){
+		if (comm!=null){
+			if (analysisRect!=null){
+				comm.message("Analysis Rect being reset; prev:("+analysisRect.x+","+analysisRect.y+") w="+analysisRect.width+", h="+analysisRect.height, VerbLevel.verb_debug);
+			} else {
+				comm.message("Analysis Rect being reset; prev: null", VerbLevel.verb_debug);
+			}
+		}
 		analysisRect = r;
+		fl.setAnalysisRect(r);
+		if (comm!=null){
+			if (analysisRect==null){
+				comm.message("Analysis Rect reset; new:null", VerbLevel.verb_debug);
+			} else {
+				comm.message("Analysis Rect reset; new:("+analysisRect.x+","+analysisRect.y+") w="+analysisRect.width+", h="+analysisRect.height, VerbLevel.verb_debug);
+			}
+		}
 	}
 	public Rectangle getAnalysisRect(){
 		return analysisRect;

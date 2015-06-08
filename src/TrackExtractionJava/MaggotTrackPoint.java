@@ -93,7 +93,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	}
 	
 	private void findContours(){
-		comm.message("Finding Contours", VerbLevel.verb_debug);
+		if (comm!=null) comm.message("Finding Contours", VerbLevel.verb_debug);
 		ImagePlus thrIm = new ImagePlus("", im.getBufferedImage());//copies image
 		ImageProcessor thIm = thrIm.getProcessor();
 		thIm.threshold(thresh);
@@ -101,21 +101,21 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		wand.autoOutline(getStart().x-rect.x, getStart().y-rect.y);
 		
 		nConPts = wand.npoints;
-		comm.message("Wand arrays have "+wand.xpoints.length+" points, and report "+nConPts+" points", VerbLevel.verb_debug);
+		if (comm!=null) comm.message("Wand arrays have "+wand.xpoints.length+" points, and report "+nConPts+" points", VerbLevel.verb_debug);
 		int[] contourX = wand.xpoints;//Arrays.copyOfRange(wand.xpoints, 0, wand.npoints);//
 //		for (int i=0;i<nConPts;i++) contourX[i]+=rect.x; 
 		int[] contourY = wand.ypoints;//Arrays.copyOfRange(wand.ypoints, 0, wand.npoints);//
 //		for (int i=0;i<nConPts;i++) contourY[i]+=rect.y;
 		
-		comm.message("Point coords were gathered", VerbLevel.verb_debug);
+		if (comm!=null) comm.message("Point coords were gathered", VerbLevel.verb_debug);
 		PolygonRoi contour = new PolygonRoi(contourX, contourY, nConPts, Roi.POLYGON);
-		comm.message("Initial polygonRoi was made", VerbLevel.verb_debug);
+		if (comm!=null) comm.message("Initial polygonRoi was made", VerbLevel.verb_debug);
 		contour = new PolygonRoi(contour.getInterpolatedPolygon(1.0, false), Roi.POLYGON);//This makes the spacing between coordinates = 1.0 pixels apart, smoothing=false
 //		rect = contour.getBounds();
 //		im.setRoi(rect);
 //		im = im.crop();
 		
-		comm.message("Making ContourPoints", VerbLevel.verb_debug);
+		if (comm!=null) comm.message("Making ContourPoints", VerbLevel.verb_debug);
 		int ptN = contour.getNCoordinates();
 		cont = new Vector<ContourPoint>();
 		for(int ind=0; ind<ptN; ind++){
@@ -302,13 +302,13 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	
 	private void deriveMidline(int numMidPts){
 		
-		comm.message("Entering Midline creation", VerbLevel.verb_debug);
+		if (comm!=null) comm.message("Entering Midline creation", VerbLevel.verb_debug);
 		if(htValid && cont.get(headi)!=null && cont.get(taili)!=null){
 			//Turn each side of the maggot into a polygonRoi 
 			//	take the x-coords & y-coords, find indices of h&t
 			//  make array for each, create polygonRoi
 			int contNum = cont.size();
-			if (contNum<=6){
+			if (contNum<=6 && comm!=null){
 				comm.message("Contour has only "+contNum+"points", VerbLevel.verb_warning);
 			}
 			int leftNum = (contNum+headi-taili+1)%contNum;
@@ -328,23 +328,23 @@ public class MaggotTrackPoint extends ImTrackPoint {
 				rightY[i] = cont.get(ind).y;
 			}
 			
-			comm.message("Left originally has "+leftX.length+" (leftNum="+leftNum+") points", VerbLevel.verb_debug);
-			comm.message("Right originally has "+rightX.length+" (rightNum="+rightNum+") points", VerbLevel.verb_debug);
+			if (comm!=null) comm.message("Left originally has "+leftX.length+" (leftNum="+leftNum+") points", VerbLevel.verb_debug);
+			if (comm!=null) comm.message("Right originally has "+rightX.length+" (rightNum="+rightNum+") points", VerbLevel.verb_debug);
 			
 
 			leftSeg = new PolygonRoi(leftX, leftY, leftNum, Roi.POLYLINE);
 			rightSeg = new PolygonRoi(rightX, rightY, rightNum, Roi.POLYLINE);
 			
-			comm.message("Segment PolygonRoi's created", VerbLevel.verb_debug);
+			if (comm!=null) comm.message("Segment PolygonRoi's created", VerbLevel.verb_debug);
 			
 			//Interpolate each into numMidPts points (divide by numMidPts+1)
-			comm.message("Interpolating left", VerbLevel.verb_debug);
+			if (comm!=null) comm.message("Interpolating left", VerbLevel.verb_debug);
 			leftSeg = getInterpolatedSegment(leftSeg, numMidPts+2);
-			comm.message("Interpolating right", VerbLevel.verb_debug);
+			if (comm!=null) comm.message("Interpolating right", VerbLevel.verb_debug);
 			rightSeg = getInterpolatedSegment(rightSeg, numMidPts+2);
 			
-			comm.message("LeftSeg has "+leftSeg.getNCoordinates()+" points", VerbLevel.verb_debug);
-			comm.message("RightSeg has "+rightSeg.getNCoordinates()+" points", VerbLevel.verb_debug);
+			if (comm!=null) comm.message("LeftSeg has "+leftSeg.getNCoordinates()+" points", VerbLevel.verb_debug);
+			if (comm!=null) comm.message("RightSeg has "+rightSeg.getNCoordinates()+" points", VerbLevel.verb_debug);
 			
 			//Average the coordinates, one by one
 			float[] midX;
@@ -552,7 +552,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	protected void flipHT(){
 
 		if (!htValid){
-			comm.message("tried to flip HT, but HT is not valid.", VerbLevel.verb_debug);
+			if (comm!=null) comm.message("tried to flip HT, but HT is not valid.", VerbLevel.verb_debug);
 			return;
 		}
 		
@@ -1081,27 +1081,15 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	public static Vector<TrackPoint> splitPt2NPts(MaggotTrackPoint mtp, int nPts, int targetArea, PointExtractor pe, ExtractionParameters ep){
 		
 		//try to find a threshold that gives the right # of pts
-		int thr = CVUtils.findThreshforNumPts(new ImagePlus("",mtp.im), ep, nPts, (int)ep.minArea, (int)ep.maxArea, targetArea);
+		int thr = CVUtils.findThreshforNumPts(new ImagePlus("",mtp.getRawIm().duplicate()), ep, nPts, (int)ep.minArea, (int)ep.maxArea, targetArea, mtp.thresh, 255);
 		
-		if (thr<0){
+		if (thr>0){
 			
-			Rectangle ar = pe.getAnalysisRect();
+//			Rectangle ar = pe.getAnalysisRect();
 			pe.setAnalysisRect(mtp.rect);
 			pe.extractPoints(mtp.frameNum, thr);
-			pe.setAnalysisRect(ar);
-//			Vector<TrackPoint> newPts = 
+//			pe.setAnalysisRect(ar);
 			return pe.getPoints();
-			//Create 2 new points with watershed'ed ims
-//			ImageProcessor thIm = mtp.im.duplicate();
-//			thIm.threshold(thr);
-//			
-//			//Find points in thIm
-//			ResultsTable rt = CVUtils.findPoints(new ImagePlus("",thIm), mtp.rect, ep, false);
-//			
-//			//Make points from ^^ (set thresh = thr)
-//			return pe.rt2TrackPoints(rt, mtp.frameNum, thr);
-			
-			
 			
 		}
 		

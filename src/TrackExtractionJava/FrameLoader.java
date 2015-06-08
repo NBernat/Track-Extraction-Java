@@ -75,8 +75,12 @@ public class FrameLoader {
 	 * @param r Analysis rectangle
 	 */
 	void setAnalysisRect(Rectangle r){
-		ar = r;
-		String s = "analysis rectangle set to location ("+r.x+","+r.y+"), with width of "+r.getWidth()+"pixels and height of "+r.getHeight()+"pixels.";
+		if (r==null){
+			ar = new Rectangle(0,0,-1,-1);
+		} else {
+			ar = r;
+		}
+		String s = "analysis rectangle set to location ("+ar.x+","+ar.y+"), with width of "+ar.getWidth()+"pixels and height of "+ar.getHeight()+"pixels.";
 		comm.message(s, VerbLevel.verb_message);
 	}
 	
@@ -100,7 +104,7 @@ public class FrameLoader {
 	 */
 	int getFrame(int frameNumber, _frame_normalization_methodT fnm, double normTarget){
 		
-		comm.message("getFrame called", VerbLevel.verb_debug);
+		if (comm!=null) comm.message("getFrame called", VerbLevel.verb_debug);
 		if (lastFrameLoaded!=frameNumber) {
 			if (loadImage(frameNumber)!=0){
 	            return -1;
@@ -108,7 +112,7 @@ public class FrameLoader {
 		}
 		
 		if (loadIm==null) {
-			comm.message("Failed to load frame "+frameNumber, VerbLevel.verb_error);
+			if (comm!=null) comm.message("Failed to load frame "+frameNumber, VerbLevel.verb_error);
 			return -1;
 		}
 		
@@ -118,11 +122,11 @@ public class FrameLoader {
 		
 		
 		if (fnm==_frame_normalization_methodT._frame_none) {
-			comm.message("Returning cloned image", VerbLevel.verb_debug);
+			if (comm!=null) comm.message("Returning cloned image", VerbLevel.verb_debug);
 		} else {
 			
 			if (normTarget<=0) {
-				comm.message("Normalization target is less than zero, returning cloned image", VerbLevel.verb_warning);
+				if (comm!=null) comm.message("Normalization target is less than zero, returning cloned image", VerbLevel.verb_warning);
 				
 			} else {
 				
@@ -136,10 +140,10 @@ public class FrameLoader {
 					s+= " so I am multiplying it by "+nf;
 					
 					convertedIm.multiply(nf);
-					comm.message(s, VerbLevel.verb_verbose);
+					if (comm!=null) comm.message(s, VerbLevel.verb_verbose);
 					
 				} else {	
-					comm.message("Norm factor returned a value <= 0, returning cloned image", VerbLevel.verb_message);
+					if (comm!=null) comm.message("Norm factor returned a value <= 0, returning cloned image", VerbLevel.verb_message);
 					
 				}	
 			}
@@ -158,7 +162,7 @@ public class FrameLoader {
 	int loadImage(int frameNum){
 		
 		if (frameNum<1 || frameNum>=imageStack.getSize()){
-			comm.message("Tried to load frame number "+frameNum+", which is out of bounds", VerbLevel.verb_warning);
+			if (comm!=null) comm.message("Tried to load frame number "+frameNum+", which is out of bounds", VerbLevel.verb_warning);
 			return -1;
 		}
 		
@@ -166,7 +170,7 @@ public class FrameLoader {
 		lastFrameLoaded = frameNum;
 		
 		if (loadIm.getProcessor()==null) {
-			comm.message("Frame "+frameNum+" returned a null image", VerbLevel.verb_warning);
+			if (comm!=null) comm.message("Frame "+frameNum+" returned a null image", VerbLevel.verb_warning);
 			return 1;
 		}
 		
@@ -212,12 +216,12 @@ public class FrameLoader {
 	void checkAr() {
 	    String ss = "";
 	    ss+= "checkAr: ar was (x,y,w,h) " + ar.x + ", " + ar.y + ", " + ar.width + ", " + ar.height;
-	    comm.message(ss, VerbLevel.verb_debug);
+	    if (comm!=null) comm.message(ss, VerbLevel.verb_debug);
 	    if (ar.width < 0 || ar.height < 0) {
-	        comm.message("analysis rectangle was not set", VerbLevel.verb_warning);
+	    	if (comm!=null)  comm.message("analysis rectangle was not set", VerbLevel.verb_warning);
 	        ar.setLocation(0, 0);
 	        if (loadIm == null) {
-	            comm.message("loadIm is NULL.", VerbLevel.verb_error);
+	        	if (comm!=null) comm.message("loadIm is NULL.", VerbLevel.verb_error);
 	        } else {
 	            ar.width = loadIm.getWidth();
 	            ar.height = loadIm.getHeight();
@@ -229,19 +233,19 @@ public class FrameLoader {
 	            ss += "analysis rectangle width reduced from " + ar.width;
 	            ar.width = loadIm.getWidth() - ar.x;
 	            ss += " to " + ar.width + " to fit image width of " + loadIm.getWidth();
-	            comm.message(ss, VerbLevel.verb_warning);
+	            if (comm!=null) comm.message(ss, VerbLevel.verb_warning);
 	        }
 	        if (ar.height + ar.y > loadIm.getHeight()) {
 	            ss = "";
 	            ss += "analysis rectangle height reduced from " + ar.height;
 	            ar.height = loadIm.getHeight() - ar.y;
 	            ss += " to " + ar.height + " to fit image height of " + loadIm.getHeight();
-	            comm.message(ss, VerbLevel.verb_warning);
+	            if (comm!=null) comm.message(ss, VerbLevel.verb_warning);
 	        }
 	    }
 	    ss = "";
 	    ss += "checkAr: ar is (x,y,w,h) " + ar.x + ", " + ar.y + ", " + ar.width + ", " + ar.height;
-	    comm.message(ss, VerbLevel.verb_debug);
+	    if (comm!=null) comm.message(ss, VerbLevel.verb_debug);
 	}
 
 	/**
