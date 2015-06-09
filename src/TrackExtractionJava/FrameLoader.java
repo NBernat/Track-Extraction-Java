@@ -80,7 +80,7 @@ public class FrameLoader {
 		} else {
 			ar = r;
 		}
-		String s = "analysis rectangle set to location ("+ar.x+","+ar.y+"), with width of "+ar.getWidth()+"pixels and height of "+ar.getHeight()+"pixels.";
+		String s = "analysis rectangle set to location ("+ar.x+","+ar.y+"), with width of "+ar.getWidth()+" pixels and height of "+ar.getHeight()+" pixels.";
 		comm.message(s, VerbLevel.verb_message);
 	}
 	
@@ -117,7 +117,7 @@ public class FrameLoader {
 		}
 		
 		checkAr();
-		ImageProcessor convertedIm = (ImageProcessor)loadIm.getProcessor().clone();
+		ImageProcessor convertedIm = loadIm.getProcessor().duplicate();
 		convertedIm.setRoi(ar);
 		
 		
@@ -151,6 +151,7 @@ public class FrameLoader {
 		
 		//crop the image to the ROI
 		returnIm = convertedIm.crop();
+		if (comm!=null && ar.width>0) comm.message("FrameLoader: Return im size = "+returnIm.getWidth()+"x"+returnIm.getHeight(), VerbLevel.verb_message);
 		return 0; 
 	}
 	

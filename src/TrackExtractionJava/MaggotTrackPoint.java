@@ -1085,10 +1085,10 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		
 		if (thr>0){
 			
-//			Rectangle ar = pe.getAnalysisRect();
+			Rectangle ar = pe.getAnalysisRect();
 			pe.setAnalysisRect(mtp.rect);
 			pe.extractPoints(mtp.frameNum, thr);
-//			pe.setAnalysisRect(ar);
+			pe.setAnalysisRect(ar);
 			return pe.getPoints();
 			
 		}

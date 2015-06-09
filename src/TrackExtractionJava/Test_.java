@@ -31,7 +31,7 @@ public class Test_ implements PlugIn {//extends JFrame
 		//Get the info from the track
 		String path = "C:\\Users\\Natalie\\Documents\\TestExProc\\Collision testing\\berlin@berlin__LIGHT_RANDOM_WALK_S1_112Hz_201402121807_MTP.jav";
 		Experiment ex = Experiment.fromPath(path);
-		Track tr = ex.getTrack(6);
+		Track tr = ex.getTrack(7);
 		MaggotTrackPoint tp = (MaggotTrackPoint)tr.getPoint(0);
 		ExtractionParameters ep = new ExtractionParameters();
 		ep.excludeEdges = false;
@@ -55,6 +55,7 @@ public class Test_ implements PlugIn {//extends JFrame
 		int targetArea = (int)tr.getPoints().lastElement().area;
 		
 		//look at the "goodness values" in order to debug findThreshforNumPts
+		/*
 		StringBuilder sb = new StringBuilder();
 		for(int i=(int)ep.globalThreshValue; i<=255; i++){
 			ImageProcessor thIm3 = im.duplicate();
@@ -63,8 +64,9 @@ public class Test_ implements PlugIn {//extends JFrame
 			sb.append("Thresh "+i+": gv="+goodness+"\n");
 		}
 		new TextWindow("Goodness values", sb.toString(), 500, 500);
+		*/
 		
-		//Back to finding threshold for 2 maggots
+		//Final Version of findThreshforNumPts
 		int thFor2Mags = CVUtils.findThreshforNumPts(new ImagePlus("im", im.duplicate()), ep, 2, (int)ep.minArea, (int)ep.maxArea, targetArea, tp.thresh, 255);
 		
 		ImageProcessor thIm2 = im.duplicate();
@@ -87,6 +89,8 @@ public class Test_ implements PlugIn {//extends JFrame
 		Communicator c = new Communicator();
 		c.setVerbosity(VerbLevel.verb_debug);
 		PointExtractor pe = new PointExtractor(mmfStack.getStack(), c, ep);
+		mmfWin.close();
+		
 		
 		//Set the proper Analysis rect
 		pe.setAnalysisRect(tp.rect);
@@ -99,14 +103,16 @@ public class Test_ implements PlugIn {//extends JFrame
 //		pointTable.show("Points...");
 //		Vector<TrackPoint> splitPts = pe.rt2TrackPoints(pointTable, pe.currentFrameNum, thFor2Mags);//in pe.findpointsinim
 
-		//Extract points to generate splitPts
+		//Extract points to generate splitPts 
 //		pe.extractPoints(tp.frameNum, thFor2Mags);
 //		Vector<TrackPoint> splitPts = pe.getPoints();
 		
-		
+		//Final version of splitPts2NPts 
 		Vector<TrackPoint> splitPts = MaggotTrackPoint.splitPt2NPts(tp, 2, targetArea, pe, ep);
-		new TextWindow("Point Extraction", c.outString, 500, 500);
-		
+		c.message("\n \n \nPoint Info:", VerbLevel.verb_debug);
+		for (TrackPoint sp : splitPts){
+			c.message(sp.getTPDescription(), VerbLevel.verb_debug);
+		}
 		
 		if (splitPts!=null){
 			
@@ -117,6 +123,41 @@ public class Test_ implements PlugIn {//extends JFrame
 					new ImageWindow(new ImagePlus("", mp.getIm()));
 					new ImageWindow(new ImagePlus("", mp.getMask()));
 				}
+				
+				
+				
+				//////////////
+				// TEST MATCHNPTS2NTRACKS
+				//////////////
+				
+				Vector<Track> colTracks = new Vector<Track>();
+				colTracks.add(ex.getTrack(4));
+				colTracks.add(ex.getTrack(5));
+				
+				Vector<TrackMatch> matches = new Vector<TrackMatch>();
+				//compare each
+				double dist1 = colTracks.get(0).distFromEnd(splitPts.get(0))+colTracks.get(1).distFromEnd(splitPts.get(1));
+				double dist2 = colTracks.get(0).distFromEnd(splitPts.get(1))+colTracks.get(1).distFromEnd(splitPts.get(0));
+				if (dist1<dist2){
+					matches.add(new TrackMatch(colTracks.get(0), splitPts.get(0), ep.maxMatchDist));
+					matches.add(new TrackMatch(colTracks.get(1), splitPts.get(1), ep.maxMatchDist));
+				} else{
+					matches.add(new TrackMatch(colTracks.get(0), splitPts.get(1), ep.maxMatchDist));
+					matches.add(new TrackMatch(colTracks.get(1), splitPts.get(0), ep.maxMatchDist));
+				}
+				
+				
+				c.message("\n \n \nMatch Making:", VerbLevel.verb_debug);
+				matches.get(0).spillInfoToCommunicator(c);
+				matches.get(1).spillInfoToCommunicator(c);
+				
+				
+				
+				
+				//Final version of matchNPts2NTracks
+//				Vector<TrackMatch> newMatches = TrackMatch.matchNPts2NTracks(splitPts, colTracks, ep.maxMatchDist);
+				
+				
 			} else {
 				ImageStack ptSt = new ImageStack(500, 500);
 				for (TrackPoint p : splitPts){
@@ -131,6 +172,10 @@ public class Test_ implements PlugIn {//extends JFrame
 				new ImagePlus("SplitPts", ptSt).show();
 //				new TextWindow(":\\", stb.toString(), 500, 500);
 			}
+			
+			new TextWindow("Point Extraction, Matching", c.outString, 500, 500);
+			
+			
 		} else {
 			new TextWindow(":(", "No points", 500, 500);
 		}

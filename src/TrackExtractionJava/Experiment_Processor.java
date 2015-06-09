@@ -272,7 +272,7 @@ public class Experiment_Processor implements PlugIn{
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
 			e.printStackTrace(pw);
-			new TextWindow("Error opening experiment", sw.toString(), 500, 500);
+			new TextWindow("Error opening mmf", sw.toString(), 500, 500);
 			return false;
 		} finally{
 			indentLevel--;
@@ -295,7 +295,7 @@ public class Experiment_Processor implements PlugIn{
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
 			e.printStackTrace(pw);
-			new TextWindow("Error opening experiment", sw.toString(), 500, 500);
+			new TextWindow("Error opening serialized experiment", sw.toString(), 500, 500);
 			return false;
 		} finally{
 			indentLevel--;
@@ -341,19 +341,26 @@ public class Experiment_Processor implements PlugIn{
 	 */
 	private boolean extractTracks(){
 		indentLevel++;
+		String status = "";
+		IJ.showStatus("Extracting tracks");
+		status+="Running trackbuilder...\n";
+		MaggotTrackBuilder tb = new MaggotTrackBuilder(mmfStack.getImageStack(), new ExtractionParameters());
+
 		try {
 			//Extract the tracks
-			IJ.showStatus("Extracting tracks");
-			MaggotTrackBuilder tb = new MaggotTrackBuilder(mmfStack.getImageStack(), new ExtractionParameters());
 			tb.run();
+			status+="...Running complete! \n Converting to experiment... \n";
 			ex = new Experiment(tb.toExperiment());
-			tb.showCommOutput();
+			status+="...Converted to Experiment!\n";
+			
 			
 			//Show the extracted tracks
 			if(prParams.showMagEx){
 				IJ.showStatus("Showing Experiment");
+				status+="Showing experiment...\n";
 				ExperimentFrame exFrame = new ExperimentFrame(ex);
 				exFrame.run(null);
+				status+="...Experiment shown!\n";
 			}
 			
 		} catch  (Exception e){
@@ -361,9 +368,10 @@ public class Experiment_Processor implements PlugIn{
 			PrintWriter pw = new PrintWriter(sw);
 			e.printStackTrace(pw);
 			log("Error opening experiment: \n"+sw.toString());
-			new TextWindow("Error opening experiment", e.getMessage(), 500, 500);
+			new TextWindow("Error extracting tracks", status+"\n"+sw.toString(), 500, 500);
 			return false;
 		} finally{
+			tb.showCommOutput();
 			indentLevel--;
 		}
 		return true;

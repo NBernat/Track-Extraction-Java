@@ -66,16 +66,11 @@ public class CVUtils {
 	 */
 	static int findThreshforNumPts(ImagePlus image, ExtractionParameters ep, int numPts, int minArea, int maxArea, int targetArea, int minTh, int maxThres){
 
-		String debS = "";
+//		String debS = "";
 		
 	    boolean excl = ep.excludeEdges;
 	    ep.excludeEdges = false;
 		
-		int minTotal = numPts*minArea;
-	    int maxTotal = numPts*maxArea;
-	    if (maxTotal>=(image.getHeight()*image.getWidth())) {
-	    	maxTotal = (image.getHeight()*image.getWidth())-1;
-	    } 
 	    
 	    int bestThres = -1;
 	    double goodness, bestGoodness = -200*numPts;
@@ -83,23 +78,22 @@ public class CVUtils {
 	    	
 	    	ImageProcessor thrIm = image.getProcessor().duplicate();
 	    	thrIm.threshold(j);
-	    	int ct = countNonZero(image);
 	    	
-	    	debS+="thresh="+j+", numAbove0="+ct+"; ";
+//	    	debS+="thresh="+j+", numAbove0="+ct+"; ";
 	    	
 	    		goodness = findGoodness(new ImagePlus("", thrIm), ep, numPts, minArea, maxArea, targetArea);
-	    		debS+="goodness="+goodness;
+//	    		debS+="goodness="+goodness;
 	    		if (goodness > bestGoodness) {
-	    			debS+="; BEST";
+//	    			debS+="; BEST";
 	    			bestGoodness = goodness;
 	    			bestThres = j;
 	        	}
-	    	debS+="\n";
+//	    	debS+="\n";
 	    }
 
 	    ep.excludeEdges = excl;
 
-	    new TextWindow("ThreshFinder debugger", debS, 500, 500);
+//	    new TextWindow("ThreshFinder debugger", debS, 500, 500);
 	    
 		return bestThres;
 	}

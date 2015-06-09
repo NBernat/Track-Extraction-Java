@@ -205,7 +205,8 @@ public class PointExtractor {
 	 */
 	public int loadFrame(int frameNum){
 		
-		if (frameNum==currentFrameNum){
+		if (frameNum==currentFrameNum && (analysisRect==null ||(fl.returnIm.getWidth()==analysisRect.getWidth() && fl.returnIm.getHeight()==analysisRect.getHeight()))){
+			if (comm!=null) comm.message("Frame already loaded in Frameloader", VerbLevel.verb_message);
 			return 0;
 		}
 		
@@ -228,7 +229,7 @@ public class PointExtractor {
 			currentIm = new ImagePlus("Frame "+frameNum,fl.returnIm);
 		}
 		assert (currentIm!=null);
-		analysisRect = fl.ar;
+//		analysisRect = fl.ar;
 				
 		if (comm!=null) comm.message("Thresholding image to zero...", VerbLevel.verb_debug);
 		defaultThresh();
@@ -265,10 +266,11 @@ public class PointExtractor {
 	 */
 	public void extractPoints(int frameNum, int thresh) {
 		
-		if (currentFrameNum!= frameNum){
+//		if (currentFrameNum!= frameNum){
 			loadFrame(frameNum);
-		}
+//		}
 		if (thresh!=ep.globalThreshValue){
+			if (comm!=null) comm.message("Rethresholding to "+thresh, VerbLevel.verb_message);
 			rethresh(thresh);
 		}
 		
@@ -291,13 +293,14 @@ public class PointExtractor {
 		
 //		boolean excl = ep.excludeEdges;
 //		ep.excludeEdges = false;
+		if (comm!=null && analysisRect!=null) comm.message("Analysis Rect: ("+analysisRect.x+","+analysisRect.y+"), "+analysisRect.width+"x"+analysisRect.height, VerbLevel.verb_message);
 		pointTable = CVUtils.findPoints(im, analysisRect, ep, showResults);
 //		ep.excludeEdges = excl;
 		
 		
-		if (showResults) {
+//		if (showResults) {
 			if (comm!=null) comm.message("Frame "+currentFrameNum+": "+pointTable.getCounter()+" points in ResultsTable", VerbLevel.verb_message);
-	    }
+//	    }
 
 		Vector<TrackPoint> pts = rt2TrackPoints(pointTable, currentFrameNum, thresh);
 		return pts;
@@ -314,19 +317,29 @@ public class PointExtractor {
 	 */
 	public Vector<TrackPoint> rt2TrackPoints (ResultsTable rt, int frameNum, int thresh) {
 		
+		int arX=0;
+		int arY=0;
+		
+		if (analysisRect!=null){
+			arX=analysisRect.x;
+			arY=analysisRect.y;
+		}
+		
+		
 		Vector<TrackPoint> tp = new Vector<TrackPoint>();
 		
 		for (int row=0; row<rt.getCounter(); row++) {
 			if (comm!=null) comm.message("Gathering info for Point "+row+" from ResultsTable", VerbLevel.verb_debug);
 			double area = rt.getValueAsDouble(ResultsTable.AREA, row);
 			if (comm!=null) comm.message("Point "+row+": area="+area, VerbLevel.verb_debug);
-			double x = rt.getValueAsDouble(ResultsTable.X_CENTROID, row);
-			double y = rt.getValueAsDouble(ResultsTable.Y_CENTROID, row);
+			double x = rt.getValueAsDouble(ResultsTable.X_CENTROID, row)+arX;
+			double y = rt.getValueAsDouble(ResultsTable.Y_CENTROID, row)+arY;
 			double width = rt.getValueAsDouble(ResultsTable.ROI_WIDTH, row);
 			double height = rt.getValueAsDouble(ResultsTable.ROI_HEIGHT, row);
-			double boundX = rt.getValueAsDouble(ResultsTable.ROI_X, row);
-			double boundY = rt.getValueAsDouble(ResultsTable.ROI_Y, row);
+			double boundX = rt.getValueAsDouble(ResultsTable.ROI_X, row)+arX;
+			double boundY = rt.getValueAsDouble(ResultsTable.ROI_Y, row)+arY;
 			Rectangle rect = new Rectangle((int)boundX-ep.roiPadding, (int)boundY-ep.roiPadding, (int)width+2*ep.roiPadding, (int)height+2*ep.roiPadding);
+			Rectangle crRect = new Rectangle((int)boundX-arX-ep.roiPadding, (int)boundY-arY-ep.roiPadding, (int)width+2*ep.roiPadding, (int)height+2*ep.roiPadding);
 //			Rectangle rect = new Rectangle((int)boundX, (int)boundY, (int)width, (int)height);
 			//Rectangle rect = new Rectangle((int)x-ep.roiPadding, (int)y-ep.roiPadding, (int)2*ep.roiPadding, (int)2*ep.roiPadding);
 			
@@ -341,7 +354,7 @@ public class PointExtractor {
 							loadFrame(frameNum);
 						}
 						Roi oldRoi = currentIm.getRoi();
-						currentIm.setRoi(rect);
+						currentIm.setRoi(crRect);
 						ImageProcessor im = currentIm.getProcessor().crop(); //does not affect currentIm
 						currentIm.setRoi(oldRoi);
 						iTPt.setImage(im, ep.trackWindowWidth, ep.trackWindowHeight);
@@ -353,9 +366,9 @@ public class PointExtractor {
 						if (currentFrameNum!=frameNum){
 							loadFrame(frameNum);
 						}
-						mtPt.setStart((int)rt.getValue("XStart", row), (int)rt.getValue("YStart", row));
+						mtPt.setStart((int)rt.getValue("XStart", row)+arX, (int)rt.getValue("YStart", row)+arY);
 						Roi roi = currentIm.getRoi();
-						currentIm.setRoi(rect);
+						currentIm.setRoi(crRect);
 						ImageProcessor im2 = currentIm.getProcessor().crop(); //does not affect currentIm
 						currentIm.setRoi(roi);
 						//Set the image mask

@@ -1,5 +1,7 @@
 package TrackExtractionJava;
 
+import ij.text.TextWindow;
+
 import java.io.Serializable;
 import java.util.ListIterator;
 import java.util.Vector;
@@ -147,6 +149,7 @@ public class TrackMatch implements Serializable {
 	public static Vector<TrackMatch> matchNPts2NTracks(Vector <? extends TrackPoint> pts, Vector<Track> tracks, double maxDist){
 		
 		if (pts.size()!=tracks.size()){
+//			new TextWindow("matchNPts error",  "point list has "+pts.size()+" points, track list has "+tracks.size()+" tracks", 500, 500);
 			return null;
 		}
 		
@@ -403,16 +406,17 @@ public class TrackMatch implements Serializable {
 		comm.setVerbosity(VerbLevel.verb_debug);
 		
 		comm.message(" ", VerbLevel.verb_debug);
+		comm.message("Frame "+track.getEnd().frameNum, VerbLevel.verb_debug);
 		comm.message("TrackID: "+track.getTrackID()+" ("+(int)track.getEnd().x+", "+(int)track.getEnd().y+")", VerbLevel.verb_debug);
 		for (int i=0; i<numStoredMatches; i++){
 			TrackPoint pt = matchPts[i];
 			String s = "MatchPt"+i+": point "+pt.pointID+", ("+(int)pt.x+","+(int)pt.y+"), ";
 			s += dist2MatchPts[i]+" pix away from track, ";
 //			Valid hasn't yet been set, so there's no point incorrectly indicating that it's still valid
-//			if (validMatch[i]==0){
-//				s += "NOT ";
-//			}
-//			s += "valid.";
+			if (validMatch[i]==0){
+				s += "NOT ";
+			}
+			s += "valid.";
 			comm.message(s, VerbLevel.verb_debug);
 		}
 		

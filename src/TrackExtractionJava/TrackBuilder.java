@@ -4,7 +4,9 @@ import ij.IJ;
 import ij.ImageStack;
 import ij.text.TextWindow;
 
+import java.io.PrintWriter;
 import java.io.Serializable;
+import java.io.StringWriter;
 import java.util.ListIterator;
 import java.util.Vector;
 
@@ -179,6 +181,13 @@ public class TrackBuilder implements Serializable{
 				}
 			}
 		}
+		if (ep.flagAbnormalMatches){
+			StringBuilder sb = new StringBuilder();
+			for (Communicator c : matchSpills){
+				sb.append(c.outString);
+			}
+			new TextWindow("Abnormal matches", sb.toString(), 600, 500);
+		}
 		
 		
 		//TODO Comb out collisions
@@ -308,6 +317,16 @@ public class TrackBuilder implements Serializable{
 		int numCutByDist = cutMatchesByDistance();
 		comm.message("Number of matches cut from frame "+frameNum+" by distance: "+numCutByDist, VerbLevel.verb_debug);
 		
+		if (ep.flagAbnormalMatches){
+			for (TrackMatch m : matches){
+				if (m.getTopMatchPoint().numMatches>1){
+					Communicator c = new Communicator();
+					m.spillInfoToCommunicator(c);
+					matchSpills.add(c);
+				}
+			}
+		}
+		
 		manageCollisions();
 		
 	}
@@ -420,37 +439,69 @@ public class TrackBuilder implements Serializable{
 	
 	
 	private void avoidCollisions(){
+		
+		// 
+		Vector<TrackMatch> toRemove = new Vector<TrackMatch>();
+		Vector<TrackMatch> toAdd= new Vector<TrackMatch>();
+		
 		for (TrackMatch tm : matches){
 			if (tm.checkTopMatchForCollision()>0){
-				rethreshCollision(tm);
+				rethreshCollision(tm, toRemove, toAdd);
 			}
 		}
+		//Non-Concurrently modify the list of matches
+		matches.removeAll(toRemove);
+		matches.addAll(toAdd);
+		
 	}
 	
-	private boolean rethreshCollision(TrackMatch tm){
+	private boolean rethreshCollision(TrackMatch tm, Vector<TrackMatch> toRemove, Vector<TrackMatch> toAdd){
 		
 		//try to rethreshold point
+		comm.message("Attempting to rethreshold collision in frame "+frameNum, VerbLevel.verb_message);
 		int npts = tm.getTopMatchPoint().numMatches;
+		
+		
 		Vector<TrackPoint> newPts = MaggotTrackPoint.splitPt2NPts((MaggotTrackPoint)tm.getTopMatchPoint(), npts, (int)tm.track.meanArea(), pe, ep);
 		
-		if (newPts!=null){
+		if (newPts!=null && newPts.size()==npts){
+			comm.message("Attempt to rethreshold collision in frame "+frameNum+" sucessful, making appropriate changes in builder", VerbLevel.verb_message);
+			try {
+				//Find all the track[matche]s in the collision
+				Vector<TrackMatch> colMatches= new Vector<TrackMatch>();
+				colMatches.add(tm);
+				colMatches.addAll(getCollisionMatches(tm));
+				
+				//Match points to tracks so as to minimize total dist between pairs
+				Vector<TrackMatch> newMatches = TrackMatch.matchNPts2NTracks(newPts, TrackMatch.getTracks(colMatches), ep.maxMatchDist);
+				
+				//Update the TrackBuilder structure
+				activePts.remove(tm.getTopMatchPoint());
+				activePts.addAll(newPts);
+				toAdd.addAll(newMatches);
+				toRemove.addAll(colMatches);
+				for (TrackMatch m: colMatches) m.clearAllMatches();//So that the other match (ie the other element of colMatches) doesn't pass the "checkTopMatchForCollision" test
+				
+				
+				return true;//Successfully avoided collision
+				
+			} catch (Exception e){
+				
+				StringWriter sw = new StringWriter();
+				PrintWriter pw = new PrintWriter(sw);
+				e.printStackTrace(pw);
+				new TextWindow("Error extracting tracks", sw.toString(), 500, 500);
+				return false;
+			}
 			
-			//Find all the track[matche]s in the collision
-			Vector<TrackMatch> colMatches= new Vector<TrackMatch>();
-			colMatches.add(tm);
-			colMatches.addAll(getCollisionMatches(tm));
-			
-			//Match points to tracks so as to minimize total dist between pairs
-			Vector<TrackMatch> newMatches = TrackMatch.matchNPts2NTracks(newPts, TrackMatch.getTracks(colMatches), ep.maxMatchDist);
-			
-			//Remove old point from activePts, add new points
-			activePts.remove(tm.getTopMatchPoint());
-			activePts.addAll(newPts);
-			matches.addAll(newMatches);
-			matches.removeAll(colMatches);
-			
-			return true;//Successfully avoided collision
 		} else {
+			String infoSt = "";
+			if (newPts==null){
+				infoSt+="no points made";
+			} else {
+				infoSt+="improper number of points made ("+newPts.size()+"pts, not "+npts+")";
+			}
+			comm.message("Attempt to rethreshold collision in frame "+frameNum+" unsuccessful; "+infoSt, VerbLevel.verb_message);
 			return false;//Did not avoid collision
 		}
 	}
@@ -533,26 +584,16 @@ public class TrackBuilder implements Serializable{
 	 */
 	public Vector<TrackMatch> getCollisionMatches(TrackMatch match){
 		
-		
 		Vector<TrackMatch> colMatches= new Vector<TrackMatch>();
-		
-//		int numColliding = match.getTopMatchPoint().getNumMatches();
-//		int startInd = matches.indexOf(match)+1;
-//		for (int j=0; j<(numColliding-1); j++) {//
 			
-			//Find the first TrackMatch in matches that's in the collision
-//			int colInd = match.findCollidingTrackMatch(matches, startInd);
-			int colInd = match.findCollidingTrackMatch(matches);
-			if (colInd>=0) {
-				colMatches.add(matches.get(colInd));
-//				colTracks.add(matches.get(colInd).track);
-				comm.message("Match found", VerbLevel.verb_debug);
-				//If there are more than 2 tracks in the collision, start looking for collision matches at the index following the one that was just found
-//				startInd = colInd+1;
-			} else{
-				comm.message("No matches found", VerbLevel.verb_debug);
-			}
-//		}
+		//Find the first TrackMatch in matches that's in the collision
+		int colInd = match.findCollidingTrackMatch(matches);
+		if (colInd>=0) {
+			colMatches.add(matches.get(colInd));
+			comm.message("Match found", VerbLevel.verb_debug);
+		} else{
+			comm.message("No matches found", VerbLevel.verb_debug);
+		}
 		
 		return colMatches;
 
@@ -579,31 +620,20 @@ public class TrackBuilder implements Serializable{
 		int colFix = avoidCollision(colMatches);//newCol.avoidCollision();//
 		
 		if (colFix==0){ //The Collision-fixing machinery did not fix the matches
-			//The old matches still exist, and they will be used later to end tracks (ie don't remove them)
-			//Create a new collision object from the collision
-//			Collision newCol = new Collision(colMatches, frameNum, this);
-			CollisionTrack newCol = new CollisionTrack(colMatches, this);
-			fixCollisionMatches(newCol, colMatches);
-//			newCol.startCollision();
-			activeColIDs.add(newCol.getTrackID());
-			//add this trackID to list
-			retMatch = newCol.getMatch();//newCol.matches.firstElement();//
-//			matches.add(newCol.matches.firstElement());
-			
-//			return 1; //1 new collision
+		//The old matches still exist, and they will be used later to end tracks (ie don't remove them)
+		//Create a new collision object from the collision
+		CollisionTrack newCol = new CollisionTrack(colMatches, this);
+		fixCollisionMatches(newCol, colMatches);
+		activeColIDs.add(newCol.getTrackID());
+		//add this trackID to list
+		retMatch = newCol.getMatch();//newCol.matches.firstElement();//
 
 		}
 		
-		else { //The Collision-fixing machinery fixed the matches
-//			newCol.endCollision(); //unnecessary, because we dont save the collision
-			if (colFix==1) {
-				comm.message("Collision avoided at point "+ptID+" by matching to nearby points", VerbLevel.verb_debug);
-			} else if (colFix==2) {
-//				activePts.remove(colPt);
-//				activePts.addAll(newCol.getMatchPoints());
-				comm.message("Collision avoided at point "+ptID+" by splitting the collision point", VerbLevel.verb_debug);
-			}
-//			return 0; //0 new collisions
+		else if (colFix==1) {
+			comm.message("Collision avoided at point "+ptID+" by matching to nearby points", VerbLevel.verb_debug);
+		} else if (colFix==2) {
+			comm.message("Collision avoided at point "+ptID+" by splitting the collision point", VerbLevel.verb_debug);
 		}
 		
 		return retMatch;
@@ -944,9 +974,16 @@ public class TrackBuilder implements Serializable{
 	}
 	
 	public void showCommOutput(){
-		if (ep.dispTrackInfo && !trackMessage.outString.equals("")){
-			new TextWindow("Track info", trackMessage.outString, 500, 500);
+		if (ep.dispTrackInfo){
+			if (!trackMessage.outString.equals("")){
+				new TextWindow("Track info", trackMessage.outString, 500, 500);
+			}
+			if (!comm.outString.equals("")){
+				new TextWindow("Builder info", comm.outString, 500, 500);
+			}
+				
 		}
+		
 	}
 	
 
