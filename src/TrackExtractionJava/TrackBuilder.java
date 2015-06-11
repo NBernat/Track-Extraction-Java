@@ -205,7 +205,11 @@ public class TrackBuilder implements Serializable{
 	 * @return status: 0 means all is well, >0 means there's an error
 	 */
 	private int addFrame(int frameNum) {
-				
+		
+		if (frameNum%ep.garbageCollectionInterval==0){
+			System.gc();
+		}
+		
 		if (loadPoints(frameNum)>0) {
 			comm.message("Error loading points in frame "+frameNum, VerbLevel.verb_error);
 			return 1;
@@ -473,14 +477,21 @@ public class TrackBuilder implements Serializable{
 				colMatches.addAll(getCollisionMatches(tm));
 				
 				//Match points to tracks so as to minimize total dist between pairs
-				Vector<TrackMatch> newMatches = TrackMatch.matchNPts2NTracks(newPts, TrackMatch.getTracks(colMatches), ep.maxMatchDist);
+				Vector<TrackMatch> newMatches = TrackMatch.matchNPts2NTracks(newPts, TrackMatch.getTracks(colMatches), ep.maxMatchDist, this);
 				
 				//Update the TrackBuilder structure
-				activePts.remove(tm.getTopMatchPoint());
-				activePts.addAll(newPts);
-				toAdd.addAll(newMatches);
-				toRemove.addAll(colMatches);
-				for (TrackMatch m: colMatches) m.clearAllMatches();//So that the other match (ie the other element of colMatches) doesn't pass the "checkTopMatchForCollision" test
+				if (newMatches!=null){
+					activePts.remove(tm.getTopMatchPoint());
+					activePts.addAll(newPts);
+					toAdd.addAll(newMatches);
+					toRemove.addAll(colMatches);
+					for (TrackMatch m: colMatches) m.clearAllMatches();//So that the other match (ie the other element of colMatches) doesn't pass the "checkTopMatchForCollision" test
+				} else {
+					String s = "";
+					s+= newPts.size()+" points unable to be matched to "+colMatches.size()+"tracks";
+					
+					new TextWindow("Point splitting error", s, 600, 500);
+				}
 				
 				
 				return true;//Successfully avoided collision

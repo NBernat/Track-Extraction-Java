@@ -139,6 +139,8 @@ public class Experiment_Processor implements PlugIn{
 				log("...no success");
 			}
 			
+			log("Done Processing");
+			
 		} catch (Exception e){
 			
 		} finally {
@@ -150,7 +152,7 @@ public class Experiment_Processor implements PlugIn{
 			
 		}
 		
-		log("Done Processing");
+		
 		IJ.showStatus("Done Processing");
 		
 	}
@@ -245,7 +247,7 @@ public class Experiment_Processor implements PlugIn{
 				success = false;
 			}
 		} else {
-			IJ.showMessage("Could not load file; null directory");
+//			IJ.showMessage("Could not load file; null directory");
 			success = false;
 		}
 		
@@ -311,7 +313,13 @@ public class Experiment_Processor implements PlugIn{
 	 * @return Success of the creation of the log 
 	 */
 	private boolean setupLog(){
+		
+		if (srcDir==null || srcName==null){
+			return false;
+		}
+		
 		indentLevel++;
+		
 		try{
 			String[] logPathParts = prParams.setLogPath(srcDir, srcName);
 			processLog = new PrintWriter(new FileWriter(new File(logPathParts[0], logPathParts[1]).getPath(), true));

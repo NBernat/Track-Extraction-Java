@@ -9,6 +9,9 @@ public class ExtractionParameters implements Serializable{
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+	
+	
+	int garbageCollectionInterval = 1000;
 
 	/**
 	 * Max number of points stored in a TrackMatch object
@@ -55,8 +58,8 @@ public class ExtractionParameters implements Serializable{
 	int sampleInd = 10;
 	//TODO
 	boolean subset = true;
-	int startFrame = 1;
-	int endFrame = 150;
+	int startFrame = 100;
+	int endFrame = 900;
 	//_frame_normalization_methodT fnm = _frame_normalization_methodT._frame_none;
 	//TODO
 	int trackWindowHeight = 50;
@@ -65,8 +68,8 @@ public class ExtractionParameters implements Serializable{
 	
 	
 	int[] matchSpill = {};//{234,251,356,367};
-	boolean flagAbnormalMatches = true;
-	boolean dispTrackInfo = true;
+	boolean flagAbnormalMatches = false;
+	boolean dispTrackInfo = false;
 	
 	///////////////////////////
 	// Background Parameters
@@ -98,6 +101,8 @@ public class ExtractionParameters implements Serializable{
     double globalThreshValue = 20;
     
     boolean excludeEdges = true; 
+    boolean clipBoundaries = true;
+    int boundarySize = 10; //Size (in pixels) of the boundary that should be clipped when CLIPBOUNDARIES is set to true 
     /**
      * The fraction from which the area of a maggot can deviate from the target area when splitting a point
      * <p>

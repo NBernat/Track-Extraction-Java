@@ -16,6 +16,8 @@ public class FrameLoader {
 	 * The stack of images from which the frames are loaded
 	 */
 	ImageStack imageStack; 
+	
+	private int[] isDims;
 	/**
 	 * The last image that was loaded
 	 */
@@ -63,6 +65,8 @@ public class FrameLoader {
 	void init(Communicator comm, ImageStack IS){
 		this.comm = comm;
 		imageStack = IS;
+		int[] dims = {IS.getProcessor(1).getWidth(), IS.getProcessor(1).getHeight()};
+		isDims = dims;
 		ar = new Rectangle(0,0,-1,-1);
 		lastFrameLoaded = -10000;
 		
@@ -268,6 +272,10 @@ public class FrameLoader {
 	
 	public int getStackSize(){
 		return imageStack.getSize();
+	}
+	
+	public int[] getStackDims(){
+		return isDims;
 	}
 	
 	

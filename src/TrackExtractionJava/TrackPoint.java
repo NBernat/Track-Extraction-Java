@@ -242,7 +242,8 @@ public class TrackPoint implements Serializable {
 	}
 	
 	public String getTPDescription(){
-		return "Frame "+frameNum+" ID="+pointID+" ("+(int)x+","+(int)y+")";
+		
+		return frameNum+" trID"+pointID+" ("+(int)x+","+(int)y+") A="+area;
 	}
 	
 

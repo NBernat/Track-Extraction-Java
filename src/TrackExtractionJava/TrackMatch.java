@@ -92,8 +92,8 @@ public class TrackMatch implements Serializable {
 	 * @param pt
 	 * @param maxDist
 	 */
-	public TrackMatch(Track tr, TrackPoint pt, double maxDist){
-		init(tr,1,null);
+	public TrackMatch(Track tr, TrackPoint pt, double maxDist, TrackBuilder TB){
+		init(tr,1,TB);
 		matchPts[0] = pt;
 		dist2MatchPts[0] = tr.distFromEnd(pt);
 		validMatch[0] = (dist2MatchPts[0]<=maxDist)? 1:0;
@@ -127,7 +127,7 @@ public class TrackMatch implements Serializable {
 			if (iter.hasNext()){
 				TrackPoint pt = iter.next();
 				if (containsPt(pt.pointID)){
-					TB.comm.message("MATCH ALREADY CONTAINS POINT "+pt.pointID, VerbLevel.verb_warning);
+					if (TB!=null && TB.comm!=null) TB.comm.message("MATCH ALREADY CONTAINS POINT "+pt.pointID, VerbLevel.verb_warning);
 				}
 				matchPts[i] = pt; //iter.next();
 				dist2MatchPts[i] = track.getEnd().dist(matchPts[i]);
@@ -146,7 +146,7 @@ public class TrackMatch implements Serializable {
 	}
 	
 	@SuppressWarnings("unchecked")
-	public static Vector<TrackMatch> matchNPts2NTracks(Vector <? extends TrackPoint> pts, Vector<Track> tracks, double maxDist){
+	public static Vector<TrackMatch> matchNPts2NTracks(Vector <? extends TrackPoint> pts, Vector<Track> tracks, double maxDist, TrackBuilder tb){
 		
 		if (pts.size()!=tracks.size()){
 //			new TextWindow("matchNPts error",  "point list has "+pts.size()+" points, track list has "+tracks.size()+" tracks", 500, 500);
@@ -155,7 +155,7 @@ public class TrackMatch implements Serializable {
 		
 		if (tracks.size()==1){
 			Vector<TrackMatch> matches = new Vector<TrackMatch>();
-			matches.add(new TrackMatch(tracks.firstElement(), pts.firstElement(), maxDist));
+			matches.add(new TrackMatch(tracks.firstElement(), pts.firstElement(), maxDist, tb));
 			return matches;
 		} else if (tracks.size()==2){
 			Vector<TrackMatch> matches = new Vector<TrackMatch>();
@@ -163,11 +163,11 @@ public class TrackMatch implements Serializable {
 			double dist1 = tracks.get(0).distFromEnd(pts.get(0))+tracks.get(1).distFromEnd(pts.get(1));
 			double dist2 = tracks.get(0).distFromEnd(pts.get(1))+tracks.get(1).distFromEnd(pts.get(0));
 			if (dist1<dist2){
-				matches.add(new TrackMatch(tracks.get(0), pts.get(0), maxDist));
-				matches.add(new TrackMatch(tracks.get(1), pts.get(1), maxDist));
+				matches.add(new TrackMatch(tracks.get(0), pts.get(0), maxDist, tb));
+				matches.add(new TrackMatch(tracks.get(1), pts.get(1), maxDist, tb));
 			} else{
-				matches.add(new TrackMatch(tracks.get(0), pts.get(1), maxDist));
-				matches.add(new TrackMatch(tracks.get(1), pts.get(0), maxDist));
+				matches.add(new TrackMatch(tracks.get(0), pts.get(1), maxDist, tb));
+				matches.add(new TrackMatch(tracks.get(1), pts.get(0), maxDist, tb));
 			}
 			return matches;
 		} else {
@@ -186,7 +186,7 @@ public class TrackMatch implements Serializable {
 			for (int i=0; i<pts.size(); i++){
 				subPts = (Vector<TrackPoint>)pts.clone();
 				subPts.remove(i);
-				Vector<TrackMatch> subMatches = matchNPts2NTracks(subPts, subTracks, maxDist);
+				Vector<TrackMatch> subMatches = matchNPts2NTracks(subPts, subTracks, maxDist, tb);
 				dist = totalDist(subMatches) + tracks.firstElement().distFromEnd(pts.get(i));
 				if (dist<minDist){
 					bestInd = i;
@@ -194,7 +194,7 @@ public class TrackMatch implements Serializable {
 				}
 			}
 			
-			bestMatches.add(new TrackMatch(tracks.firstElement(), pts.get(bestInd), maxDist));
+			bestMatches.add(new TrackMatch(tracks.firstElement(), pts.get(bestInd), maxDist, tb));
 			return bestMatches;
 		}
 		
@@ -227,7 +227,7 @@ public class TrackMatch implements Serializable {
 				if (i==topInd){
 					matchPts[topInd].setNumMatches(matchPts[topInd].getNumMatches()-1);
 					topInd = getTopMatchInd();
-					matchPts[topInd].setNumMatches(matchPts[topInd].getNumMatches()+1);
+					if (topInd>=0) matchPts[topInd].setNumMatches(matchPts[topInd].getNumMatches()+1);
 				}
 				//INCREMENT NUM MATCHES OF THE NEXT VALID PT??
 			}
@@ -281,7 +281,7 @@ public class TrackMatch implements Serializable {
 	public TrackPoint getTopMatchPoint(){
 		int ind = getTopMatchInd();
 		if (ind<0){
-			TB.comm.message("Did not find top match point", VerbLevel.verb_debug);
+			if (TB!=null && TB.comm!=null) TB.comm.message("Did not find top match point", VerbLevel.verb_debug);
 			return null;
 		} else {
 			return matchPts[ind];
@@ -294,7 +294,7 @@ public class TrackMatch implements Serializable {
 				return i;
 			}
 		}
-		TB.comm.message("Did not find top match point", VerbLevel.verb_debug);
+		if (TB!=null && TB.comm!=null) TB.comm.message("Did not find top match point", VerbLevel.verb_debug);
 		return -1;
 	}
 	
@@ -325,18 +325,18 @@ public class TrackMatch implements Serializable {
 	 */
 //	public int findCollidingTrackMatch(Vector<TrackMatch> matches, int startInd){
 	public int findCollidingTrackMatch(Vector<TrackMatch> matches){
-		TB.comm.message("findCollidingTrackMatch called on track "+track.getTrackID(), VerbLevel.verb_debug);
+		if (TB!=null && TB.comm!=null) TB.comm.message("findCollidingTrackMatch called on track "+track.getTrackID(), VerbLevel.verb_debug);
 		int ind = -1;
 		boolean notFound = true;
 		if (matches.isEmpty()){
-			TB.comm.message("Match list empty", VerbLevel.verb_debug);
+			if (TB!=null && TB.comm!=null) TB.comm.message("Match list empty", VerbLevel.verb_debug);
 			return -2;
 		} else {
-//			TB.comm.message("Of "+matches.size()+" matches, we're starting at number "+startInd, VerbLevel.verb_debug);
+//			if (TB.comm!=null) TB.comm.message("Of "+matches.size()+" matches, we're starting at number "+startInd, VerbLevel.verb_debug);
 		}
 		
 //		if (startInd<matches.size()){
-			TB.comm.message("Searching list for collision match...", VerbLevel.verb_debug);
+			if (TB!=null && TB.comm!=null) TB.comm.message("Searching list for collision match...", VerbLevel.verb_debug);
 //			ListIterator<TrackMatch> tmIt = matches.listIterator(startInd);
 			ListIterator<TrackMatch> tmIt = matches.listIterator();
 			while (notFound && tmIt.hasNext()) {

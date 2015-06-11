@@ -139,11 +139,11 @@ public class Test_ implements PlugIn {//extends JFrame
 				double dist1 = colTracks.get(0).distFromEnd(splitPts.get(0))+colTracks.get(1).distFromEnd(splitPts.get(1));
 				double dist2 = colTracks.get(0).distFromEnd(splitPts.get(1))+colTracks.get(1).distFromEnd(splitPts.get(0));
 				if (dist1<dist2){
-					matches.add(new TrackMatch(colTracks.get(0), splitPts.get(0), ep.maxMatchDist));
-					matches.add(new TrackMatch(colTracks.get(1), splitPts.get(1), ep.maxMatchDist));
+					matches.add(new TrackMatch(colTracks.get(0), splitPts.get(0), ep.maxMatchDist, null));
+					matches.add(new TrackMatch(colTracks.get(1), splitPts.get(1), ep.maxMatchDist, null));
 				} else{
-					matches.add(new TrackMatch(colTracks.get(0), splitPts.get(1), ep.maxMatchDist));
-					matches.add(new TrackMatch(colTracks.get(1), splitPts.get(0), ep.maxMatchDist));
+					matches.add(new TrackMatch(colTracks.get(0), splitPts.get(1), ep.maxMatchDist, null));
+					matches.add(new TrackMatch(colTracks.get(1), splitPts.get(0), ep.maxMatchDist, null));
 				}
 				
 				

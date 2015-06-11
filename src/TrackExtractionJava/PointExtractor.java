@@ -307,7 +307,9 @@ public class PointExtractor {
 	}
 	
 	
-	
+	public Vector<TrackPoint> rt2TrackPoints (ResultsTable rt, int frameNum, int thresh) {
+		return rt2TrackPoints(rt, frameNum, thresh, ep.clipBoundaries);
+	}
 	
 	/**
 	 * Adds a row from the results table to the list of TrackPoints, if the point is the proper size according to the extraction parameters
@@ -315,7 +317,7 @@ public class PointExtractor {
 	 * @param frameNum Frame number
 	 * @return List of Trackpoints within the 
 	 */
-	public Vector<TrackPoint> rt2TrackPoints (ResultsTable rt, int frameNum, int thresh) {
+	public Vector<TrackPoint> rt2TrackPoints (ResultsTable rt, int frameNum, int thresh, boolean clipBoundaries) {
 		
 		int arX=0;
 		int arY=0;
@@ -329,6 +331,7 @@ public class PointExtractor {
 		Vector<TrackPoint> tp = new Vector<TrackPoint>();
 		
 		for (int row=0; row<rt.getCounter(); row++) {
+			
 			if (comm!=null) comm.message("Gathering info for Point "+row+" from ResultsTable", VerbLevel.verb_debug);
 			double area = rt.getValueAsDouble(ResultsTable.AREA, row);
 			if (comm!=null) comm.message("Point "+row+": area="+area, VerbLevel.verb_debug);
@@ -338,59 +341,73 @@ public class PointExtractor {
 			double height = rt.getValueAsDouble(ResultsTable.ROI_HEIGHT, row);
 			double boundX = rt.getValueAsDouble(ResultsTable.ROI_X, row)+arX;
 			double boundY = rt.getValueAsDouble(ResultsTable.ROI_Y, row)+arY;
-			Rectangle rect = new Rectangle((int)boundX-ep.roiPadding, (int)boundY-ep.roiPadding, (int)width+2*ep.roiPadding, (int)height+2*ep.roiPadding);
-			Rectangle crRect = new Rectangle((int)boundX-arX-ep.roiPadding, (int)boundY-arY-ep.roiPadding, (int)width+2*ep.roiPadding, (int)height+2*ep.roiPadding);
-//			Rectangle rect = new Rectangle((int)boundX, (int)boundY, (int)width, (int)height);
-			//Rectangle rect = new Rectangle((int)x-ep.roiPadding, (int)y-ep.roiPadding, (int)2*ep.roiPadding, (int)2*ep.roiPadding);
 			
-			
-			if (comm!=null) comm.message("Converting Point "+row+" "+"("+(int)x+","+(int)y+")"+"to TrackPoint", VerbLevel.verb_debug);
-			if (ep.properPointSize(area)) {
+			if (!clipBoundaries || (inBounds((int)boundX,(int)boundY,(int)width,(int)height))){
 				
-				switch (ep.trackPointType){
-					case 1: //ImTrackPoint
-						ImTrackPoint iTPt = new ImTrackPoint(x,y,rect,area,frameNum,thresh);
-						if (currentFrameNum!=frameNum){
-							loadFrame(frameNum);
-						}
-						Roi oldRoi = currentIm.getRoi();
-						currentIm.setRoi(crRect);
-						ImageProcessor im = currentIm.getProcessor().crop(); //does not affect currentIm
-						currentIm.setRoi(oldRoi);
-						iTPt.setImage(im, ep.trackWindowWidth, ep.trackWindowHeight);
-						tp.add(iTPt);
-						break;
-					case 2: //MaggotTrackPoint
-						MaggotTrackPoint mtPt = new MaggotTrackPoint(x,y,rect,area,frameNum,thresh);
-						mtPt.setCommunicator(comm);
-						if (currentFrameNum!=frameNum){
-							loadFrame(frameNum);
-						}
-						mtPt.setStart((int)rt.getValue("XStart", row)+arX, (int)rt.getValue("YStart", row)+arY);
-						Roi roi = currentIm.getRoi();
-						currentIm.setRoi(crRect);
-						ImageProcessor im2 = currentIm.getProcessor().crop(); //does not affect currentIm
-						currentIm.setRoi(roi);
-						//Set the image mask
-						mtPt.setMask(getMask(rt, row));
-						mtPt.setImage(im2, ep.trackWindowWidth, ep.trackWindowHeight);
-						mtPt.extractFeatures();
-						tp.add(mtPt);
-						break;
-					default:
-						TrackPoint newPt = new TrackPoint(x,y,rect,area,frameNum,thresh); 
-						tp.add(newPt);
-						if (comm!=null) comm.message("Point "+row+" has pointID "+newPt.pointID, VerbLevel.verb_debug);
+				Rectangle rect = new Rectangle((int)boundX-ep.roiPadding, (int)boundY-ep.roiPadding, (int)width+2*ep.roiPadding, (int)height+2*ep.roiPadding);
+				Rectangle crRect = new Rectangle((int)boundX-arX-ep.roiPadding, (int)boundY-arY-ep.roiPadding, (int)width+2*ep.roiPadding, (int)height+2*ep.roiPadding);
+	//			Rectangle rect = new Rectangle((int)boundX, (int)boundY, (int)width, (int)height);
+				//Rectangle rect = new Rectangle((int)x-ep.roiPadding, (int)y-ep.roiPadding, (int)2*ep.roiPadding, (int)2*ep.roiPadding);
+				
+				
+				if (comm!=null) comm.message("Converting Point "+row+" "+"("+(int)x+","+(int)y+")"+"to TrackPoint", VerbLevel.verb_debug);
+				if (ep.properPointSize(area)) {
+					
+					switch (ep.trackPointType){
+						case 1: //ImTrackPoint
+							ImTrackPoint iTPt = new ImTrackPoint(x,y,rect,area,frameNum,thresh);
+							if (currentFrameNum!=frameNum){
+								loadFrame(frameNum);
+							}
+							Roi oldRoi = currentIm.getRoi();
+							currentIm.setRoi(crRect);
+							ImageProcessor im = currentIm.getProcessor().crop(); //does not affect currentIm
+							currentIm.setRoi(oldRoi);
+							iTPt.setImage(im, ep.trackWindowWidth, ep.trackWindowHeight);
+							tp.add(iTPt);
+							break;
+						case 2: //MaggotTrackPoint
+							MaggotTrackPoint mtPt = new MaggotTrackPoint(x,y,rect,area,frameNum,thresh);
+							mtPt.setCommunicator(comm);
+							if (currentFrameNum!=frameNum){
+								loadFrame(frameNum);
+							}
+							mtPt.setStart((int)rt.getValue("XStart", row)+arX, (int)rt.getValue("YStart", row)+arY);
+							Roi roi = currentIm.getRoi();
+							currentIm.setRoi(crRect);
+							ImageProcessor im2 = currentIm.getProcessor().crop(); //does not affect currentIm
+							currentIm.setRoi(roi);
+							//Set the image mask
+							mtPt.setMask(getMask(rt, row));
+							mtPt.setImage(im2, ep.trackWindowWidth, ep.trackWindowHeight);
+							mtPt.extractFeatures();
+							tp.add(mtPt);
+							break;
+						default:
+							TrackPoint newPt = new TrackPoint(x,y,rect,area,frameNum,thresh); 
+							tp.add(newPt);
+							if (comm!=null) comm.message("Point "+row+" has pointID "+newPt.pointID, VerbLevel.verb_debug);
+					}
+					
+				} else{
+					if (comm!=null) comm.message("Point was not proper size: not made into a point", VerbLevel.verb_debug);
 				}
-				
-			} else{
-				if (comm!=null) comm.message("Point was not proper size: not made into a point", VerbLevel.verb_debug);
+			} else {
+				if (comm!=null) comm.message("Point "+row+" from ResultsTable in frame "+frameNum+" was clipped", VerbLevel.verb_message);
 			}
 			
 		}
 		
 		return tp;
 		
+	}
+
+	
+	private boolean inBounds(int boundX, int boundY, int width, int height){
+		int bs = ep.boundarySize;
+		int sw = fl.getStackDims()[0];//2592;//fl.imageStack.getWidth();
+		int sh = fl.getStackDims()[1];//1944;//fl.imageStack.getHeight();
+		return boundX>bs && boundY>bs && (boundX+width)<(sw-bs) && (boundY+height)<(sh-bs);
 	}
 	
 	protected ImageProcessor getMask(ResultsTable rt, int row){
