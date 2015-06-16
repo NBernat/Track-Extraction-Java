@@ -149,7 +149,12 @@ public class TrackMatch implements Serializable {
 	public static Vector<TrackMatch> matchNPts2NTracks(Vector <? extends TrackPoint> pts, Vector<Track> tracks, double maxDist, TrackBuilder tb){
 		
 		if (pts.size()!=tracks.size()){
-//			new TextWindow("matchNPts error",  "point list has "+pts.size()+" points, track list has "+tracks.size()+" tracks", 500, 500);
+			String ds = "point list has "+pts.size()+" points, track list has "+tracks.size()+" tracks\n";
+			ds+="\nTracks:\n";
+			for (Track t : tracks) ds+=t.getTrackID()+"\n";
+			ds+="\nPoints:\n";
+			for (TrackPoint p : pts) ds+=p.getTPDescription()+"\n";
+			new TextWindow("matchNPts error; frame "+tb.frameNum,  ds, 500, 500);
 			return null;
 		}
 		
@@ -172,28 +177,41 @@ public class TrackMatch implements Serializable {
 			return matches;
 		} else {
 			//This is not optimal bc it makes a lot of TrackMatch objects that get thrown away, but this case rarely happens often so...yeah
+			String ds = "";
+			
 			
 			//"Match" the first track to the i'th point, then find the matches for the remaining subset; take the min total dist
 			Vector<Track> subTracks = (Vector<Track>)tracks.clone();
-			subTracks.remove(0);
+			for (int i=1; i<tracks.size(); i++){
+				subTracks.add(tracks.get(i)); 
+			}
 
 			Vector<TrackMatch> bestMatches = new Vector<TrackMatch>();
 			int bestInd=-1;
 			double minDist = Double.MAX_VALUE;
 
-			Vector<TrackPoint> subPts;
+			Vector<TrackPoint> subPts = new Vector<TrackPoint>();
 			double dist;
 			for (int i=0; i<pts.size(); i++){
-				subPts = (Vector<TrackPoint>)pts.clone();
-				subPts.remove(i);
-				Vector<TrackMatch> subMatches = matchNPts2NTracks(subPts, subTracks, maxDist, tb);
-				dist = totalDist(subMatches) + tracks.firstElement().distFromEnd(pts.get(i));
-				if (dist<minDist){
-					bestInd = i;
-					bestMatches = subMatches;
+				//Add all pts except the i'th one to the subPt list
+				subPts.clear();
+				for(int j=0; j<pts.size(); j++){
+					if (j!=i) subPts.add(pts.get(j));
 				}
+				//Match the subtracks to the remaining points
+				Vector<TrackMatch> subMatches = matchNPts2NTracks(subPts, subTracks, maxDist, tb);
+				//Store the matches/index for the minimum distance match set
+				dist = totalDist(subMatches) + tracks.firstElement().distFromEnd(pts.get(i));
+				ds+=tracks.firstElement().getTrackID()+" to point #"+i+"("+pts.get(i).getPointID()+"): totalDist="+dist;
+				if (dist<minDist){
+					ds+=" (NEW BEST)";
+					bestInd = i;
+					bestMatches.clear();
+					bestMatches.addAll(subMatches);
+				}
+				ds+="\n";
 			}
-			
+			new TextWindow("Multi-maggot collision", ds, 500, 500);
 			bestMatches.add(new TrackMatch(tracks.firstElement(), pts.get(bestInd), maxDist, tb));
 			return bestMatches;
 		}
@@ -318,38 +336,35 @@ public class TrackMatch implements Serializable {
 
 	
 	/**
-	 * Finds the first trackMatch which is colliding with this trackMatch's track 
+	 * Finds the trackMatches that are colliding with this trackMatch's track 
 	 * @param matches List of TrackMatches containing the colliding track
 	 * @param startInd First index of matches that is searched for colliding tracks; none of the previous matches are searched 
 	 * @return Index of the first TrackMatch whose primary pointMatch is the same as this TrackMatch's primary pointMatch 
 	 */
 //	public int findCollidingTrackMatch(Vector<TrackMatch> matches, int startInd){
-	public int findCollidingTrackMatch(Vector<TrackMatch> matches){
+	public Vector<TrackMatch> findCollidingTrackMatches(Vector<TrackMatch> matches){
 		if (TB!=null && TB.comm!=null) TB.comm.message("findCollidingTrackMatch called on track "+track.getTrackID(), VerbLevel.verb_debug);
-		int ind = -1;
-		boolean notFound = true;
+		
 		if (matches.isEmpty()){
 			if (TB!=null && TB.comm!=null) TB.comm.message("Match list empty", VerbLevel.verb_debug);
-			return -2;
+			return null;
 		} else {
-//			if (TB.comm!=null) TB.comm.message("Of "+matches.size()+" matches, we're starting at number "+startInd, VerbLevel.verb_debug);
+			//if (TB.comm!=null) TB.comm.message("Of "+matches.size()+" matches, we're starting at number "+startInd, VerbLevel.verb_debug);
 		}
 		
-//		if (startInd<matches.size()){
-			if (TB!=null && TB.comm!=null) TB.comm.message("Searching list for collision match...", VerbLevel.verb_debug);
-//			ListIterator<TrackMatch> tmIt = matches.listIterator(startInd);
-			ListIterator<TrackMatch> tmIt = matches.listIterator();
-			while (notFound && tmIt.hasNext()) {
-				int curInd = tmIt.nextIndex();
-				TrackMatch mCheck = tmIt.next();
-				//If this is not the current match and the point is the same, then we found a winner! 
-				if (mCheck.getTopMatchPoint()!=null && mCheck.track.getTrackID()!=track.getTrackID() && mCheck.getTopMatchPoint().pointID==getTopMatchPoint().pointID) {
-					ind = curInd;
-					notFound = false;
-				}
+		if (TB!=null && TB.comm!=null) TB.comm.message("Searching list for collision match...", VerbLevel.verb_debug);
+		
+		Vector<TrackMatch> ctm = new Vector<TrackMatch>();
+		
+		ListIterator<TrackMatch> tmIt = matches.listIterator();
+		while (tmIt.hasNext()) {
+			TrackMatch mCheck = tmIt.next();
+			//If this is not the current match and the point is the same, then we found a winner! 
+			if (mCheck.track.getTrackID()!=track.getTrackID() && mCheck.getTopMatchPoint()!=null && mCheck.getTopMatchPoint().pointID==getTopMatchPoint().pointID) {
+				ctm.add(mCheck);
 			}
-//		}
-		return ind;
+		}
+		return ctm;
 	}
 	
 	public Vector<Integer> indsOfValidNonPrimaryEmptyMatches(){

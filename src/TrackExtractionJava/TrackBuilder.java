@@ -488,9 +488,19 @@ public class TrackBuilder implements Serializable{
 					for (TrackMatch m: colMatches) m.clearAllMatches();//So that the other match (ie the other element of colMatches) doesn't pass the "checkTopMatchForCollision" test
 				} else {
 					String s = "";
-					s+= newPts.size()+" points unable to be matched to "+colMatches.size()+"tracks";
+					s+= newPts.size()+" points unable to be matched to "+colMatches.size()+"tracks\n";
+					s+="\nCollision tracks:\n";
+					for (TrackMatch cm : colMatches){
+						s+="Track "+cm.track.getTrackID()+"\n";
+					}
 					
-					new TextWindow("Point splitting error", s, 600, 500);
+					s+="\nOldPoint: \n"+tm.getTopMatchPoint().getTPDescription()+"\n";
+					s+="\nNew points:\n";
+					for (TrackPoint p : newPts){
+						s+=p.getTPDescription()+"\n";
+					}
+					
+					new TextWindow("Point splitting error; frame "+newPts.firstElement().frameNum, s, 600, 500);
 				}
 				
 				
@@ -595,18 +605,19 @@ public class TrackBuilder implements Serializable{
 	 */
 	public Vector<TrackMatch> getCollisionMatches(TrackMatch match){
 		
-		Vector<TrackMatch> colMatches= new Vector<TrackMatch>();
+//		Vector<TrackMatch> colMatches= new Vector<TrackMatch>();
 			
-		//Find the first TrackMatch in matches that's in the collision
-		int colInd = match.findCollidingTrackMatch(matches);
-		if (colInd>=0) {
-			colMatches.add(matches.get(colInd));
-			comm.message("Match found", VerbLevel.verb_debug);
+		//Find the TrackMatches that are in the collision
+		Vector<TrackMatch> ctm = match.findCollidingTrackMatches(matches);
+		if (ctm!=null && ctm.size()>0) {
+//			colMatches.addAll(ctm);
+			comm.message("Match(es) found", VerbLevel.verb_debug);
 		} else{
+			ctm=null;
 			comm.message("No matches found", VerbLevel.verb_debug);
 		}
 		
-		return colMatches;
+		return ctm;
 
 		
 	}

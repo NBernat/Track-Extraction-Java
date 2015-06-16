@@ -716,7 +716,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		
 		imOriginX = (int)x-(trackWindowWidth/2)-1;
 		imOriginY = (int)y-(trackWindowHeight/2)-1;
-		im.snapshot();
+//		im.snapshot();
 		
 		ImageProcessor bigIm = im.resize(im.getWidth()*expandFac);
 		
@@ -734,7 +734,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	public ImageProcessor getImOLD() {
 		imOriginX = (int)x-(trackWindowWidth/2)-1;
 		imOriginY = (int)y-(trackWindowHeight/2)-1;
-		im.snapshot();
+//		im.snapshot();
 //		ImageProcessor cIm = drawFeatures(im);
 		ImageProcessor pIm = CVUtils.padAndCenter(new ImagePlus("Point "+pointID, im), trackWindowWidth, trackWindowHeight, (int)x-rect.x, (int)y-rect.y);
 		int offX = rect.x-imOriginX;

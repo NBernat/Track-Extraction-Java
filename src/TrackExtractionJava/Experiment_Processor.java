@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.Vector;
 
 import ij.IJ;
+import ij.ImageJ;
 import ij.ImagePlus;
 import ij.WindowManager;
 import ij.gui.ImageWindow;
@@ -45,15 +46,29 @@ public class Experiment_Processor implements PlugIn{
 	}
 	
 	//TODO command line invocation
-	public void main(String[] args){
-			
-		//Open IJ
-		if (args.length==1){
-			run(args[0]);
-		} else { 
-			System.out.println("Pass only one argument, with the name of the .mmf or .ser file");
-		}
+	public static void main(String[] args){
+		
+        // set the plugins.dir property to make the plugin appear in the Plugins menu
+		Class<?> clazz = Experiment_Processor.class; 
+        String url = clazz.getResource("/" + clazz.getName().replace('.', '/') + ".class").toString();
+        String pluginsDir = url.substring(5, url.length() - clazz.getName().length() - 6);
+        System.setProperty("plugins.dir", pluginsDir);
+		/*
+        Class<?> clazz2 = mmf_Reader.class; 
+        String url2 = clazz2.getResource("/" + clazz2.getName().replace('.', '/') + ".class").toString();
+        String pluginsDir2 = url2.substring(5, url2.length() - clazz2.getName().length() - 6);
+        System.setProperty("plugins.dir", pluginsDir2);
+        */
+        
+        // start ImageJ
+        new ImageJ();
+
+        // run the plugin
+        IJ.runPlugIn(clazz.getName(), "");
+		
+		
 	}
+	
 	
 	
 	/**
@@ -107,7 +122,7 @@ public class Experiment_Processor implements PlugIn{
 				*/
 				
 				if (prParams.doFitting){
-					ex = new Experiment(ex);
+//					ex = new Experiment(ex);
 					log("Fitting "+ex.getNumTracks()+" Tracks...");
 					fitTracks();
 					log("...done fitting tracks");

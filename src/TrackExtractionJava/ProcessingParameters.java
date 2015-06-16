@@ -10,7 +10,7 @@ public class ProcessingParameters {
 	 */
 	int minTrackLen = 80;//TODO set this when fp is set
 	
-	boolean doFitting = true;
+	boolean doFitting = false;
 	
 	/**
 	 * Closes the MMF window
@@ -24,7 +24,7 @@ public class ProcessingParameters {
 	/**
 	 * Displays an ExperimentFrame after fitting tracks 
 	 */
-	boolean showFitEx = true;
+	boolean showFitEx = false;
 	
 	/**
 	 * Whether or not to automatically save the extracted tracks of MTPs
