@@ -5,6 +5,8 @@ import java.util.Vector;
 
 public class FittingParameters {
 	
+	int GCInterval = 5;
+	
 	int numBBPts = 9;
 	
 	int[] grains = {16,  1};//{1};//

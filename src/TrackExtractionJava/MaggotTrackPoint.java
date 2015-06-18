@@ -42,8 +42,10 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	protected Point contourStart;
 	protected int nConPts;
 	
-//	PolygonRoi contour;
-	protected Vector<ContourPoint> cont;
+//	protected Vector<ContourPoint> cont;
+	int[] contourX;
+	int[] contourY;
+	
 	
 	ContourPoint head; //RELATIVE TO IMAGE RECT
 	transient int headi;
@@ -88,11 +90,15 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	
 
 	protected void extractFeatures(){
-		findContours();
-		findHTMidline(maxContourAngle, numMidCoords);
+		Vector<ContourPoint> cont = findContours();
+		findHTMidline(cont, maxContourAngle, numMidCoords);
+		convertCPtoArrays(cont);
+		cont.removeAllElements();
+		cont = null;
 	}
 	
-	private void findContours(){
+	private Vector<ContourPoint> findContours(){
+		Vector<ContourPoint> con = new Vector<ContourPoint>();
 		if (comm!=null) comm.message("Finding Contours", VerbLevel.verb_debug);
 		ImagePlus thrIm = new ImagePlus("", im.getBufferedImage());//copies image
 		ImageProcessor thIm = thrIm.getProcessor();
@@ -103,44 +109,36 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		nConPts = wand.npoints;
 		if (comm!=null) comm.message("Wand arrays have "+wand.xpoints.length+" points, and report "+nConPts+" points", VerbLevel.verb_debug);
 		int[] contourX = wand.xpoints;//Arrays.copyOfRange(wand.xpoints, 0, wand.npoints);//
-//		for (int i=0;i<nConPts;i++) contourX[i]+=rect.x; 
 		int[] contourY = wand.ypoints;//Arrays.copyOfRange(wand.ypoints, 0, wand.npoints);//
-//		for (int i=0;i<nConPts;i++) contourY[i]+=rect.y;
 		
 		if (comm!=null) comm.message("Point coords were gathered", VerbLevel.verb_debug);
 		PolygonRoi contour = new PolygonRoi(contourX, contourY, nConPts, Roi.POLYGON);
 		if (comm!=null) comm.message("Initial polygonRoi was made", VerbLevel.verb_debug);
 		contour = new PolygonRoi(contour.getInterpolatedPolygon(1.0, false), Roi.POLYGON);//This makes the spacing between coordinates = 1.0 pixels apart, smoothing=false
-//		rect = contour.getBounds();
-//		im.setRoi(rect);
-//		im = im.crop();
 		
 		if (comm!=null) comm.message("Making ContourPoints", VerbLevel.verb_debug);
 		int ptN = contour.getNCoordinates();
-		cont = new Vector<ContourPoint>();
+		con = new Vector<ContourPoint>();
 		for(int ind=0; ind<ptN; ind++){
-				cont.add(new ContourPoint(contour.getXCoordinates()[ind]+contour.getBounds().x, contour.getYCoordinates()[ind]+contour.getBounds().y));
-//				cont.add(new ContourPoint(contour.getXCoordinates()[ind], contour.getYCoordinates()[ind]));
+				con.add(new ContourPoint(contour.getXCoordinates()[ind]+contour.getBounds().x, contour.getYCoordinates()[ind]+contour.getBounds().y));
 		}
 		
 		
-		
+		return con;
 		
 	}
 	
 
 
-	private void findHTMidline(double maxAngle, int numMidPts){
+	private void findHTMidline(Vector<ContourPoint> cont, double maxAngle, int numMidPts){
 		
-		findHT(maxAngle);
+		findHT(cont, maxAngle);
 		
-		deriveMidline(numMidPts);
-		
-//		invertMaggot(); 
+		deriveMidline(cont, numMidPts);
 		
 	}
 	
-	private void findHT(double maxAngle){
+	private void findHT(Vector<ContourPoint> cont, double maxAngle){
 		///////////////////////////////
 		///// Make a list of candidates 
 		///////////////////////////////
@@ -157,19 +155,6 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			comm.message("Initially, there are "+ptN+" points", VerbLevel.verb_debug);
 		}
 		
-//		for(int ind=0; ind<ptN; ind++){
-//			if(contour.getXCoordinates()[ind]!=0 || contour.getYCoordinates()[ind]!=0){
-//				
-//				ptList.add(new ContourPoint(contour.getXCoordinates()[ind], contour.getYCoordinates()[ind]));
-//			}
-//		}
-//		ptN = ptList.size();
-		
-		//Link the points to each other, measure the angle between points at the given spacing, and mark whether or not they're in the convex hull
-//		PolygonRoi cvxHull = new PolygonRoi(contour.getConvexHull(), Roi.POLYGON);
-//		cvxHull = new PolygonRoi(cvxHull.getInterpolatedPolygon(1.0, false), Roi.POLYGON);
-//		cvxHull  = new PolygonRoi(cvxHull.getXCoordinates(), cvxHull.getYCoordinates(), cvxHull.getNCoordinates(), Roi.POLYGON);
-//		cvxHull = new PolygonRoi(cvxHull.getInterpolatedPolygon(1.0, false), Roi.POLYGON);
 		int spacing = ptN/6;
 		ContourPoint thisPt;
 		int nCan = 0;
@@ -275,9 +260,13 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		if (htValid){
 			head = ptList.get(0);
 			headi = cont.indexOf(head);
+			head.setNext(null);
+			head.setPrev(null);
 //			head.x+=contour.getBounds().x;
 //			head.y+=contour.getBounds().y;
 			tail = ptList.get(1);
+			tail.setNext(null);
+			tail.setPrev(null);
 			taili= cont.indexOf(tail);
 //			tail.x+=contour.getBounds().x;
 //			tail.y+=contour.getBounds().y;
@@ -300,7 +289,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		
 	}
 	
-	private void deriveMidline(int numMidPts){
+	private void deriveMidline(Vector<ContourPoint> cont, int numMidPts){
 		
 		if (comm!=null) comm.message("Entering Midline creation", VerbLevel.verb_debug);
 		if(htValid && cont.get(headi)!=null && cont.get(taili)!=null){
@@ -382,6 +371,15 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		
 	}
 	
+	
+	private void convertCPtoArrays(Vector<ContourPoint> cont){
+		contourX = new int[cont.size()];
+		contourY = new int[cont.size()];
+		for (int i=0; i<cont.size(); i++){
+			contourX[i] = cont.get(i).x;
+			contourY[i] = cont.get(i).y;
+		}
+	}
 	
 	public static PolygonRoi getInterpolatedSegment(PolygonRoi origSegment, int numPts){
 		return getInterpolatedSegment(origSegment, numPts, false);
@@ -625,18 +623,17 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		return nConPts;
 	}
 	
-	public Vector<ContourPoint> getContour(){
-		return cont;
-	}
+//	public Vector<ContourPoint> getContour(){
+//		return cont;
+//	}
 	
 	public int[][] getContourArray(){
 		
-		int[][] ar = new int[2][cont.size()];
+		int[][] ar = new int[2][contourX.length];
 		
-		for (int i=0; i<cont.size(); i++){
-			ContourPoint cp = cont.get(i);
-			ar[0][i] = cp.x;
-			ar[1][i] = cp.y;
+		for (int i=0; i<contourX.length; i++){
+			ar[0][i] = contourX[i];
+			ar[1][i] = contourY[i];
 		}
 		
 		
@@ -645,13 +642,15 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	
 	public PolygonRoi getContourRoi(){
 		
-		float[] x = new float[cont.size()];
-		float[] y = new float[cont.size()];
+		float[] x = new float[contourX.length];
+		float[] y = new float[contourY.length];
 		
-		for (int i=0; i<cont.size(); i++){
-			x[i] = cont.get(i).x;
-			y[i] = cont.get(i).y;
+		for (int i=0; i<contourX.length; i++){
+			x[i] = contourX[i];
+			y[i] = contourY[i];
 		}
+		
+		
 		
 		PolygonRoi roi = new PolygonRoi(x, y, PolygonRoi.POLYGON);		
 		return roi;
@@ -755,44 +754,44 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		ImageProcessor im = grayIm.convertToRGB();
 				
 		im.setColor(Color.WHITE);
-//		im.drawDot(offX, offY);//Top Right
+		//im.drawDot(offX, offY);//Top Right
 		im.drawLine(offX-1, offY-1, offX+rect.width, offY-1);//TL to TR
 		im.drawLine(offX-1, offY+rect.height, offX+rect.width, offY+rect.height);//BL to BR
 		im.drawLine(offX-1, offY-1, offX-1, offY+rect.height);//TL to BL
 		im.drawLine(offX+rect.width, offY-1, offX+rect.width, offY+rect.height);//TR to BR
-//		im.drawDot(rect.width-1+offX, rect.height-1+offY);//Bottom Right
+		//im.drawDot(rect.width-1+offX, rect.height-1+offY);//Bottom Right
 		
 		im.setColor(Color.YELLOW);
-		for (int i=0; i<(cont.size()-1); i++){
-			im.drawLine(cont.get(i).x+offX, cont.get(i).y+offY, cont.get(i+1).x+offX, cont.get(i+1).y+offY);
+		for (int i=0; i<(contourX.length-1); i++){
+			im.drawLine(contourX[i]+offX, contourY[i]+offY, contourX[i+1]+offX, contourY[i+1]+offY);
 		}
-		im.drawLine(cont.get(cont.size()-1).x+offX, cont.get(cont.size()-1).y+offY, cont.get(0).x+offX, cont.get(0).y+offY);
-//		im.drawRoi(contour);
+		im.drawLine(contourX[contourX.length-1]+offX, contourY[contourX.length-1]+offY, contourX[0]+offX, contourY[0]+offY);
 
+		/*
+		im.setColor(Color.BLUE);
+		im.drawDot((int)x-rect.x+offX, (int)y-rect.y+offY);//Center
+		im.drawDot(getStart().x-rect.x+offX, getStart().y-rect.y+offY);//First pt in contour algorithm
 		
-//		im.setColor(Color.BLUE);
-//		im.drawDot((int)x-rect.x+offX, (int)y-rect.y+offY);//Center
-//		im.drawDot(getStart().x-rect.x+offX, getStart().y-rect.y+offY);//First pt in contour algorithm
-		
-//		if (leftX!=null){
-//			im.setColor(Color.BLUE);
-//			for (int i=0; i<leftX.length; i++){
-//				im.drawDot(leftX[i]+offX, leftY[i]+offY);
-//			}
-//			im.setColor(Color.YELLOW);
-//			for (int i=0; i<leftSeg.getNCoordinates(); i++){
-//				im.drawDot(leftSeg.getXCoordinates()[i]+offX+(int)leftSeg.getXBase(), leftSeg.getYCoordinates()[i]+offY+(int)leftSeg.getYBase());
-//			}
-//			
-//			im.setColor(Color.CYAN);
-//			for (int i=0; i<rightX.length; i++){
-//				im.drawDot(rightX[i]+offX, rightY[i]+offY);
-//			}
-//			im.setColor(Color.ORANGE);
-//			for (int i=0; i<rightSeg.getNCoordinates(); i++){
-//				im.drawDot(rightSeg.getXCoordinates()[i]+offX+(int)rightSeg.getXBase(), rightSeg.getYCoordinates()[i]+offY+(int)rightSeg.getYBase());
-//			}
-//		}
+		if (leftX!=null){
+			im.setColor(Color.BLUE);
+			for (int i=0; i<leftX.length; i++){
+				im.drawDot(leftX[i]+offX, leftY[i]+offY);
+			}
+			im.setColor(Color.YELLOW);
+			for (int i=0; i<leftSeg.getNCoordinates(); i++){
+				im.drawDot(leftSeg.getXCoordinates()[i]+offX+(int)leftSeg.getXBase(), leftSeg.getYCoordinates()[i]+offY+(int)leftSeg.getYBase());
+			}
+			
+			im.setColor(Color.CYAN);
+			for (int i=0; i<rightX.length; i++){
+				im.drawDot(rightX[i]+offX, rightY[i]+offY);
+			}
+			im.setColor(Color.ORANGE);
+			for (int i=0; i<rightSeg.getNCoordinates(); i++){
+				im.drawDot(rightSeg.getXCoordinates()[i]+offX+(int)rightSeg.getXBase(), rightSeg.getYCoordinates()[i]+offY+(int)rightSeg.getYBase());
+			}
+		}
+		*/
 		
 		im.setColor(Color.MAGENTA);
 		if (midline!=null){
@@ -826,7 +825,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		if (mid) displayUtils.drawMidline(im, midline, offX, offY, expandFac, Color.YELLOW);
 		
 		//CONTOUR
-		if (contour) displayUtils.drawContour(im, cont, expandFac, offX, offY, Color.BLUE);
+		if (contour) displayUtils.drawContour(im, contourX, contourY, expandFac, offX, offY, Color.BLUE);
 		
 		 
 		//HEAD AND TAIL
@@ -860,7 +859,8 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		btp.next = next;
 		btp.contourStart = contourStart;
 		btp.nConPts = nConPts;
-		btp.cont = cont;
+		btp.contourX = contourX;
+		btp.contourY = contourY;
 		btp.head = head;
 		btp.headi = headi;
 		btp.tail = tail;
@@ -911,6 +911,19 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	}
 	
 	
+	protected void strip(){
+		super.strip();
+		leftX = null;
+		leftY = null;
+		rightX = null;
+		rightY = null;
+		leftSeg = null;
+		rightSeg = null;
+		mask = null;
+		contourStart = null;
+		
+	}
+	
 	public int toDisk(DataOutputStream dos, PrintWriter pw){
 		
 		//Write all ImTrackPoint data
@@ -922,14 +935,18 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			dos.writeByte(htValid ? 1:0);
 			
 			//Write # contour pts 
-			dos.writeInt(cont.size());
+			dos.writeInt(contourX.length);
 			//Write contour
-			for (int i=0; i<cont.size(); i++){
-				ContourPoint cp = cont.get(i);
+			for (int i=0; i<contourX.length; i++){
+				
+				dos.writeInt(contourX[i]);
+				dos.writeInt(contourY[i]);
+				
+				/*ContourPoint cp = cont.get(i);
 				if (cp.toDisk(dos, pw)>0){
 					if (pw!=null) pw.println("Error writing ContourPoint "+i+"/"+cont.size()+" for MaggotTrackPoint "+pointID);
 					return 2;
-				}
+				}*/
 			}
 			
 		} catch (Exception e) {
@@ -985,7 +1002,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		//size+= ; 1 byte + (1 int + nConPts*sizeOfContourPoint) + (3*sizeOfContourPoint) + (1 int + 2*numMidlineCoords*sizeOfFloat)
 		// = 1 byte + 2 int + 2*numMidlineCoords float + (3+nContourPts) sizeOfContourPoint
 		size += 1 + 2*Integer.SIZE/Byte.SIZE; 
-		size += cont.size()*ContourPoint.sizeOnDisk();
+		size += contourX.length*2*(Integer.SIZE/Byte.SIZE);//ContourPoint.sizeOnDisk();
 		if (htValid){
 			size += 3*ContourPoint.sizeOnDisk();
 		}
@@ -1020,15 +1037,19 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			
 			//nconpts, contour
 			nConPts = dis.readInt();
-			cont = new Vector<ContourPoint>();
+			//cont = new Vector<ContourPoint>();
+			contourX = new int[nConPts];
+			contourY = new int[nConPts];
 			for (int i=0; i<nConPts; i++){
-				ContourPoint cp = ContourPoint.fromDisk(dis, pw);
+				/*ContourPoint cp = ContourPoint.fromDisk(dis, pw);
 				if (cp!=null){
 					cont.add(cp);
 				} else {
 					if (pw!=null) pw.println("Error: null contour pt ("+i+"/"+nConPts+")");
 					return 2;
-				}
+				}*/
+				contourX[i] = dis.readInt();
+				contourY[i] = dis.readInt();
 			}
 						
 			//head,mid,tail

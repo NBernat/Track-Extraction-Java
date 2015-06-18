@@ -11,7 +11,7 @@ public class ExtractionParameters implements Serializable{
 	private static final long serialVersionUID = 1L;
 	
 	
-	int garbageCollectionInterval = 1000;
+	int GCInterval = 500;
 
 	/**
 	 * Max number of points stored in a TrackMatch object
@@ -57,7 +57,7 @@ public class ExtractionParameters implements Serializable{
 	int showSampleData =0; 
 	int sampleInd = 10;
 	//TODO
-	boolean subset = true;
+	boolean subset = false;
 	int startFrame = 1300;
 	int endFrame = 1600;
 	//_frame_normalization_methodT fnm = _frame_normalization_methodT._frame_none;

@@ -252,6 +252,10 @@ public class TrackPoint implements Serializable {
 	}
 
 	
+	protected void strip(){
+		covariance = null;
+	}
+	
 	/**
 	 * Generates Serializable forms of any non-serializable ImageJ objects; for basic TrackPoints, nothing is done
 	 */

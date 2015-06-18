@@ -49,22 +49,22 @@ public class Experiment_Processor implements PlugIn{
 	public static void main(String[] args){
 		
         // set the plugins.dir property to make the plugin appear in the Plugins menu
-		Class<?> clazz = Experiment_Processor.class; 
-        String url = clazz.getResource("/" + clazz.getName().replace('.', '/') + ".class").toString();
-        String pluginsDir = url.substring(5, url.length() - clazz.getName().length() - 6);
-        System.setProperty("plugins.dir", pluginsDir);
+//		Class<?> clazz = Experiment_Processor.class; 
+//        String url = clazz.getResource("/" + clazz.getName().replace('.', '/') + ".class").toString();
+//        String pluginsDir = url.substring(5, url.length() - clazz.getName().length() - 6);
+//        System.setProperty("plugins.dir", pluginsDir);
 		/*
-        Class<?> clazz2 = mmf_Reader.class; 
+        Class<?> clazz2 =  mmf_Reader.class; 
         String url2 = clazz2.getResource("/" + clazz2.getName().replace('.', '/') + ".class").toString();
         String pluginsDir2 = url2.substring(5, url2.length() - clazz2.getName().length() - 6);
         System.setProperty("plugins.dir", pluginsDir2);
         */
-        
+         
         // start ImageJ
         new ImageJ();
 
         // run the plugin
-        IJ.runPlugIn(clazz.getName(), "");
+//        IJ.runPlugIn(clazz.getName(), "");
 		
 		
 	}
@@ -228,7 +228,7 @@ public class Experiment_Processor implements PlugIn{
 		
 		//Get the path name...
 		if (arg0==null || arg0.equals("")){ //...from a dialog
-			OpenDialog od = new OpenDialog("Choose an experiment (.mmf or .ser)", null);
+			OpenDialog od = new OpenDialog("Choose an experiment (.mmf or .jav)", null);
 			dir = od.getDirectory();
 			fileName = od.getFileName();
 			
@@ -254,11 +254,11 @@ public class Experiment_Processor implements PlugIn{
 			if (fileName.substring(fileName.length()-4).equalsIgnoreCase(".mmf")){
 				success = openMMF(dir, fileName);
 				
-			} else if (fileName.substring(fileName.length()-4).equalsIgnoreCase(".ser")){
+			} else if (fileName.substring(fileName.length()-4).equalsIgnoreCase(".jav")){
 				success = openExp(dir, fileName);
 				
 			} else {
-				IJ.showMessage("File not recognized as a .mmf or a .ser");
+				IJ.showMessage("File not recognized as a .mmf or a .jav");
 				success = false;
 			}
 		} else {
@@ -304,8 +304,11 @@ public class Experiment_Processor implements PlugIn{
 	private boolean openExp(String dir, String filename){
 		indentLevel++;
 		try {
-			IJ.showStatus("Opening Experiment...");
+			/*IJ.showStatus("Opening Experiment...");
 			ex = new Experiment(Experiment.deserialize(new File(dir, filename).getPath())); 
+			IJ.showStatus("Experiment open");*/
+			IJ.showStatus("Opening Experiment...");
+			ex = new Experiment(Experiment.fromPath(new File(dir, filename).getPath())); 
 			IJ.showStatus("Experiment open");
 			return true;
 		} catch (Exception e){
@@ -412,6 +415,12 @@ public class Experiment_Processor implements PlugIn{
 
 		//Fit each track that is long enough for the course passes
 		for (int i=0; i<ex.getNumTracks(); i++){
+			
+			if (i%bbf.params.GCInterval==0){
+				System.gc();
+			}
+			
+			IJ.showStatus("Fitting Track "+(i+1)+"/"+ex.getNumTracks());
 			tr = ex.getTrackFromInd(i);
 			if (tr.getNumPoints()>prParams.minTrackLen) {//Check track length
 				newTr = fitTrack(tr);

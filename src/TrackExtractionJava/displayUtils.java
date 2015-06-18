@@ -38,12 +38,12 @@ public class displayUtils {
 	}
 	
 	
-	public static void drawContour(ImageProcessor im, Vector<ContourPoint> cont, int expandFac, int offX, int offY, Color color){
+	public static void drawContour(ImageProcessor im, int[] cX, int[] cY, int expandFac, int offX, int offY, Color color){
 		im.setColor(color);
-		for (int i=0; i<(cont.size()-1); i++){
-			im.drawLine(expandFac*cont.get(i).x+offX, expandFac*cont.get(i).y+offY, expandFac*cont.get(i+1).x+offX, expandFac*cont.get(i+1).y+offY);
+		for (int i=0; i<(cX.length-1); i++){
+			im.drawLine(expandFac*cX[i]+offX, expandFac*cY[i]+offY, expandFac*cX[i+1]+offX, expandFac*cY[i+1]+offY);
 		}
-		im.drawLine(expandFac*cont.get(cont.size()-1).x+offX, expandFac*cont.get(cont.size()-1).y+offY, expandFac*cont.get(0).x+offX, expandFac*cont.get(0).y+offY);
+		im.drawLine(expandFac*cX[cX.length-1]+offX, expandFac*cY[cX.length-1]+offY, expandFac*cX[0]+offX, expandFac*cY[0]+offY);
 		
 	}
 	

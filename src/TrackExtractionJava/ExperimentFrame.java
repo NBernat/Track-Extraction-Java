@@ -125,6 +125,19 @@ public class ExperimentFrame extends JFrame{
 		add(playPanel, BorderLayout.EAST);
 //		add(new JScrollPane(trackList), BorderLayout.WEST);
 		pack();
+		
+		addWindowListener(new java.awt.event.WindowAdapter() {
+		    @Override
+		    public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+		        ex = null;
+		        mdp=null;
+		        trackList = null;//.removeAll();
+		        trackPanel = null;//.removeAll();
+		        exPanel = null;//.removeAll();
+		        playPanel = null;//.removeAll();
+		        
+		    }
+		});
 	}
 	
 	protected void showFrame(){

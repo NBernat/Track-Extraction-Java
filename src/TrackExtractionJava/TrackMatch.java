@@ -177,11 +177,10 @@ public class TrackMatch implements Serializable {
 			return matches;
 		} else {
 			//This is not optimal bc it makes a lot of TrackMatch objects that get thrown away, but this case rarely happens often so...yeah
-			String ds = "";
 			
 			
 			//"Match" the first track to the i'th point, then find the matches for the remaining subset; take the min total dist
-			Vector<Track> subTracks = (Vector<Track>)tracks.clone();
+			Vector<Track> subTracks = new Vector<Track>();//(Vector<Track>)tracks.clone();
 			for (int i=1; i<tracks.size(); i++){
 				subTracks.add(tracks.get(i)); 
 			}
@@ -202,16 +201,13 @@ public class TrackMatch implements Serializable {
 				Vector<TrackMatch> subMatches = matchNPts2NTracks(subPts, subTracks, maxDist, tb);
 				//Store the matches/index for the minimum distance match set
 				dist = totalDist(subMatches) + tracks.firstElement().distFromEnd(pts.get(i));
-				ds+=tracks.firstElement().getTrackID()+" to point #"+i+"("+pts.get(i).getPointID()+"): totalDist="+dist;
 				if (dist<minDist){
-					ds+=" (NEW BEST)";
 					bestInd = i;
+					minDist = dist;
 					bestMatches.clear();
 					bestMatches.addAll(subMatches);
 				}
-				ds+="\n";
 			}
-			new TextWindow("Multi-maggot collision", ds, 500, 500);
 			bestMatches.add(new TrackMatch(tracks.firstElement(), pts.get(bestInd), maxDist, tb));
 			return bestMatches;
 		}

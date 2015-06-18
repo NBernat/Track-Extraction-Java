@@ -10,7 +10,9 @@ public class ProcessingParameters {
 	 */
 	int minTrackLen = 80;//TODO set this when fp is set
 	
-	boolean doFitting = false;
+	
+	
+	boolean doFitting = true;
 	
 	/**
 	 * Closes the MMF window
@@ -24,7 +26,7 @@ public class ProcessingParameters {
 	/**
 	 * Displays an ExperimentFrame after fitting tracks 
 	 */
-	boolean showFitEx = false;
+	boolean showFitEx = true;
 	
 	/**
 	 * Whether or not to automatically save the extracted tracks of MTPs
@@ -64,6 +66,10 @@ public class ProcessingParameters {
 
 		StringBuilder name = new StringBuilder(srcName);
 		name.replace(name.lastIndexOf("."), name.length(), ".jav");
+		int mtpInd = name.indexOf("MTP");
+		if (mtpInd>=0){
+			name.replace(mtpInd, 3, "BTP");
+		}
 		String[] FitExPathParts = {outDir, name.toString()};
 		return FitExPathParts;
 	}

@@ -72,6 +72,11 @@ public class ImTrackPoint extends TrackPoint{
 		frameIm.setRoi(oldRoi);
 	}
 	
+	protected void strip(){
+		super.strip();
+		serializableIm = null;
+	}
+	
 	/**
 	 * Generates Serializable forms of any non-serializable ImageJ objects 
 	 * <p>

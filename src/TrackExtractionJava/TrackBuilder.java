@@ -206,7 +206,7 @@ public class TrackBuilder implements Serializable{
 	 */
 	private int addFrame(int frameNum) {
 		
-		if (frameNum%ep.garbageCollectionInterval==0){
+		if (frameNum%ep.GCInterval==0){
 			System.gc();
 		}
 		
@@ -481,7 +481,8 @@ public class TrackBuilder implements Serializable{
 				
 				//Update the TrackBuilder structure
 				if (newMatches!=null){
-					activePts.remove(tm.getTopMatchPoint());
+					rmActivePt(tm.getTopMatchPoint());
+//					activePts.remove(tm.getTopMatchPoint());
 					activePts.addAll(newPts);
 					toAdd.addAll(newMatches);
 					toRemove.addAll(colMatches);
@@ -846,7 +847,8 @@ public class TrackBuilder implements Serializable{
 //				match.track.markCollision(frameNum, null);
 				
 				activeTracks.add(match.track);
-				activePts.remove(match.track.getEnd());
+				rmActivePt(match.track.getEnd());
+//				activePts.remove(match.track.getEnd());
 				
 			} else {
 				match.track.extendTrack(match.getTopMatchPoint());
@@ -856,8 +858,8 @@ public class TrackBuilder implements Serializable{
 //					match.track.markCollision(frameNum, null);
 //				}
 				
-
-				activePts.remove(match.track.getEnd());
+				rmActivePt(match.track.getEnd());
+//				activePts.remove(match.track.getEnd());
 						
 				//activePts.remove(match.getTopMatchPoint());
 			}
@@ -889,6 +891,11 @@ public class TrackBuilder implements Serializable{
 		}
 		
 		return numNew;
+	}
+	
+	protected void rmActivePt(TrackPoint pt){
+		pt.strip();
+		activePts.remove(pt);
 	}
 	
 	/**

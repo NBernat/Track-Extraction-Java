@@ -442,7 +442,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		if (initialBB) displayUtils.drawBBInit(im, bbInit, offX, offY, rect, expandFac, Color.MAGENTA);
 		
 		//CONTOUR
-		if (contour) displayUtils.drawContour(im, cont, expandFac, offX, offY, Color.BLUE);
+		if (contour) displayUtils.drawContour(im, contourX, contourY, expandFac, offX, offY, Color.BLUE);
 		
 		 
 		//HEAD AND TAIL
