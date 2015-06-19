@@ -344,6 +344,16 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		return CVUtils.fPoly2Array(backbone.getFloatPolygon(), rect.x, rect.y);
 	}
 	
+	public double[][] getInterpdBackbone(int numCoords){
+		if (numCoords==-1) numCoords = numBBPts;
+		FloatPolygon newBB = getInterpolatedSegment(backbone, numCoords).getFloatPolygon();
+		if (newBB!=null){
+			return CVUtils.fPoly2Array(newBB, 0, 0);
+		}else {
+			return null;
+		}
+	}
+	
 	public boolean getArtificialMid(){
 		return artificialMid;
 	}
