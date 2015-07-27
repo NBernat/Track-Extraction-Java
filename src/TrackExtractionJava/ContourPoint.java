@@ -70,20 +70,22 @@ public class ContourPoint extends Point implements Comparable<ContourPoint> {
 	
 	public int compareTo(ContourPoint otherPt){
 		
+		return java.lang.Double.compare(angle, otherPt.angle);
+		/*
 		if (this.angle==java.lang.Double.POSITIVE_INFINITY || otherPt.angle==java.lang.Double.POSITIVE_INFINITY){
 			throw new NullPointerException();
 		}
 		
-		if (Math.abs(angle)==Math.abs(otherPt.angle) ){
+		if (angle==otherPt.angle){
 			return 0;
 		}
 		
-		if (Math.abs(angle)-Math.abs(otherPt.angle)>0){
+		if (angle-otherPt.angle>0){
 			return 1;
 		} else {
 			return -1;
 		}
-		
+		*/
 	}
 	
 	

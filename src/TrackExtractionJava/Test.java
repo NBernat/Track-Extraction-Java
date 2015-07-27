@@ -1,6 +1,9 @@
 package TrackExtractionJava;
 
 
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Scanner;
 import java.util.Vector;
 
@@ -20,10 +23,33 @@ public class Test {//extends JFrame
 
 	public static void main(String[] args) {
 		
-		String inDir = "C:\\Users\\Natalie\\Documents\\TestJavaMat\\data\\201406122014";
+		Experiment_Processor.main(args);// ep = new Experiment_Processor();
+//		ep.main(args);
 		
-		System.out.println(inDir);
-		System.out.println(ProcessingParameters.getOutFromInDir(inDir));
+		/*String path = "C:\\Users\\Natalie\\Documents\\1cm_checkerboard.png";
+		
+		if (args!=null && args.length>=1){
+			path = args[0];
+		}
+		
+		
+		File f = new File(path);
+		
+		System.out.println(path);
+		System.out.println(f.getParent());*/
+
+		/*
+		String path = "C:\\Users\\Natalie\\Documents\\TestJavaMat\\data\\phototaxis\\berlin@berlin\\LIGHT_RANDOM_WALK_S1_112Hz\\201402121840\\berlin@berlin_LIGHT_RANDOM_WALK_S1_112Hz_201402121840.mmf";
+		String dstDir = "C:\\Users\\Natalie\\Documents\\";
+		Path p = Paths.get(path.replace(".mmf", ".mdat"));
+		String savepath = new File(dstDir, p.getFileName().toString()).getAbsolutePath();
+		System.out.println(savepath);
+				*/
+		
+//		String inDir = "C:\\Users\\Natalie\\Documents\\TestJavaMat\\data\\201406122014";
+//		
+//		System.out.println(inDir);
+//		System.out.println(ProcessingParameters.getOutFromInDir(inDir));
 		
 		
 //		ImagePlus imp = new ImagePlus("C:\\Users\\Natalie\\Documents\\TestExProc\\unmaskTest.tif");
@@ -87,6 +113,10 @@ public class Test {//extends JFrame
 			ret+=fld2;
 		}
 		return ret;
+	}
+	
+	public Test(){
+		
 	}
 	
 	public Test(int i, String s){

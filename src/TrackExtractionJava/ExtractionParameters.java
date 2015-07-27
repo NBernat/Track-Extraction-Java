@@ -1,6 +1,10 @@
 package TrackExtractionJava;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 
 
 public class ExtractionParameters implements Serializable{
@@ -9,6 +13,8 @@ public class ExtractionParameters implements Serializable{
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+	
+	
 	
 	
 	int GCInterval = 500;
@@ -57,9 +63,9 @@ public class ExtractionParameters implements Serializable{
 	int showSampleData =0; 
 	int sampleInd = 10;
 	//TODO
-	boolean subset = false;
+	boolean subset = true;
 	int startFrame = 1300;
-	int endFrame = 1600;
+	int endFrame = 1400;
 	//_frame_normalization_methodT fnm = _frame_normalization_methodT._frame_none;
 	//TODO
 	int trackWindowHeight = 50;
@@ -147,14 +153,52 @@ public class ExtractionParameters implements Serializable{
      */
     int trackPointType = 2;
     
+    /**
+	 * Creates a set of Extraction Parameters, with the proper start frame
+	 */
+	public ExtractionParameters(){
+		if (!subset){
+			startFrame = 1;
+		}
+	}
     
-    
-//	public ExtractionParameters(){
-//		
-//	}
-	
 	public boolean properPointSize(double area){
 		return (area>=minArea && area<=maxArea);
+	}
+	
+	public boolean toDisk(String outputName){
+		
+		
+		try{
+			
+			File f = new File(outputName);
+			
+			FileWriter fw = new FileWriter(f.getAbsoluteFile());
+			BufferedWriter bw = new BufferedWriter(fw);
+			System.out.println("Writing params to disk...");
+			Field[] flds = ExtractionParameters.class.getDeclaredFields();//getFields();
+			System.out.println(flds.length+" fields");
+			for (Field fld: flds){
+				bw.write(fld.getName()+":"+fld.get(this)+"\n");
+			}
+			
+			bw.close();
+			System.out.println("...finished writing params to disk");
+			
+		} catch (Exception e){
+			System.out.println("Error saving to disk"+e.getMessage());
+		}
+		
+		return true;
+	}
+	
+	
+	public static void main(String[] args) {
+		
+		ExtractionParameters ep = new ExtractionParameters();
+		System.out.println("Saving params to disk...");
+		ep.toDisk("C:\\Users\\Natalie\\Documents\\test.txt");
+		System.out.println("...done saving params to disk");
 	}
 	
 }

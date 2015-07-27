@@ -15,6 +15,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
 
+import edu.nyu.physics.gershowlab.mmf.mmf_Reader;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
@@ -30,6 +31,7 @@ public class Experiment_Processor implements PlugIn{
 	ProcessingParameters prParams; 
 	private String srcDir;
 	private String srcName;
+	private String dstDir;
 	private PrintWriter processLog;
 	
 	
@@ -38,12 +40,10 @@ public class Experiment_Processor implements PlugIn{
 	private BackboneFitter bbf;
 	private Experiment ex;
 	
+	private boolean runningFromMain = false;
 	private TicToc runTime;
 	private int indentLevel;
 	
-	public Experiment_Processor(){
-		
-	}
 	
 	//TODO command line invocation
 	public static void main(String[] args){
@@ -59,31 +59,47 @@ public class Experiment_Processor implements PlugIn{
         String pluginsDir2 = url2.substring(5, url2.length() - clazz2.getName().length() - 6);
         System.setProperty("plugins.dir", pluginsDir2);
         */
-         
-        // start ImageJ
-        new ImageJ();
-
-        // run the plugin
-//        IJ.runPlugIn(clazz.getName(), "");
 		
+//		System.out.println(args[0]);
+//		System.out.println(args[1]);
+		
+		ImageJ imj = new ImageJ();
+		
+		Experiment_Processor ep = new Experiment_Processor();
+		ep.runningFromMain = true;
+		
+		if (args!=null && args.length>=1){
+			
+			if (args.length>=2){
+				ep.dstDir = args[1];
+			}
+			
+			ep.run(args[0]);
+		}
+		
+//		imj.quit();
+	}
+
+
+	public Experiment_Processor(){
 		
 	}
-	
-	
-	
 	/**
 	 * Opens a file (via argument or dialog); extracts if needed, and fits tracks; saves extracted and fit tracks
 	 */
 	public void run(String arg0) {
 		indentLevel=0;
 		runTime = new TicToc();
-				
-		init();
+		
+		if (prParams==null){
+			init();
+		}
 		
 		boolean success = (loadFile(arg0) );
 		try {
 			runTime.tic();
-			setupLog();
+			String logpathname = setupLog();
+			System.out.println("Experiment Processing Log initiated at "+logpathname);
 			log("Initiated log entry");
 			if(success){
 				if (ex==null){
@@ -120,7 +136,7 @@ public class Experiment_Processor implements PlugIn{
 					log ("...Error in MTP Experiment fromDisk:\n"+sw.toString());
 				}
 				*/
-				
+				System.gc();
 				if (prParams.doFitting){
 //					ex = new Experiment(ex);
 					log("Fitting "+ex.getNumTracks()+" Tracks...");
@@ -137,8 +153,8 @@ public class Experiment_Processor implements PlugIn{
 					}
 					
 				}
-				/*
-				try{
+				
+				/*try{
 					log("Testing FitEx.fromDisk...");
 					testFromDisk(true, processLog);
 					log("...FitEx.fromDisk complete");
@@ -147,8 +163,8 @@ public class Experiment_Processor implements PlugIn{
 					PrintWriter pw = new PrintWriter(sw);
 					exc.printStackTrace(pw);
 					log ("...Error in BTP Experiment fromDisk:\n"+sw.toString());
-				}
-				*/
+				}*/
+				
 				//TODO release memory to OS? System.gc
 			} else {
 				log("...no success");
@@ -180,8 +196,14 @@ public class Experiment_Processor implements PlugIn{
 		} else {
 			pathParts = prParams.setMagExPath(srcDir, srcName);
 		}
-		File f = new File(pathParts[0]+File.separator+pathParts[1]);
+		File f;
+		if (dstDir==null || dstDir.equals("")){
+			f = new File(pathParts[0]+File.separator+pathParts[1]);
+		}else {
+			f = new File(dstDir+File.separator+pathParts[1]);
+		}
 		IJ.showStatus("Loading Experiment...");
+		System.out.println("Testing fromDisk method on file "+f.getPath());
 		if (pw!=null) pw.println("Loading experiment "+f.getPath());
 		try{
 			 
@@ -199,6 +221,7 @@ public class Experiment_Processor implements PlugIn{
 			
 		} catch (Exception e){
 			if(pw!=null) pw.println("Error loading experiment");
+			System.out.println("Experiment_Processor.testFromDisk error");
 			return;
 			
 		}
@@ -235,12 +258,15 @@ public class Experiment_Processor implements PlugIn{
 		} else {//...from the passed argument
 			System.out.println("Loading file "+arg0);
 			IJ.showStatus("Loading file "+arg0);
-			StringBuilder sb = new StringBuilder(arg0);
-			int sep = sb.lastIndexOf(System.getProperty("path.separator"));
-			if (sep>0){
-				fileName = sb.substring(sep+1);
-				dir = sb.substring(0, sep-1);
-			}
+			File f = new File(arg0);
+			fileName = f.getName();
+			dir = f.getParent();
+//			StringBuilder sb = new StringBuilder(arg0);
+//			int sep = sb.lastIndexOf(System.getProperty("path.separator"));
+//			if (sep>0){
+//				fileName = sb.substring(sep+1);
+//				dir = sb.substring(0, sep-1);
+//			}
 		}
 		
 		//Open the file with the appropriate method
@@ -249,20 +275,25 @@ public class Experiment_Processor implements PlugIn{
 			srcDir = dir;
 			srcName = fileName;
 			
+//			System.out.println("Loading file "+fileName);
 			IJ.showStatus("Loading file "+fileName);
 			
 			if (fileName.substring(fileName.length()-4).equalsIgnoreCase(".mmf")){
+//				System.out.println("Recognized as mmf");
 				success = openMMF(dir, fileName);
+				//Read MMF metadata 
 				
 			} else if (fileName.substring(fileName.length()-4).equalsIgnoreCase(".jav")){
 				success = openExp(dir, fileName);
 				
 			} else {
+				System.out.println("Experiment_Processor.loadFile error: did not recognize file type"); 
 				IJ.showMessage("File not recognized as a .mmf or a .jav");
 				success = false;
 			}
 		} else {
 //			IJ.showMessage("Could not load file; null directory");
+			System.out.println("Experiment_Processor.loadFile error: could not parse file name"); 
 			success = false;
 		}
 		
@@ -279,10 +310,23 @@ public class Experiment_Processor implements PlugIn{
 		indentLevel++;
 		try{
 			IJ.showStatus("Opening MMF...");		
-			IJ.run("Import MMF", "path=["+new File(dir, filename).getPath()+"]");
-			mmfWin = WindowManager.getCurrentWindow();
-			mmfStack = mmfWin.getImagePlus();
-//			if (prParams.closeMMF) mmfWin.close();
+			
+			if (!runningFromMain){
+				IJ.run("Import MMF", "path=["+new File(dir, filename).getPath()+"]");
+				mmfWin = WindowManager.getCurrentWindow();
+				mmfStack = mmfWin.getImagePlus();
+			} else {
+//				System.out.println("Opening mmf from code..");
+				mmf_Reader mr = new mmf_Reader();
+				String path = new File(dir, filename).getPath();
+//				System.out.println(path);
+				mr.loadStack(path);
+				if (mr.getMmfStack()==null) {
+					System.out.println("null stack");
+					return false;
+				}
+				mmfStack = new ImagePlus(path, mr.getMmfStack());
+			}
 			IJ.showStatus("MMF open");
 			return true;
 		} catch (Exception e){
@@ -290,6 +334,7 @@ public class Experiment_Processor implements PlugIn{
 			PrintWriter pw = new PrintWriter(sw);
 			e.printStackTrace(pw);
 			new TextWindow("Error opening mmf", sw.toString(), 500, 500);
+			System.out.println("Experiment_processor.openMMF error");
 			return false;
 		} finally{
 			indentLevel--;
@@ -315,6 +360,7 @@ public class Experiment_Processor implements PlugIn{
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
 			e.printStackTrace(pw);
+			System.out.println("Experiment_processor.openExp error");
 			new TextWindow("Error opening serialized experiment", sw.toString(), 500, 500);
 			return false;
 		} finally{
@@ -330,17 +376,18 @@ public class Experiment_Processor implements PlugIn{
 	 * file already exists, this log is appended to the end of that file
 	 * @return Success of the creation of the log 
 	 */
-	private boolean setupLog(){
+	private String setupLog(){
 		
 		if (srcDir==null || srcName==null){
-			return false;
+			return "";
 		}
 		
 		indentLevel++;
 		
 		try{
 			String[] logPathParts = prParams.setLogPath(srcDir, srcName);
-			processLog = new PrintWriter(new FileWriter(new File(logPathParts[0], logPathParts[1]).getPath(), true));
+			String fname = new File(logPathParts[0], logPathParts[1]).getPath();
+			processLog = new PrintWriter(new FileWriter(fname, true));
 			
 			processLog.println();
 			processLog.println("----------------------------------------------");
@@ -349,11 +396,10 @@ public class Experiment_Processor implements PlugIn{
 			processLog.println("----------------------------------------------");
 			processLog.println();
 			
-			
-			return true;
+			return fname;
 		} catch (Exception e){
 			new TextWindow("Log error", "Unable to create Processing Log file '"+srcName+"' in '"+srcDir+"'", 500, 500);
-			return false;
+			return "";
 		} finally{
 			indentLevel--;
 		}
@@ -373,11 +419,12 @@ public class Experiment_Processor implements PlugIn{
 		MaggotTrackBuilder tb = new MaggotTrackBuilder(mmfStack.getImageStack(), new ExtractionParameters());
 
 		try {
+			System.out.println("Extracting tracks");
 			//Extract the tracks
 			tb.run();
 			status+="...Running complete! \n Converting to experiment... \n";
 			ex = new Experiment(tb.toExperiment());
-			status+="...Converted to Experiment!\n";
+			status+="...Converted to Experiment\n";
 			
 			
 			//Show the extracted tracks
@@ -386,14 +433,17 @@ public class Experiment_Processor implements PlugIn{
 				status+="Showing experiment...\n";
 				ExperimentFrame exFrame = new ExperimentFrame(ex);
 				exFrame.run(null);
-				status+="...Experiment shown!\n";
+				status+="...Experiment shown\n";
 			}
+			
+			System.out.println("Extracted "+ex.getNumTracks()+" tracks");
 			
 		} catch  (Exception e){
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
 			e.printStackTrace(pw);
 			log("Error opening experiment: \n"+sw.toString());
+			System.out.println("Experiment_Processor.extractTracks error");
 			new TextWindow("Error extracting tracks", status+"\n"+sw.toString(), 500, 500);
 			return false;
 		} finally{
@@ -408,7 +458,7 @@ public class Experiment_Processor implements PlugIn{
 	private void fitTracks(){
 		indentLevel++;
 		IJ.showStatus("Fitting Tracks...");
-		
+		System.out.println("Fitting "+ex.getNumTracks()+" Tracks");
 		Track tr;
 		Track newTr = null;
 		Vector<Track> toRemove = new Vector<Track>();
@@ -427,9 +477,12 @@ public class Experiment_Processor implements PlugIn{
 				if (newTr!=null){
 					ex.replaceTrack(newTr, i);
 				} else {
+					tr.setValid(false);
+					System.out.println("Error fitting Track "+tr.getTrackID()+" (#"+i+")");
 					toRemove.add(tr);
 				}
 			} else {
+				System.out.println("Track "+tr.getTrackID()+" (#"+i+") too short to fit");
 				toRemove.add(tr);
 			}
 		}
@@ -437,11 +490,12 @@ public class Experiment_Processor implements PlugIn{
 		bbf.showCommOutput();
 		
 		//Remove the tracks that couldn't be fit
-		for(Track t : toRemove){
-			ex.removeTrack(t);
-		}
+//		for(Track t : toRemove){
+//			ex.removeTrack(t);
+//		}
 		
 		IJ.showStatus("Done fitting tracks");
+		System.out.println("Done fitting tracks: "+(ex.getNumTracks()-toRemove.size())+"/"+ex.getNumTracks()+" were fit successfully");
 		
 		//Show the fitted tracks
 		if (prParams.showFitEx){
@@ -471,9 +525,14 @@ public class Experiment_Processor implements PlugIn{
 	 */
 	private boolean saveOldTracks(){
 		indentLevel++;
-		
+		File f;
 		String[] pathParts = prParams.setMagExPath(srcDir, srcName);
-		File f = new File(pathParts[0]+File.separator+pathParts[1]);
+		if (dstDir==null || dstDir.equals("")){
+			f = new File(pathParts[0]+File.separator+pathParts[1]);
+		}else {
+			f = new File(dstDir+File.separator+pathParts[1]);
+		}
+		System.out.println("Saving MaggotTrack experiment to "+f.getPath());
 		log("Saving MaggotTrack experiment to "+f.getPath());
 		boolean status;
 		try{
@@ -487,6 +546,7 @@ public class Experiment_Processor implements PlugIn{
 			e.printStackTrace(pw);
 			log("Error saving experiment: \n"+sw.toString());
 			status=false;
+			System.out.println("Experiment_processor.saveOldTracks error");
 		}
 		
 		indentLevel--;
@@ -499,8 +559,13 @@ public class Experiment_Processor implements PlugIn{
 		indentLevel++;
 		
 		String[] pathParts = prParams.setFitExPath(srcDir, srcName);
-		File f = new File(pathParts[0]+File.separator+pathParts[1]);
-		
+		File f;
+		if (dstDir==null || dstDir.equals("")){
+			f = new File(pathParts[0]+File.separator+pathParts[1]);
+		}else {
+			f = new File(dstDir+File.separator+pathParts[1]);
+		}
+		System.out.println("Saving LarvaTrack experiment to "+f.getPath());
 		boolean status;
 		try{
 			DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f))); 
@@ -509,6 +574,7 @@ public class Experiment_Processor implements PlugIn{
 			dos.close();
 		} catch(Exception e){
 			status=false;
+			System.out.println("Experiment_processor.saveNewTracks error");
 		}
 		
 		indentLevel--;
@@ -516,6 +582,9 @@ public class Experiment_Processor implements PlugIn{
 	}
 	
 	private void log(String message){
+//		System.out.println(message);
+		
+		
 		String indent = "";
 		for (int i=0;i<indentLevel; i++) indent+="----";
 		processLog.println(runTime.tocSec()+indent+" "+message);

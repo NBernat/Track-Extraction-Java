@@ -1076,7 +1076,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			if (nMidPts>0){
 				if (nMidPts!=numMidCoords){
 					if (pw!=null) pw.println("Error: improper num of midline coordinates ("+nMidPts+",not"+numMidCoords+")");
-					return 6;
+//					return 6;
 				}
 				float[] midX = new float[nMidPts];
 				float[] midY = new float[nMidPts];

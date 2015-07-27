@@ -34,6 +34,10 @@ public class Track implements Serializable{
 	 */
 	protected Vector<TrackPoint> points;
 	/**
+	 * 
+	 */
+	protected boolean valid=true;
+	/**
 	 * Unique identifier for the track 
 	 */
 	private int trackID;
@@ -225,6 +229,14 @@ public class Track implements Serializable{
 	///////////////////////////
 	// Accessors
 	///////////////////////////	
+	
+	protected void setValid(boolean v){
+		valid=v;
+	}
+	
+	public boolean valid(){
+		return valid;
+	}
 	
 	public int getTrackID(){
 		return trackID;
@@ -425,6 +437,21 @@ public class Track implements Serializable{
 			if (pw!=null) pw.println("...Error writing size of track "+trackID+"; aborting save");
 			return 3;
 		}
+
+		//Write the valid flag
+		try{
+			String v;
+			if (valid){
+				v="true";
+			} else{
+				v="false";
+			}
+			if (pw!=null) pw.println("Writing valid flag ("+v+")");
+			dos.writeBoolean(valid);
+		} catch(Exception e){
+			if (pw!=null) pw.println("...Error writing valid flag in track "+trackID+"; aborting save");
+			return 4;
+		}
 		
 		//Write the # of points in this track to disk
 		try {
@@ -502,11 +529,22 @@ public class Track implements Serializable{
 			if (pw!=null) pw.println("ERROR: Unable to advance past field 'size on disk'");
 			return 4;
 		}
+
+		try {
+			valid = dis.readBoolean();
+			if (pw!=null) pw.println("Valid track: "+valid);
+		} catch (Exception e) {
+			if (pw!=null) pw.println("ERROR: Unable to gather 'valid' field");
+			return 4;
+		}
 		
 		//Read nPts and then the points
 		try {
 			int nPts = dis.readInt();
 			if (pw!=null) pw.println(nPts+" Points to load...");
+			if (pointType==3 && !valid){
+				pointType=2;
+			}
 			
 			switch (pointType){
 				case 0: 

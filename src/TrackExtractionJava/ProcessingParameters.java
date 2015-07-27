@@ -1,5 +1,9 @@
 package TrackExtractionJava;
 
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 
 public class ProcessingParameters {
 
@@ -22,7 +26,7 @@ public class ProcessingParameters {
 	/**
 	 * Displays an ExperimentFrame after extracting tracks 
 	 */
-	boolean showMagEx = true;
+	boolean showMagEx = false;
 	/**
 	 * Displays an ExperimentFrame after fitting tracks 
 	 */
@@ -37,40 +41,51 @@ public class ProcessingParameters {
 	 */
 	boolean saveFitEx = true;
 	
+	boolean sendDataToExtracted = true;
+	
 	public static String getOutFromInDir(String inDir){
 		
-		StringBuilder out = new StringBuilder(inDir);
+		Path p = Paths.get(inDir);
+		
+		StringBuilder out = new StringBuilder(p.getParent().toString());
 		
 		String dataStr = "data";
 		String exStr = "extracted";
-		int ind = out.lastIndexOf(dataStr);
-		out.replace(ind, ind+dataStr.length(), exStr);
+		int ind = out.indexOf(dataStr);
+		out.delete(ind, ind+dataStr.length());
+		out.insert(ind, exStr);
 				
 		return out.toString();
 	}
 	
-	public String[] setLogPath(String outDir, String srcName){
-		String[] logPathParts = {outDir, "ProcessingLog.txt"};
+	public String[] setLogPath(String srcDir, String srcName){
+		String[] logPathParts = {srcDir, "ProcessingLog.txt"};
 		return logPathParts;
 	}
 	
-	public String[] setMagExPath(String outDir, String srcName){
-		
+	public String[] setMagExPath(String srcDir, String srcName){
+		StringBuilder path = new StringBuilder(srcDir);
 		StringBuilder name = new StringBuilder(srcName);
-		name.replace(name.lastIndexOf("."), name.length(), "_MTP.jav");
-		String[] MagExPathParts = {outDir, name.toString()};
+		if (sendDataToExtracted){
+			path = new StringBuilder(getOutFromInDir(srcDir));
+		}
+		name.replace(name.lastIndexOf("."), name.length(), ".prejav");
+		String[] MagExPathParts = {path.toString(), name.toString()};
 		return MagExPathParts;
 	}
 	
-	public String[] setFitExPath(String outDir, String srcName){
-
+	public String[] setFitExPath(String srcDir, String srcName){
+		StringBuilder path = new StringBuilder(srcDir);
 		StringBuilder name = new StringBuilder(srcName);
-		name.replace(name.lastIndexOf("."), name.length(), ".jav");
-		int mtpInd = name.indexOf("MTP");
-		if (mtpInd>=0){
-			name.replace(mtpInd, 3, "BTP");
+		if (sendDataToExtracted){
+			path = new StringBuilder(getOutFromInDir(srcDir));
 		}
-		String[] FitExPathParts = {outDir, name.toString()};
+		name.replace(name.lastIndexOf("."), name.length(), ".jav");
+//		int mtpInd = name.indexOf("MTP");
+//		if (mtpInd>=0){
+//			name.replace(mtpInd, 3, "BTP");
+//		}
+		String[] FitExPathParts = {path.toString(), name.toString()};
 		return FitExPathParts;
 	}
 	
