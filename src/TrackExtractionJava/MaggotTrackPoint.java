@@ -696,6 +696,10 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		return midline.getNCoordinates();
 	}
 	
+	public int getProperNumMidCoords(){
+		return numMidCoords;
+	}
+	
 	public boolean getHTValid(){
 		return htValid;
 	}
@@ -1075,7 +1079,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			int nMidPts = dis.readInt();
 			if (nMidPts>0){
 				if (nMidPts!=numMidCoords){
-					if (pw!=null) pw.println("Error: improper num of midline coordinates ("+nMidPts+",not"+numMidCoords+")");
+					if (pw!=null) pw.println("Error: improper num of midline coordinates on pt "+(t.getNumPoints()+1)+" ("+nMidPts+",not"+numMidCoords+"; nconpts="+nConPts+") ("+x+","+y+")");
 //					return 6;
 				}
 				float[] midX = new float[nMidPts];

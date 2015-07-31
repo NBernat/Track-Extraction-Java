@@ -77,7 +77,7 @@ public class Experiment_Processor implements PlugIn{
 			ep.run(args[0]);
 		}
 		
-//		imj.quit();
+		imj.quit();
 	}
 
 
@@ -482,6 +482,7 @@ public class Experiment_Processor implements PlugIn{
 					toRemove.add(tr);
 				}
 			} else {
+				tr.setValid(false);
 				System.out.println("Track "+tr.getTrackID()+" (#"+i+") too short to fit");
 				toRemove.add(tr);
 			}

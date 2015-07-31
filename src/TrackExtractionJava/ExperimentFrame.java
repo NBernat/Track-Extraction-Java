@@ -142,7 +142,7 @@ public class ExperimentFrame extends JFrame{
 	
 	protected void showFrame(){
 		setSize(550, 600);
-		setTitle("Experiment "+ex.getFileName());
+		setTitle("("+Experiment.getNumTracks(ex.getFileName())+" tracks) Experiment "+ex.getFileName());
 		setVisible(true);
 	}
 	

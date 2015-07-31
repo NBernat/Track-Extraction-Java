@@ -508,9 +508,11 @@ public class Track implements Serializable{
 		Track tr = new Track();
 		
 		//load data
-		if (tr.loadFromDisk(dis, pointType, experiment, pw)==0){
+		int result=tr.loadFromDisk(dis, pointType, experiment, pw);
+		if (result==0){
 			return tr;
 		} else {
+			System.out.println(result);
 			return null;
 		}
 	}

@@ -7,7 +7,9 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
@@ -58,8 +60,8 @@ public class Experiment implements Serializable{
 			//TODO use experiment_Processor functions
 			DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(new File(filename))));
 			
-			loadFromDisk(dis, new PrintWriter(System.out));
-			System.out.println("Experiment loaded; "+tracks.size()+" tracks"); 
+			loadFromDisk(dis, null);//new PrintWriter(System.out));
+//			System.out.println("Experiment loaded; "+tracks.size()+" tracks"); 
 		} catch (Exception e){
 			StringWriter sw = new StringWriter();
 			PrintWriter prw = new PrintWriter(sw);
@@ -215,14 +217,88 @@ public class Experiment implements Serializable{
 		return newEx;
 	}
 	
+	public static int getNumTracks(String fname){
+		try {
+			DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(new File(fname))));
+			dis.readInt();
+			int nTracks = dis.readInt();
+			dis.close();
+			return nTracks;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return -1;
+	}
+	
+	public static int getPointType(String fname){
+		
+		try {
+			DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(new File(fname))));
+			int tpType = dis.readInt();
+			dis.close();
+			return tpType;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return -1;
+	}
+	
+	public static Track getTrack(int n, String fname){
+		return getTrack(n, -1, fname);
+	}
+	
+	public static Track getTrack(int n, int bytes2skip, String fname){
+		
+		if (n<0) return null;
+		
+		try {
+			DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(new File(fname))));
+			int tpType = dis.readInt();
+			//System.out.println("Type: "+tpType);
+			int nTracks = dis.readInt();
+			//System.out.println("NTracks: "+nTracks);
+			if(n>=nTracks){
+				dis.close();
+				return null;
+			}
+			//Skip past all previous tracks
+			if (bytes2skip==-1){
+				//System.out.println("Skipping to track "+n);
+				skip2trackN(n, dis, tpType, null);
+			} else {
+				dis.skipBytes(bytes2skip);
+			}
+			
+			Track t = Track.fromDisk(dis, tpType, null, null);
+			dis.close();
+			return t;
+		} catch (Exception e) {
+			
+			e.printStackTrace();
+		} 
+		
+		return null;
+		
+	}
+
+	private static void skip2trackN(int n, DataInputStream dis, int pointType, PrintWriter pw) throws IOException{
+		for(int i=0; i<n;i++){
+			Track.fromDisk(dis, pointType, null, null);
+//			int skip = dis.readInt();
+//			System.out.println("Skipping "+skip+" bytes");
+//			dis.skipBytes(skip);
+		}
+	}
 	
 	
 	private void loadFromDisk(DataInputStream dis, PrintWriter pw){
-		System.out.println("Loading from disk...");
+//		System.out.println("Loading from disk...");
 		int progress = -2;
 		try{
 
-			System.out.println("Loading from disk...");
+//			System.out.println("Loading from disk...");
 			//Read the Experiment Type
 			int tpType = dis.readInt();
 			if (pw!=null) pw.println("==> trackpoint type "+tpType);
@@ -252,7 +328,7 @@ public class Experiment implements Serializable{
 				//TODO ask for garbage collection
 			}
 
-			System.out.println("...done loading!");
+//			System.out.println("...done loading!");
 			
 		} catch (Exception e){
 			if (pw!=null) pw.println("Error: progress code "+progress);

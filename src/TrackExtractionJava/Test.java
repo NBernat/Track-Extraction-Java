@@ -23,7 +23,16 @@ public class Test {//extends JFrame
 
 	public static void main(String[] args) {
 		
-		Experiment_Processor.main(args);// ep = new Experiment_Processor();
+		
+		String fname = "C:\\Users\\Natalie\\Documents\\TestJavaMat\\extracted\\SA\\CantonS@CantonS\\C_Bl_2uW#N_Re_B0to255s3_120Hz_800uW\\CantonS@CantonS_C_Bl_2uW#N_Re_B0to255s3_120Hz_800uW_201507201614.jav";
+//		Experiment ex = Experiment.fromPath(fname);
+//		System.out.println("Tracks: "+ex.getNumTracks());
+		Track t = Experiment.getTrack(12, fname);
+		
+		
+		System.out.println("pts: "+t.getNumPoints());
+		
+		// ep = new Experiment_Processor();
 //		ep.main(args);
 		
 		/*String path = "C:\\Users\\Natalie\\Documents\\1cm_checkerboard.png";

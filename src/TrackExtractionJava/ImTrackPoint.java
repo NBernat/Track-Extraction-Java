@@ -11,6 +11,7 @@ import java.awt.Rectangle;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 
 
 public class ImTrackPoint extends TrackPoint{
@@ -150,8 +151,15 @@ public class ImTrackPoint extends TrackPoint{
 		
 		//read new data: image
 		try {
-			trackWindowWidth = t.exp.getEP().trackWindowWidth;
-			trackWindowHeight = t.exp.getEP().trackWindowHeight;
+			ExtractionParameters ep;
+			if (t.exp==null){
+				ep=new ExtractionParameters();
+			} else{
+				ep =t.exp.getEP();
+			}
+				
+			trackWindowWidth = ep.trackWindowWidth;
+			trackWindowHeight = ep.trackWindowHeight;
 			int w = dis.readByte();
 			int h = dis.readByte();
 //			pw.println("Image ("+w+"x"+h+")");
@@ -166,7 +174,8 @@ public class ImTrackPoint extends TrackPoint{
 			im = imp.getProcessor();
 			
 		} catch (Exception e) {
-			if (pw!=null) pw.println("Error writing ImTrackPoint Info");
+			e.printStackTrace(pw);
+			if (pw!=null) pw.println("Error loading ImTrackPoint Info");
 			return 3;
 		}
 		
