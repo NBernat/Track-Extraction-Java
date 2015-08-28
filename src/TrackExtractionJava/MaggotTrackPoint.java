@@ -262,14 +262,10 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			headi = cont.indexOf(head);
 			head.setNext(null);
 			head.setPrev(null);
-//			head.x+=contour.getBounds().x;
-//			head.y+=contour.getBounds().y;
 			tail = ptList.get(1);
 			tail.setNext(null);
 			tail.setPrev(null);
 			taili= cont.indexOf(tail);
-//			tail.x+=contour.getBounds().x;
-//			tail.y+=contour.getBounds().y;
 			
 			if (comm!=null){
 				comm.message("Head: i="+headi+"("+head.x+","+head.y+") Tail: i="+taili+"("+tail.x+","+tail.y+")", VerbLevel.verb_debug);
@@ -353,13 +349,25 @@ public class MaggotTrackPoint extends ImTrackPoint {
 				midline = new PolygonRoi(midX, midY, midX.length, Roi.POLYLINE); 
 				
 				//Assign the midpoint
-				int midi = midX.length/2;//don't need to add 1, b/c of zero indexing; e.g. (11 pts)/2=5, which is the 6th point
+				int midi = midX.length/2;
 				int midpointX = (int) ((leftSeg.getXCoordinates()[midi]+leftSeg.getXBase()+rightSeg.getXCoordinates()[midi]+rightSeg.getXBase())/2.0);
 				int midpointY = (int) ((leftSeg.getYCoordinates()[midi]+leftSeg.getYBase()+rightSeg.getYCoordinates()[midi]+rightSeg.getYBase())/2.0);
 				midpoint = new ContourPoint(midpointX, midpointY);
 				
 			} else {
 				midline=null; //TODO this causes an empty spine
+				
+				//Assign the midpoint to be the avg of all contour points 
+				float midpointX=0;
+				float midpointY=0;
+				for (int i=0; i>contNum; i++){
+					midpointX+=cont.get(i).x;
+					midpointY+=cont.get(i).y;
+				}
+				midpointX = midpointX/contNum;
+				midpoint = new ContourPoint(midpointX, midpointY);
+				
+				
 				htValid=false;
 				comm.message("Frame "+frameNum+": Segments have different numbers of Coordinates, L="+leftSeg.getNCoordinates()+" R="+rightSeg.getNCoordinates(), VerbLevel.verb_message);
 			}
@@ -387,6 +395,9 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	
 	protected static PolygonRoi getInterpolatedSegment(PolygonRoi origSegment, int numPts, boolean debug){
 
+		if (numPts==0 || origSegment.getNCoordinates()==0){
+			return null;
+		}
 
 		Communicator com = new Communicator();
 		com.setVerbosity(VerbLevel.verb_debug);
@@ -409,7 +420,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 					changeFact=.99;
 				}
 				
-				while (retSeg.getNCoordinates()!= numPts && retSeg.getNCoordinates()>0 && retSeg.getNCoordinates()<10*numPts){
+				while (retSeg.getNCoordinates()!= numPts && retSeg.getNCoordinates()>0 && retSeg.getNCoordinates()<10*numPts && spacing*changeFact>0.01){
 					spacing = spacing*changeFact;
 					retSeg = new PolygonRoi(origSegment.getInterpolatedPolygon(spacing, true), Roi.POLYLINE);
 				}
@@ -834,8 +845,9 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		 
 		//HEAD AND TAIL
 		if (ht){
-			displayUtils.drawPoint(im, head, expandFac, offX, offY, Color.MAGENTA);
+			displayUtils.drawPoint(im, head, expandFac, offX, offY, Color.MAGENTA);		
 			displayUtils.drawPoint(im, tail, expandFac, offX, offY, Color.GREEN);
+			displayUtils.drawPoint(im, midpoint, expandFac, offX, offY, Color.BLUE);	
 		}
 		
 			
@@ -958,19 +970,42 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			return 1;
 		}
 		
+//		try{
+//			if(htValid){
+//				//Write head 
+//				head.toDisk(dos, pw);
+//				//Write mid
+//				midpoint.toDisk(dos, pw);
+//				//Write tail
+//				tail.toDisk(dos, pw);
+//			}
+//		} catch (Exception e) {
+//			if (pw!=null) pw.println("Error writing MaggotTrackPoint data(head,tail,mid) for point "+pointID+"; aborting save");
+//			return 1;
+//		}
 		try{
-			if(htValid){
-				//Write head 
+			if (head!=null){
 				head.toDisk(dos, pw);
-				//Write mid
-				midpoint.toDisk(dos, pw);
-				//Write tail
-				tail.toDisk(dos, pw);
+			} else{
+				new ContourPoint(Double.NaN, Double.NaN).toDisk(dos, pw);
 			}
-		} catch (Exception e) {
+			if (midpoint!=null){
+				midpoint.toDisk(dos, pw);
+			} else{
+				new ContourPoint(Double.NaN, Double.NaN).toDisk(dos, pw);
+			}
+			if (tail!=null){
+				tail.toDisk(dos, pw);
+			} else{
+				new ContourPoint(Double.NaN, Double.NaN).toDisk(dos, pw);
+			}
+			
+			
+		}  catch (Exception e) {
 			if (pw!=null) pw.println("Error writing MaggotTrackPoint data(head,tail,mid) for point "+pointID+"; aborting save");
 			return 1;
 		}
+		
 		
 		try{
 			
@@ -1057,23 +1092,23 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			}
 						
 			//head,mid,tail
-			if (htValid){
-				head = ContourPoint.fromDisk(dis);
-				if (head==null){
-					if (pw!=null) pw.println("Error: head null");
-					return 3;
-				}
-				midpoint = ContourPoint.fromDisk(dis);
-				if (midpoint==null){
-					if (pw!=null) pw.println("Error: midpoint null");
-					return 4;
-				}
-				tail = ContourPoint.fromDisk(dis);
-				if (tail==null){
-					if (pw!=null) pw.println("Error: tail null");
-					return 5;
-				}
+//			if (htValid){
+			head = ContourPoint.fromDisk(dis);
+			if (head==null){
+				if (pw!=null) pw.println("Error: head null");
+				return 3;
 			}
+			midpoint = ContourPoint.fromDisk(dis);
+			if (midpoint==null){
+				if (pw!=null) pw.println("Error: midpoint null");
+				return 4;
+			}
+			tail = ContourPoint.fromDisk(dis);
+			if (tail==null){
+				if (pw!=null) pw.println("Error: tail null");
+				return 5;
+			}
+//			}
 			
 			//nmidpts, midline
 			int nMidPts = dis.readInt();

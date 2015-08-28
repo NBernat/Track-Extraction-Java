@@ -31,17 +31,20 @@ public class BackboneFitter {
 	 * The track that is being fit
 	 */
 	Track track;
+	int newTrID=-1;
 	
 	/**
-	 * The list of empty midlines corresponding to the full list of trackpoints
-	 */
-//	boolean[] emptyMidlines;
-	
-	/**
-	 * A List of the BbTP's, worked on during fitting algorithm
+	 * A List of (references to) the BTP's in track, worked on during fitting algorithm
 	 */
 	Vector<BackboneTrackPoint> BTPs;
-
+	private boolean clipEnds = false;
+	private int BTPstartFrame = -1;
+	private int BTPendFrame = -1;
+	private Vector<TrackPoint> startClippings;
+	private Vector<TrackPoint> endClippings;
+	
+	
+	
 	/**
 	 * The amount that each backbone in the track shifted during the last
 	 * iteration that acted upon any given point
@@ -51,15 +54,11 @@ public class BackboneFitter {
 	private BBFUpdateScheme updater;
 	
 	private int pass;
+	
+	private boolean diverged = false;
 
-	/**
-	 * The final forces acting on each backbone point
-	 */
-
-	/**
-	 * The final energy of each backbone point
-	 */
-
+	
+	
 	transient Communicator comm;
 	transient Communicator bbcomm;
 
@@ -91,23 +90,21 @@ public class BackboneFitter {
 	public void fitTrack(Track tr) {
 
 		clearPrev();
-		
-		BTPs = new Vector<BackboneTrackPoint>();
 
 		// Extract the points, and move on (if successful)
 		comm.message("Extracting maggot tracks", VerbLevel.verb_debug);
 		
 		
-		if (extractTrackPoints(tr)) {//ExtractTrackPoints creates the new track
+		if (convertTrack2BTP(tr)) {//creates the new track
 			//If there was no error extraction points, run the different grain passes of the algorithm
 			boolean noError = true;
 			for(int i=0; (i<params.grains.length && noError); i++){
 				noError = doPass(params.grains[i]);
 				if (!noError) {
+					comm.message("Error on track "+tr.getTrackID()+"("+track.getTrackID()+") pass "+i+"(grain "+params.grains[i]+") \n ---------------------------- \n \n", VerbLevel.verb_error);
+					track = null;
 					pass++;
 					Forces = params.getForces(pass);
-					comm.message("Error on track "+tr.getTrackID()+"("+track.getTrackID()+") pass "+i+"(grain "+params.grains[i]+")", VerbLevel.verb_error);
-					track = null;
 				}
 				
 				
@@ -120,12 +117,10 @@ public class BackboneFitter {
 			
 				 
 		} else {
-			comm.message("Error extracting trackPoints from track", VerbLevel.verb_error);
+			comm.message("Error converting track points to btp", VerbLevel.verb_error);
 		}
 		
 		
-		
-		// }
 	}
 
 	
@@ -135,6 +130,11 @@ public class BackboneFitter {
 		shifts = null;
 		updater = null;
 		pass = 0;
+		diverged = false;
+		BTPs = new Vector<BackboneTrackPoint>();
+		clipEnds = false;
+		BTPstartFrame=-1;
+		BTPendFrame=-1;
 	}
 
 	/**
@@ -144,7 +144,7 @@ public class BackboneFitter {
 	 * @return A list of booleans indicating whether or not the midline in the
 	 *         corresponding BTP is empty
 	 */
-	private boolean extractTrackPoints(Track tr) {
+	private boolean convertTrack2BTP(Track tr) {
 		
 		boolean noerror=true;
 		try {
@@ -181,6 +181,7 @@ public class BackboneFitter {
 				} 
 				
 				track = new Track(BTPs, tr);
+				newTrID = track.getTrackID();
 				BTPs.removeAllElements();
 				
 			} else {
@@ -222,6 +223,10 @@ public class BackboneFitter {
 			// Run the fitting algorithm
 			try {
 				runFitter();
+				if (diverged) {
+					comm.message("Track "+track.getTrackID()+" diverged", VerbLevel.verb_error);
+					return false;
+				}
 				
 			} catch(Exception e){
 				
@@ -254,17 +259,16 @@ public class BackboneFitter {
 			
 			comm.message("Sampling points", VerbLevel.verb_debug);
 			sampleTrackPoints(grain);
-			addBackboneInfo();
-//			if (sampledEmptyMids!=null) cleanUpBTPs(sampledEmptyMids);//TODO move this to the first pass
+			boolean noError = addBackboneInfo();
 			
-			return true;
+			return noError;
 
 		} catch (Exception e) {
 			
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
 			e.printStackTrace(pw);
-			comm.message("Problem getting BTPS from the track at grain "+grain+" \n" + sw.toString(), VerbLevel.verb_debug);
+			comm.message("Problem getting BTPS from the track at grain "+grain+" \n" + sw.toString(), VerbLevel.verb_error);
 			return false;
 		}
 	}
@@ -286,7 +290,6 @@ public class BackboneFitter {
 				
 			}
 			
-			
 		} catch (Exception e){
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
@@ -297,43 +300,49 @@ public class BackboneFitter {
 	}
 
 	
-	private void addBackboneInfo(){
+	private boolean addBackboneInfo(){
 		
 		float[] origin = new float[2];
-		
-		if (pass==0){
-			for (int i=0; i<BTPs.size(); i++){
-				origin[0] = BTPs.get(i).rect.x;
-				origin[1] = BTPs.get(i).rect.y;
-				BTPs.get(i).setBackboneInfo(BTPs.get(i).midline, origin);
-				comm.message("Adding backbone info to BTP "+i+"(frame "+BTPs.get(i).frameNum+")", VerbLevel.verb_debug);
-			}
-			
-			cleanUpBTPs(findEmptyMids(), params.minFlickerDist*params.grains[pass]);
-			
-			
-		} else {
-			
-			origin[0] = 0;
-			origin[1] = 0;
-			//The old spines are already in the BTPs from the previous pass; find the empty ones and interpolate
-
-			int prev = 0;//TODO find the first spine!! If this does not =0, carry spines backwards 
-			
-			Vector<FloatPolygon> interpdBBs;
-			for (int i=(prev+1); i<BTPs.size(); i++){
-				if(BTPs.get(i).backbone!=null){
-					interpdBBs = interpBackbones(i-prev-1, origin, origin, BTPs.get(prev).backbone.getFloatPolygon(), BTPs.get(i).backbone.getFloatPolygon());
-					//fill in the midlines
-					for (int j=prev; j<i; j++){
-						BTPs.get(j).setBackboneInfo(new PolygonRoi(interpdBBs.get(j-prev), PolygonRoi.POLYLINE), origin);
-					} 
-					prev = i;
+		try {
+			if (pass==0){
+				for (int i=0; i<BTPs.size(); i++){
+					origin[0] = BTPs.get(i).rect.x;
+					origin[1] = BTPs.get(i).rect.y;
+					BTPs.get(i).setBackboneInfo(BTPs.get(i).midline, origin);
+					comm.message("Adding backbone info to BTP "+i+"(frame "+BTPs.get(i).frameNum+")", VerbLevel.verb_debug);
 				}
+				boolean noError = cleanUpBTPs(findEmptyMids(), params.minFlickerDist*params.grains[pass]);
+				return noError;
+			} else {
+//				if (clipEnds) clipEnds();
+				origin[0] = 0;
+				origin[1] = 0;
+				//The old spines are already in the BTPs from the previous pass; find the empty ones and interpolate
+				int prev = 0; 				
+				Vector<FloatPolygon> interpdBBs;
+				for (int i=(prev+1); i<BTPs.size(); i++){
+					if(BTPs.get(i).backbone!=null){
+						interpdBBs = interpBackbones(i-prev-1, origin, origin, BTPs.get(prev).backbone.getFloatPolygon(), BTPs.get(i).backbone.getFloatPolygon());
+						//fill in the midlines
+						for (int j=prev; j<i; j++){
+							BTPs.get(j).setBackboneInfo(new PolygonRoi(interpdBBs.get(j-prev), PolygonRoi.POLYLINE), origin);
+						} 
+						prev = i;
+					}
+				}
+				return true;
 			}
 			
-			
-			
+		} catch (Exception e){
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			e.printStackTrace(pw);
+			if (pass==0){
+				comm.message("Error adding backbone info (getting offsets, prepping backbone-generating data) \n"+sw.toString(), VerbLevel.verb_error);
+			} else {
+				comm.message("Error adding backbone info (interpolating backbones, prepping backbone-generating data) \n"+sw.toString(), VerbLevel.verb_error);
+			}
+			return false;
 		}
 	}
 	
@@ -349,20 +358,24 @@ public class BackboneFitter {
 		
 	}
 	
-	private void cleanUpBTPs(boolean[] sampledEmptyMids, double flickerDist){
+	private boolean cleanUpBTPs(boolean[] sampledEmptyMids, double flickerDist){
 		if(sampledEmptyMids!=null){
-			comm.message("Clearing flickers", VerbLevel.verb_debug);
+				comm.message("Clearing flickers", VerbLevel.verb_debug);
 			clearFlickerMids(sampledEmptyMids, flickerDist);
 			
-			comm.message("Finding gaps", VerbLevel.verb_debug);
+				comm.message("Finding gaps", VerbLevel.verb_debug);
 			Vector<Gap> gaps = findGaps(sampledEmptyMids);
-			comm.message("Cleaning gaps", VerbLevel.verb_debug);
+				comm.message("Cleaning gaps", VerbLevel.verb_debug);
 			sanitizeGaps(gaps);
 			MaggotTrackBuilder.orientMaggotTrack(BTPs, comm, track.getTrackID());
-			
-			comm.message("Filling midlines", VerbLevel.verb_debug);
-			fillGaps(gaps);
+				comm.message("Filling midlines", VerbLevel.verb_debug);
+			boolean noError = fillGaps(gaps);
+			if (!noError){
+				return false;
+			}
+			if (clipEnds) clipEnds();
 		}
+		return true;
 	}
 	
 	private void clearFlickerMids(boolean[] emptyMidlines, double minFlickerDist){
@@ -428,10 +441,11 @@ public class BackboneFitter {
 			
 			comm.message("Merging "+gaps.size()+" gaps", VerbLevel.verb_debug); 
 			
-			dilateGaps(gaps, params.gapDilation, params.minValidSegmentLen, track.getStart().frameNum, track.getEnd().frameNum, params.dilateToEdges);
+			dilateGaps(gaps, params.gapDilation, params.minValidSegmentLen, 0, BTPs.size()-1, params.dilateToEdges);
+			//dilateGaps(gaps, params.gapDilation, params.minValidSegmentLen, track.getStart().frameNum, track.getEnd().frameNum, params.dilateToEdges);
 			
 			if (mergeGaps(gaps, params.minValidSegmentLen, comm)) {
-				clearGaps(gaps);
+				invalidateGaps(gaps);
 //				MaggotTrackBuilder.orientMaggotTrack(BTPs, comm, track.getTrackID());
 			}
 			
@@ -491,17 +505,15 @@ public class BackboneFitter {
 		return clearGaps;
 	}
 
-	private void clearGaps(Vector<Gap> gaps){
+	private void invalidateGaps(Vector<Gap> gaps){
 		for (int i=0; i<gaps.size(); i++){
-			clearGapMidlines(gaps.get(i));
+			invalidateGapMidlines(gaps.get(i));
 		}
 	}
 	
-	private void clearGapMidlines(Gap gap){
+	private void invalidateGapMidlines(Gap gap){
 		
 		for (int i=gap.start; i<=gap.end; i++){
-//			MaggotTrackPoint mtp = (MaggotTrackPoint) track.points.get(i);
-//			mtp.htValid = false;
 			BackboneTrackPoint btp = BTPs.get(i);
 			btp.htValid = false;
 		}
@@ -511,6 +523,9 @@ public class BackboneFitter {
 	}
 	
 	
+	
+	
+	
 		/**
 	 * Finds and fills all the empty midlines
 	 * 
@@ -518,7 +533,7 @@ public class BackboneFitter {
 	 *            A list of booleans indicating whether or not the midline in
 	 *            the corresponding BTP is empty
 	 */
-	private void fillGaps(Vector<Gap> gaps) {
+	private boolean fillGaps(Vector<Gap> gaps) {
 
 		
 		ListIterator<Gap> gIt = gaps.listIterator();
@@ -531,8 +546,10 @@ public class BackboneFitter {
 				comm.message("Filled successfully", VerbLevel.verb_debug);
 			} else {
 				comm.message("Error filling gap", VerbLevel.verb_debug);
+				return false;
 			}
 		}
+		return true;
 	}
 	
 	/**
@@ -552,57 +569,70 @@ public class BackboneFitter {
 	 * @return false when a filling error occurs, otherwise true
 	 */
 	private boolean fillGap(int gapStart, int gapEnd) {
-
-		int gapLen = gapEnd - gapStart + 1;
-		comm.message("Filling gap of size "+gapLen, VerbLevel.verb_debug);
-		if (gapLen < params.smallGapMaxLen) {
-			// Set the
-			
-			PolygonRoi fillerMidline;
-			float[] origin;
-			if (gapStart != 0) {
-				fillerMidline = BTPs.get(gapStart - 1).midline;
-				float[] o = {BTPs.get(gapStart - 1).rect.x, BTPs.get(gapStart - 1).rect.y};
-				origin = o;
-			} else if (gapEnd != (BTPs.size() - 1)) {
-				fillerMidline = BTPs.get(gapEnd + 1).midline;
-				float[] o = {BTPs.get(gapEnd + 1).rect.x, BTPs.get(gapEnd + 1).rect.y};
-				origin = o;
-			} else {
-				return false;
-			}
-
-			for (int i = gapStart; i <= gapEnd; i++) {
-				BTPs.get(i).fillInBackboneInfo(fillerMidline, origin);
-			}
-
-		} else if (gapStart != 0 && gapEnd != (BTPs.size() - 1)) {
-			comm.message("Filling large gap", VerbLevel.verb_debug);
-			Vector<FloatPolygon> newMids = interpBackbones(gapStart - 1, gapEnd + 1);
-			comm.message("Interpolation complete; Midlines:", VerbLevel.verb_debug);
-			for (int i=0; i<newMids.size(); i++){
-				FloatPolygon mid = newMids.get(i);
-				String s = "";
-				for (int j=0; j<mid.npoints; j++){
-					float xmid = mid.xpoints[j];
-					float ymid = mid.ypoints[j];
-					s+= "("+xmid+","+ymid+") ";
+		try { 
+			int gapLen = gapEnd - gapStart + 1;
+			comm.message("Filling gap of size "+gapLen, VerbLevel.verb_debug);
+			if (gapLen < params.smallGapMaxLen) {
+				// Set the
+				
+				PolygonRoi fillerMidline;
+				float[] origin;
+				if (gapStart != 0) {
+					fillerMidline = BTPs.get(gapStart - 1).midline;
+					float[] o = {BTPs.get(gapStart - 1).rect.x, BTPs.get(gapStart - 1).rect.y};
+					origin = o;
+				} else if (gapEnd != (BTPs.size() - 1)) {
+					fillerMidline = BTPs.get(gapEnd + 1).midline;
+					float[] o = {BTPs.get(gapEnd + 1).rect.x, BTPs.get(gapEnd + 1).rect.y};
+					origin = o;
+				} else {
+					return false;
 				}
-				comm.message(s, VerbLevel.verb_debug);
+	
+				for (int i = gapStart; i <= gapEnd; i++) {
+					BTPs.get(i).fillInBackboneInfo(fillerMidline, origin);
+				}
+	
+			} else if (gapStart != 0 && gapEnd != (BTPs.size() - 1)) {
+				comm.message("Filling large gap", VerbLevel.verb_debug);
+				Vector<FloatPolygon> newMids = interpBackbones(gapStart - 1, gapEnd + 1);
+				comm.message("Interpolation complete; Midlines:", VerbLevel.verb_debug);
+				for (int i=0; i<newMids.size(); i++){
+					FloatPolygon mid = newMids.get(i);
+					String s = "";
+					for (int j=0; j<mid.npoints; j++){
+						float xmid = mid.xpoints[j];
+						float ymid = mid.ypoints[j];
+						s+= "("+xmid+","+ymid+") ";
+					}
+					comm.message(s, VerbLevel.verb_debug);
+				}
+				for (int i = gapStart; i <= gapEnd; i++) {
+					float[] origin = {0.0f,0.0f};
+					PolygonRoi newMid = new PolygonRoi(newMids.get(i-gapStart), PolygonRoi.POLYLINE);
+					comm.message("Filling in midline "+i+"; new midline has "+newMid.getNCoordinates()+" pts", VerbLevel.verb_debug);
+					BTPs.get(i).bf = this;
+					BTPs.get(i).fillInBackboneInfo(newMid, origin);
+				}
+				comm.message("Gap filled", VerbLevel.verb_debug);
+			} else if (gapStart==0 && gapEnd == (BTPs.size()-1)){
+				comm.message("All midlines are invalid in track "+track.getTrackID(), VerbLevel.verb_error);
+				System.out.println("All midlines are invalid in track "+track.getTrackID());
+				return false;
+			} else {
+				clipEnds=true;
+				if (gapStart == 0) {
+					BTPstartFrame=BTPs.get(gapEnd+1).frameNum;
+				} else if (gapEnd == (BTPs.size()-1)){
+					BTPendFrame=BTPs.get(gapStart-1).frameNum;
+				}
 			}
-			for (int i = gapStart; i <= gapEnd; i++) {
-				float[] origin = {0.0f,0.0f};
-				PolygonRoi newMid = new PolygonRoi(newMids.get(i-gapStart), PolygonRoi.POLYLINE);
-				comm.message("Filling in midline "+i+"; new midline has "+newMid.getNCoordinates()+" pts", VerbLevel.verb_debug);
-				BTPs.get(i).bf = this;
-				BTPs.get(i).fillInBackboneInfo(newMid, origin);
-			}
-			comm.message("Gap filled", VerbLevel.verb_debug);
-		} else {
-			//TODO CLIP THE TRACK
-			return false;
+		}catch(Exception e){
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			e.printStackTrace(pw);
+			comm.message("Error filling gap ("+gapStart+"-"+gapEnd+") in track "+track.getTrackID()+"\n"+sw.toString(), VerbLevel.verb_error);
 		}
-
 		return true;
 	}
 
@@ -619,7 +649,7 @@ public class BackboneFitter {
 	}
 	
 	
-	protected Vector<FloatPolygon> interpBackbones(int numnewbbs, float[] firstO, float[] endO, FloatPolygon bbFirst, FloatPolygon bbEnd) {
+	protected static Vector<FloatPolygon> interpBackbones(int numnewbbs, float[] firstO, float[] endO, FloatPolygon bbFirst, FloatPolygon bbEnd) {
 		
 		if (numnewbbs<1) return null;
 		
@@ -720,13 +750,74 @@ public class BackboneFitter {
 		return newMids;
 	}
 
+
+	private boolean clipEnds(){
+		
+		comm.message("Clipping ends on track "+newTrID+": startFrame="+BTPstartFrame+" endFrame="+BTPendFrame, VerbLevel.verb_message);
+		
+		if (BTPendFrame>0){//new end frame
+			
+			//Clip the actual track
+			endClippings = track.clipPoints(BTPendFrame+1,track.points.lastElement().frameNum+1);
+			
+			//Find the index of the endFrame BTP
+			int i=BTPs.size();//i = index of first element to remove
+			while (i>1 && BTPs.get(i-1).getFrameNum()!=BTPendFrame){
+				i--;
+			}
+			
+			if (BTPs.get(i-1).getFrameNum()==BTPendFrame){
+				//invalidate BTPs
+				for (int j=i; j<BTPs.size(); j++){
+					BTPs.get(j).htValid = false;
+					BTPs.get(j).finalizeBackbone();
+				}
+				//Remove elements
+				BTPs.subList(i, BTPs.size()).clear();
+			} else {
+				comm.message("Error clipping ends in track "+track.getTrackID()+": could not find index of new end frame ("+BTPendFrame+")", VerbLevel.verb_error);
+				return false;
+			}
+		}
+		
+		if (BTPstartFrame>0){// New Start frame:
+			
+			startClippings = track.clipPoints(track.points.firstElement().frameNum,BTPstartFrame);
+			
+			//Find the index of last element to remove
+			int i=-1; //i = index 
+			while (i<(BTPs.size()-2) && BTPs.get(i+1).getFrameNum()!=BTPstartFrame){
+				i++;
+			}
+			
+			if (BTPs.get(i+1).getFrameNum()==BTPstartFrame){
+				//Invalidate BTPs
+				for (int j=0; j<=i; j++){
+					BTPs.get(j).htValid = false;
+					BTPs.get(j).finalizeBackbone();
+				}
+				//Remove elements
+				BTPs.subList(0, i+1).clear();
+			} else {
+				comm.message("Error clipping ends in track "+track.getTrackID()+": could not find index of new start frame ("+BTPstartFrame+")", VerbLevel.verb_error);
+				return false;
+			}
+		}
+		
+		return true;
+	}
+	
+	
 	/**
 	 * Runs the fitting algorithm
 	 * <p>
 	 * An updating scheme is maintained, which alternates between fitting every
 	 * point and fitting just the points which are still changing significantly
+	 * 
+	 * returns convergence status
 	 */
-	private void runFitter() {
+	private boolean runFitter() {
+		
 		do {
 //			if (updater.getIterNum()>20) comm.setVerbosity(VerbLevel.verb_error);
 //			if (updater.getIterNum()>20) bbcomm.setVerbosity(VerbLevel.verb_off);
@@ -740,18 +831,26 @@ public class BackboneFitter {
 			relaxBackbones(updater.inds2Update());
 
 			// Setup for the next step
-			for (int i = 0; i < BTPs.size(); i++) {
+			for (int i = 0; (i<BTPs.size() && !diverged); i++) {
 				shifts[i] = BTPs.get(i).calcPointShift();
-				BTPs.get(i).setupForNextRelaxationStep();
+				
+				//Check for divergence
+				if (BTPs.get(i).diverged(params.divergenceConstant)){
+					//System.out.println("Track ID="+track.getTrackID()+" diverged");
+					diverged = true;
+				} else {
+					BTPs.get(i).setupForNextRelaxationStep();
+				}
 			}
 			
 			// Show the fitting messages, if necessary
 			if (!updater.comm.outString.equals("")) {
 				new TextWindow("TrackFitting Updater, pass "+pass, updater.comm.outString, 500, 500);
 			}
-		} while (updater.keepGoing(shifts));
+		} while (!diverged && updater.keepGoing(shifts));
 		
-		finalizeBackbones();
+		if (!diverged) finalizeBackbones();
+		return !diverged;
 
 	}
 
@@ -783,13 +882,8 @@ public class BackboneFitter {
 		// IJ.showStatus("Getting target backbones in frame "+btpInd);
 		// Get the lower-energy backbones for each individual force
 		Vector<FloatPolygon> targetBackbones = getTargetBackbones(btpInd);
-		// Combine the single-force backbones into one, and set it as the new
-		// backbone
-		// IJ.showStatus("Setting bbNew in frame "+btpInd);
 		bbcomm.message("Frame "+btpInd+" Components:", VerbLevel.verb_debug);
 		BTPs.get(btpInd).setBBNew(generateNewBackbone(targetBackbones));
-		// Get the shift (and energy?) for use in updating scheme/display
-		// shifts[btpInd] = BTPs.get(btpInd).calcPointShift();
 
 	}
 
@@ -805,11 +899,18 @@ public class BackboneFitter {
 		Vector<FloatPolygon> targetBackbones = new Vector<FloatPolygon>();
 
 		// Store the backbones which are relaxed under individual forces
-		ListIterator<Force> fIt = Forces.listIterator();
-		while (fIt.hasNext()) {
-			targetBackbones.add(fIt.next().getTargetPoints(btpInd, BTPs));
+		ListIterator<Force> fIt = Forces.listIterator(); 
+		try{
+			while (fIt.hasNext()) {
+				targetBackbones.add(fIt.next().getTargetPoints(btpInd, BTPs));
+			}
+		} catch(Exception e){
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			e.printStackTrace(pw);
+			comm.message("Error getting target backbones: \n"+sw.toString()+"\n", VerbLevel.verb_error);
 		}
-
+		
 		return targetBackbones;
 
 	}
@@ -897,6 +998,22 @@ public class BackboneFitter {
 		if (!bbcomm.outString.equals("")){
 			new TextWindow("Backbone Generation", bbcomm.outString, 500, 500);
 		}
+	}
+	
+	public boolean diverged(){
+		return diverged;
+	}
+	
+	public boolean wasClipped(){
+		return clipEnds;
+	}
+	
+	public Vector<TrackPoint> getStartClippings(){
+		return startClippings;
+	}
+
+	public Vector<TrackPoint> getEndClippings(){
+		return endClippings;
 	}
 	
 	

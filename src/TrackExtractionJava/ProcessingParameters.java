@@ -12,7 +12,7 @@ public class ProcessingParameters {
 	/**
 	 * Min length that the fitter can handle
 	 */
-	int minTrackLen = 80;//TODO set this when fp is set
+	int minTrackLen = 500;//TODO set this when fp is set
 	
 	
 	
@@ -30,18 +30,24 @@ public class ProcessingParameters {
 	/**
 	 * Displays an ExperimentFrame after fitting tracks 
 	 */
-	boolean showFitEx = true;
+	boolean showFitEx = false;
 	
 	/**
 	 * Whether or not to automatically save the extracted tracks of MTPs
 	 */
-	boolean saveMagEx = true;
+	boolean saveMagEx = false;
 	/**
 	 * Whether or not to automatically save the fitted tracks of BTPs
 	 */
 	boolean saveFitEx = true;
 	
-	boolean sendDataToExtracted = true;
+	boolean saveErrors = true;
+	
+	boolean testMagFromDisk = false;
+	boolean testFitFromDisk = false;
+	
+	boolean sendDataToExtracted = false;
+	
 	
 	public static String getOutFromInDir(String inDir){
 		
@@ -57,6 +63,7 @@ public class ProcessingParameters {
 				
 		return out.toString();
 	}
+	
 	
 	public String[] setLogPath(String srcDir, String srcName){
 		String[] logPathParts = {srcDir, "ProcessingLog.txt"};
@@ -75,6 +82,7 @@ public class ProcessingParameters {
 	}
 	
 	public String[] setFitExPath(String srcDir, String srcName){
+		//Clean up use of stringbuilder vs string 
 		StringBuilder path = new StringBuilder(srcDir);
 		StringBuilder name = new StringBuilder(srcName);
 		if (sendDataToExtracted){

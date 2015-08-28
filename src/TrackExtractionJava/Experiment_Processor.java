@@ -63,7 +63,7 @@ public class Experiment_Processor implements PlugIn{
 //		System.out.println(args[0]);
 //		System.out.println(args[1]);
 		
-		ImageJ imj = new ImageJ();
+		ImageJ imj = new ImageJ(ImageJ.NO_SHOW);
 		
 		Experiment_Processor ep = new Experiment_Processor();
 		ep.runningFromMain = true;
@@ -124,18 +124,18 @@ public class Experiment_Processor implements PlugIn{
 					//TODO release memory to OS? System.gc
 				}
 				
-				/*
-				try{
-					log("Testing MagEx.fromDisk...");
-					testFromDisk(false, processLog);
-					log("...MagEx.fromDisk complete");
-				} catch (Exception exc){
-					StringWriter sw = new StringWriter();
-					PrintWriter pw = new PrintWriter(sw);
-					exc.printStackTrace(pw);
-					log ("...Error in MTP Experiment fromDisk:\n"+sw.toString());
+				if(prParams.testMagFromDisk){
+					try{
+						log("Testing MagEx.fromDisk...");
+						testFromDisk(false, processLog);
+						log("...MagEx.fromDisk complete");
+					} catch (Exception exc){
+						StringWriter sw = new StringWriter();
+						PrintWriter pw = new PrintWriter(sw);
+						exc.printStackTrace(pw);
+						log ("...Error in MTP Experiment fromDisk:\n"+sw.toString());
+					}
 				}
-				*/
 				System.gc();
 				if (prParams.doFitting){
 //					ex = new Experiment(ex);
@@ -154,17 +154,18 @@ public class Experiment_Processor implements PlugIn{
 					
 				}
 				
-				/*try{
-					log("Testing FitEx.fromDisk...");
-					testFromDisk(true, processLog);
-					log("...FitEx.fromDisk complete");
-				} catch (Exception exc){
-					StringWriter sw = new StringWriter();
-					PrintWriter pw = new PrintWriter(sw);
-					exc.printStackTrace(pw);
-					log ("...Error in BTP Experiment fromDisk:\n"+sw.toString());
-				}*/
-				
+				if(prParams.testFitFromDisk){
+					try{
+						log("Testing FitEx.fromDisk...");
+						testFromDisk(true, processLog);
+						log("...FitEx.fromDisk complete");
+					} catch (Exception exc){
+						StringWriter sw = new StringWriter();
+						PrintWriter pw = new PrintWriter(sw);
+						exc.printStackTrace(pw);
+						log ("...Error in BTP Experiment fromDisk:\n"+sw.toString());
+					}
+				}
 				//TODO release memory to OS? System.gc
 			} else {
 				log("...no success");
@@ -286,6 +287,9 @@ public class Experiment_Processor implements PlugIn{
 			} else if (fileName.substring(fileName.length()-4).equalsIgnoreCase(".jav")){
 				success = openExp(dir, fileName);
 				
+			} else if (fileName.substring(fileName.length()-7).equalsIgnoreCase(".prejav")){
+				success = openExp(dir, fileName);
+				
 			} else {
 				System.out.println("Experiment_Processor.loadFile error: did not recognize file type"); 
 				IJ.showMessage("File not recognized as a .mmf or a .jav");
@@ -317,15 +321,17 @@ public class Experiment_Processor implements PlugIn{
 				mmfStack = mmfWin.getImagePlus();
 			} else {
 //				System.out.println("Opening mmf from code..");
+				
+				
 				mmf_Reader mr = new mmf_Reader();
 				String path = new File(dir, filename).getPath();
-//				System.out.println(path);
 				mr.loadStack(path);
 				if (mr.getMmfStack()==null) {
 					System.out.println("null stack");
 					return false;
 				}
 				mmfStack = new ImagePlus(path, mr.getMmfStack());
+				
 			}
 			IJ.showStatus("MMF open");
 			return true;
@@ -462,41 +468,72 @@ public class Experiment_Processor implements PlugIn{
 		Track tr;
 		Track newTr = null;
 		Vector<Track> toRemove = new Vector<Track>();
-
+		Vector<Track> errorsToSave = new Vector<Track>();
+		
+		int divergedCount=0;
+		int shortCount=0;
+		
 		//Fit each track that is long enough for the course passes
 		for (int i=0; i<ex.getNumTracks(); i++){
 			
 			if (i%bbf.params.GCInterval==0){
 				System.gc();
 			}
-			
+			TicToc trTic = new TicToc();
+			trTic.tic();
 			IJ.showStatus("Fitting Track "+(i+1)+"/"+ex.getNumTracks());
 			tr = ex.getTrackFromInd(i);
+			String trStr = "Track "+tr.getTrackID();
 			if (tr.getNumPoints()>prParams.minTrackLen) {//Check track length
 				newTr = fitTrack(tr);
+				long[] minSec = trTic.tocMinSec();
+				String timStr = "("+(int)minSec[0]+"m"+minSec[1]+"s)";
+				trStr+=" (#"+bbf.newTrID+")";
 				if (newTr!=null){
 					ex.replaceTrack(newTr, i);
+					String msg = trStr+": done fitting "+timStr;
+					if (bbf.wasClipped()) msg+=" (ends clipped)"; 
+					System.out.println(msg);
+				} else if (bbf.diverged()){
+					divergedCount++;
+					tr.setValid(false);
+					System.out.println(trStr+": diverged "+timStr);
+					toRemove.add(tr);
+					errorsToSave.add(tr);
 				} else {
 					tr.setValid(false);
-					System.out.println("Error fitting Track "+tr.getTrackID()+" (#"+i+")");
+					System.out.println(trStr+": ERROR "+timStr);
 					toRemove.add(tr);
+//					errorsToSave.add(tr);
 				}
 			} else {
 				tr.setValid(false);
-				System.out.println("Track "+tr.getTrackID()+" (#"+i+") too short to fit");
+				shortCount++;
+				System.out.println(trStr+": too short to fit");
 				toRemove.add(tr);
 			}
 		}
 		
 		bbf.showCommOutput();
 		
+		
+		
+		IJ.showStatus("Done fitting tracks");
+		System.out.println("Done fitting tracks: ");
+		System.out.println(shortCount+"/"+ex.getNumTracks()+" were too short (minlength="+prParams.minTrackLen+")");
+		System.out.println(divergedCount+"/"+(ex.getNumTracks()-shortCount)+" remaining diverged");
+		System.out.println((ex.getNumTracks()-toRemove.size())+"/"+(ex.getNumTracks()-shortCount-divergedCount)+" remaining were fit successfully");
+		
 		//Remove the tracks that couldn't be fit
 //		for(Track t : toRemove){
 //			ex.removeTrack(t);
 //		}
 		
-		IJ.showStatus("Done fitting tracks");
-		System.out.println("Done fitting tracks: "+(ex.getNumTracks()-toRemove.size())+"/"+ex.getNumTracks()+" were fit successfully");
+		if (prParams.saveErrors){
+			System.out.println("Saving Error tracks...");
+			saveErrorTracks(errorsToSave);
+			System.out.println("...Done saving error tracks");
+		}
 		
 		//Show the fitted tracks
 		if (prParams.showFitEx){
@@ -582,6 +619,23 @@ public class Experiment_Processor implements PlugIn{
 		return status;
 	}
 	
+	private void saveErrorTracks(Vector<Track> errTracks){
+		File f = new File(srcDir+File.separator+"divergedTrackExp.prejav");
+		System.out.println("Saving error track experiment to "+f.getPath());
+		boolean status;
+		try{
+			DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f))); 
+			Experiment errEx = new Experiment(ex, errTracks);
+			
+			errEx.toDisk(dos, processLog);
+			status=true;
+			dos.close();
+		} catch(Exception e){
+			status=false;
+			System.out.println("Experiment_processor.saveErrorTracks error");
+		}
+	}
+	
 	private void log(String message){
 //		System.out.println(message);
 		
@@ -593,29 +647,4 @@ public class Experiment_Processor implements PlugIn{
 	
 }
 
-
-
-
-class TicToc{
-	
-	private long startTime;
-	
-	public TicToc(){
-		
-	}
-	
-	public void tic(){
-		startTime = System.currentTimeMillis();
-	}
-	
-	public long toc(){
-		return System.currentTimeMillis()-startTime;
-	}
-	
-	public long tocSec(){
-		return (toc())/1000;
-	}
-	
-	
-}
 

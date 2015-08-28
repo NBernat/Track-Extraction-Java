@@ -88,6 +88,8 @@ public class Experiment implements Serializable{
 	}
 	
 	
+	
+	
 	private void init(String fname, ExtractionParameters ep, Vector<Track> tracks) {
 		this.fname = fname;
 		this.ep = ep;
@@ -102,6 +104,11 @@ public class Experiment implements Serializable{
 		Forces = exOld.Forces;
 	}
 
+	public Experiment(Experiment exOld, Vector<Track> newTracks){
+		init(exOld.fname, exOld.ep, newTracks);
+//		init(exOld.fname, exOld.ep, exOld.collisionTrackIDs, (Vector<Track>)exOld.tracks.clone());
+		Forces = exOld.Forces;
+	}
 	
 	public int toDisk(DataOutputStream dos, PrintWriter pw){
 		
@@ -421,17 +428,17 @@ public class Experiment implements Serializable{
 	public int getTypeCode(){
 		int trackType = -1;
 		
-		for (int i=0; (trackType<0 && i<tracks.size()); i++){
+		for (int i=0; i<tracks.size(); i++){
 			if(tracks.get(i).getNumPoints()>0){
 				
-				if (tracks.get(i).getStart() instanceof BackboneTrackPoint){
-					return 3;
-				} else if (tracks.get(i).getStart() instanceof MaggotTrackPoint){
-					return 2;
-				} else if (tracks.get(i).getStart() instanceof ImTrackPoint){
-					return 1;
-				} else if (tracks.get(i).getStart() instanceof TrackPoint){
-					return 0;
+				if (tracks.get(i).getStart() instanceof BackboneTrackPoint && trackType<3){
+					trackType = 3;
+				} else if (tracks.get(i).getStart() instanceof MaggotTrackPoint && trackType<2){
+					trackType = 2;
+				} else if (tracks.get(i).getStart() instanceof ImTrackPoint && trackType<1){
+					trackType = 1;
+				} else if (tracks.get(i).getStart() instanceof TrackPoint && trackType<0){
+					trackType = 0;
 				}
 			}
 		}

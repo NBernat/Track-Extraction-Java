@@ -13,6 +13,7 @@ import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.Collections;
+import java.util.List;
 import java.util.ListIterator;
 import java.util.Vector;
 
@@ -224,7 +225,18 @@ public class Track implements Serializable{
 		
 	}
 	
-	
+	/**
+	 * Clips and returns the list of track points indicated by the startFrame (inclusive) and endFrame (exclusive)
+	 * @param startFrame
+	 * @param endFrame
+	 * @return
+	 */
+	protected Vector<TrackPoint> clipPoints(int startFrame, int endFrame){
+		
+		Vector<TrackPoint> clippings = new Vector<TrackPoint>(points.subList(startFrame-points.firstElement().frameNum, endFrame-points.firstElement().frameNum));
+		points.subList(startFrame-points.firstElement().frameNum, endFrame-points.firstElement().frameNum).clear();
+		return clippings;
+	}
 	
 	///////////////////////////
 	// Accessors
@@ -597,7 +609,7 @@ public class Track implements Serializable{
 							points.add(btp);
 						} else {
 							if (pw!=null) pw.println("ERROR: null BackboneTrackpoint ("+i+"/"+(nPts-1)+")");
-							return 3;
+							return 3000+i;
 						}
 					}
 					break;

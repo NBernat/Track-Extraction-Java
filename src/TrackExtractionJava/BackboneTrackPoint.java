@@ -258,7 +258,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 				}
 			}
 			if (minInd==-1) {
-				bf.comm.message("Voronoi clusters went unset in frame "+frameNum, VerbLevel.verb_warning);
+				bf.comm.message("Voronoi clusters went unset in frame "+frameNum, VerbLevel.verb_error);
 				
 				
 			}
@@ -301,15 +301,16 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	 * Stores the final backbone
 	 */
 	protected void finalizeBackbone(){
-		backbone = new PolygonRoi(bbOld, PolygonRoi.POLYLINE);
-		
-//		backboneX = new float[bbNew.npoints];
-//		backboneY = new float[bbNew.npoints];
-//		for (int i=0; i<bbNew.npoints; i++){
-//			backboneX[i] = bbNew.xpoints[i];
-//			backboneY[i] = bbNew.ypoints[i];
-//		}
-		
+		if (bbOld!=null){
+			backbone = new PolygonRoi(bbOld, PolygonRoi.POLYLINE); 
+			
+			head = new ContourPoint(bbOld.xpoints[0]-rect.x, bbOld.ypoints[0]-rect.y);
+			tail = new ContourPoint(bbOld.xpoints[bbOld.npoints-1]-rect.x, bbOld.ypoints[bbOld.npoints-1]-rect.y);
+			midpoint = new ContourPoint(bbOld.xpoints[bbOld.npoints/2]-rect.x, bbOld.ypoints[bbOld.npoints/2]-rect.y);
+		}else{
+			backbone = new PolygonRoi(new FloatPolygon(), PolygonRoi.POLYLINE);
+			//h, t, and mid are left as they were in MTP
+		}
 	}
 	
 	public int getNumPix(){
@@ -346,9 +347,9 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	
 	public double[][] getInterpdBackbone(int numCoords){
 		if (numCoords==-1) numCoords = numBBPts;
-		FloatPolygon newBB = getInterpolatedSegment(backbone, numCoords).getFloatPolygon();
+		PolygonRoi newBB = getInterpolatedSegment(backbone, numCoords);
 		if (newBB!=null){
-			return CVUtils.fPoly2Array(newBB, 0, 0);
+			return CVUtils.fPoly2Array(newBB.getFloatPolygon(), 0, 0);
 		}else {
 			return null;
 		}
@@ -356,6 +357,26 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	
 	public boolean getArtificialMid(){
 		return artificialMid;
+	}
+	
+	public boolean diverged(int dc){
+		
+		int w = im.getWidth();
+		int h = im.getHeight();
+		
+		int xL = rect.x-dc*w;
+		int xU = rect.x+(dc+1)*w;
+		int yL = rect.y-dc*h;
+		int yU = rect.y+(dc+1)*h;
+		
+		for (int i=0; i<bbOld.npoints; i++){
+			double xc = bbOld.xpoints[i];
+			double yc = bbOld.ypoints[i];
+			if (xc<xL || xc>xU || yc<yL || yc>yU){
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	public ImageProcessor getIm(){
@@ -459,6 +480,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		if (ht){
 			displayUtils.drawPoint(im, head, expandFac, offX, offY, Color.MAGENTA);
 			displayUtils.drawPoint(im, tail, expandFac, offX, offY, Color.GREEN);
+			displayUtils.drawPoint(im, midpoint, expandFac, offX, offY, Color.BLUE);
 		}
 		
 		//FORCES
@@ -579,9 +601,11 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	public static BackboneTrackPoint fromDisk(DataInputStream dis, Track t, PrintWriter pw){
 		
 		BackboneTrackPoint btp = new BackboneTrackPoint();
-		if (btp.loadFromDisk(dis,t,pw)==0){
+		int resultCode = btp.loadFromDisk(dis,t,pw);
+		if (resultCode==0){
 			return btp;
 		} else {
+			System.out.println(resultCode);
 			return null;
 		}
 	}
@@ -599,13 +623,17 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 			numBBPts = dis.readShort();
 			
 			//backbone
-			float[] bbX = new float[numBBPts];
-			float[] bbY = new float[numBBPts];
-			for (int i=0; i<numBBPts; i++){
-				bbX[i] = dis.readFloat();
-				bbY[i] = dis.readFloat();
+			if (numBBPts>0){
+				float[] bbX = new float[numBBPts];
+				float[] bbY = new float[numBBPts];
+				for (int i=0; i<numBBPts; i++){
+					bbX[i] = dis.readFloat();
+					bbY[i] = dis.readFloat();
+				}
+				backbone = new PolygonRoi(bbX,  bbY, PolygonRoi.POLYLINE);
+			} else {
+				backbone = new PolygonRoi(new FloatPolygon(),PolygonRoi.POLYLINE);
 			}
-			backbone = new PolygonRoi(bbX,  bbY, PolygonRoi.POLYLINE);
 			
 			//artificialMid
 			artificialMid = (dis.readByte()==1);
