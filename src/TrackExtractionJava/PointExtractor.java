@@ -6,11 +6,11 @@ import ij.gui.Roi;
 import ij.measure.ResultsTable;
 //import ij.plugin.ImageCalculator;
 import ij.process.ImageProcessor;
+import ij.text.TextWindow;
 
 import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
 import java.util.Vector;
-
-import com.sun.org.apache.xpath.internal.operations.And;
 
 
 /**
@@ -106,7 +106,7 @@ public class PointExtractor {
 	 * <p>
 	 * Includes points out of the size range 
 	 */
-	ResultsTable pointTable;
+//	private ResultsTable pointTable;
 	
 	/**
 	 * background image
@@ -281,43 +281,51 @@ public class PointExtractor {
 	    	threshIm.show();
 	    }
 
-	    extractedPoints = findPtsInIm(threshIm, thresh, showResults);
-	    
+	    extractedPoints = findPtsInIm(currentFrameNum, currentIm, threshIm, thresh, fl.getStackDims(), analysisRect, ep, showResults, comm);
 	    
 	    String s = "Frame "+currentFrameNum+": Extracted "+extractedPoints.size()+" new points";
 	    if (comm!=null) comm.message(s, VerbLevel.verb_message);
-	    		
+	    
 	}
 	
-	private Vector<TrackPoint> findPtsInIm(ImagePlus im, int thresh, boolean showResults){
+	protected static Vector<TrackPoint> findPtsInIm(int frameNum, ImagePlus currentIm, ImagePlus threshIm, int thresh, int[] frameSize, Rectangle analysisRect, ExtractionParameters ep, boolean showResults,  Communicator comm){
 		
 //		boolean excl = ep.excludeEdges;
 //		ep.excludeEdges = false;
 		if (comm!=null && analysisRect!=null) comm.message("Analysis Rect: ("+analysisRect.x+","+analysisRect.y+"), "+analysisRect.width+"x"+analysisRect.height, VerbLevel.verb_message);
-		pointTable = CVUtils.findPoints(im, analysisRect, ep, showResults);
+		ResultsTable pointTable = CVUtils.findPoints(threshIm, analysisRect, ep, showResults);
 //		ep.excludeEdges = excl;
 		
-		
 //		if (showResults) {
-			if (comm!=null) comm.message("Frame "+currentFrameNum+": "+pointTable.getCounter()+" points in ResultsTable", VerbLevel.verb_message);
+			if (comm!=null) comm.message("Frame "+frameNum+": "+pointTable.getCounter()+" points in ResultsTable", VerbLevel.verb_message);
 //	    }
 
-		Vector<TrackPoint> pts = rt2TrackPoints(pointTable, currentFrameNum, thresh);
+			//ResultsTable rt, int frameNum, Rectangle analysisRect, int[] frameSize, ImagePlus currentIm, ImagePlus threshIm, ExtractionParameters ep, int thresh, Communicator comm
+		Vector<TrackPoint> pts = rt2TrackPoints(pointTable, frameNum, analysisRect, frameSize, currentIm, threshIm, ep, thresh, comm);
 		return pts;
 	}
 	
-	
-	public Vector<TrackPoint> rt2TrackPoints (ResultsTable rt, int frameNum, int thresh) {
-		return rt2TrackPoints(rt, frameNum, thresh, ep.clipBoundaries);
-	}
-	
+
 	/**
 	 * Adds a row from the results table to the list of TrackPoints, if the point is the proper size according to the extraction parameters
 	 * @param rt Results Table containing point info 
 	 * @param frameNum Frame number
 	 * @return List of Trackpoints within the 
 	 */
-	public Vector<TrackPoint> rt2TrackPoints (ResultsTable rt, int frameNum, int thresh, boolean clipBoundaries) {
+	
+	/**
+	 * This is ridiculous. Get rid of some of these isoforms
+	 */
+//	public Vector<TrackPoint> rt2TrackPoints (ResultsTable rt, int frameNum, int thresh) {
+//		return rt2TrackPoints (rt, frameNum, analysisRect, ep, thresh, comm);
+//	}
+	
+	
+	public Vector<TrackPoint> rt2TrackPoints (ResultsTable rt, int frameNum, Rectangle analysisRect, ExtractionParameters ep, int thresh, Communicator comm) {
+		return rt2TrackPoints (rt, frameNum, analysisRect, fl.getStackDims(), currentIm, threshIm, ep, thresh, comm);
+	}
+	
+	public static Vector<TrackPoint> rt2TrackPoints (ResultsTable rt, int frameNum, Rectangle analysisRect, int[] frameSize, ImagePlus currentIm, ImagePlus threshIm, ExtractionParameters ep, int thresh, Communicator comm) {
 		
 		int arX=0;
 		int arY=0;
@@ -342,13 +350,18 @@ public class PointExtractor {
 			double boundX = rt.getValueAsDouble(ResultsTable.ROI_X, row)+arX;
 			double boundY = rt.getValueAsDouble(ResultsTable.ROI_Y, row)+arY;
 			
-			if (!clipBoundaries || (inBounds((int)boundX,(int)boundY,(int)width,(int)height))){
+			boolean inB = inBounds(new Rectangle((int)boundX,(int)boundY,(int)width,(int)height), ep.boundarySize, frameSize[0], frameSize[1]);
+			
+			if (!ep.clipBoundaries || inB){
 				
 				Rectangle rect = new Rectangle((int)boundX-ep.roiPadding, (int)boundY-ep.roiPadding, (int)width+2*ep.roiPadding, (int)height+2*ep.roiPadding);
 				Rectangle crRect = new Rectangle((int)boundX-arX-ep.roiPadding, (int)boundY-arY-ep.roiPadding, (int)width+2*ep.roiPadding, (int)height+2*ep.roiPadding);
 	//			Rectangle rect = new Rectangle((int)boundX, (int)boundY, (int)width, (int)height);
 				//Rectangle rect = new Rectangle((int)x-ep.roiPadding, (int)y-ep.roiPadding, (int)2*ep.roiPadding, (int)2*ep.roiPadding);
-				
+//				if (crRect.x<0 || crRect.y<0){
+//					new TextWindow("Cropping info crRect", "crRect: (x="+crRect.x+", y="+crRect.y+", w="+crRect.width+", h="+crRect.height+")", 500, 500);
+//				}
+					
 				
 				if (comm!=null) comm.message("Converting Point "+row+" "+"("+(int)x+","+(int)y+")"+"to TrackPoint", VerbLevel.verb_debug);
 				if (ep.properPointSize(area)) {
@@ -356,9 +369,9 @@ public class PointExtractor {
 					switch (ep.trackPointType){
 						case 1: //ImTrackPoint
 							ImTrackPoint iTPt = new ImTrackPoint(x,y,rect,area,frameNum,thresh);
-							if (currentFrameNum!=frameNum){
-								loadFrame(frameNum);
-							}
+//							if (currentFrameNum!=frameNum){
+//								loadFrame(frameNum);
+//							}
 							Roi oldRoi = currentIm.getRoi();
 							currentIm.setRoi(crRect);
 							ImageProcessor im = currentIm.getProcessor().crop(); //does not affect currentIm
@@ -369,16 +382,27 @@ public class PointExtractor {
 						case 2: //MaggotTrackPoint
 							MaggotTrackPoint mtPt = new MaggotTrackPoint(x,y,rect,area,frameNum,thresh);
 							mtPt.setCommunicator(comm);
-							if (currentFrameNum!=frameNum){
-								loadFrame(frameNum);
-							}
+//							if (currentFrameNum!=frameNum){
+//								loadFrame(frameNum);
+//							}
 							mtPt.setStart((int)rt.getValue("XStart", row)+arX, (int)rt.getValue("YStart", row)+arY);
 							Roi roi = currentIm.getRoi();
 							currentIm.setRoi(crRect);
 							ImageProcessor im2 = currentIm.getProcessor().crop(); //does not affect currentIm
 							currentIm.setRoi(roi);
 							//Set the image mask
-							mtPt.setMask(getMask(rt, row));
+							mtPt.setMask(getMask(rt, row, threshIm, ep));
+							
+//							String debugInfo = "Rect: (x="+mtPt.x+", y="+mtPt.y+")\n";
+//							debugInfo+="Bitdepth="+im2.getBitDepth()+"\n";
+//							debugInfo+="Type="+im2.getBufferedImage().getType()+"(proper="+BufferedImage.TYPE_BYTE_GRAY+")\n";
+//							new TextWindow("New point info", debugInfo, 500, 500);
+							
+							/*
+							new ImagePlus("Current image", currentIm.getProcessor()).show();
+							new ImagePlus("New point image", im2).show();
+							*/
+							
 							mtPt.setImage(im2, ep.trackWindowWidth, ep.trackWindowHeight);
 							mtPt.extractFeatures();
 							tp.add(mtPt);
@@ -403,14 +427,20 @@ public class PointExtractor {
 	}
 
 	
-	private boolean inBounds(int boundX, int boundY, int width, int height){
-		int bs = ep.boundarySize;
-		int sw = fl.getStackDims()[0];//2592;//fl.imageStack.getWidth();
-		int sh = fl.getStackDims()[1];//1944;//fl.imageStack.getHeight();
-		return boundX>bs && boundY>bs && (boundX+width)<(sw-bs) && (boundY+height)<(sh-bs);
+//	private boolean inBounds(int boundX, int boundY, int width, int height){
+//		return inBounds(boundX, boundY, width, height, ep.boundarySize, fl.getStackDims()[0], fl.getStackDims()[1]);
+//	}
+	
+	public static boolean inBounds(Rectangle boxBounds, int boundarySize, int stackW, int stackH){
+//		int bs = ep.boundarySize;
+//		int sw = fl.getStackDims()[0];//2592;//fl.imageStack.getWidth();
+//		int sh = fl.getStackDims()[1];//1944;//fl.imageStack.getHeight();
+		return boxBounds.x>boundarySize && boxBounds.y>boundarySize && 
+				(boxBounds.x+boxBounds.width)<(stackW-boundarySize) && 
+				(boxBounds.y+boxBounds.height)<(stackH-boundarySize);
 	}
 	
-	protected ImageProcessor getMask(ResultsTable rt, int row){
+	private static ImageProcessor getMask(ResultsTable rt, int row, ImagePlus threshIm, ExtractionParameters ep){
 		
 		//Get info from table
 		double width = rt.getValueAsDouble(ResultsTable.ROI_WIDTH, row);
@@ -440,45 +470,7 @@ public class PointExtractor {
 	}
 	
 	
-	/**
-	 * Tries to find a pixel threshold which can achieve the desired number of points. If successful, returns a list of the new points.
-	 * @param point The point to be split
-	 * @param numDesiredPts the number of points which "should" be in that image
-	 * @return The new points if a threshold was found, otherwise an empty list 
-	 */
-	/**
-	public Vector<TrackPoint> splitPoint(TrackPoint point, int numDesiredPts, int targetArea){
-		
-		Vector<TrackPoint> newPoints = new Vector<TrackPoint>();
-		
-		loadFrame(point.frameNum);
-		
-		ImagePlus crIm = (ImagePlus) currentIm.clone();
-		crIm.setRoi(point.rect);
-		crIm.getProcessor().crop();
-		//Try to find the threshold (CVUtils)
-//		int minArea = (int) (targetArea*(1-ep.fracChangeForSplitting));
-//		int maxArea = (int) (targetArea*(1+ep.fracChangeForSplitting));
-		int newThres = CVUtils.findThreshforNumPts(crIm, ep, numDesiredPts, (int)ep.minArea, (int)ep.maxArea, targetArea);
-		if (newThres>0){
-			//Threshold the image
-			crIm.getProcessor().threshold(newThres);
-			//Find the points 
-			newPoints = findPtsInIm(crIm, newThres, false);
-			//Fix the offsets
-			for (int i=1; i<=newPoints.size(); i++){
-				Rectangle rect = newPoints.get(i).rect;
-				rect.x += point.rect.x;
-				rect.y += point.rect.y;
-				newPoints.get(i).rect = rect;
-			}
-			
-			
-		}
-		
-		return newPoints;
-	}
-	*/
+
 	
 	/**
 	 * Returns the extracted points

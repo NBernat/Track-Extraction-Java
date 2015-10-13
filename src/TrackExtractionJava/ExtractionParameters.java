@@ -64,8 +64,8 @@ public class ExtractionParameters implements Serializable{
 	int sampleInd = 10;
 	//TODO
 	boolean subset = false;
-	int startFrame = 1;
-	int endFrame = 500;
+	int startFrame = 4000;
+	int endFrame = 4500;
 	//_frame_normalization_methodT fnm = _frame_normalization_methodT._frame_none;
 	//TODO
 	int trackWindowHeight = 50;
@@ -104,7 +104,7 @@ public class ExtractionParameters implements Serializable{
     /**
      * The global threshold value
      */
-    double globalThreshValue = 20;
+    int globalThreshValue = 20;
     
     boolean excludeEdges = true; 
     boolean clipBoundaries = true;
@@ -115,6 +115,11 @@ public class ExtractionParameters implements Serializable{
      * Between 0 and 1, inclusive 
      */
     double fracChangeForSplitting = .5;
+    /**
+     * the method for splitting points:
+     * 1=extracting points from rethresholded im
+     */
+    int pointSplittingMethod = 1;
     /**
      *  The area change which indicates that a collision has ended, expressed as a fraction of the previous area
      */
@@ -140,7 +145,7 @@ public class ExtractionParameters implements Serializable{
     /**
      * Minimum blob area
      */
-    double minArea = 35;
+    double minArea = 20;
     /**
      * Maximum blob area
      */

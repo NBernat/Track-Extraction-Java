@@ -13,6 +13,7 @@ import ij.text.TextWindow;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.PrintWriter;
@@ -70,6 +71,8 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	
 	protected boolean htValid;
 	
+	protected boolean saveContourPoint = true;
+	
 	final double maxContourAngle = Math.PI/2.0;
 	final int numMidCoords = 11;
 	
@@ -97,19 +100,30 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		cont = null;
 	}
 	
-	private Vector<ContourPoint> findContours(){
+	protected Vector<ContourPoint> findContours(){
 		Vector<ContourPoint> con = new Vector<ContourPoint>();
 		if (comm!=null) comm.message("Finding Contours", VerbLevel.verb_debug);
-		ImagePlus thrIm = new ImagePlus("", im.getBufferedImage());//copies image
-		ImageProcessor thIm = thrIm.getProcessor();
+//		ImagePlus thrIm = new ImagePlus("", im.getBufferedImage());//copies image
+//		ImageProcessor thIm = thrIm.getProcessor();
+		BufferedImage bim = im.duplicate().getBufferedImage();
+		if (bim.getType()!=BufferedImage.TYPE_BYTE_GRAY){ 
+//			new ImagePlus("Im before conversion", bim).show();
+			BufferedImage tempIm = new BufferedImage(bim.getWidth(), bim.getHeight(), BufferedImage.TYPE_BYTE_GRAY);
+			tempIm.getGraphics().drawImage(bim, 0, 0, bim.getWidth(), bim.getHeight(), null);
+			bim = tempIm;
+		}
+		ByteProcessor thIm = new ByteProcessor(bim);
 		thIm.threshold(thresh);
+		
 		Wand wand = new Wand(thIm);
-		wand.autoOutline(getStart().x-rect.x, getStart().y-rect.y);
+		wand.autoOutline(getStart().x-rect.x, getStart().y-rect.y);//, 0, Wand.LEGACY_MODE);//);//
 		
 		nConPts = wand.npoints;
 		if (comm!=null) comm.message("Wand arrays have "+wand.xpoints.length+" points, and report "+nConPts+" points", VerbLevel.verb_debug);
 		int[] contourX = wand.xpoints;//Arrays.copyOfRange(wand.xpoints, 0, wand.npoints);//
 		int[] contourY = wand.ypoints;//Arrays.copyOfRange(wand.ypoints, 0, wand.npoints);//
+		
+		
 		
 		if (comm!=null) comm.message("Point coords were gathered", VerbLevel.verb_debug);
 		PolygonRoi contour = new PolygonRoi(contourX, contourY, nConPts, Roi.POLYGON);
@@ -380,7 +394,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	}
 	
 	
-	private void convertCPtoArrays(Vector<ContourPoint> cont){
+	protected void convertCPtoArrays(Vector<ContourPoint> cont){
 		contourX = new int[cont.size()];
 		contourY = new int[cont.size()];
 		for (int i=0; i<cont.size(); i++){
@@ -936,11 +950,29 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		leftSeg = null;
 		rightSeg = null;
 		mask = null;
-		contourStart = null;
+//		contourStart = null;
 		
 	}
 	
+
 	public int toDisk(DataOutputStream dos, PrintWriter pw){
+		int r = toDiskOld(dos, pw);
+		if (r==0 && saveContourPoint){
+			try{
+				dos.writeInt(contourStart.x);
+				dos.writeInt(contourStart.y);
+			}catch (Exception e){
+				if (pw!=null) pw.println("Error writing MaggotTrackPoint data (contour start) for point "+pointID+"; aborting save");
+				return 10;
+			}
+		} else {
+			return r;
+		}
+		return 0;
+		
+	}
+	
+	public int toDiskOld(DataOutputStream dos, PrintWriter pw){
 		
 		//Write all ImTrackPoint data
 		super.toDisk(dos, pw);
@@ -949,6 +981,9 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		try {
 			//Write htvalid
 			dos.writeByte(htValid ? 1:0);
+			
+//			dos.writeInt(contourStart.x);
+//			dos.writeInt(contourStart.y);
 			
 			//Write # contour pts 
 			dos.writeInt(contourX.length);
@@ -1041,6 +1076,9 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		//size+= ; 1 byte + (1 int + nConPts*sizeOfContourPoint) + (3*sizeOfContourPoint) + (1 int + 2*numMidlineCoords*sizeOfFloat)
 		// = 1 byte + 2 int + 2*numMidlineCoords float + (3+nContourPts) sizeOfContourPoint
 		size += 1 + 2*Integer.SIZE/Byte.SIZE; 
+		if (saveContourPoint){
+			size += 2*Integer.SIZE/Byte.SIZE; 			
+		}
 		size += contourX.length*2*(Integer.SIZE/Byte.SIZE);//ContourPoint.sizeOnDisk();
 		if (htValid){
 			size += 3*ContourPoint.sizeOnDisk();
@@ -1062,7 +1100,22 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		}
 	}
 	
+
 	protected int loadFromDisk(DataInputStream dis, Track t, PrintWriter pw){
+		int r = loadFromDiskOld(dis, t, pw);
+		if (r==0 && saveContourPoint){
+			try {
+				contourStart = new Point(dis.readInt(), dis.readInt());
+			}catch (Exception e){
+				return 10;
+			}
+		} else {
+			return r;
+		}
+		return 0;
+	}
+	
+	protected int loadFromDiskOld(DataInputStream dis, Track t, PrintWriter pw){
 		
 		//Load all superclass info
 		if (super.loadFromDisk(dis,t,pw)!=0){
@@ -1073,6 +1126,8 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		try {
 			//htvalid
 			htValid = dis.readByte()==1; 
+			
+//			contourStart = new Point(dis.readInt(), dis.readInt());
 			
 			//nconpts, contour
 			nConPts = dis.readInt();
@@ -1143,17 +1198,32 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		//try to find a threshold that gives the right # of pts
 		int thr = CVUtils.findThreshforNumPts(new ImagePlus("",mtp.getRawIm().duplicate()), ep, nPts, (int)ep.minArea, (int)ep.maxArea, targetArea, mtp.thresh, 255);
 		
+		
+		Vector<TrackPoint> splitPts=null;
 		if (thr>0){
 			
-			Rectangle ar = pe.getAnalysisRect();
-			pe.setAnalysisRect(mtp.rect);
-			pe.extractPoints(mtp.frameNum, thr);
-			pe.setAnalysisRect(ar);
-			return pe.getPoints();
+			switch(ep.pointSplittingMethod){
+			case 1:
+				//Extract new points using rethresholded im
+				Rectangle ar = pe.getAnalysisRect();
+				pe.setAnalysisRect(mtp.rect);
+				pe.extractPoints(mtp.frameNum, thr);
+				pe.setAnalysisRect(ar);
+				splitPts = pe.getPoints();
+				break;
+				
+			case 2:
+				//
+//				splitPts = DistanceMapSpliter.splitPoint(mtp, thr, ep);
+				
+			default:
+				
+			}
 			
+			return splitPts;
 		}
 		
-		return null;
+		return splitPts;
 	}
 	
 	

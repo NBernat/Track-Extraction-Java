@@ -1,8 +1,8 @@
 package TrackExtractionJava;
 
 import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+//import java.nio.file.Path;
+//import java.nio.file.Paths;
 
 
 public class ProcessingParameters {
@@ -21,7 +21,7 @@ public class ProcessingParameters {
 	/**
 	 * Closes the MMF window
 	 */
-	boolean closeMMF = true;//TODO set/use this 
+	boolean closeMMF = false;//TODO set/use this 
 	
 	/**
 	 * Displays an ExperimentFrame after extracting tracks 
@@ -35,7 +35,7 @@ public class ProcessingParameters {
 	/**
 	 * Whether or not to automatically save the extracted tracks of MTPs
 	 */
-	boolean saveMagEx = false;
+	boolean saveMagEx = true;
 	/**
 	 * Whether or not to automatically save the fitted tracks of BTPs
 	 */
@@ -51,17 +51,18 @@ public class ProcessingParameters {
 	
 	public static String getOutFromInDir(String inDir){
 		
-		Path p = Paths.get(inDir);
-		
-		StringBuilder out = new StringBuilder(p.getParent().toString());
-		
-		String dataStr = "data";
-		String exStr = "extracted";
-		int ind = out.indexOf(dataStr);
-		out.delete(ind, ind+dataStr.length());
-		out.insert(ind, exStr);
-				
-		return out.toString();
+//		Path p = Paths.get(inDir);
+//		
+//		StringBuilder out = new StringBuilder(p.getParent().toString());
+//		
+//		String dataStr = "data";
+//		String exStr = "extracted";
+//		int ind = out.indexOf(dataStr);
+//		out.delete(ind, ind+dataStr.length());
+//		out.insert(ind, exStr);
+//				
+//		return out.toString();
+		return inDir;
 	}
 	
 	

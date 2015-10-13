@@ -290,7 +290,9 @@ public class Experiment_Processor implements PlugIn{
 			} else if (fileName.substring(fileName.length()-7).equalsIgnoreCase(".prejav")){
 				success = openExp(dir, fileName);
 				
-			} else {
+			} else if (fileName.substring(fileName.length()-7).equalsIgnoreCase("current")) {
+				success = useCurrentWindow();
+			} else{ 
 				System.out.println("Experiment_Processor.loadFile error: did not recognize file type"); 
 				IJ.showMessage("File not recognized as a .mmf or a .jav");
 				success = false;
@@ -303,6 +305,11 @@ public class Experiment_Processor implements PlugIn{
 		
 		indentLevel--;
 		return success;
+	}
+	private boolean useCurrentWindow(){
+		mmfWin = WindowManager.getCurrentWindow();
+		mmfStack = mmfWin.getImagePlus();
+		return mmfStack!=null;
 	}
 	/**
 	 * Loads an imageStack into the processor from a .mmf file
@@ -317,20 +324,22 @@ public class Experiment_Processor implements PlugIn{
 			
 			if (!runningFromMain){
 				IJ.run("Import MMF", "path=["+new File(dir, filename).getPath()+"]");
+//				useCurrentWindow()
+				
 				mmfWin = WindowManager.getCurrentWindow();
 				mmfStack = mmfWin.getImagePlus();
 			} else {
 //				System.out.println("Opening mmf from code..");
 				
 				
-				mmf_Reader mr = new mmf_Reader();
-				String path = new File(dir, filename).getPath();
-				mr.loadStack(path);
-				if (mr.getMmfStack()==null) {
-					System.out.println("null stack");
-					return false;
-				}
-				mmfStack = new ImagePlus(path, mr.getMmfStack());
+//				mmf_Reader mr = new mmf_Reader();
+//				String path = new File(dir, filename).getPath();
+//				mr.loadStack(path);
+//				if (mr.getMmfStack()==null) {
+//					System.out.println("null stack");
+//					return false;
+//				}
+//				mmfStack = new ImagePlus(path, mr.getMmfStack());
 				
 			}
 			IJ.showStatus("MMF open");

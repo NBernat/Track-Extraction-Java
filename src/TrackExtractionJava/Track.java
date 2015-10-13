@@ -91,7 +91,7 @@ public class Track implements Serializable{
 	}
 	
 	
-	public Track(Vector<BackboneTrackPoint> pts, int ID){
+	public Track(Vector<? extends TrackPoint> pts, int ID){
 		maxHeight=0;
 		maxWidth=0;
 		

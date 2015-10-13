@@ -178,6 +178,15 @@ public class TrackPoint implements Serializable {
 		return nearestPts;
 	}
 	
+	protected Vector<ContourPoint> findContours(){
+		return null;
+	}
+	
+	protected void convertCPtoArrays(Vector<ContourPoint> c){
+		
+	}
+
+	
 	/**
 	 * Angle formed between two points and this point as the vertex
 	 * @param ptA

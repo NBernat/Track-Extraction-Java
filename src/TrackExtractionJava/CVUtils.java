@@ -4,14 +4,17 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
+import java.util.Vector;
 
 import ij.ImagePlus;
 import ij.gui.Roi;
 import ij.measure.Measurements;
 import ij.measure.ResultsTable;
+import ij.plugin.ImageCalculator;
 import ij.plugin.filter.Analyzer;
 import ij.plugin.filter.ParticleAnalyzer;
 import ij.process.FloatPolygon;
+import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 import ij.text.TextWindow;
 
@@ -287,6 +290,48 @@ public class CVUtils {
 		return im;
 		
 	}
+	
+	public static ImagePlus lessThan(ImagePlus im1, Vector<ImagePlus> im2){
+		return lessThan(im1, im2, -1);
+	}
+	public static ImagePlus lessThan(ImagePlus im1, Vector<ImagePlus> im2, int skipInd){
+		
+		if(im2.size()==1){
+			return lessThan(im1, im2.firstElement());
+		}
+		
+		ImageCalculator ic = new ImageCalculator();
+		ImagePlus result = new ImagePlus("", new BufferedImage(im1.getWidth(), im1.getHeight(), BufferedImage.TYPE_BYTE_GRAY));
+		result.getProcessor().setPixels(1, new FloatProcessor(im1.getWidth(), im1.getHeight()));
+		result.getProcessor().invert();//Sets image white
+		for (int i=0; i<im2.size(); i++){
+			if (i!=skipInd){
+				result = ic.run("AND create", result, lessThan(im1, im2.get(i)));
+			}
+		}
 
+		result.getProcessor().threshold(1);
+		//TODO Convert to binary
+		return result;
+	}
+	
+	/**
+	 * Returns binary image im1>im2
+	 * @param im1
+	 * @param im2
+	 * @return
+	 */
+	public static ImagePlus lessThan(ImagePlus im1, ImagePlus im2 ){
+		ImageCalculator ic = new ImageCalculator();
+//		ImagePlus result = new ImagePlus();
+//		result.getProcessor().setPixels(1, new FloatProcessor(im1.getWidth(), im1.getHeight()));
+//		result.getProcessor().invert();//Sets image white
+//		result = ic.run("AND", result, ic.run("Subtract", im2, im1));
+		ImagePlus result = ic.run("Subtract create", im2, im1);
+		
+		//TODO Convert to binary
+		return result;
+	}
+	
 	
 }

@@ -421,13 +421,18 @@ public class TrackMatch implements Serializable {
 		comm.message("TrackID: "+track.getTrackID()+" ("+(int)track.getEnd().x+", "+(int)track.getEnd().y+")", VerbLevel.verb_debug);
 		for (int i=0; i<numStoredMatches; i++){
 			TrackPoint pt = matchPts[i];
-			String s = "MatchPt"+i+": point "+pt.pointID+", ("+(int)pt.x+","+(int)pt.y+"), ";
+			String s;
+			if (pt!=null){
+			s = "MatchPt"+i+": point "+pt.pointID+", ("+(int)pt.x+","+(int)pt.y+"), ";
 			s += dist2MatchPts[i]+" pix away from track, ";
 //			Valid hasn't yet been set, so there's no point incorrectly indicating that it's still valid
 			if (validMatch[i]==0){
 				s += "NOT ";
 			}
 			s += "valid.";
+			} else {
+				s = "MatchPt"+i+"=null";
+			}
 			comm.message(s, VerbLevel.verb_debug);
 		}
 		
