@@ -145,7 +145,6 @@ public class TrackMatch implements Serializable {
 			
 	}
 	
-	@SuppressWarnings("unchecked")
 	public static Vector<TrackMatch> matchNPts2NTracks(Vector <? extends TrackPoint> pts, Vector<Track> tracks, double maxDist, TrackBuilder tb){
 		
 		if (pts.size()!=tracks.size()){

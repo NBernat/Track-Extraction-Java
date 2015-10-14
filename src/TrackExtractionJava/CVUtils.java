@@ -11,12 +11,10 @@ import ij.gui.Roi;
 import ij.measure.Measurements;
 import ij.measure.ResultsTable;
 import ij.plugin.ImageCalculator;
-import ij.plugin.filter.Analyzer;
 import ij.plugin.filter.ParticleAnalyzer;
 import ij.process.FloatPolygon;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
-import ij.text.TextWindow;
 
 
 public class CVUtils {
@@ -100,7 +98,7 @@ public class CVUtils {
 	    
 		return bestThres;
 	}
-	
+	/*
 	private static int countNonZero(ImagePlus image){
 		int count = 0;
 		for (int h=0; h<image.getHeight(); h++) {
@@ -112,7 +110,7 @@ public class CVUtils {
 		}
 		return count;
 	}
-	
+	*/
 	
 	public static double findGoodness(ImagePlus threshIm, ExtractionParameters ep, int nregions, int minArea, int maxArea, int bestArea) {
 		
@@ -120,20 +118,21 @@ public class CVUtils {
 	    //-100 for every contour# you are away from nregions
 	    //-10 for every contour below minArea or above maxArea
 	    //-1 * (area - bestArea)^2 / (maxArea - minArea)^2 for each contour
-	    int nc = 0;
 	    int area;
-	    ResultsTable rt = findPoints(threshIm, ep, false);
-	    nc = rt.getCounter();
-	    goodness -= Math.abs(nc - nregions) * 100;
+	    ResultsTable rt = findPoints(threshIm, null, ep, minArea, maxArea, false);
+	    int nc = rt.getCounter();
+//	    goodness -= Math.abs(nc - nregions) * 100;
 	    //nc = number of results; iterate through resulting areas
-	    for (int i=0; i<nc; i++) {
+	    for (int i=0; i<rt.getCounter(); i++) {
 	        area = (int) rt.getValueAsDouble(ResultsTable.AREA, i);
 	        if (area < minArea || area > maxArea) {
 	            goodness -= 10;
+	            nc--;
 	        }
 	        goodness -= 1.0*(area - bestArea)*(area - bestArea) / ((maxArea-minArea)*(maxArea - minArea));
 	    }
-	    
+
+	    goodness -= Math.abs(nc - nregions) * 100;
 	    
 	    return goodness;
 
@@ -147,7 +146,7 @@ public class CVUtils {
 	 * @return
 	 */
 	static ResultsTable findPoints(ImagePlus threshIm, ExtractionParameters ep, boolean showResults) {
-		return findPoints(threshIm, null, ep, showResults);
+		return findPoints(threshIm, null, ep, (int)ep.minArea, (int)ep.maxArea, showResults);
 	}
 
 	/**
@@ -156,7 +155,7 @@ public class CVUtils {
 	 * @param ep Extraction Parameters
 	 * @return A ResultsTable with the appropriate info
 	 */
-	static ResultsTable findPoints(ImagePlus threshIm, Rectangle analysisRect, ExtractionParameters ep, boolean showResults) {
+	static ResultsTable findPoints(ImagePlus threshIm, Rectangle analysisRect, ExtractionParameters ep, int minArea, int maxArea, boolean showResults) {
 		
 		
 		boolean excludeEdges = analysisRect==null && ep.excludeEdges;
@@ -164,7 +163,7 @@ public class CVUtils {
 		int measurements = getPointFindingMeasurements();
 		ResultsTable rt = new ResultsTable();
 		
-		ParticleAnalyzer partAn = new ParticleAnalyzer(options, measurements, rt, ep.minArea, ep.maxArea);
+		ParticleAnalyzer partAn = new ParticleAnalyzer(options, measurements, rt, minArea, maxArea);
 		
 		//Populate the results table
 		Roi r = threshIm.getRoi();
@@ -291,13 +290,13 @@ public class CVUtils {
 		
 	}
 	
-	public static ImagePlus lessThan(ImagePlus im1, Vector<ImagePlus> im2){
-		return lessThan(im1, im2, -1);
+	public static ImagePlus lessThan(ImagePlus im1, Vector<ImagePlus> im2, boolean orEqualTo){
+		return lessThan(im1, im2, -1, orEqualTo);
 	}
-	public static ImagePlus lessThan(ImagePlus im1, Vector<ImagePlus> im2, int skipInd){
+	public static ImagePlus lessThan(ImagePlus im1, Vector<ImagePlus> im2, int skipInd, boolean orEqualTo){
 		
 		if(im2.size()==1){
-			return lessThan(im1, im2.firstElement());
+			return lessThan(im1, im2.firstElement(), orEqualTo);
 		}
 		
 		ImageCalculator ic = new ImageCalculator();
@@ -306,7 +305,7 @@ public class CVUtils {
 		result.getProcessor().invert();//Sets image white
 		for (int i=0; i<im2.size(); i++){
 			if (i!=skipInd){
-				result = ic.run("AND create", result, lessThan(im1, im2.get(i)));
+				result = ic.run("AND create", result, lessThan(im1, im2.get(i), orEqualTo));
 			}
 		}
 
@@ -315,18 +314,22 @@ public class CVUtils {
 		return result;
 	}
 	
-	/**
-	 * Returns binary image im1>im2
-	 * @param im1
-	 * @param im2
-	 * @return
-	 */
-	public static ImagePlus lessThan(ImagePlus im1, ImagePlus im2 ){
+	
+	
+//	public static ImagePlus lessThan(ImagePlus im1, ImagePlus im2 ){
+//		return lessThan(im1, im2, false);
+//	}
+//	
+	
+	public static ImagePlus lessThan(ImagePlus im1, ImagePlus im2, boolean orEqualTo){
 		ImageCalculator ic = new ImageCalculator();
 //		ImagePlus result = new ImagePlus();
 //		result.getProcessor().setPixels(1, new FloatProcessor(im1.getWidth(), im1.getHeight()));
 //		result.getProcessor().invert();//Sets image white
 //		result = ic.run("AND", result, ic.run("Subtract", im2, im1));
+		if (orEqualTo){
+			im2.getProcessor().add(1);
+		}
 		ImagePlus result = ic.run("Subtract create", im2, im1);
 		
 		//TODO Convert to binary

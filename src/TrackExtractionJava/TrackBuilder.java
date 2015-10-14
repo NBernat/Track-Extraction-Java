@@ -479,7 +479,6 @@ public class TrackBuilder implements Serializable{
 		comm.message("Attempting to rethreshold collision in frame "+frameNum, VerbLevel.verb_message);
 		int npts = tm.getTopMatchPoint().numMatches;
 		
-		
 		Vector<TrackPoint> newPts = MaggotTrackPoint.splitPt2NPts((MaggotTrackPoint)tm.getTopMatchPoint(), npts, (int)tm.track.meanArea(), pe, ep);
 		
 		if (newPts!=null && newPts.size()==npts){
@@ -569,6 +568,7 @@ public class TrackBuilder implements Serializable{
 	 * Finds tracks that collide, tries to resolve them, and if they can't be fixed, creates a new Track and Collision 
 	 * @return The number of new collisions
 	 */
+	/*
 	private Vector<TrackMatch> detectNewCollisions(){
 		
 //		int numNewCollisions = 0;
@@ -611,7 +611,7 @@ public class TrackBuilder implements Serializable{
 		
 		return newColMatches;
 	}
-	
+	*/
 
 	/**
 	 * Finds the TrackMatches which are colliding with the given TrackMatch
@@ -643,6 +643,7 @@ public class TrackBuilder implements Serializable{
 	 * @param colMatches The TrackMatches that collide to the same point 
 	 * @return The number of new collisions 
 	 */
+	/*
 	private TrackMatch avoidOrCreateCollision(Vector<TrackMatch> colMatches){
 		
 		TrackMatch retMatch = null;
@@ -676,7 +677,10 @@ public class TrackBuilder implements Serializable{
 		return retMatch;
 	}
 	
+	*/
+	
 	//TODO 
+	/*
 	private int avoidCollision(Vector<TrackMatch> colMatches){
 		
 		if (matchCollisionToEmptyPts(colMatches)){
@@ -688,9 +692,10 @@ public class TrackBuilder implements Serializable{
 		
 		return 0;
 	}
-	
+	*/
 	
 	//TODO 
+	/*
 	private boolean matchCollisionToEmptyPts(Vector<TrackMatch> colMatches){
 		
 		//Set up the data needed to adjust the matches
@@ -742,7 +747,10 @@ public class TrackBuilder implements Serializable{
 		}
 	}
 	
+	*/
+	
 	//TODO
+	/*
 	private boolean matchCollisionToSplitPts(Vector<TrackMatch> colMatches){
 		 
 		TrackPoint badPt = colMatches.firstElement().getTopMatchPoint();
@@ -774,8 +782,10 @@ public class TrackBuilder implements Serializable{
 		
 		return false;
 	}
+	*/
 
 	//TODO 
+	/*
 	private void fixCollisionMatches(CollisionTrack colTrack, Vector<TrackMatch> initMatches){
 		
 		colTrack.setMatch(new TrackMatch(colTrack, initMatches.firstElement()));
@@ -786,11 +796,12 @@ public class TrackBuilder implements Serializable{
 		
 	}
 	
-	
+	*/
 	
 	/**
 	 * Tries to fix each ongoing collision
 	 */
+	/*
 	private int endCollisions(){
 		
 		int endedCols = 0;
@@ -832,7 +843,7 @@ public class TrackBuilder implements Serializable{
 		return endedCols;
 		
 	}
-	
+	*/
 
 
 

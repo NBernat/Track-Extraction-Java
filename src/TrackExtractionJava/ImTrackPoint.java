@@ -11,7 +11,6 @@ import java.awt.Rectangle;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.PrintWriter;
-import java.io.StringWriter;
 
 
 public class ImTrackPoint extends TrackPoint{

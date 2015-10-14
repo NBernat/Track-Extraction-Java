@@ -1,9 +1,5 @@
 package TrackExtractionJava;
 
-import java.io.File;
-//import java.nio.file.Path;
-//import java.nio.file.Paths;
-
 
 public class ProcessingParameters {
 
@@ -16,7 +12,7 @@ public class ProcessingParameters {
 	
 	
 	
-	boolean doFitting = true;
+	boolean doFitting = false;
 	
 	/**
 	 * Closes the MMF window
@@ -26,7 +22,7 @@ public class ProcessingParameters {
 	/**
 	 * Displays an ExperimentFrame after extracting tracks 
 	 */
-	boolean showMagEx = false;
+	boolean showMagEx = true;
 	/**
 	 * Displays an ExperimentFrame after fitting tracks 
 	 */

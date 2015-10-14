@@ -66,7 +66,7 @@ public class Experiment_Viewer implements PlugIn{
 			if(arg!=null && !arg.equals("")){
 				path = arg;
 			}else {
-				OpenDialog od = new OpenDialog("Choose a .ser file containing an experiment", null);
+				OpenDialog od = new OpenDialog("Choose a .jav or .prejav file containing an experiment", null);
 				
 				String fileName = od.getFileName();
 				

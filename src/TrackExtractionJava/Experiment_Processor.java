@@ -15,7 +15,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
 
-import edu.nyu.physics.gershowlab.mmf.mmf_Reader;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
@@ -631,16 +630,13 @@ public class Experiment_Processor implements PlugIn{
 	private void saveErrorTracks(Vector<Track> errTracks){
 		File f = new File(srcDir+File.separator+"divergedTrackExp.prejav");
 		System.out.println("Saving error track experiment to "+f.getPath());
-		boolean status;
 		try{
 			DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f))); 
 			Experiment errEx = new Experiment(ex, errTracks);
 			
 			errEx.toDisk(dos, processLog);
-			status=true;
 			dos.close();
 		} catch(Exception e){
-			status=false;
 			System.out.println("Experiment_processor.saveErrorTracks error");
 		}
 	}

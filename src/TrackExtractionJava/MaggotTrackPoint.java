@@ -4,7 +4,6 @@ import ij.ImagePlus;
 import ij.gui.PolygonRoi;
 import ij.gui.Roi;
 import ij.gui.Wand;
-import ij.measure.ResultsTable;
 import ij.process.ByteProcessor;
 import ij.process.FloatPolygon;
 import ij.process.ImageProcessor;
@@ -1213,8 +1212,8 @@ public class MaggotTrackPoint extends ImTrackPoint {
 				break;
 				
 			case 2:
-				//
-//				splitPts = DistanceMapSpliter.splitPoint(mtp, thr, ep);
+				//Distribute pixels between larvae using distance maps of pixels to each contour
+				splitPts = DistanceMapSpliter.splitPoint(mtp, nPts, thr, targetArea, ep, pe.fl.getStackDims());
 				
 			default:
 				

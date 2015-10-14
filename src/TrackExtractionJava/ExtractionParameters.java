@@ -15,7 +15,10 @@ public class ExtractionParameters implements Serializable{
 	private static final long serialVersionUID = 1L;
 	
 	
-	
+
+	boolean subset = true;
+	int startFrame = 4000;
+	int endFrame = 4500;
 	
 	int GCInterval = 500;
 
@@ -62,17 +65,9 @@ public class ExtractionParameters implements Serializable{
 	 */
 	int showSampleData =0; 
 	int sampleInd = 10;
-	//TODO
-	boolean subset = false;
-	int startFrame = 4000;
-	int endFrame = 4500;
-	//_frame_normalization_methodT fnm = _frame_normalization_methodT._frame_none;
-	//TODO
 	int trackWindowHeight = 50;
 	int trackWindowWidth = 50;
 	int trackZoomFac = 10;
-	
-	
 	int[] matchSpill = {};//{234,251,356,367};
 	boolean flagAbnormalMatches = false;
 	boolean dispTrackInfo = false;
@@ -119,7 +114,7 @@ public class ExtractionParameters implements Serializable{
      * the method for splitting points:
      * 1=extracting points from rethresholded im
      */
-    int pointSplittingMethod = 1;
+    int pointSplittingMethod = 2;
     /**
      *  The area change which indicates that a collision has ended, expressed as a fraction of the previous area
      */
@@ -150,7 +145,14 @@ public class ExtractionParameters implements Serializable{
      * Maximum blob area
      */
     double maxArea = 1000;
-    //TODO
+    /**
+     * Minimum blob area used when rethresholding a maggot
+     */
+    double minSubMaggotArea = 10;
+    
+    /**
+     * Width (in px) of padding around image used in TrackPoint.getIm()  
+     */
     int roiPadding = 0;
     
     /**

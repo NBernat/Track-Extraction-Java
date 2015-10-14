@@ -1,11 +1,6 @@
 package TrackExtractionJava;
 
 
-import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Scanner;
-import java.util.Vector;
 
 public class Test {//extends JFrame
 
@@ -66,7 +61,7 @@ public class Test {//extends JFrame
 		
 //		testGapDilation();
 	}
-	
+	/*
 	private static void testGapDilation(){
 		String input = "4 6 ";
 		input += "20 20 ";
@@ -114,6 +109,7 @@ public class Test {//extends JFrame
 		return gaps;
 		
 	}
+	*/
 
 	
 	public String str(){

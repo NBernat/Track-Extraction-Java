@@ -1,15 +1,11 @@
 package TrackExtractionJava;
 
-//import ContourPlotter_;
 import ij.*;
 import ij.gui.Roi;
 import ij.measure.ResultsTable;
-//import ij.plugin.ImageCalculator;
 import ij.process.ImageProcessor;
-import ij.text.TextWindow;
 
 import java.awt.Rectangle;
-import java.awt.image.BufferedImage;
 import java.util.Vector;
 
 
@@ -293,7 +289,7 @@ public class PointExtractor {
 //		boolean excl = ep.excludeEdges;
 //		ep.excludeEdges = false;
 		if (comm!=null && analysisRect!=null) comm.message("Analysis Rect: ("+analysisRect.x+","+analysisRect.y+"), "+analysisRect.width+"x"+analysisRect.height, VerbLevel.verb_message);
-		ResultsTable pointTable = CVUtils.findPoints(threshIm, analysisRect, ep, showResults);
+		ResultsTable pointTable = CVUtils.findPoints(threshIm, analysisRect, ep, (int)ep.minArea, (int)ep.maxArea, showResults);
 //		ep.excludeEdges = excl;
 		
 //		if (showResults) {
