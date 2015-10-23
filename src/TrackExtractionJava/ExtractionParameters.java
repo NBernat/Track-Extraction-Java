@@ -16,9 +16,9 @@ public class ExtractionParameters implements Serializable{
 	
 	
 
-	boolean subset = true;
-	int startFrame = 4000;
-	int endFrame = 4500;
+	boolean subset = false;
+	int startFrame = 1000;
+	int endFrame = 2000;
 	
 	int GCInterval = 500;
 
@@ -113,8 +113,9 @@ public class ExtractionParameters implements Serializable{
     /**
      * the method for splitting points:
      * 1=extracting points from rethresholded im
+     * 2=distributing maggot points 
      */
-    int pointSplittingMethod = 2;
+    int pointSplittingMethod = 1;
     /**
      *  The area change which indicates that a collision has ended, expressed as a fraction of the previous area
      */

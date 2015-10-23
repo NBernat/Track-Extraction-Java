@@ -360,6 +360,14 @@ public class MaggotTrackPoint extends ImTrackPoint {
 				
 				//Assign the midline
 				midline = new PolygonRoi(midX, midY, midX.length, Roi.POLYLINE); 
+				if(midline.getNCoordinates()!=numMidCoords){
+					midline = getInterpolatedSegment(midline, numMidCoords);
+					if (midline==null){
+						htValid=false;
+						comm.message("Frame "+frameNum+": interpolation failed wshen deriving midline", VerbLevel.verb_warning);
+					}
+				}
+				//Below, assign midpt from midline? 
 				
 				//Assign the midpoint
 				int midi = midX.length/2;
@@ -1192,30 +1200,30 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	}
 	
 	
-	public static Vector<TrackPoint> splitPt2NPts(MaggotTrackPoint mtp, int nPts, int targetArea, PointExtractor pe, ExtractionParameters ep){
+	public static Vector<TrackPoint> splitPt2NPts(MaggotTrackPoint mtp, int nPts, int targetArea, PointExtractor pe, ExtractionParameters ep, Communicator comm){
 		
 		//try to find a threshold that gives the right # of pts
-		int thr = CVUtils.findThreshforNumPts(new ImagePlus("",mtp.getRawIm().duplicate()), ep, nPts, (int)ep.minArea, (int)ep.maxArea, targetArea, mtp.thresh, 255);
+		int thr = 1+CVUtils.findThreshforNumPts(new ImagePlus("",mtp.getRawIm().duplicate()), ep, nPts, (int)ep.minArea, (int)ep.maxArea, targetArea, mtp.thresh, 255);
 		
 		
 		Vector<TrackPoint> splitPts=null;
 		if (thr>0){
 			
 			switch(ep.pointSplittingMethod){
-			case 1:
-				//Extract new points using rethresholded im
-				Rectangle ar = pe.getAnalysisRect();
-				pe.setAnalysisRect(mtp.rect);
-				pe.extractPoints(mtp.frameNum, thr);
-				pe.setAnalysisRect(ar);
-				splitPts = pe.getPoints();
-				break;
-				
-			case 2:
-				//Distribute pixels between larvae using distance maps of pixels to each contour
-				splitPts = DistanceMapSpliter.splitPoint(mtp, nPts, thr, targetArea, ep, pe.fl.getStackDims());
-				
-			default:
+				case 1:
+					//Extract new points using rethresholded im
+					Rectangle ar = pe.getAnalysisRect();
+					pe.setAnalysisRect(mtp.rect);
+					pe.extractPoints(mtp.frameNum, thr);
+					pe.setAnalysisRect(ar);
+					splitPts = pe.getPoints();
+					break;
+					
+				case 2:
+					//Distribute pixels between larvae using distance maps of pixels to each contour
+					splitPts = DistanceMapSpliter.splitPoint(mtp, nPts, thr, targetArea, ep, pe.fl.getStackDims(), comm);
+					
+				default:
 				
 			}
 			

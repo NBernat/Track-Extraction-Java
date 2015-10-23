@@ -1,5 +1,8 @@
 package TrackExtractionJava;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 
 public class ProcessingParameters {
 
@@ -12,7 +15,7 @@ public class ProcessingParameters {
 	
 	
 	
-	boolean doFitting = false;
+	boolean doFitting = true;
 	
 	/**
 	 * Closes the MMF window
@@ -22,7 +25,7 @@ public class ProcessingParameters {
 	/**
 	 * Displays an ExperimentFrame after extracting tracks 
 	 */
-	boolean showMagEx = true;
+	boolean showMagEx = false;
 	/**
 	 * Displays an ExperimentFrame after fitting tracks 
 	 */
@@ -42,23 +45,23 @@ public class ProcessingParameters {
 	boolean testMagFromDisk = false;
 	boolean testFitFromDisk = false;
 	
-	boolean sendDataToExtracted = false;
+	boolean sendDataToExtracted = true;
 	
 	
 	public static String getOutFromInDir(String inDir){
 		
-//		Path p = Paths.get(inDir);
-//		
-//		StringBuilder out = new StringBuilder(p.getParent().toString());
-//		
-//		String dataStr = "data";
-//		String exStr = "extracted";
-//		int ind = out.indexOf(dataStr);
-//		out.delete(ind, ind+dataStr.length());
-//		out.insert(ind, exStr);
-//				
-//		return out.toString();
-		return inDir;
+		Path p = Paths.get(inDir);
+		
+		StringBuilder out = new StringBuilder(p.getParent().toString());
+		
+		String dataStr = "data";
+		String exStr = "extracted";
+		int ind = out.indexOf(dataStr);
+		out.delete(ind, ind+dataStr.length());
+		out.insert(ind, exStr);
+				
+		return out.toString();
+//		return inDir;
 	}
 	
 	

@@ -37,7 +37,7 @@ public class Test_ implements PlugIn {//extends JFrame
 		
 		int[] frameSize = {2592,1944}; 
 		
-		DistanceMapSpliter.splitPoint(itp, nPts, rethreshVal, targetArea, ep, frameSize);
+		DistanceMapSpliter.splitPoint(itp, nPts, rethreshVal, targetArea, ep, frameSize, null);
 		
 		
 		

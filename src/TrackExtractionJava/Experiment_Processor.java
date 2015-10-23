@@ -15,6 +15,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
 
+import edu.nyu.physics.gershowlab.mmf.mmf_Reader;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
@@ -328,17 +329,17 @@ public class Experiment_Processor implements PlugIn{
 				mmfWin = WindowManager.getCurrentWindow();
 				mmfStack = mmfWin.getImagePlus();
 			} else {
-//				System.out.println("Opening mmf from code..");
+				System.out.println("Opening mmf from code..");
 				
 				
-//				mmf_Reader mr = new mmf_Reader();
-//				String path = new File(dir, filename).getPath();
-//				mr.loadStack(path);
-//				if (mr.getMmfStack()==null) {
-//					System.out.println("null stack");
-//					return false;
-//				}
-//				mmfStack = new ImagePlus(path, mr.getMmfStack());
+				mmf_Reader mr = new mmf_Reader();
+				String path = new File(dir, filename).getPath();
+				mr.loadStack(path);
+				if (mr.getMmfStack()==null) {
+					System.out.println("null stack");
+					return false;
+				}
+				mmfStack = new ImagePlus(path, mr.getMmfStack());
 				
 			}
 			IJ.showStatus("MMF open");

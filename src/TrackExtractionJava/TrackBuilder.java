@@ -479,7 +479,7 @@ public class TrackBuilder implements Serializable{
 		comm.message("Attempting to rethreshold collision in frame "+frameNum, VerbLevel.verb_message);
 		int npts = tm.getTopMatchPoint().numMatches;
 		
-		Vector<TrackPoint> newPts = MaggotTrackPoint.splitPt2NPts((MaggotTrackPoint)tm.getTopMatchPoint(), npts, (int)tm.track.meanArea(), pe, ep);
+		Vector<TrackPoint> newPts = MaggotTrackPoint.splitPt2NPts((MaggotTrackPoint)tm.getTopMatchPoint(), npts, (int)tm.track.meanArea(), pe, ep, comm);
 		
 		if (newPts!=null && newPts.size()==npts){
 			comm.message("Attempt to rethreshold collision in frame "+frameNum+" sucessful, making appropriate changes in builder", VerbLevel.verb_message);

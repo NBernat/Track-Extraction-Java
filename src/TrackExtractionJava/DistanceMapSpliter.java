@@ -10,7 +10,6 @@ import ij.plugin.filter.ParticleAnalyzer;
 import ij.plugin.frame.RoiManager;
 import ij.process.ByteProcessor;
 import ij.process.ImageProcessor;
-import ij.text.TextWindow;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -23,9 +22,9 @@ public class DistanceMapSpliter {
 //	public static void main(String[] args){
 //	}
 	
-	public static Vector<TrackPoint> splitPoint(ImTrackPoint itp, int npts, int rethreshVal, int targetArea, ExtractionParameters ep, int[] frameSize){
+	public static Vector<TrackPoint> splitPoint(ImTrackPoint itp, int npts, int rethreshVal, int targetArea, ExtractionParameters ep, int[] frameSize, Communicator comm){
 		
-		boolean debug = true;
+		boolean debug = false;
 		
 		
 		ImagePlus rawIm = new ImagePlus("Raw im from point",itp.getRawIm());
@@ -49,18 +48,20 @@ public class DistanceMapSpliter {
 		//Find particle rois
 		boolean showResults = false;
 		ResultsTable rt = new ResultsTable();
-		ParticleAnalyzer pa = new ParticleAnalyzer(CVUtils.getPointFindingOptions(showResults, ep.excludeEdges, true), CVUtils.getPointFindingMeasurements(), rt, ep.minSubMaggotArea, ep.maxArea);
+		ParticleAnalyzer pa = new ParticleAnalyzer(CVUtils.getPointFindingOptions(showResults, false, true), CVUtils.getPointFindingMeasurements(), rt, ep.minSubMaggotArea, ep.maxArea);
 		RoiManager rm = RoiManager.getInstance();
 		if (rm==null){
-			rm = new RoiManager();
+			rm = new RoiManager(true);
 		}
 		ParticleAnalyzer.setRoiManager(rm);
 		pa.analyze(rethreshIm);
 		Roi[] rois = rm.getRoisAsArray();
-		if (rm.getCount()<=1){
-			if (debug && numFailed<10){
-				new TextWindow("Point Splitter: Error message", "Only one point was found after rethresholding (new thresh "+rethreshVal+"); frame"+itp.frameNum+" point "+itp.pointID+"("+(int)itp.x+","+(int)itp.y+")", 500, 500);
-				new ImagePlus("Error: (frame "+itp.frameNum+" point "+itp.pointID+") original image", itp.getRawIm());
+		if (rm.getCount()<npts){
+			if (debug && comm!=null){//numFailed<10){
+//				int area = (int)rt.getValueAsDouble(ResultsTable.AREA, 0);
+				comm.message("Point Splitter: Too few points found ("+rm.getCount()+", not "+npts+") after rethresholding (new thresh "+rethreshVal+"); frame"+itp.frameNum+" point "+itp.pointID+"("+(int)itp.x+","+(int)itp.y+")", VerbLevel.verb_error);
+//				new TextWindow("Point Splitter: Error message", "Too few points found ("+rm.getCount()+", not "+npts+") after rethresholding (new thresh "+rethreshVal+"); frame"+itp.frameNum+" point "+itp.pointID+"("+(int)itp.x+","+(int)itp.y+")", 500, 500);
+				//new ImagePlus("Error: (frame "+itp.frameNum+" point "+itp.pointID+") original image", itp.getRawIm()).show();;
 			}
 //			rethreshIm.setTitle("Error: only one point (thresholded image)");
 //			rethreshIm.show();
@@ -75,7 +76,10 @@ public class DistanceMapSpliter {
 		int[] imSize = {itp.getRawIm().getWidth(),itp.getRawIm().getHeight()}; 
 		Vector<ImagePlus> dist_maps = DistanceMapSpliter.generateDistanceMaps(rois, rt, imSize);
 		if (dist_maps.size()<2){
-			new TextWindow("Point Splitter: Error message", "Only one distance map was created", 500, 500);
+			if (comm!=null){
+				comm.message("Point Splitter: Only one distance map was created", VerbLevel.verb_warning);
+//				new TextWindow("Point Splitter: Error message", "Only one distance map was created", 500, 500);
+			}
 			numFailed++;
 			return null;
 		}
@@ -164,7 +168,7 @@ public class DistanceMapSpliter {
 	public static Vector<ImagePlus> generateDistanceMaps(Roi[] rois, ResultsTable rt, int[] imSize){
 		EDM distMapMaker = new EDM();//EDM=Euclidean Distance Map
 		Vector<ImagePlus> dist_maps = new Vector<ImagePlus>();
-		for (int i=0; i<rois.length; i++){
+		for (int i=0; i<(rt.getCounter()); i++){
 			//Generate distance map from roi mask 
 			ImagePlus mapFromMask = new ImagePlus("Map from mask "+i, new ByteProcessor(imSize[0], imSize[1])); 
 			ImageProcessor mask = rois[i].getMask();
