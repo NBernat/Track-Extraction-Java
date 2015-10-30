@@ -1234,4 +1234,8 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	}
 	
 	
+	public String getTypeName(){
+		return "MaggotTrackPoint";
+	}
+	
 }

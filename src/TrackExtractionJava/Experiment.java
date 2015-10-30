@@ -3,17 +3,20 @@ package TrackExtractionJava;
 import ij.IJ;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.util.ListIterator;
 import java.util.Vector;
 
@@ -222,6 +225,71 @@ public class Experiment implements Serializable{
 		
 		return newEx;
 	}
+	
+	public static void toCSV(Experiment ex, String path, CSVPrefs prefs){
+		
+		//Open the FileWriter
+		File f = new File(path);
+		if(!f.exists()){
+			try {
+				f.createNewFile();
+			} catch(Exception e) {
+				System.out.println("Error creating File for CSV data");
+				return;
+			}
+		}
+		BufferedWriter bfw = new BufferedWriter(new FileWriter(f));
+		//Check the prefs
+		if (prefs==null){
+			prefs = CSVPrefs.defaultPrefs();
+		}
+		//
+		ex.toCSV(bfw, prefs);
+		
+		bfw.close();
+	}
+	
+	public void toCSV(Writer fw, CSVPrefs prefs){
+		
+		fw.append(prefs.CSVheaders());
+		
+		int nFrames = getNumFrames();
+		int[] startFrames = new int[nFrames];
+		for(int i=0; i<tracks.size(); i++){
+			startFrames[i]=tracks.get(i).getStart().frameNum;
+		}
+		int[] currFrame = startFrames;
+		
+		for (int f=0; f<nFrames; f++){
+			
+			for (int t=0; t<tracks.size(); t++){
+				String fInfo;
+				if (currFrame[t]==f){
+					fInfo = tracks.get(t).points.get(currFrame[t]-startFrames[t]).CSVinfo(prefs);
+				} else {
+					fInfo = TrackPoint.emptyCSVinfo();
+				}
+			}
+			
+		}
+		
+		
+	}
+	
+	public int getNumFrames(){
+		
+		int numFrames = 0;
+		for(int i=0; i<tracks.size(); i++){
+			int endFrame = tracks.get(i).getEnd().frameNum;
+			if (endFrame>numFrames){
+				numFrames = endFrame;
+			}
+				
+		}
+		
+		return numFrames;
+	}
+	
 	
 	public static int getNumTracks(String fname){
 		try {

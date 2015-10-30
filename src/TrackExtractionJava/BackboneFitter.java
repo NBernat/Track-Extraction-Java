@@ -90,14 +90,19 @@ public class BackboneFitter {
 	public void fitTrack(Track tr) {
 
 		clearPrev();
+		boolean noError = true;
+		
+		if (params.checkArea){
+			noError = checkArea();
+		}
 
 		// Extract the points, and move on (if successful)
 		comm.message("Extracting maggot tracks", VerbLevel.verb_debug);
 		
 		
-		if (convertTrack2BTP(tr)) {//creates the new track
+		if (noError && convertTrack2BTP(tr)) {//creates the new track
 			//If there was no error extraction points, run the different grain passes of the algorithm
-			boolean noError = true;
+			noError = true;
 			for(int i=0; (i<params.grains.length && noError); i++){
 				noError = doPass(params.grains[i]);
 				if (!noError) {
@@ -137,6 +142,16 @@ public class BackboneFitter {
 		BTPendFrame=-1;
 	}
 
+	
+	private boolean checkArea(){
+		
+		
+		
+		return false;
+	}
+	
+	
+	
 	/**
 	 * Creates a new track full of BTPs out of the points in the track
 	 * <p>

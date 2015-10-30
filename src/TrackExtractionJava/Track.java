@@ -665,6 +665,8 @@ public class Track implements Serializable{
 		String d = "";
 		d += "Track "+ID+lb+lb;
 		
+		
+		
 		if (pointList!=null){
 			d += "Frames: ";
 			d += (pointList.size()>0) ? pointList.firstElement().frameNum+"-"+pointList.lastElement().frameNum+lb+lb : "X-X"+lb+lb;
@@ -673,7 +675,7 @@ public class Track implements Serializable{
 		if(!addInfo.equals("")) d += addInfo+lb+lb;
 		
 		if (pointList!=null){
-			d += "Points("+pointList.size()+"):"+lb;
+			d += "Points("+pointList.firstElement().getTypeName()+"; "+pointList.size()+"):"+lb;
 			for (int i=0; i<pointList.size(); i++){
 				TrackPoint pt = pointList.get(i);
 				d += (i+1)+": "+pt.getTPDescription()+lb;

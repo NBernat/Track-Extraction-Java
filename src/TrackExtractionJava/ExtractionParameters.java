@@ -7,7 +7,7 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 
 
-public class ExtractionParameters implements Serializable{
+public class ExtractionParameters implements Serializable{ 
 	
 	/**
 	 * 
@@ -17,8 +17,8 @@ public class ExtractionParameters implements Serializable{
 	
 
 	boolean subset = false;
-	int startFrame = 1000;
-	int endFrame = 2000;
+	int startFrame = 2000;
+	int endFrame = 3000;
 	
 	int GCInterval = 500;
 
@@ -99,7 +99,7 @@ public class ExtractionParameters implements Serializable{
     /**
      * The global threshold value
      */
-    int globalThreshValue = 20;
+    int globalThreshValue = 40;
     
     boolean excludeEdges = true; 
     boolean clipBoundaries = true;

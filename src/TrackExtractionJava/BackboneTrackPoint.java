@@ -646,4 +646,12 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		return 0;
 	}
 	
+	
+	public String getTypeName(){
+		if (backbone==null || backbone.getNCoordinates()==0){
+			return "Empty BackboneTrackPoint";
+		}
+		return "BackboneTrackPoint";
+	}
+	
 }

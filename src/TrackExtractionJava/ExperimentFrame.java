@@ -365,7 +365,7 @@ class DisplayOpPanel extends JPanel{
 	private JCheckBox initialBBBox;
 	private JCheckBox contourBox;
 	private JCheckBox htBox;
-	private JCheckBox forcesBox;
+//	private JCheckBox forcesBox;
 	private JCheckBox backboneBox;
 	
 	/**
@@ -386,7 +386,7 @@ class DisplayOpPanel extends JPanel{
 		add(initialBBBox);
 		add(contourBox);
 		add(htBox);
-		add(forcesBox);
+//		add(forcesBox);
 		add(backboneBox);
 	}
 	
@@ -447,17 +447,17 @@ class DisplayOpPanel extends JPanel{
 			}
 		});
 
-		
-//		paramNames.put(forcesBox, "forces");
-//		buildCheckBox(forcesBox, "Forces");
-		forcesBox = new JCheckBox("Forces");
-		forcesBox.setSelected(mdp.getParam("forces"));
-		forcesBox.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				mdp.setParam("forces", forcesBox.isSelected());
-			}
-		});
+//		
+////		paramNames.put(forcesBox, "forces");
+////		buildCheckBox(forcesBox, "Forces");
+//		forcesBox = new JCheckBox("Forces");
+//		forcesBox.setSelected(mdp.getParam("forces"));
+//		forcesBox.addActionListener(new ActionListener() {
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+//				mdp.setParam("forces", forcesBox.isSelected());
+//			}
+//		});
 
 		
 //		paramNames.put(backboneBox, "backbone");

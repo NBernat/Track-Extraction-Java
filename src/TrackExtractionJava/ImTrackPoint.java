@@ -182,4 +182,9 @@ public class ImTrackPoint extends TrackPoint{
 	}
 	
 	
+	public String getTypeName(){
+		return "ImTrackPoint";
+	}
+	
+	
 }

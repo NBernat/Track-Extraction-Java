@@ -430,7 +430,12 @@ public class Experiment_Processor implements PlugIn{
 		indentLevel++;
 		String status = "";
 		IJ.showStatus("Extracting tracks");
+		if (mmfStack==null){
+			status+="imageStack null; aborting extraction\n";
+			return false;
+		}
 		status+="Running trackbuilder...\n";
+		
 		MaggotTrackBuilder tb = new MaggotTrackBuilder(mmfStack.getImageStack(), new ExtractionParameters());
 
 		try {

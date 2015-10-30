@@ -204,7 +204,6 @@ public class TrackBuilder implements Serializable{
 		}
 		
 		
-		//TODO Comb out collisions
 		//resolveCollisions();
 		finishedColIDs.addAll(activeColIDs);
 		activeColIDs.removeAll(finishedColIDs);
@@ -432,6 +431,7 @@ public class TrackBuilder implements Serializable{
 				comm.message("Collision has "+numColliding+" tracks", VerbLevel.verb_debug);
 				colMatches.addAll(getCollisionMatches(match));
 				
+				//TODO deal with incoming/outgoing 
 				//End the colliding tracks
 				ListIterator<TrackMatch> cmIt = colMatches.listIterator();
 				while (cmIt.hasNext()) {
@@ -548,7 +548,7 @@ public class TrackBuilder implements Serializable{
 			if (tm.checkTopMatchForCollision()>0){
 				CollisionTrack ct = avoidOrCreateCollision(tm);
 				if (ct!=null){
-					//TODO add to list of collisions
+					//add to list of collisions
 				}
 			}
 		}
@@ -558,7 +558,6 @@ public class TrackBuilder implements Serializable{
 	
 	private CollisionTrack avoidOrCreateCollision(TrackMatch tm){
 		
-		//TODO
 		return null;
 	}
 	
@@ -679,7 +678,6 @@ public class TrackBuilder implements Serializable{
 	
 	*/
 	
-	//TODO 
 	/*
 	private int avoidCollision(Vector<TrackMatch> colMatches){
 		
@@ -694,7 +692,6 @@ public class TrackBuilder implements Serializable{
 	}
 	*/
 	
-	//TODO 
 	/*
 	private boolean matchCollisionToEmptyPts(Vector<TrackMatch> colMatches){
 		
@@ -749,7 +746,6 @@ public class TrackBuilder implements Serializable{
 	
 	*/
 	
-	//TODO
 	/*
 	private boolean matchCollisionToSplitPts(Vector<TrackMatch> colMatches){
 		 
@@ -784,7 +780,6 @@ public class TrackBuilder implements Serializable{
 	}
 	*/
 
-	//TODO 
 	/*
 	private void fixCollisionMatches(CollisionTrack colTrack, Vector<TrackMatch> initMatches){
 		

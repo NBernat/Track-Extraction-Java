@@ -5,11 +5,11 @@ public class MaggotDisplayParameters {
 	
 	
 	static int DEFAULTexpandFac = 10;
-	static boolean DEFAULTclusters = true;
+	static boolean DEFAULTclusters = false;
 	static boolean DEFAULTmid = true;
 	static boolean DEFAULTinitialBB = false; 
-	static boolean DEFAULTcontour = true;
-	static boolean DEFAULTht = true;
+	static boolean DEFAULTcontour = false;
+	static boolean DEFAULTht = false;
 	static boolean DEFAULTforces = false;
 	static boolean DEFAULTbackbone = true;
 	//Image, SpineLength, SpineSmooth, TimeLength, TimeSmooth

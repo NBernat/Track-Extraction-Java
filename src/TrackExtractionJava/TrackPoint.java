@@ -368,4 +368,7 @@ public class TrackPoint implements Serializable {
 		return track;
 	}
 	
+	public String getTypeName(){
+		return "TrackPoint";
+	}
 }
