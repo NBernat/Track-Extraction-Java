@@ -647,6 +647,23 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	}
 	
 	
+	public String getCSVfieldVal(int ind){
+		
+		if (ind<=CSVPrefs.maxInd(super.getTypeName())){
+			return super.getCSVfieldVal(ind);
+		}
+		
+		switch (ind-CSVPrefs.maxInd(super.getTypeName())) {
+		case 1:
+			return (artificialMid)? "TRUE":"FALSE";
+		default: 
+			return "";
+		
+		}
+        
+	}
+	
+	
 	public String getTypeName(){
 		if (backbone==null || backbone.getNCoordinates()==0){
 			return "Empty BackboneTrackPoint";

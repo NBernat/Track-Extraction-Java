@@ -226,6 +226,11 @@ public class Experiment implements Serializable{
 		return newEx;
 	}
 	
+	
+	public static void toCSV(Experiment ex, String path){
+		toCSV(ex, path, null);
+	}
+	
 	public static void toCSV(Experiment ex, String path, CSVPrefs prefs){
 		
 		//Open the FileWriter
@@ -238,20 +243,46 @@ public class Experiment implements Serializable{
 				return;
 			}
 		}
-		BufferedWriter bfw = new BufferedWriter(new FileWriter(f));
-		//Check the prefs
-		if (prefs==null){
-			prefs = CSVPrefs.defaultPrefs();
-		}
-		//
-		ex.toCSV(bfw, prefs);
 		
-		bfw.close();
+		try{
+			BufferedWriter bfw = new BufferedWriter(new FileWriter(f));
+			//Check the prefs
+			if (prefs==null){
+				prefs = CSVPrefs.defaultPrefs();
+			}
+			//
+			ex.toCSV(bfw, prefs);
+			
+			bfw.close();
+		} catch (Exception e){
+			System.out.println("Error writing CSV");
+		}
 	}
 	
 	public void toCSV(Writer fw, CSVPrefs prefs){
 		
-		fw.append(prefs.CSVheaders());
+		String lb = System.lineSeparator();
+		
+		try{
+			fw.append("Track:");
+			int nFields = prefs.numFields(true);
+			for (int i=0; i<tracks.size(); i++){
+				for (int j=0; j<nFields; j++){
+					fw.append(","+tracks.get(i).getTrackID());
+				}
+			}
+			fw.append(lb);
+			
+			fw.append("frame");
+			for (int i=0; i<tracks.size(); i++){
+				fw.append(prefs.CSVheaders());
+			}
+			fw.append(lb);
+			
+		} catch (Exception e){
+			System.out.println("Error writing headers to CSV");
+		}
+		
 		
 		int nFrames = getNumFrames();
 		int[] startFrames = new int[nFrames];
@@ -260,21 +291,46 @@ public class Experiment implements Serializable{
 		}
 		int[] currFrame = startFrames;
 		
-		for (int f=0; f<nFrames; f++){
-			
-			for (int t=0; t<tracks.size(); t++){
-				String fInfo;
-				if (currFrame[t]==f){
-					fInfo = tracks.get(t).points.get(currFrame[t]-startFrames[t]).CSVinfo(prefs);
-				} else {
-					fInfo = TrackPoint.emptyCSVinfo();
+		try{
+			//Iterate over each frame and write each track's data for that frame
+			for (int f=getStartFrame(); f<nFrames; f++){//TODO change to f:frameinds
+				fw.append(f+"");
+				for (int t=0; t<tracks.size(); t++){//TODO change to t:trackinds
+					String fInfo;
+					if (currFrame[t]==f){
+						fInfo = tracks.get(t).points.get(currFrame[t]-startFrames[t]).getCSVinfo(prefs, true);
+						currFrame[t]++;
+					} else {
+						fInfo = TrackPoint.getEmptyCSVinfo(prefs);
+					}
+					fw.append(fInfo);
 				}
+				fw.append(lb);
 			}
-			
+		} catch(Exception e){
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			e.printStackTrace(pw);
+			System.out.println("Error writing info to CSV\n"+sw.toString());
 		}
 		
-		
 	}
+	
+	
+	public int getStartFrame(){
+
+		int startFrame = Integer.MAX_VALUE;
+		for(int i=0; i<tracks.size(); i++){
+			int s = tracks.get(i).getStart().frameNum;
+			if (s<startFrame){
+				startFrame = s;
+			}
+				
+		}
+		
+		return startFrame;
+	}
+	
 	
 	public int getNumFrames(){
 		

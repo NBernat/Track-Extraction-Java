@@ -181,6 +181,26 @@ public class ImTrackPoint extends TrackPoint{
 		return 0;
 	}
 	
+	public String getCSVfieldVal(int ind){
+		
+		if (ind<=CSVPrefs.maxInd(super.getTypeName())){
+			return super.getCSVfieldVal(ind);
+		}
+		
+		
+		switch (ind-CSVPrefs.maxInd(super.getTypeName())) {
+		case 1:
+			return imOriginX+"";
+		case 2:
+			return imOriginY+"";
+		default: 
+			return "";
+		
+		}
+        
+	}
+	
+	
 	
 	public String getTypeName(){
 		return "ImTrackPoint";

@@ -255,7 +255,83 @@ public class TrackPoint implements Serializable {
 		return frameNum+" trID"+pointID+" ("+(int)x+","+(int)y+") A="+area;
 	}
 	
+	public static String getEmptyCSVinfo(CSVPrefs prefs){
+		return getEmptyCSVinfo(prefs, 0, prefs.fieldNames.size()-1);
+	}
+	
+	public static String getEmptyCSVinfo(CSVPrefs prefs, int startInd, int endInd){
+		
+		String info = "";
+		int lastInd = (endInd<prefs.lastInd())? endInd : prefs.lastInd();
+		for (int i=startInd; i<=lastInd; i++){
+			if (prefs.includeValue[i]) {
+				info+=","+prefs.emptyValue.get(i);
+			}
+		}
+		
+		return info;
+	}
+	
+	public String getCSVfieldVal(int ind){
+		
+		
+		switch (ind) {
+		case 0: 
+			return pointID+"";
+		case 1:
+			return pointType+"";
+		case 2: 
+			return track.getTrackID()+"";
+		case 3: 	
+			return x+"";
+		case 4: 	
+			return y+"";
+		case 5: 	
+			return rect.x+"";
+		case 6: 	
+			return rect.y+"";
+		case 7: 	
+			return rect.width+"";
+		case 8: 	
+			return rect.height+"";
+		case 9: 	
+			return area+"";
+		case 10: 	
+			return thresh+"";
+		default: 
+			return "";
+		
+		}
+        
+	}
 
+	
+	public String getCSVinfo(CSVPrefs prefs, boolean includeSubclassFields){
+		return CSVinfo(prefs, CSVPrefs.maxInd(getTypeName()));
+	}
+	
+	protected String CSVinfo(CSVPrefs prefs, int maxInd){
+		
+		
+		String info = "";
+		for (int i=0; i<=maxInd; i++){
+			if (prefs.includeValue[i]){
+				info+=","+getCSVfieldVal(i);
+			}
+			
+		}
+			
+		for(int j=(maxInd+1); j<prefs.numFields(false); j++){
+			if (prefs.includeValue[j]){
+				info+=","+prefs.getEmptyVal(j);
+			}
+		}
+		
+		return info;
+		
+	}
+	
+	
 	public boolean equals(TrackPoint pt){
 		return pt.pointID==pointID;
 	}

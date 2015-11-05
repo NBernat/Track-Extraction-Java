@@ -34,8 +34,6 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	 */
 	final int pointType = 2;
 	
-//	String dummyF;
-
 	protected MaggotTrackPoint prev;
 	protected MaggotTrackPoint next;
 	
@@ -1197,6 +1195,37 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		}
 		
 		return 0;
+	}
+	
+	
+	public String getCSVfieldVal(int ind){
+		
+		if (ind<=CSVPrefs.maxInd(super.getTypeName())){
+			return super.getCSVfieldVal(ind);
+		}
+		
+		switch (ind-CSVPrefs.maxInd(super.getTypeName())) {
+		case 1:
+			return prev.pointID+"";
+		case 2:
+			return next.pointID+"";
+		case 3:
+			return (htValid)? "TRUE" : "FALSE";
+		case 4:
+			return head.x+"";
+		case 5:
+			return head.y+"";
+		case 6:
+			return midpoint.x+"";
+		case 7:
+			return midpoint.y+"";
+		case 8:
+			return tail.x+"";
+		case 9:
+			return tail.y+"";
+		default: 
+			return "";
+		}
 	}
 	
 	

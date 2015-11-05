@@ -18,14 +18,16 @@ public class Test {//extends JFrame
 
 	public static void main(String[] args) {
 		
+		testToCSV();
 		
-		String fname = "C:\\Users\\Natalie\\Documents\\TestJavaMat\\extracted\\SA\\CantonS@CantonS\\C_Bl_2uW#N_Re_B0to255s3_120Hz_800uW\\CantonS@CantonS_C_Bl_2uW#N_Re_B0to255s3_120Hz_800uW_201507201614.jav";
+		
+//		String fname = "C:\\Users\\Natalie\\Documents\\TestJavaMat\\extracted\\SA\\CantonS@CantonS\\C_Bl_2uW#N_Re_B0to255s3_120Hz_800uW\\CantonS@CantonS_C_Bl_2uW#N_Re_B0to255s3_120Hz_800uW_201507201614.jav";
 //		Experiment ex = Experiment.fromPath(fname);
 //		System.out.println("Tracks: "+ex.getNumTracks());
-		Track t = Experiment.getTrack(12, fname);
+//		Track t = Experiment.getTrack(12, fname);
 		
 		
-		System.out.println("pts: "+t.getNumPoints());
+//		System.out.println("pts: "+t.getNumPoints());
 		
 		// ep = new Experiment_Processor();
 //		ep.main(args);
@@ -61,6 +63,21 @@ public class Test {//extends JFrame
 		
 //		testGapDilation();
 	}
+	
+	
+	public static void testToCSV(){
+		
+		String fname = "C:\\Users\\Natalie\\Documents\\Testing\\CSV writing\\berlin@berlin__LIGHT_RANDOM_WALK_S1_112Hz_201402121807.jav";
+		
+		Experiment ex = new Experiment(fname);
+		
+		Experiment.toCSV(ex, fname.replace(".jav", ".csv"));
+		
+	}
+	
+	
+	
+	
 	/*
 	private static void testGapDilation(){
 		String input = "4 6 ";

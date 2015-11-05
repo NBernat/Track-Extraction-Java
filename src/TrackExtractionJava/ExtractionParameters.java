@@ -16,9 +16,9 @@ public class ExtractionParameters implements Serializable{
 	
 	
 
-	boolean subset = false;
+	boolean subset = true;
 	int startFrame = 2000;
-	int endFrame = 3000;
+	int endFrame = 2200;
 	
 	int GCInterval = 500;
 
