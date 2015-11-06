@@ -1,7 +1,14 @@
 package TrackExtractionJava;
 
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Arrays;
 import java.util.Vector;
+
+import javax.swing.BoxLayout;
+import javax.swing.JCheckBox;
+import javax.swing.JPanel;
 
 public class CSVPrefs {
 	
@@ -44,7 +51,7 @@ public class CSVPrefs {
 			boolean[] initVals = {
 				true,//"pointID",  //Start of Trackpoint data
 				false,//"pointType", 
-				true,//"trackID",
+				false,//"trackID",
 				true,//"x", 
 				true,//"y",
 				false,//"rect.x",
@@ -162,6 +169,101 @@ public class CSVPrefs {
 		return (ind>=0 && ind<emptyValue.size())? emptyValue.get(ind) : "";
 	}
 	
-	
+	public void setIncludeVal(String name, boolean val){
+		int i = fieldNames.indexOf(name);
+		if (i>=0 && i<includeValue.length) includeValue[i]=val;
+	}
 	
 }
+
+
+
+class csvPrefPanel extends JPanel{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	
+	CSVPrefs prefs;
+	Vector<JCheckBox> checkboxes;
+	
+	
+	public csvPrefPanel(){
+		init(new CSVPrefs());
+	}
+	
+	public csvPrefPanel(CSVPrefs prefs){
+		init(prefs);
+	}
+	
+	private void init(CSVPrefs prefs){
+		
+		this.prefs = prefs;
+		
+		checkboxes = new Vector<JCheckBox>();
+		
+		buildFrame();
+	}
+	
+	
+	protected void buildFrame(){
+		//set layout
+//		setLayout(new GridLayout(11, 2));
+		setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+		
+		//build components
+		buildBoxes();
+		
+		//add components 
+		JPanel left = new JPanel();
+		left.setLayout(new BoxLayout(left, BoxLayout.Y_AXIS));
+		JPanel mid = new JPanel();
+		mid.setLayout(new BoxLayout(mid, BoxLayout.Y_AXIS));
+		JPanel right = new JPanel();
+		right.setLayout(new BoxLayout(right, BoxLayout.Y_AXIS));
+		
+		int perCol = prefs.includeValue.length/3;
+		if (prefs.includeValue.length%3>0) perCol++;
+		for (int i=0; i<checkboxes.size(); i++){
+			switch (i/perCol){
+				case 0:
+					left.add(checkboxes.get(i));
+					break;
+				case 1:
+					mid.add(checkboxes.get(i));
+					break;
+				case 2:
+					right.add(checkboxes.get(i));
+					break;
+				default:
+					break;
+			}
+		}
+		
+		add(left);
+		add(mid);
+		add(right);
+		
+	}
+	
+	private void buildBoxes(){
+		for (int i=0; i<prefs.fieldNames.size(); i++){
+			JCheckBox newBox = new JCheckBox(prefs.fieldNames.get(i));
+			newBox.setSelected(prefs.includeValue[i]);
+			newBox.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					JCheckBox box = (JCheckBox)e.getSource();
+					prefs.setIncludeVal(box.getName(), box.isSelected());
+				}
+			});
+			
+			checkboxes.add(newBox);
+		}
+	}
+	
+}
+
+

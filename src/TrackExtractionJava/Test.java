@@ -1,5 +1,11 @@
 package TrackExtractionJava;
 
+import java.awt.BorderLayout;
+import java.util.Scanner;
+import java.util.Vector;
+
+import javax.swing.JFrame;
+
 
 
 public class Test {//extends JFrame
@@ -8,31 +14,33 @@ public class Test {//extends JFrame
 	public int fld1;
 	public String fld2;
 	
-	
-	/**
-	 * 
-	 */
-//	private static final long serialVersionUID = 1L;
-	
-	
+		
 
 	public static void main(String[] args) {
 		
+		
+		
+		testCSVPanel();
+		
+		/*
 		testToCSV();
+		*/
+		
+		/*
+		String fname = "C:\\Users\\Natalie\\Documents\\TestJavaMat\\extracted\\SA\\CantonS@CantonS\\C_Bl_2uW#N_Re_B0to255s3_120Hz_800uW\\CantonS@CantonS_C_Bl_2uW#N_Re_B0to255s3_120Hz_800uW_201507201614.jav";
+		Experiment ex = Experiment.fromPath(fname);
+		System.out.println("Tracks: "+ex.getNumTracks());
+		Track t = Experiment.getTrack(12, fname);
+		*/
 		
 		
-//		String fname = "C:\\Users\\Natalie\\Documents\\TestJavaMat\\extracted\\SA\\CantonS@CantonS\\C_Bl_2uW#N_Re_B0to255s3_120Hz_800uW\\CantonS@CantonS_C_Bl_2uW#N_Re_B0to255s3_120Hz_800uW_201507201614.jav";
-//		Experiment ex = Experiment.fromPath(fname);
-//		System.out.println("Tracks: "+ex.getNumTracks());
-//		Track t = Experiment.getTrack(12, fname);
+		/*
+		Experiment_Processor ep = new Experiment_Processor();
+		ep.main(args);
+		*/
 		
-		
-//		System.out.println("pts: "+t.getNumPoints());
-		
-		// ep = new Experiment_Processor();
-//		ep.main(args);
-		
-		/*String path = "C:\\Users\\Natalie\\Documents\\1cm_checkerboard.png";
+		/*
+		String path = "C:\\Users\\Natalie\\Documents\\1cm_checkerboard.png";
 		
 		if (args!=null && args.length>=1){
 			path = args[0];
@@ -42,7 +50,8 @@ public class Test {//extends JFrame
 		File f = new File(path);
 		
 		System.out.println(path);
-		System.out.println(f.getParent());*/
+		System.out.println(f.getParent());
+		*/
 
 		/*
 		String path = "C:\\Users\\Natalie\\Documents\\TestJavaMat\\data\\phototaxis\\berlin@berlin\\LIGHT_RANDOM_WALK_S1_112Hz\\201402121840\\berlin@berlin_LIGHT_RANDOM_WALK_S1_112Hz_201402121840.mmf";
@@ -50,18 +59,26 @@ public class Test {//extends JFrame
 		Path p = Paths.get(path.replace(".mmf", ".mdat"));
 		String savepath = new File(dstDir, p.getFileName().toString()).getAbsolutePath();
 		System.out.println(savepath);
-				*/
-		
-//		String inDir = "C:\\Users\\Natalie\\Documents\\TestJavaMat\\data\\201406122014";
-//		
-//		System.out.println(inDir);
-//		System.out.println(ProcessingParameters.getOutFromInDir(inDir));
+		*/
 		
 		
-//		ImagePlus imp = new ImagePlus("C:\\Users\\Natalie\\Documents\\TestExProc\\unmaskTest.tif");
-//		imp.show();
+		/*
+		String inDir = "C:\\Users\\Natalie\\Documents\\TestJavaMat\\data\\201406122014";
 		
-//		testGapDilation();
+		System.out.println(inDir);
+		System.out.println(ProcessingParameters.getOutFromInDir(inDir));
+		*/
+		
+		
+		/*
+		ImagePlus imp = new ImagePlus("C:\\Users\\Natalie\\Documents\\TestExProc\\unmaskTest.tif");
+		imp.show();
+		*/
+		
+		/*
+		testGapDilation();
+		*/
+		
 	}
 	
 	
@@ -75,11 +92,24 @@ public class Test {//extends JFrame
 		
 	}
 	
+	public static void testCSVPanel(){
+		
+		
+		JFrame jf = new JFrame();
+		
+		csvPrefPanel cpp = new csvPrefPanel();
+		
+		jf.add(cpp, BorderLayout.CENTER);
+		jf.pack();
+
+		jf.setTitle("Test Frame for CSV preferences");
+		jf.setVisible(true);
+		
+	}
 	
 	
 	
-	/*
-	private static void testGapDilation(){
+	public static void testGapDilation(){
 		String input = "4 6 ";
 		input += "20 20 ";
 		input += "36 38 ";
@@ -90,7 +120,7 @@ public class Test {//extends JFrame
 		StringBuilder sb = new StringBuilder();
 		
 		Vector<Gap> gaps = makeGaps(input);
-		int minValidSegmentLen = 10;
+//		int minValidSegmentLen = 10;
 		int startFrame = 1;
 		int endFrame = 85;
 		boolean dilateToEdges = true;
@@ -104,7 +134,7 @@ public class Test {//extends JFrame
 		System.out.println(sb.toString());
 	}
 	
-	private static String printGaps(Vector<Gap> gaps){
+	public static String printGaps(Vector<Gap> gaps){
 		StringBuilder s = new StringBuilder();
 		for (Gap g : gaps){
 			s.append(g.toString()+". ");
@@ -113,7 +143,7 @@ public class Test {//extends JFrame
 	}
 
 	
-	private static Vector<Gap> makeGaps(String input){
+	public static Vector<Gap> makeGaps(String input){
 		
 		Vector<Gap> gaps = new Vector<Gap>();
 		Scanner s = new Scanner(input);
@@ -126,7 +156,7 @@ public class Test {//extends JFrame
 		return gaps;
 		
 	}
-	*/
+	
 
 	
 	public String str(){
