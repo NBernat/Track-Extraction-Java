@@ -1,5 +1,15 @@
 package TrackExtractionJava;
 
+import java.awt.Dimension;
+
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImageStack;
@@ -24,6 +34,10 @@ public class Track_Extractor implements PlugIn{
 	public void run(String arg) {
 				
 		
+		ExtractorFrame ef = new ExtractorFrame();
+		ef.run(null);
+		
+		/*
 		IJ.showStatus("Getting stack");
 		
 		IS = getStack();
@@ -73,7 +87,7 @@ public class Track_Extractor implements PlugIn{
 			}
 		}
 		
-		
+		*/
 	}
 	
 	
@@ -83,17 +97,157 @@ public class Track_Extractor implements PlugIn{
 	
 	public static void main(String[] args) {
         // set the plugins.dir property to make the plugin appear in the Plugins menu
-        Class<?> clazz = Track_Extractor.class;
-        String url = clazz.getResource("/" + clazz.getName().replace('.', '/') + ".class").toString();
-        String pluginsDir = url.substring(5, url.length() - clazz.getName().length() - 6);
-        System.setProperty("plugins.dir", pluginsDir);
+//        Class<?> clazz = Track_Extractor.class;
+//        String url = clazz.getResource("/" + clazz.getName().replace('.', '/') + ".class").toString();
+//        String pluginsDir = url.substring(5, url.length() - clazz.getName().length() - 6);
+//        System.setProperty("plugins.dir", pluginsDir);
 
         // start ImageJ
-        new ImageJ();
+//        new ImageJ();
 
 
         // run the plugin
         //IJ.runPlugIn(clazz.getName(), "");
+		Track_Extractor te = new Track_Extractor();
+		te.run("");
 }
+	
+}
+
+
+
+class ExtractorFrame extends JFrame{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	JTabbedPane mainPanel;
+	int tabPlacement = JTabbedPane.TOP;
+	Dimension panelSize = new Dimension(500,500);
+	String panelName = "Experiment Processor"; 
+	
+	InputPanel input;
+	ParamPanel params;
+	OutputPanel output;
+	
+	public void run(String args){
+
+		buildFrame();
+		
+		showFrame();
+		
+	}
+	
+	private void buildFrame(){
+		
+		//Build components
+		input = new InputPanel();
+		params = new ParamPanel();
+		output = new OutputPanel();
+		
+		//Add them to the MainPanel
+		mainPanel = new JTabbedPane(tabPlacement);
+		mainPanel.add("Select input...", input);
+		mainPanel.add("Set Parameters...", params);
+		mainPanel.add("Select output...", output);
+		
+		//Add mainPanel to frame
+		add(mainPanel);
+		
+	}
+	
+	
+	private void showFrame(){
+		setSize(panelSize);
+		setTitle(panelName);
+		setVisible(true);
+	}
+	
+	
+}
+
+
+class InputPanel extends JPanel{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	//Internal Elements
+	JTextField txFld;
+	JButton flChButton;
+	JFileChooser flCh;
+	
+	Experiment ex;
+	JPanel descPanel;
+	JTextArea desc;
+	
+	//External Elements
+	JTextField outputTxFld;
+	
+	
+	//Constructors
+	public InputPanel(){
+		
+		buildPanel();
+	}
+	
+	//output Setter
+	
+	//Experiment Getter
+	
+	
+	private void buildPanel(){
+		
+		buildComponents();
+		
+		//put components together
+		
+	}
+	
+	
+	private void buildComponents(){
+		
+	}
+	
+	
+	
+}
+
+class ParamPanel extends JPanel{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	ProcessingParameters procParams;
+	ExtractionParameters extrParams;
+	FittingParameters fitParams;
+	
+	
+	
+}
+
+class OutputPanel extends JPanel{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	
+}
+
+
+class ProgressFrame extends JFrame{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	
 }

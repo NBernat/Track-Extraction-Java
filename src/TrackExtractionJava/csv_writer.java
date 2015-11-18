@@ -76,8 +76,8 @@ class writerFrame extends JFrame {
 		
 		setTitle("Save experiment to CSV...");
 		
-		setSize(600,600);
-//		pack();
+//		setSize(600,600);
+		pack();
 		setVisible(true);
 	}
 	
@@ -136,11 +136,12 @@ class writerFrame extends JFrame {
 			JPanel namePanel = new JPanel();
 			namePanel.setSize(getPreferredSize()); 
 			String exptDisplay = "Choose an experiment (.jav)...";
-			srcName = new JTextField(exptDisplay);
+			srcName = new JTextField(exptDisplay,20);
 			srcName.setMaximumSize(srcDim);
 			namePanel.add(srcName);
 			
-			description = new JTextArea("Experiment...");
+			description = new JTextArea("Experiment...",2, 20);
+			description.setAlignmentX(JTextArea.CENTER_ALIGNMENT);
 			description.setSize(200, 50);
 			srcName.addActionListener(new ActionListener() {
 				@Override
@@ -220,7 +221,7 @@ class writerFrame extends JFrame {
 		dstDim = new Dimension(500, 200);
 		
 		//Make text field
-		dstName = new JTextField("");
+		dstName = new JTextField("", 20);
 		if (ex!=null){
 			//make suggestion based on src
 			if (srcName.getText().contains(".jav")){
