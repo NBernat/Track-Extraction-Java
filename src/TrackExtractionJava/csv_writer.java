@@ -1,10 +1,20 @@
 package TrackExtractionJava;
 
+
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+
+
 import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 
@@ -27,11 +37,25 @@ class writerFrame extends JFrame {
 	 */
 	private static final long serialVersionUID = 1L;
 	
-	FileChooserPanel srcNameChooser;
-	csvPrefPanel cpp;
-	FileChooserPanel dstNameChooser;
-	
+
 	Experiment ex;
+	
+	JPanel srcNamePanel;
+	JFileChooser srcNameChooser;
+	JTextField srcName;
+	JTextArea description;
+	Dimension srcDim;
+	
+	JPanel csvPrefPanel;
+	csvPrefPanel cpp;
+	
+	JPanel dstNamePanel;
+	JFileChooser dstNameChooser;
+	JTextField dstName;
+	Dimension dstDim;
+	
+	JPanel savePanel;
+	
 	
 	public writerFrame() {
 	}
@@ -49,8 +73,11 @@ class writerFrame extends JFrame {
 	}
 	
 	private void showFrame(){
-		setSize(550, 600);
+		
 		setTitle("Save experiment to CSV...");
+		
+		setSize(600,600);
+//		pack();
 		setVisible(true);
 	}
 	
@@ -59,13 +86,17 @@ class writerFrame extends JFrame {
 		
 		buildComponents();
 		
-		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+		setLayout(new BorderLayout());
 		
-		add(srcNameChooser);
-		add(cpp);
-		add(dstNameChooser);
+		add(srcNamePanel, BorderLayout.NORTH);
+		add(csvPrefPanel, BorderLayout.CENTER);
 		
+		JPanel southPanel = new JPanel();
+		southPanel.setLayout(new BoxLayout(southPanel, BoxLayout.Y_AXIS));
+		southPanel.add(dstNamePanel);
+		southPanel.add(savePanel);
 		
+		add(southPanel, BorderLayout.SOUTH);
 	}
 	
 	
@@ -75,82 +106,193 @@ class writerFrame extends JFrame {
 		buildExptChooser();
 		
 		//Create new csv panel
-		cpp = new csvPrefPanel();
+		buildCPPPanel();
 		
 		//create new destination chooser panel
 		buildDestChooser();
+		
+		buildSavePanel();
 	}
 	
 	
 	private void buildExptChooser(){
 		
+		srcDim = new Dimension(500,100);
+		
+		
 		if (ex!=null){
 			//Make text display
 			
-		} else {
-			//Make text field
-			//Set empty text
+			String exptDisplay = ex.getFileName()+"\n"
+					+"("+ex.getNumTracks()+" tracks)";
 			
-			//Make button
-			//Set listener to:
-				//open file chooser
-				//then, update text field with name
-				//start opening file
-				//when file is open, update text display
-				//when file is open, update dest chooser
+			description = new JTextArea(exptDisplay);
+			srcNamePanel = new JPanel();
+			srcNamePanel.add(description);
+			
+		} else {
+			
+			//Make a name field
+			JPanel namePanel = new JPanel();
+			namePanel.setSize(getPreferredSize()); 
+			String exptDisplay = "Choose an experiment (.jav)...";
+			srcName = new JTextField(exptDisplay);
+			srcName.setMaximumSize(srcDim);
+			namePanel.add(srcName);
+			
+			description = new JTextArea("Experiment...");
+			description.setSize(200, 50);
+			srcName.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					//Get the file name
+					openExpt(srcName.getText());
+				}
+			});
+//			namePanel.add(description);
+			
+			//Make the button to browse files
+			JButton browseSrcButton = new JButton("Browse...");
+			srcNameChooser = new JFileChooser();
+			browseSrcButton.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					int result = srcNameChooser.showOpenDialog(srcNamePanel);
+					
+					if (result==JFileChooser.APPROVE_OPTION){
+						srcName.setText(srcNameChooser.getSelectedFile().getPath());
+						
+						openExpt(srcNameChooser.getSelectedFile().getPath());
+						
+						//If no destination exists, make a suggestion 
+						if (srcName.getText().equals("")){
+							if (srcName.getText().contains(".jav")){
+								dstName.setText(srcName.getText().replace(".jav", ".csv"));
+							} else if (srcName.getText().contains(".prejav")){
+								dstName.setText(srcName.getText().replace(".prejav", ".csv"));
+							}
+						}
+						
+						
+					}
+				}
+			});
+			
+			
+			JPanel srcChooserPanel = new JPanel();
+			srcChooserPanel.setLayout(new BoxLayout(srcChooserPanel, BoxLayout.X_AXIS));
+			srcChooserPanel.add(namePanel);
+			srcChooserPanel.add(browseSrcButton);
+			
+			
+			srcNamePanel = new JPanel();
+			srcNamePanel.setLayout(new BoxLayout(srcNamePanel, BoxLayout.Y_AXIS));
+//			srcNamePanel.setSize(500, 100);
+//			srcNamePanel.add(namePanel, BorderLayout.CENTER);
+//			srcNamePanel.add(browseSrcButton, BorderLayout.EAST);
+			
+			
+//			srcName.setMinimumSize(new Dimension((int)(srcDim.width*.8), (int)(srcDim.height*.8)));
+//			srcName.setMaximumSize(new Dimension((int)(srcDim.width*.8), (int)(srcDim.height*.8)));
+			srcNamePanel.add(srcChooserPanel);
+			srcNamePanel.add(description);
 			
 		}
+
+		srcNamePanel.setMinimumSize(srcDim);
+		srcNamePanel.setMaximumSize(srcDim);
 		
+	}
+	
+	
+	private void buildCPPPanel(){
+
+		csvPrefPanel = new JPanel(new BorderLayout());
+		cpp = new csvPrefPanel();
+		
+		csvPrefPanel.add(cpp, BorderLayout.CENTER);
 		
 	}
 	
 	private void buildDestChooser(){
 		
-		//Make text field
+		dstNamePanel = new JPanel();
+		dstDim = new Dimension(500, 200);
 		
+		//Make text field
+		dstName = new JTextField("");
 		if (ex!=null){
 			//make suggestion based on src
+			if (srcName.getText().contains(".jav")){
+				dstName.setText(srcName.getText().replace(".jav", ".csv"));
+			} else if (srcName.getText().contains(".prejav")){
+				dstName.setText(srcName.getText().replace(".prejav", ".csv"));
+			}
 		}
 		
-	}
-	
-	
-}
-
-class FileChooserPanel extends JPanel{
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-	
-	JLabel label;
-	JTextField fileField;
-	JFileChooser chooser;
-	
-	
-	public FileChooserPanel(String label) {
-		
-		buildComponents(label);
-		
-		buildPanel();
-	}
-	
-	private void buildComponents(String label){
-		
-		//build label
+		//Make button that opens file chooser
+		JButton browseDstButton = new JButton("Browse...");
+		dstNameChooser = new JFileChooser();
+		browseDstButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int result = dstNameChooser.showSaveDialog(dstNamePanel);
+				
+				if (result==JFileChooser.APPROVE_OPTION){
+					dstName.setText(dstNameChooser.getSelectedFile().getPath());
+				}
+			}
+		});
 		
 		
-		//build file field
-		
-		//build file browser & button
+		//Add components to panel
+		dstNamePanel.add(dstName);
+		dstNamePanel.add(browseDstButton);
 		
 	}
 	
-	private void buildPanel(){
+	private void buildSavePanel(){
+		savePanel = new JPanel(new BorderLayout());
 		
+		JButton saveToCSV = new JButton("Save to CSV");
+		saveToCSV.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int res = checkData();
+				if (res==0){
+					Experiment.toCSV(ex, dstName.getText(), cpp.prefs);
+				}
+			}
+		}); 
 		
+		savePanel.add(saveToCSV, BorderLayout.CENTER);
 		
 	}
 	
+	
+	private void openExpt(String path){
+		//Try to open experiment
+		description.setText("Opening experiment...");
+		ex = Experiment.fromPath(path);
+		
+		if (ex!=null){
+			description.setText("Experiment: "+ex.getNumTracks()+" tracks");
+		} else{
+			description.setText("Could not open file");
+		}
+	}
+	
+	
+	private int checkData(){
+		if (ex==null){
+			JOptionPane.showMessageDialog(new JFrame(), "Load an experiment");
+			return 1;
+		}
+		if (new File(dstName.getText()).exists()){
+			JOptionPane.showMessageDialog(new JFrame(), "Save file already exists");
+			return 2;
+		}
+		
+		return 0;
+	}
 }

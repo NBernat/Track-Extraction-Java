@@ -1,6 +1,5 @@
 package TrackExtractionJava;
 
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
@@ -255,14 +254,22 @@ class csvPrefPanel extends JPanel{
 			newBox.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					JCheckBox box = (JCheckBox)e.getSource();
-					prefs.setIncludeVal(box.getName(), box.isSelected());
+					updatePrefs();
+//					JCheckBox box = (JCheckBox)e.getSource();
+//					prefs.setIncludeVal(box.getName(), box.isSelected());
 				}
 			});
 			
 			checkboxes.add(newBox);
 		}
 	}
+	
+	private void updatePrefs(){
+		for (int i=0; i<checkboxes.size(); i++){
+			prefs.includeValue[i]=checkboxes.get(i).isSelected();
+		}
+	}
+	
 	
 }
 

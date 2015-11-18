@@ -19,8 +19,11 @@ public class Test {//extends JFrame
 	public static void main(String[] args) {
 		
 		
+		testCSVwriterFrame();
 		
+		/*
 		testCSVPanel();
+		*/
 		
 		/*
 		testToCSV();
@@ -81,6 +84,12 @@ public class Test {//extends JFrame
 		
 	}
 	
+	public static void testCSVwriterFrame(){
+		
+		writerFrame cwf = new writerFrame();
+		cwf.run();
+		
+	}
 	
 	public static void testToCSV(){
 		
@@ -106,8 +115,6 @@ public class Test {//extends JFrame
 		jf.setVisible(true);
 		
 	}
-	
-	
 	
 	public static void testGapDilation(){
 		String input = "4 6 ";
@@ -142,7 +149,6 @@ public class Test {//extends JFrame
 		return s.toString();
 	}
 
-	
 	public static Vector<Gap> makeGaps(String input){
 		
 		Vector<Gap> gaps = new Vector<Gap>();
@@ -156,8 +162,6 @@ public class Test {//extends JFrame
 		return gaps;
 		
 	}
-	
-
 	
 	public String str(){
 		String ret = "";
@@ -177,8 +181,6 @@ public class Test {//extends JFrame
 		fld2 = s;
 		
 	}
-	
-	
 	
 	public void run(String arg0) {
 		main(null);
