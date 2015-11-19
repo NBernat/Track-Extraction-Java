@@ -2,6 +2,9 @@ package TrackExtractionJava;
 
 import java.util.Vector;
 
+import javax.swing.JTable;
+import javax.swing.table.AbstractTableModel;
+
 
 public class FittingParameters {
 	
@@ -31,11 +34,14 @@ public class FittingParameters {
 	float[] imageWeights = {1,1,1, 1,1,1, 1,1,1};
 	float[] spineLengthWeights = {.7f,1,1, 1,1,1, 1,1,1};//{.1f,1,1, 1,1,1, 1,1,1};//{0,1,1, 1,1,1, 1,1,1};//edit 3,4
 	float[] spineSmoothWeights = {.8f,1,1, 1,1,1, 1,1,1};//{.1f,1,1, 1,1,1, 1,1,1};//edit 12 (head to .5), edit 13 (head to .8)
-	float[] timeLengthWeights = {1,1,1, 1,1,1, 1,1,1};
-	float[] timeSmoothWeights = {1,1,1, 1,1,1, 1,1,1};
-	float[] HTAttractionWeights = {1,0,0, 0,0,0, 0,0,1};
+	float[][] timeLengthWeights = { {1,1,1, 1,1,1, 1,1,1},
+									{1,1,1, 1,1,1, 1,1,1},
+									{1,1,1, 1,1,1, 1,1,1}	};
+	float[][] timeSmoothWeights = { {1,1,1, 1,1,1, 1,1,1},
+									{1,1,1, 1,1,1, 1,1,1},
+									{1,1,1, 1,1,1, 1,1,1}	};
 	
-	
+	fittingParamTableModel fpTableModel;
 	
 	public FittingParameters(){
 		
@@ -73,12 +79,110 @@ public class FittingParameters {
 				spineLengthWeight));
 		Forces.add(new SpineSmoothForce(spineSmoothWeights,
 				spineSmoothWeight));
-		Forces.add(new TimeLengthForce(timeLengthWeights,
+		
+		
+		float[] tlWeights = new float[numBBPts];
+		float[] tsWeights = new float[numBBPts];
+		for (int i=0; i<numBBPts; i++){
+			tlWeights[i] = timeLengthWeights[pass][i];
+			tsWeights[i] = timeSmoothWeights[pass][i];
+		}
+		
+		Forces.add(new TimeLengthForce(tlWeights,
 				timeLengthWeight(pass)));
-		Forces.add(new TimeSmoothForce(timeSmoothWeights,
+		Forces.add(new TimeSmoothForce(tsWeights,
 				timeSmoothWeight(pass)));
-		// Forces.add(new HTAttractionForce(params.HTAttractionWeights));
 		return Forces;
 	}
 	
+	public int getNumWeights(){
+		return 3 + 2*grains.length;
+	}
+	
+	public JTable getTable(){
+		
+		if (fpTableModel!=null || fpTableModel.numGrains!=grains.length){
+			fpTableModel = new fittingParamTableModel(this);
+		}
+		return new JTable(fpTableModel);
+	}
+	
+}
+
+
+class fittingParamTableModel extends AbstractTableModel {
+	
+	
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	int numGrains;
+	FittingParameters fp;
+	String[] columnNames;
+	String[] rowNames;
+	
+	public fittingParamTableModel(FittingParameters fp){
+		this.fp = fp;
+		numGrains = fp.grains.length;
+		setRowNames();
+		setColumnNames();
+	}
+	
+	private void setRowNames(){
+		rowNames = new String[fp.getNumWeights()];
+		rowNames[0] = "Image";
+		rowNames[1] = "Spine Length";
+		rowNames[2] = "Spine Smooth";
+		int tlStart = 3;
+		int nGrains = numGrains;
+		for (int i=0; i<nGrains; i++){
+			rowNames[tlStart+i] = "Time Length g"+fp.grains[i];
+			rowNames[tlStart+nGrains+i] = "Time Smooth g"+fp.grains[i];
+		}
+	}
+	private void setColumnNames(){
+		columnNames = new String[2+fp.numBBPts];
+		
+		columnNames[0] = "Energy Term";
+		columnNames[1] = "Energy Weight";
+		for (int i=0; i<fp.numBBPts; i++){
+			if (i==0){
+				columnNames[2+i] = "Head Weight";
+			} else if (i==(fp.numBBPts-1)){
+				columnNames[2+i] = "Tail Weight";
+			} else {
+				columnNames[2+i] = "Backbone Coord "+i+" Weight";
+			}
+			
+		}
+		
+		
+	}
+	
+	public String getColumnName(int col) {
+        return columnNames[col];
+    }
+    public int getRowCount() { 
+    	return rowNames.length; 
+	}
+    public int getColumnCount() { 
+    	return columnNames.length; 
+	}
+    public Object getValueAt(int row, int col) {
+        
+    	//TODO
+    	
+    	return null;
+    }
+    public boolean isCellEditable(int row, int col){ 
+    	//TODO
+    	return true; 
+    }
+    public void setValueAt(Object value, int row, int col) {
+    	//TODO
+        ///rowData[row][col] = value;
+        fireTableCellUpdated(row, col);
+    }
 }

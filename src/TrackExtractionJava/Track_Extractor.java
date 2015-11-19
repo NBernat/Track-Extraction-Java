@@ -7,6 +7,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
+import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
@@ -230,6 +231,8 @@ class ParamPanel extends JPanel{
 	
 	
 	
+	
+	
 }
 
 class OutputPanel extends JPanel{
@@ -238,6 +241,13 @@ class OutputPanel extends JPanel{
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+	
+
+	JTextField txFld;
+	JButton flChButton;
+	JFileChooser flCh;
+	
+	
 	
 	
 }
