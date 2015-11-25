@@ -19,7 +19,11 @@ public class Test {//extends JFrame
 	public static void main(String[] args) {
 		
 		
+		testExractionWindow();
+		
+		/*
 		testCSVwriterFrame();
+		*/
 		
 		/*
 		testCSVPanel();
@@ -83,6 +87,15 @@ public class Test {//extends JFrame
 		*/
 		
 	}
+	
+	public static void testExractionWindow(){
+		
+		ExtractorFrame ef = new ExtractorFrame();
+		
+		ef.run(null);
+		
+	}
+	
 	
 	public static void testCSVwriterFrame(){
 		

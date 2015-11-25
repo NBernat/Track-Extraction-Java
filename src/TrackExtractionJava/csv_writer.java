@@ -143,6 +143,7 @@ class writerFrame extends JFrame {
 			description = new JTextArea("Experiment...",2, 20);
 			description.setAlignmentX(JTextArea.CENTER_ALIGNMENT);
 			description.setSize(200, 50);
+			
 			srcName.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
@@ -166,7 +167,7 @@ class writerFrame extends JFrame {
 						openExpt(srcNameChooser.getSelectedFile().getPath());
 						
 						//If no destination exists, make a suggestion 
-						if (srcName.getText().equals("")){
+						if (dstName.getText().equals("")){
 							if (srcName.getText().contains(".jav")){
 								dstName.setText(srcName.getText().replace(".jav", ".csv"));
 							} else if (srcName.getText().contains(".prejav")){
@@ -181,13 +182,13 @@ class writerFrame extends JFrame {
 			
 			
 			JPanel srcChooserPanel = new JPanel();
-			srcChooserPanel.setLayout(new BoxLayout(srcChooserPanel, BoxLayout.X_AXIS));
 			srcChooserPanel.add(namePanel);
 			srcChooserPanel.add(browseSrcButton);
 			
+			JPanel descBox = new JPanel();
+			descBox.setSize(30, 5);
+			descBox.add(description);
 			
-			srcNamePanel = new JPanel();
-			srcNamePanel.setLayout(new BoxLayout(srcNamePanel, BoxLayout.Y_AXIS));
 //			srcNamePanel.setSize(500, 100);
 //			srcNamePanel.add(namePanel, BorderLayout.CENTER);
 //			srcNamePanel.add(browseSrcButton, BorderLayout.EAST);
@@ -195,8 +196,12 @@ class writerFrame extends JFrame {
 			
 //			srcName.setMinimumSize(new Dimension((int)(srcDim.width*.8), (int)(srcDim.height*.8)));
 //			srcName.setMaximumSize(new Dimension((int)(srcDim.width*.8), (int)(srcDim.height*.8)));
+			
+			
+			srcNamePanel = new JPanel();
+			srcNamePanel.setLayout(new BoxLayout(srcNamePanel, BoxLayout.Y_AXIS));
 			srcNamePanel.add(srcChooserPanel);
-			srcNamePanel.add(description);
+			srcNamePanel.add(descBox);
 			
 		}
 
@@ -285,15 +290,41 @@ class writerFrame extends JFrame {
 	
 	
 	private int checkData(){
+		//Check if there's even an experiment
 		if (ex==null){
 			JOptionPane.showMessageDialog(new JFrame(), "Load an experiment");
 			return 1;
 		}
-		if (new File(dstName.getText()).exists()){
+
+		//Check that there is a file name entered
+		if (dstName.getText().equals("")){
 			JOptionPane.showMessageDialog(new JFrame(), "Save file already exists");
 			return 2;
 		}
 		
+		//Check that there's the proper extension
+		File dstFile = new File(dstName.getText());
+		int i = dstFile.getName().lastIndexOf('.');
+		String ext;
+		if (i<0){
+			ext = ".csv";
+			dstName.setText(dstName.getText()+ext);
+			dstFile = new File(dstName.getText());
+
+		} else if (i >= 0) {
+		    ext = dstFile.getName().substring(i+1);
+		    if (!ext.equals(".csv")){
+				dstName.setText(dstName.getText().replace(ext, ".csv"));
+				dstFile = new File(dstName.getText());
+		    }
+		}
+		
+		
+		//check if the file name already exists
+		if (dstFile.exists()){
+			JOptionPane.showMessageDialog(new JFrame(), "Save file already exists");
+			return 3;
+		} 
 		return 0;
 	}
 }
