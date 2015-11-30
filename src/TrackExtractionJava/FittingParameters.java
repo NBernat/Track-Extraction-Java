@@ -2,6 +2,7 @@ package TrackExtractionJava;
 
 import java.util.Vector;
 
+import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
 
@@ -43,8 +44,10 @@ public class FittingParameters {
 	
 	fittingParamTableModel fpTableModel;
 	
+	JPanel fpPanel;
+	
 	public FittingParameters(){
-		
+		//TODO
 	}
 	
 	public boolean isFirstPass(int grain){
@@ -105,6 +108,18 @@ public class FittingParameters {
 			fpTableModel = new fittingParamTableModel(this);
 		}
 		return new JTable(fpTableModel);
+	}
+	
+
+	private void makePanel(){
+		
+	}
+	
+	public JPanel getPanel(){
+		if (fpPanel==null){
+			makePanel();
+		}
+		return fpPanel;
 	}
 	
 }

@@ -1,7 +1,18 @@
 package TrackExtractionJava;
 
+import java.awt.BorderLayout;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.NumberFormat;
+
+import javax.swing.JCheckBox;
+import javax.swing.JFormattedTextField;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 
 
 public class ProcessingParameters {
@@ -46,6 +57,8 @@ public class ProcessingParameters {
 	boolean testFitFromDisk = false;
 	
 	boolean sendDataToExtracted = true;
+	
+	JPanel ppPanel;
 	
 	
 	public static String getOutFromInDir(String inDir){
@@ -96,5 +109,109 @@ public class ProcessingParameters {
 		String[] FitExPathParts = {path.toString(), name.toString()};
 		return FitExPathParts;
 	}
+	
+	
+	public JPanel getPanel(){
+		if (ppPanel==null){
+			ppPanel = ProcPanel.makePanel(this);
+		}
+		return ppPanel;
+	}
+	
+	
+	
+}
+
+class ProcPanel extends JPanel {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	ProcessingParameters prPs;
+	
+	JCheckBox dofitBox;
+	String dofitName = "Do fitting";
+	
+	JFormattedTextField minTrackLenField;
+	JLabel minTrackLenLabel;
+	JPanel minTrackLenPanel;
+	String minTrackLengthName = "Minimum track length for fitting";
+	
+	JCheckBox viewExBox;
+	String viewExName = "View experiment after processing";
+	
+	public ProcPanel(ProcessingParameters pp){
+		if (pp==null){
+			prPs = new ProcessingParameters();
+		} else {
+			prPs = pp;
+		}
+		buildPanel();
+	}
+	
+	private void buildPanel(){
+		//build components
+		buildComponents();
+		
+		//add components to panel
+		setLayout(new GridLayout(3, 1));
+		add(dofitBox);
+		add(minTrackLenPanel);
+		add(viewExBox);
+		
+		
+	}
+	
+	public void buildComponents(){
+		
+		dofitBox = new  JCheckBox(dofitName, prPs.doFitting);
+		dofitBox.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				prPs.doFitting = dofitBox.isSelected();
+				
+			}
+		});
+		
+		
+		minTrackLenField = new JFormattedTextField(NumberFormat.getIntegerInstance());
+		minTrackLenField.setValue(prPs.minTrackLen); 
+		minTrackLenField.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (minTrackLenField.isEditValid()){
+					prPs.minTrackLen = (Integer)minTrackLenField.getValue();
+				} else {
+					minTrackLenField.setValue(minTrackLenField.getValue());
+				}
+			}
+		});
+		minTrackLenLabel = new JLabel(minTrackLengthName);
+		minTrackLenPanel = new JPanel(new BorderLayout());
+		minTrackLenPanel.add(minTrackLenField, BorderLayout.WEST);
+		minTrackLenPanel.add(minTrackLenLabel);
+		
+		viewExBox = new  JCheckBox(viewExName, (prPs.doFitting)?prPs.showFitEx:prPs.showMagEx);
+		viewExBox.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				//Both parameters are changed; if viewEx is selected, the appropriate
+				//param is DEselected based on doFitting, so that only one is shown
+				prPs.showFitEx = viewExBox.isSelected();
+				prPs.showMagEx = viewExBox.isSelected();
+				
+			}
+		});
+		
+	}
+	
+	public static ProcPanel makePanel(ProcessingParameters pp){
+		
+		return new ProcPanel(pp);
+	}
+	
 	
 }

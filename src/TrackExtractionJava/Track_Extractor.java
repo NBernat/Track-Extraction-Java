@@ -1,6 +1,7 @@
 package TrackExtractionJava;
 
 import java.awt.Dimension;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -135,6 +136,7 @@ class ExtractorFrame extends JFrame{
 	InputPanel input;
 	ParamPanel params;
 	OutputPanel output;
+	JButton runButton;
 	
 	public void run(String args){
 
@@ -152,6 +154,7 @@ class ExtractorFrame extends JFrame{
 		params = new ParamPanel();
 		input.outputTxFld = output.txFld;
 		
+		//TODO make button
 		
 		//Add them to the MainPanel
 		mainPanel = new JPanel(); //new JTabbedPane(tabPlacement);
@@ -362,6 +365,54 @@ class ParamPanel extends JPanel{
 	ProcessingParameters procParams;
 	ExtractionParameters extrParams;
 	FittingParameters fitParams;
+	
+	public ParamPanel(){
+		init(null, null, null);
+		buildPanel();
+	}
+	
+	public ParamPanel(ProcessingParameters pp, ExtractionParameters ep, FittingParameters fp){
+		init(pp, ep, fp);
+		buildPanel();
+	}
+	
+	private void init(ProcessingParameters pp, ExtractionParameters ep, FittingParameters fp){
+		
+		if (pp==null){
+			procParams = new ProcessingParameters();
+		} else {
+			procParams = pp;
+		}
+		
+		if (ep==null){
+			extrParams = new ExtractionParameters();
+		} else {
+			extrParams = ep;
+		}
+		
+		if (fp==null){
+			fitParams = new FittingParameters();
+		} else {
+			fitParams = fp;
+		}
+		
+	}
+	
+	private void buildPanel(){
+		//Build the components
+		buildComponents();
+		
+		//Add components to the panel
+		setLayout(new GridLayout(1, 3));
+		add(procParams.getPanel());
+		
+	}
+	
+	private void buildComponents(){
+		
+		//TODO
+		
+	}
 	
 	
 }

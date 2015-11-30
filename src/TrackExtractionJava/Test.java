@@ -5,6 +5,7 @@ import java.util.Scanner;
 import java.util.Vector;
 
 import javax.swing.JFrame;
+import javax.swing.JWindow;
 
 
 
@@ -18,8 +19,15 @@ public class Test {//extends JFrame
 
 	public static void main(String[] args) {
 		
+		testExParamaPanel();
 		
+		/*
+		testProcParamPanel();
+		*/
+		
+		/*
 		testExractionWindow();
+		*/
 		
 		/*
 		testCSVwriterFrame();
@@ -85,6 +93,25 @@ public class Test {//extends JFrame
 		/*
 		testGapDilation();
 		*/
+		
+	}
+	
+	public static void testExParamaPanel(){
+		extrPanel exP = new extrPanel(null);
+		JFrame jf = new JFrame();
+		jf.add(exP);
+		jf.pack();
+		jf.setVisible(true);
+		
+	}
+	
+	public static void testProcParamPanel(){
+		
+		ProcPanel prP = new ProcPanel(null);
+		JFrame jf = new JFrame();
+		jf.add(prP);
+		jf.pack();
+		jf.setVisible(true);
 		
 	}
 	

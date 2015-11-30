@@ -1,10 +1,20 @@
 package TrackExtractionJava;
 
+import java.awt.BorderLayout;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.text.NumberFormat;
+
+import javax.swing.JCheckBox;
+import javax.swing.JFormattedTextField;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 
 
 public class ExtractionParameters implements Serializable{ 
@@ -161,6 +171,8 @@ public class ExtractionParameters implements Serializable{
      */
     int trackPointType = 2;
     
+    JPanel epPanel;
+    
     /**
 	 * Creates a set of Extraction Parameters, with the proper start frame
 	 */
@@ -200,6 +212,14 @@ public class ExtractionParameters implements Serializable{
 		return true;
 	}
 	
+
+	
+	public JPanel getPanel(){
+		if (epPanel==null){
+			extrPanel.makePanel(this);
+		}
+		return epPanel;
+	}
 	
 	public static void main(String[] args) {
 		
@@ -208,5 +228,210 @@ public class ExtractionParameters implements Serializable{
 		ep.toDisk("C:\\Users\\Natalie\\Documents\\test.txt");
 		System.out.println("...done saving params to disk");
 	}
+	
+}
+
+
+class extrPanel extends JPanel {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	ExtractionParameters exPs;
+
+	JCheckBox subsetBox;
+	String subsetName = "Extract from subset of frames";
+	
+	JPanel frameRangePanel;
+	
+	JFormattedTextField startFrameField;
+	JLabel startFrameLabel;
+	JPanel startFramePanel;
+	String startFrameName = "Start frame";
+	
+	JFormattedTextField endFrameField;
+	JLabel endFrameLabel;
+	JPanel endFramePanel;
+	String endFrameName = "End frame";
+	
+	JCheckBox exclEdgeBox;
+	String exclEdgeName = "Exclude edge points";
+	
+	JFormattedTextField glbThreshField;
+	JLabel glbThreshLabel;
+	JPanel glbThreshPanel;
+	String glbThreshName = "Global threshold";
+	
+	JFormattedTextField maxDistField;
+	JLabel maxDistLabel;
+	JPanel maxDistPanel;
+	String maxDistName = "Mix dist between track points (pixels)";
+
+	JFormattedTextField minAreaField;
+	JLabel minAreaLabel;
+	JPanel minAreaPanel;
+	String minAreaName = "Min area of track point (pixels)";
+
+	JFormattedTextField maxAreaField;
+	JLabel maxAreaLabel;
+	JPanel maxAreaPanel;
+	String maxAreaName = "Max area of track point (pixels)";
+	
+	
+	public extrPanel(ExtractionParameters ep){
+		if (ep==null){
+			exPs = new ExtractionParameters();
+		} else {
+			exPs = ep;
+		}
+		buildPanel();
+	}
+	
+	private void buildPanel(){
+		//build components
+		buildComponents();
+		
+		//add components to panel
+		//TODO
+		setLayout(new GridLayout(7, 1));
+		add(glbThreshPanel);
+		add(maxDistPanel);
+		add(minAreaPanel);
+		add(maxAreaPanel);
+	}
+	
+	public void buildComponents(){
+		//TODO
+		
+		subsetBox = new  JCheckBox(subsetName, exPs.subset);
+		subsetBox.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				exPs.subset = subsetBox.isSelected();
+				
+			}
+		});
+		
+		startFrameField = new JFormattedTextField(NumberFormat.getIntegerInstance());
+		startFrameField.setValue(exPs.startFrame); 
+		startFrameField.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (startFrameField.isEditValid()){
+					exPs.startFrame = (Integer)startFrameField.getValue();
+				} else {
+					startFrameField.setValue(startFrameField.getValue());
+				}
+			}
+		});
+		startFrameLabel = new JLabel(startFrameName);
+		startFramePanel = new JPanel(new BorderLayout());
+		startFramePanel.add(startFrameField, BorderLayout.WEST);
+		startFramePanel.add(startFrameLabel);
+		
+		endFrameField = new JFormattedTextField(NumberFormat.getIntegerInstance());
+		endFrameField.setValue(exPs.endFrame); 
+		endFrameField.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (endFrameField.isEditValid()){
+					exPs.endFrame = (Integer)endFrameField.getValue();
+				} else {
+					endFrameField.setValue(endFrameField.getValue());
+				}
+			}
+		});
+		endFrameLabel = new JLabel(endFrameName);
+		endFramePanel = new JPanel(new BorderLayout());
+		endFramePanel.add(endFrameField, BorderLayout.WEST);
+		endFramePanel.add(endFrameLabel);
+		
+		
+		exclEdgeBox = new  JCheckBox(exclEdgeName, exPs.excludeEdges);
+		exclEdgeBox.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				exPs.excludeEdges = exclEdgeBox.isSelected();
+				
+			}
+		});
+		
+		glbThreshField = new JFormattedTextField(NumberFormat.getIntegerInstance());
+		glbThreshField.setValue(exPs.globalThreshValue); 
+		glbThreshField.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (glbThreshField.isEditValid()){
+					exPs.globalThreshValue = (Integer)glbThreshField.getValue();
+				} else {
+					glbThreshField.setValue(glbThreshField.getValue());
+				}
+			}
+		});
+		glbThreshLabel = new JLabel(glbThreshName);
+		glbThreshPanel = new JPanel(new BorderLayout());
+		glbThreshPanel.add(glbThreshField, BorderLayout.WEST);
+		glbThreshPanel.add(glbThreshLabel);
+		
+		maxDistField = new JFormattedTextField(NumberFormat.getIntegerInstance());
+		maxDistField.setValue(exPs.maxMatchDist); 
+		maxDistField.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (maxDistField.isEditValid()){
+					exPs.maxMatchDist = (Integer)maxDistField.getValue();
+				} else {
+					maxDistField.setValue(maxDistField.getValue());
+				}
+			}
+		});
+		maxDistLabel = new JLabel(maxDistName);
+		maxDistPanel = new JPanel(new BorderLayout());
+		maxDistPanel.add(maxDistField, BorderLayout.WEST);
+		maxDistPanel.add(maxDistLabel);
+		
+		minAreaField = new JFormattedTextField(NumberFormat.getIntegerInstance());
+		minAreaField.setValue(exPs.minArea); 
+		minAreaField.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (minAreaField.isEditValid()){
+					exPs.minArea = (Integer)minAreaField.getValue();
+				} else {
+					minAreaField.setValue(minAreaField.getValue());
+				}
+			}
+		});
+		minAreaLabel = new JLabel(minAreaName);
+		minAreaPanel = new JPanel(new BorderLayout());
+		minAreaPanel.add(minAreaField, BorderLayout.WEST);
+		minAreaPanel.add(minAreaLabel);
+		
+		maxAreaField = new JFormattedTextField(NumberFormat.getIntegerInstance());
+		maxAreaField.setValue(exPs.maxArea); 
+		maxAreaField.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (maxAreaField.isEditValid()){
+					exPs.maxArea = (Integer)maxAreaField.getValue();
+				} else {
+					maxAreaField.setValue(maxAreaField.getValue());
+				}
+			}
+		});
+		maxAreaLabel = new JLabel(maxAreaName);
+		maxAreaPanel = new JPanel(new BorderLayout());
+		maxAreaPanel.add(maxAreaField, BorderLayout.WEST);
+		maxAreaPanel.add(maxAreaLabel);
+	}
+	
+	public static extrPanel makePanel(ExtractionParameters ep){
+		
+		return new extrPanel(ep);
+	}
+	
 	
 }
