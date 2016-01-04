@@ -78,6 +78,24 @@ public class BackboneFitter {
 		bbcomm.setVerbosity(VerbLevel.verb_off);
 
 	}
+	
+	public BackboneFitter(FittingParameters fp) {
+
+		if (fp==null){
+			params = new FittingParameters();
+		} else{
+			params = fp;
+		}
+			
+		pass = 0;
+		Forces = params.getForces(pass);
+
+		comm = new Communicator();
+		comm.setVerbosity(VerbLevel.verb_error);
+		bbcomm = new Communicator();
+		bbcomm.setVerbosity(VerbLevel.verb_off);
+
+	}
 
 	/**
 	 * Fits backbones to the points in the given track.

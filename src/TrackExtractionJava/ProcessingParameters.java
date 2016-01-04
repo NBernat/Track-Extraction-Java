@@ -4,8 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+//import java.nio.file.Path;
+//import java.nio.file.Paths;
 import java.text.NumberFormat;
 
 import javax.swing.JCheckBox;
@@ -58,23 +58,23 @@ public class ProcessingParameters {
 	
 	boolean sendDataToExtracted = true;
 	
-	JPanel ppPanel;
+	ProcPanel ppPanel;
 	
 	
 	public static String getOutFromInDir(String inDir){
 		
-		Path p = Paths.get(inDir);
-		
-		StringBuilder out = new StringBuilder(p.getParent().toString());
-		
-		String dataStr = "data";
-		String exStr = "extracted";
-		int ind = out.indexOf(dataStr);
-		out.delete(ind, ind+dataStr.length());
-		out.insert(ind, exStr);
-				
-		return out.toString();
-//		return inDir;
+//		Path p = Paths.get(inDir);
+//		
+//		StringBuilder out = new StringBuilder(p.getParent().toString());
+//		
+//		String dataStr = "data";
+//		String exStr = "extracted";
+//		int ind = out.indexOf(dataStr);
+//		out.delete(ind, ind+dataStr.length());
+//		out.insert(ind, exStr);
+//				
+//		return out.toString();
+		return inDir;
 	}
 	
 	
@@ -181,6 +181,8 @@ class ProcPanel extends JPanel {
 		minTrackLenField.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				
+				prPs.minTrackLen = (Integer)minTrackLenField.getValue();
 				if (minTrackLenField.isEditValid()){
 					prPs.minTrackLen = (Integer)minTrackLenField.getValue();
 				} else {

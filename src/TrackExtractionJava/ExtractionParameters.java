@@ -216,7 +216,7 @@ public class ExtractionParameters implements Serializable{
 	
 	public JPanel getPanel(){
 		if (epPanel==null){
-			extrPanel.makePanel(this);
+			epPanel = extrPanel.makePanel(this);
 		}
 		return epPanel;
 	}
@@ -239,7 +239,14 @@ class extrPanel extends JPanel {
 	 */
 	private static final long serialVersionUID = 1L;
 	ExtractionParameters exPs;
-
+	
+	//Components:
+	
+	JPanel LeftPanel;
+	JPanel RightPanel;
+	
+	JPanel RangePanel;
+	
 	JCheckBox subsetBox;
 	String subsetName = "Extract from subset of frames";
 	
@@ -293,12 +300,22 @@ class extrPanel extends JPanel {
 		buildComponents();
 		
 		//add components to panel
-		//TODO
-		setLayout(new GridLayout(7, 1));
-		add(glbThreshPanel);
-		add(maxDistPanel);
-		add(minAreaPanel);
-		add(maxAreaPanel);
+		LeftPanel = new JPanel();
+		LeftPanel.setLayout(new GridLayout(3,1));
+		LeftPanel.add(subsetBox);
+		LeftPanel.add(RangePanel);
+		LeftPanel.add(exclEdgeBox);
+		
+		RightPanel = new JPanel();
+		RightPanel.setLayout(new GridLayout(4, 1));
+		RightPanel.add(glbThreshPanel);
+		RightPanel.add(maxDistPanel);
+		RightPanel.add(minAreaPanel);
+		RightPanel.add(maxAreaPanel);
+		
+		add(LeftPanel);
+		add(RightPanel);
+		
 	}
 	
 	public void buildComponents(){
@@ -310,7 +327,6 @@ class extrPanel extends JPanel {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				exPs.subset = subsetBox.isSelected();
-				
 			}
 		});
 		
@@ -347,6 +363,11 @@ class extrPanel extends JPanel {
 		endFramePanel = new JPanel(new BorderLayout());
 		endFramePanel.add(endFrameField, BorderLayout.WEST);
 		endFramePanel.add(endFrameLabel);
+		
+		RangePanel = new JPanel();
+		RangePanel.setLayout(new GridLayout(2,1));
+		RangePanel.add(startFramePanel);
+		RangePanel.add(endFramePanel);
 		
 		
 		exclEdgeBox = new  JCheckBox(exclEdgeName, exPs.excludeEdges);

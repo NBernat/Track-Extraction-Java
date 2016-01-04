@@ -261,7 +261,7 @@ public class Experiment implements Serializable{
 	
 	public void toCSV(Writer fw, CSVPrefs prefs){
 		
-		String lb = System.lineSeparator();
+		String lb = "\n";//System.lineSeparator();
 		
 		try{
 			fw.append("Track:");

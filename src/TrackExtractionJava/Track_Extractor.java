@@ -42,57 +42,6 @@ public class Track_Extractor implements PlugIn{
 		ExtractorFrame ef = new ExtractorFrame();
 		ef.run(null);
 		
-		/*
-		IJ.showStatus("Getting stack");
-		
-		IS = getStack();
-		if (IS == null) {
-			IJ.showMessage("Null ImagePlus");
-			return;
-		} 
-
-		
-		IJ.showStatus("Setting up TrackBuiling");
-		ep= new ExtractionParameters();
-		IJ.showStatus("Building Tracks");
-		
-		// 
-		if (ep.trackPointType>=2){
-			tb = new MaggotTrackBuilder(IS, ep);
-		} else {
-			tb = new TrackBuilder(IS, ep);
-		}
-		
-		try {
-			
-			
-			tb.run();
-			
-			
-			//////
-			IJ.showStatus("Converting to Experiment");
-			Experiment exp = tb.toExperiment();
-			
-			ef = new ExperimentFrame(exp);
-			ef.run(null);
-			
-			new TextWindow("Communicator Output", tb.comm.outString, 500, 500);
-		}
-		catch (Exception e) {
-			
-			StackTraceElement[] tr = e.getStackTrace();
-			String s = e.toString()+"\n";
-			for (int i=0; i<tr.length; i++){
-				s += tr[i].toString()+"\n";
-			}
-			
-			if (tb!=null){
-				tb.comm.message(s, VerbLevel.verb_error);
-				new TextWindow("Communicator Output: Error", tb.comm.outString, 500, 500);
-			}
-		}
-		
-		*/
 	}
 	
 	
@@ -101,18 +50,7 @@ public class Track_Extractor implements PlugIn{
 	}
 	
 	public static void main(String[] args) {
-        // set the plugins.dir property to make the plugin appear in the Plugins menu
-//        Class<?> clazz = Track_Extractor.class;
-//        String url = clazz.getResource("/" + clazz.getName().replace('.', '/') + ".class").toString();
-//        String pluginsDir = url.substring(5, url.length() - clazz.getName().length() - 6);
-//        System.setProperty("plugins.dir", pluginsDir);
-
-        // start ImageJ
-//        new ImageJ();
-
-
-        // run the plugin
-        //IJ.runPlugIn(clazz.getName(), "");
+        
 		Track_Extractor te = new Track_Extractor();
 		te.run("");
 }
@@ -136,6 +74,7 @@ class ExtractorFrame extends JFrame{
 	InputPanel input;
 	ParamPanel params;
 	OutputPanel output;
+	JPanel buttonPanel;
 	JButton runButton;
 	
 	public void run(String args){
@@ -154,7 +93,32 @@ class ExtractorFrame extends JFrame{
 		params = new ParamPanel();
 		input.outputTxFld = output.txFld;
 		
-		//TODO make button
+		runButton = new JButton("Run extraction");
+		runButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int statecode = validRunState();
+				if (statecode==0){
+					runProcessor();
+					//TODO close window, show progress
+				} else {
+					
+					String message = "";
+					switch(statecode){
+					case 2:
+						
+						break;
+					default: 
+						message += "Unable to process";
+					}
+					
+					new TextWindow("Processing Message", message, 200, 200);	
+				}
+			}
+		} );
+		
+		buttonPanel = new JPanel();
+		buttonPanel.add(runButton);
 		
 		//Add them to the MainPanel
 		mainPanel = new JPanel(); //new JTabbedPane(tabPlacement);
@@ -162,10 +126,12 @@ class ExtractorFrame extends JFrame{
 		mainPanel.add("Select input...", input);
 		mainPanel.add("Select output...", output);
 		mainPanel.add("Set Parameters...", params);
+		mainPanel.add("Run Extraction", buttonPanel);
 		
 		//Add mainPanel to frame
 		add(mainPanel);
 		
+		pack();
 	}
 	
 	
@@ -175,8 +141,40 @@ class ExtractorFrame extends JFrame{
 		setVisible(true);
 	}
 	
+	private int validRunState(){
+		
+		
+		//TODO
+		return 0;
+	}
+	
+	private void runProcessor(){
+		
+		
+		Experiment_Processor ep = new Experiment_Processor();
+		
+		//Set params from input
+		ep.runningFromMain = true;
+		ep.prParams = params.procParams;
+		ep.extrParams = params.extrParams;
+		ep.fitParams = params.fitParams;
+		
+		//Set src and dest
+		String[] epArgs = new String[3];
+		epArgs[0] = input.txFld.getText();
+		
+		
+		ep.run("");
+		
+	}
+	
 	
 }
+
+
+
+
+
 
 
 class InputPanel extends JPanel{
@@ -338,6 +336,7 @@ class OutputPanel extends JPanel{
 		
 		//build the dest chooser and button
 		flCh = new JFileChooser();
+		flCh.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 		flChButton = new JButton("Browse...");
 		
 		flChButton.addActionListener(new ActionListener() {
@@ -405,6 +404,7 @@ class ParamPanel extends JPanel{
 		//Add components to the panel
 		setLayout(new GridLayout(1, 3));
 		add(procParams.getPanel());
+		add(extrParams.getPanel());
 		
 	}
 	
