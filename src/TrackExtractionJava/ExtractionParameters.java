@@ -4,6 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -171,7 +173,7 @@ public class ExtractionParameters implements Serializable{
      */
     int trackPointType = 2;
     
-    JPanel epPanel;
+    extrPanel epPanel;
     
     /**
 	 * Creates a set of Extraction Parameters, with the proper start frame
@@ -214,7 +216,7 @@ public class ExtractionParameters implements Serializable{
 	
 
 	
-	public JPanel getPanel(){
+	public extrPanel getPanel(){
 		if (epPanel==null){
 			epPanel = extrPanel.makePanel(this);
 		}
@@ -273,7 +275,7 @@ class extrPanel extends JPanel {
 	JFormattedTextField maxDistField;
 	JLabel maxDistLabel;
 	JPanel maxDistPanel;
-	String maxDistName = "Mix dist between track points (pixels)";
+	String maxDistName = "Max dist between track points (pixels)";
 
 	JFormattedTextField minAreaField;
 	JLabel minAreaLabel;
@@ -332,16 +334,14 @@ class extrPanel extends JPanel {
 		
 		startFrameField = new JFormattedTextField(NumberFormat.getIntegerInstance());
 		startFrameField.setValue(exPs.startFrame); 
-		startFrameField.addActionListener(new ActionListener() {
+		startFrameField.addPropertyChangeListener( new PropertyChangeListener() {
+			
 			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (startFrameField.isEditValid()){
-					exPs.startFrame = (Integer)startFrameField.getValue();
-				} else {
-					startFrameField.setValue(startFrameField.getValue());
-				}
+			public void propertyChange(PropertyChangeEvent evt) {
+				Integer sf = ((Number)startFrameField.getValue()).intValue();
+				exPs.startFrame = sf.intValue();
 			}
-		});
+		}); 
 		startFrameLabel = new JLabel(startFrameName);
 		startFramePanel = new JPanel(new BorderLayout());
 		startFramePanel.add(startFrameField, BorderLayout.WEST);
@@ -349,14 +349,12 @@ class extrPanel extends JPanel {
 		
 		endFrameField = new JFormattedTextField(NumberFormat.getIntegerInstance());
 		endFrameField.setValue(exPs.endFrame); 
-		endFrameField.addActionListener(new ActionListener() {
+		endFrameField.addPropertyChangeListener( new PropertyChangeListener() {
+			
 			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (endFrameField.isEditValid()){
-					exPs.endFrame = (Integer)endFrameField.getValue();
-				} else {
-					endFrameField.setValue(endFrameField.getValue());
-				}
+			public void propertyChange(PropertyChangeEvent evt) {
+				Integer ef = ((Number)endFrameField.getValue()).intValue();
+				exPs.endFrame = ef.intValue();
 			}
 		});
 		endFrameLabel = new JLabel(endFrameName);
@@ -382,14 +380,12 @@ class extrPanel extends JPanel {
 		
 		glbThreshField = new JFormattedTextField(NumberFormat.getIntegerInstance());
 		glbThreshField.setValue(exPs.globalThreshValue); 
-		glbThreshField.addActionListener(new ActionListener() {
+		glbThreshField.addPropertyChangeListener( new PropertyChangeListener() {
+			
 			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (glbThreshField.isEditValid()){
-					exPs.globalThreshValue = (Integer)glbThreshField.getValue();
-				} else {
-					glbThreshField.setValue(glbThreshField.getValue());
-				}
+			public void propertyChange(PropertyChangeEvent evt) {
+				Integer gt = ((Number)glbThreshField.getValue()).intValue();
+				exPs.globalThreshValue = gt.intValue();
 			}
 		});
 		glbThreshLabel = new JLabel(glbThreshName);
@@ -399,14 +395,12 @@ class extrPanel extends JPanel {
 		
 		maxDistField = new JFormattedTextField(NumberFormat.getIntegerInstance());
 		maxDistField.setValue(exPs.maxMatchDist); 
-		maxDistField.addActionListener(new ActionListener() {
+		maxDistField.addPropertyChangeListener( new PropertyChangeListener() {
+			
 			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (maxDistField.isEditValid()){
-					exPs.maxMatchDist = (Integer)maxDistField.getValue();
-				} else {
-					maxDistField.setValue(maxDistField.getValue());
-				}
+			public void propertyChange(PropertyChangeEvent evt) {
+				Integer md = ((Number)maxDistField.getValue()).intValue();
+				exPs.maxMatchDist = md.intValue();
 			}
 		});
 		maxDistLabel = new JLabel(maxDistName);
@@ -416,14 +410,12 @@ class extrPanel extends JPanel {
 		
 		minAreaField = new JFormattedTextField(NumberFormat.getIntegerInstance());
 		minAreaField.setValue(exPs.minArea); 
-		minAreaField.addActionListener(new ActionListener() {
+		minAreaField.addPropertyChangeListener( new PropertyChangeListener() {
+			
 			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (minAreaField.isEditValid()){
-					exPs.minArea = (Integer)minAreaField.getValue();
-				} else {
-					minAreaField.setValue(minAreaField.getValue());
-				}
+			public void propertyChange(PropertyChangeEvent evt) {
+				Integer ma = ((Number)minAreaField.getValue()).intValue();
+				exPs.minArea = ma.intValue();
 			}
 		});
 		minAreaLabel = new JLabel(minAreaName);
@@ -433,14 +425,12 @@ class extrPanel extends JPanel {
 		
 		maxAreaField = new JFormattedTextField(NumberFormat.getIntegerInstance());
 		maxAreaField.setValue(exPs.maxArea); 
-		maxAreaField.addActionListener(new ActionListener() {
+		maxAreaField.addPropertyChangeListener( new PropertyChangeListener() {
+			
 			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (maxAreaField.isEditValid()){
-					exPs.maxArea = (Integer)maxAreaField.getValue();
-				} else {
-					maxAreaField.setValue(maxAreaField.getValue());
-				}
+			public void propertyChange(PropertyChangeEvent evt) {
+				Integer ma = ((Number)maxAreaField.getValue()).intValue();
+				exPs.maxArea = ma.intValue();
 			}
 		});
 		maxAreaLabel = new JLabel(maxAreaName);

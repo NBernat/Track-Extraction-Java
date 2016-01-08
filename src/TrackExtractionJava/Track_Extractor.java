@@ -4,6 +4,7 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -77,6 +78,11 @@ class ExtractorFrame extends JFrame{
 	JPanel buttonPanel;
 	JButton runButton;
 	
+	public ExtractorFrame(){
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	}
+	
+	
 	public void run(String args){
 
 		buildFrame();
@@ -91,9 +97,10 @@ class ExtractorFrame extends JFrame{
 		input = new InputPanel();
 		output = new OutputPanel();
 		params = new ParamPanel();
-		input.outputTxFld = output.txFld;
+		input.outputDirFld = output.dirTxFld;
+		input.outputNameFld = output.nameTxFld;
 		
-		runButton = new JButton("Run extraction");
+		runButton = new JButton("Extract tracks to CSV");
 		runButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -124,8 +131,8 @@ class ExtractorFrame extends JFrame{
 		mainPanel = new JPanel(); //new JTabbedPane(tabPlacement);
 		mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
 		mainPanel.add("Select input...", input);
-		mainPanel.add("Select output...", output);
 		mainPanel.add("Set Parameters...", params);
+		mainPanel.add("Select output...", output);
 		mainPanel.add("Run Extraction", buttonPanel);
 		
 		//Add mainPanel to frame
@@ -194,8 +201,12 @@ class InputPanel extends JPanel{
 	JTextArea desc;
 	
 	//External Elements
-	JTextField outputTxFld;
+	JTextField outputDirFld;
+	JTextField outputNameFld;
 	
+
+	static String txFldDisplay = "Choose an experiment...";
+	int txFldNColumns = 20;
 	
 	//Constructors
 	public InputPanel(){
@@ -218,7 +229,7 @@ class InputPanel extends JPanel{
 		descBox.add(desc);
 		
 		add(srcChooserBox);
-		add(descBox);
+//		add(descBox);
 		
 		
 	}
@@ -230,8 +241,6 @@ class InputPanel extends JPanel{
 		
 		
 		//build the source name text field
-		String txFldDisplay = "Choose an experiment (.jav)...";
-		int txFldNColumns = 20;
 		txFld = new JTextField(txFldDisplay,txFldNColumns);
 		txFld.addActionListener(new ActionListener() {
 			@Override
@@ -271,13 +280,18 @@ class InputPanel extends JPanel{
 	//Auxiliary functions
 	private void setOutput(){
 		
+		File f = new File(txFld.getText());
+		String dir = f.getParent();
+		String name = f.getName();
+		
 		//If no destination exists, make a suggestion 
-		if (outputTxFld.getText().equals("Save as...")){
-			if (txFld.getText().contains(".jav")){
-				outputTxFld.setText(txFld.getText().replace(".jav", ".csv"));
-			} else if (txFld.getText().contains(".prejav")){
-				outputTxFld.setText(txFld.getText().replace(".prejav", "_pre.csv"));
-			}
+		if(outputDirFld.getText().equals(OutputPanel.dirTxFldDisplay)){
+			outputDirFld.setText(dir);
+		}
+		
+		if (outputNameFld.getText().equals(OutputPanel.nameTxFldDisplay)){
+			int i = name.lastIndexOf(".");
+			outputNameFld.setText(name.substring(0, i));
 		}
 	}
 	
@@ -305,9 +319,17 @@ class OutputPanel extends JPanel{
 	private static final long serialVersionUID = 1L;
 	
 
-	JTextField txFld;
+	JTextField dirTxFld;
 	JButton flChButton;
 	JFileChooser flCh;
+	
+	JTextField nameTxFld;
+	
+	
+	static String dirTxFldDisplay = "Choose save directory...";
+	int dirTxFldNColumns = 20;
+	static String nameTxFldDisplay = "Choose save name...";
+	int nameTxFldNColumns = 20;
 	
 	public OutputPanel(){
 		buildPanel();
@@ -318,23 +340,26 @@ class OutputPanel extends JPanel{
 		//Build components
 		buildComponents();
 		
-		//Put them together
-		JPanel dstChooserBox = new JPanel();
-		dstChooserBox.add(txFld);
-		dstChooserBox.add(flChButton);
+		//TODO Set layout 
 		
-		add(dstChooserBox);
+		//Put them together
+		JPanel dirChooserBox = new JPanel();
+		dirChooserBox.add(dirTxFld);
+		dirChooserBox.add(flChButton);
+		
+		add(dirChooserBox);
+		add(nameTxFld);
 		
 	}
 	
 	private void buildComponents(){
-				
-		//Build the dest name text field
-		String txFldDisplay = "Save as...";
-		int txFldNColumns = 20;
-		txFld = new JTextField(txFldDisplay,txFldNColumns);
 		
-		//build the dest chooser and button
+		
+		
+		//Build the dir  text field
+		dirTxFld = new JTextField(dirTxFldDisplay,dirTxFldNColumns);
+		
+		//build the dir chooser and button
 		flCh = new JFileChooser();
 		flCh.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 		flChButton = new JButton("Browse...");
@@ -342,12 +367,15 @@ class OutputPanel extends JPanel{
 		flChButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				int result = flCh.showSaveDialog(txFld);
+				int result = flCh.showSaveDialog(dirTxFld);
 				if (result==JFileChooser.APPROVE_OPTION){
-					txFld.setText(flCh.getSelectedFile().getPath());
+					dirTxFld.setText(flCh.getSelectedFile().getPath());
 				}
 			}
 		});
+		
+		//build the name text field
+		nameTxFld = new JTextField(nameTxFldDisplay,nameTxFldNColumns);
 	}
 	
 	
@@ -403,7 +431,7 @@ class ParamPanel extends JPanel{
 		
 		//Add components to the panel
 		setLayout(new GridLayout(1, 3));
-		add(procParams.getPanel());
+//		add(procParams.getPanel());
 		add(extrParams.getPanel());
 		
 	}

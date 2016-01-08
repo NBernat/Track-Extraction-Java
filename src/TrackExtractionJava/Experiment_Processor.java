@@ -80,12 +80,11 @@ public class Experiment_Processor implements PlugIn{
 		
 		if (args.length==2){
 			dstDir = args[1];
-			run(args[0]);
 		} else if(args.length==3){
 			dstDir = args[1];
 			dstName = args[2];
-			run(args[0]);
 		}
+		run(args[0]);
 	}
 	
 	/**

@@ -4,6 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 //import java.nio.file.Path;
 //import java.nio.file.Paths;
 import java.text.NumberFormat;
@@ -111,7 +113,7 @@ public class ProcessingParameters {
 	}
 	
 	
-	public JPanel getPanel(){
+	public ProcPanel getPanel(){
 		if (ppPanel==null){
 			ppPanel = ProcPanel.makePanel(this);
 		}
@@ -178,18 +180,14 @@ class ProcPanel extends JPanel {
 		
 		minTrackLenField = new JFormattedTextField(NumberFormat.getIntegerInstance());
 		minTrackLenField.setValue(prPs.minTrackLen); 
-		minTrackLenField.addActionListener(new ActionListener() {
+		minTrackLenField.addPropertyChangeListener( new PropertyChangeListener() {
+			
 			@Override
-			public void actionPerformed(ActionEvent e) {
-				
-				prPs.minTrackLen = (Integer)minTrackLenField.getValue();
-				if (minTrackLenField.isEditValid()){
-					prPs.minTrackLen = (Integer)minTrackLenField.getValue();
-				} else {
-					minTrackLenField.setValue(minTrackLenField.getValue());
-				}
+			public void propertyChange(PropertyChangeEvent evt) {
+				Integer mtl = ((Number)minTrackLenField.getValue()).intValue();
+				prPs.minTrackLen = mtl.intValue();
 			}
-		});
+		}); 
 		minTrackLenLabel = new JLabel(minTrackLengthName);
 		minTrackLenPanel = new JPanel(new BorderLayout());
 		minTrackLenPanel.add(minTrackLenField, BorderLayout.WEST);
