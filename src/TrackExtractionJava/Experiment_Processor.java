@@ -15,7 +15,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
 
-//import edu.nyu.physics.gershowlab.mmf.mmf_Reader;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+
+import edu.nyu.physics.gershowlab.mmf.mmf_Reader;
 import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
@@ -32,6 +35,7 @@ public class Experiment_Processor implements PlugIn{
 	ProcessingParameters prParams; 
 	ExtractionParameters extrParams;
 	FittingParameters fitParams;
+	CSVPrefs csvPrefs;
 	
 	private String srcDir;
 	private String srcName;
@@ -49,8 +53,8 @@ public class Experiment_Processor implements PlugIn{
 	private TicToc runTime;
 	private int indentLevel;
 	
+	ProgressFrame progFrame;
 	
-	//TODO command line invocation
 	public static void main(String[] args){
 		
 		
@@ -99,7 +103,7 @@ public class Experiment_Processor implements PlugIn{
 		}
 		
 		
-		if (bbf==null && prParams.doFitting){
+		if (bbf==null){
 			
 			if (fitParams==null){
 				fitParams = new FittingParameters();
@@ -138,7 +142,6 @@ public class Experiment_Processor implements PlugIn{
 						log("...done saving Maggot Tracks");
 					}
 					IJ.showStatus("Done Saving MaggotTrackPoint Experiment");
-					//TODO release memory to OS? System.gc
 				}
 				
 				if(prParams.testMagFromDisk){
@@ -184,7 +187,13 @@ public class Experiment_Processor implements PlugIn{
 						log ("...Error in BTP Experiment fromDisk:\n"+sw.toString());
 					}
 				}
-				//TODO release memory to OS? System.gc
+				
+				if(prParams.savetoCSV){
+					Experiment.toCSV(ex, dstDir+File.separator+dstName+".csv", csvPrefs);
+				}
+				
+				
+				
 			} else {
 				log("...no success");
 			}
@@ -360,14 +369,14 @@ public class Experiment_Processor implements PlugIn{
 				System.out.println("Opening mmf from code..");
 				
 				
-//				mmf_Reader mr = new mmf_Reader();
-//				String path = new File(dir, filename).getPath();
-//				mr.loadStack(path);
-//				if (mr.getMmfStack()==null) {
-//					System.out.println("null stack");
-//					return false;
-//				}
-//				mmfStack = new ImagePlus(path, mr.getMmfStack());
+				mmf_Reader mr = new mmf_Reader();
+				String path = new File(dir, filename).getPath();
+				mr.loadStack(path);
+				if (mr.getMmfStack()==null) {
+					System.out.println("null stack");
+					return false;
+				}
+				mmfStack = new ImagePlus(path, mr.getMmfStack());
 				
 			}
 			IJ.showStatus("MMF open");
@@ -463,7 +472,6 @@ public class Experiment_Processor implements PlugIn{
 			return false;
 		}
 		status+="Running trackbuilder...\n";
-		//TODO
 		MaggotTrackBuilder tb = new MaggotTrackBuilder(mmfStack.getImageStack(), extrParams);
 
 		try {
@@ -610,6 +618,9 @@ public class Experiment_Processor implements PlugIn{
 		String name = pathParts[1];
 		if (dstName!=null && dstName!=""){
 			name = dstName;
+			if (name.lastIndexOf(".")<0){
+				name = name+".prejav";
+			}
 		}
 		if (dstDir==null || dstDir.equals("")){
 			f = new File(pathParts[0]+File.separator+name);
@@ -647,6 +658,9 @@ public class Experiment_Processor implements PlugIn{
 		String name = pathParts[1];
 		if (dstName!=null && dstName!=""){
 			name = dstName;
+			if (name.lastIndexOf(".")<0){
+				name = name+".jav";
+			}
 		}
 		if (dstDir==null || dstDir.equals("")){
 			f = new File(pathParts[0]+File.separator+name);
@@ -682,6 +696,8 @@ public class Experiment_Processor implements PlugIn{
 			System.out.println("Experiment_processor.saveErrorTracks error");
 		}
 	}
+	
+	
 	
 	private void log(String message){
 //		System.out.println(message);

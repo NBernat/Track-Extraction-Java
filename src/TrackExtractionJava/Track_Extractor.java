@@ -1,6 +1,9 @@
 package TrackExtractionJava;
 
+import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -10,7 +13,9 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSeparator;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
@@ -69,7 +74,7 @@ class ExtractorFrame extends JFrame{
 	
 	JPanel mainPanel;
 	//int tabPlacement = JTabbedPane.TOP;
-	Dimension panelSize = new Dimension(500,500);
+	Dimension panelSize = new Dimension(500,650);
 	String panelName = "Experiment Processor"; 
 	
 	InputPanel input;
@@ -100,7 +105,7 @@ class ExtractorFrame extends JFrame{
 		input.outputDirFld = output.dirTxFld;
 		input.outputNameFld = output.nameTxFld;
 		
-		runButton = new JButton("Extract tracks to CSV");
+		runButton = new JButton("Run Extraction");
 		runButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -130,9 +135,16 @@ class ExtractorFrame extends JFrame{
 		//Add them to the MainPanel
 		mainPanel = new JPanel(); //new JTabbedPane(tabPlacement);
 		mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+		
+		mainPanel.add(makeLabelPanel("Source"));
 		mainPanel.add("Select input...", input);
-		mainPanel.add("Set Parameters...", params);
+		mainPanel.add(new JSeparator(JSeparator.HORIZONTAL));
+		mainPanel.add(makeLabelPanel("Parameters"));
+		mainPanel.add("Parameters...", params);
+		mainPanel.add(new JSeparator(JSeparator.HORIZONTAL));
+		mainPanel.add(makeLabelPanel("Destination"));
 		mainPanel.add("Select output...", output);
+		mainPanel.add(new JSeparator(JSeparator.HORIZONTAL));
 		mainPanel.add("Run Extraction", buttonPanel);
 		
 		//Add mainPanel to frame
@@ -157,25 +169,38 @@ class ExtractorFrame extends JFrame{
 	
 	private void runProcessor(){
 		
-		
+
+		ImageJ imj = new ImageJ(ImageJ.NO_SHOW);
 		Experiment_Processor ep = new Experiment_Processor();
+		
 		
 		//Set params from input
 		ep.runningFromMain = true;
 		ep.prParams = params.procParams;
 		ep.extrParams = params.extrParams;
 		ep.fitParams = params.fitParams;
+		ep.csvPrefs = params.cPrefs;
 		
 		//Set src and dest
 		String[] epArgs = new String[3];
 		epArgs[0] = input.txFld.getText();
+		epArgs[1] = output.dirTxFld.getText();
+		epArgs[2] = output.nameTxFld.getText();
 		
-		
-		ep.run("");
-		
+		ep.run(epArgs);
+
+		imj.quit();
 	}
 	
-	
+	public JPanel makeLabelPanel(String labelText){
+		
+		JPanel labelPanel = new JPanel();
+		JLabel label = new JLabel(labelText);
+		label.setFont(new Font(label.getFont().getName(), Font.BOLD, label.getFont().getSize()*2));
+		labelPanel.add(label);
+		
+		return labelPanel;
+	}
 }
 
 
@@ -340,15 +365,17 @@ class OutputPanel extends JPanel{
 		//Build components
 		buildComponents();
 		
-		//TODO Set layout 
+		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS)); 
 		
 		//Put them together
-		JPanel dirChooserBox = new JPanel();
-		dirChooserBox.add(dirTxFld);
-		dirChooserBox.add(flChButton);
+		JPanel dirChooserPanel = new JPanel();
+		dirChooserPanel.add(dirTxFld);
+		dirChooserPanel.add(flChButton);
+		JPanel namePanel = new JPanel();
+		namePanel.add(nameTxFld);
 		
-		add(dirChooserBox);
-		add(nameTxFld);
+		add(dirChooserPanel);
+		add(namePanel);
 		
 	}
 	
@@ -390,20 +417,26 @@ class ParamPanel extends JPanel{
 	private static final long serialVersionUID = 1L;
 	
 	ProcessingParameters procParams;
+	ProcPanel pp;
 	ExtractionParameters extrParams;
+	extrPanel ep;
 	FittingParameters fitParams;
+	CSVPrefs cPrefs;
+	JButton cPrefButton;
+	JFrame cPrefFrame;
+	JPanel cPrefPanel;
 	
 	public ParamPanel(){
-		init(null, null, null);
+		init(null, null, null, null);
 		buildPanel();
 	}
 	
-	public ParamPanel(ProcessingParameters pp, ExtractionParameters ep, FittingParameters fp){
-		init(pp, ep, fp);
+	public ParamPanel(ProcessingParameters pp, ExtractionParameters ep, FittingParameters fp, CSVPrefs cp){
+		init(pp, ep, fp, cp);
 		buildPanel();
 	}
 	
-	private void init(ProcessingParameters pp, ExtractionParameters ep, FittingParameters fp){
+	private void init(ProcessingParameters pp, ExtractionParameters ep, FittingParameters fp, CSVPrefs cp){
 		
 		if (pp==null){
 			procParams = new ProcessingParameters();
@@ -423,6 +456,12 @@ class ParamPanel extends JPanel{
 			fitParams = fp;
 		}
 		
+		if (cp==null){
+			cPrefs = new CSVPrefs();
+		} else {
+			cPrefs = cp;
+		}
+		
 	}
 	
 	private void buildPanel(){
@@ -430,16 +469,58 @@ class ParamPanel extends JPanel{
 		buildComponents();
 		
 		//Add components to the panel
-		setLayout(new GridLayout(1, 3));
-//		add(procParams.getPanel());
-		add(extrParams.getPanel());
+		setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
+		
+		add(pp);
+		add(cPrefPanel);
+		add(ep);
 		
 	}
 	
 	private void buildComponents(){
 		
-		//TODO
+		pp = procParams.getPanel();
+		pp.setAlignmentX(Component.CENTER_ALIGNMENT);
+		ep = extrParams.getPanel();
+		ep.setAlignmentX(Component.CENTER_ALIGNMENT);
 		
+		cPrefButton = new JButton("Set CSV Saving Preferences");
+		cPrefButton.addActionListener(new ActionListener() {
+			
+			public void actionPerformed(ActionEvent e) {
+				setCSVPrefs();
+			}
+		});
+		cPrefPanel = new JPanel();
+		cPrefPanel.add(cPrefButton);
+		
+	}
+	
+	private void setCSVPrefs(){
+		
+		cPrefFrame = new JFrame();
+		
+		//Build components
+		csvPrefPanel cpp = new csvPrefPanel(cPrefs);
+		JButton okButton = new JButton("OK");
+		okButton.addActionListener(new ActionListener() {
+			
+			public void actionPerformed(ActionEvent e) {
+				procParams.savetoCSV = true;
+				pp.toCSVBox.setSelected(true);
+				cPrefFrame.dispose();
+			}
+		});
+		
+		//Display components in frame
+		cPrefFrame.setLayout(new BorderLayout());
+		cPrefFrame.add(cpp, BorderLayout.CENTER);
+		cPrefFrame.add(okButton, BorderLayout.SOUTH);
+		
+		cPrefFrame.pack();
+
+		cPrefFrame.setTitle("Test Frame for CSV preferences");
+		cPrefFrame.setVisible(true);
 	}
 	
 	
@@ -452,4 +533,18 @@ class ProgressFrame extends JFrame{
 	 */
 	private static final long serialVersionUID = 1L;
 	
+	JLabel progLabel;
+	
+	public ProgressFrame() {
+		setTitle("Progress");
+	}
+	
+	
+	
+	
+	public static void updateProgress(ProgressFrame pf, String statusUpdate){
+		if (pf!=null){
+			
+		}
+	}
 }

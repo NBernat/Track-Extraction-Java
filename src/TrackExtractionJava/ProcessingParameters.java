@@ -6,13 +6,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
 //import java.nio.file.Path;
 //import java.nio.file.Paths;
 import java.text.NumberFormat;
 
 import javax.swing.JCheckBox;
 import javax.swing.JFormattedTextField;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
@@ -24,16 +24,16 @@ public class ProcessingParameters {
 	/**
 	 * Min length that the fitter can handle
 	 */
-	int minTrackLen = 500;//TODO set this when fp is set
+	int minTrackLen = 500;
 	
 	
 	
-	boolean doFitting = true;
+	boolean doFitting = false;
 	
 	/**
 	 * Closes the MMF window
 	 */
-	boolean closeMMF = false;//TODO set/use this 
+	boolean closeMMF = false;
 	
 	/**
 	 * Displays an ExperimentFrame after extracting tracks 
@@ -55,10 +55,12 @@ public class ProcessingParameters {
 	
 	boolean saveErrors = true;
 	
+	boolean savetoCSV = false;
+	
 	boolean testMagFromDisk = false;
 	boolean testFitFromDisk = false;
 	
-	boolean sendDataToExtracted = true;
+	boolean sendDataToExtracted = false;
 	
 	ProcPanel ppPanel;
 	
@@ -66,17 +68,21 @@ public class ProcessingParameters {
 	public static String getOutFromInDir(String inDir){
 		
 //		Path p = Paths.get(inDir);
-//		
-//		StringBuilder out = new StringBuilder(p.getParent().toString());
-//		
-//		String dataStr = "data";
-//		String exStr = "extracted";
-//		int ind = out.indexOf(dataStr);
-//		out.delete(ind, ind+dataStr.length());
-//		out.insert(ind, exStr);
-//				
-//		return out.toString();
-		return inDir;
+		File f = new File(inDir);
+		
+		StringBuilder out = new StringBuilder(f.getParent().toString());
+		
+		String dataStr = "data";
+		String exStr = "extracted";
+		int ind = out.indexOf(dataStr);
+		if (ind>0){
+			out.delete(ind, ind+dataStr.length());
+			out.insert(ind, exStr);
+		}		
+		
+		
+		return out.toString();
+//		return inDir;
 	}
 	
 	
@@ -91,7 +97,11 @@ public class ProcessingParameters {
 		if (sendDataToExtracted){
 			path = new StringBuilder(getOutFromInDir(srcDir));
 		}
-		name.replace(name.lastIndexOf("."), name.length(), ".prejav");
+		if (name.lastIndexOf(".")>name.lastIndexOf(File.separator)){//if there is a file extension in the name
+			name.replace(name.lastIndexOf("."), name.length(), ".prejav");
+		} else {
+			name.append(".prejav");
+		}
 		String[] MagExPathParts = {path.toString(), name.toString()};
 		return MagExPathParts;
 	}
@@ -103,11 +113,12 @@ public class ProcessingParameters {
 		if (sendDataToExtracted){
 			path = new StringBuilder(getOutFromInDir(srcDir));
 		}
-		name.replace(name.lastIndexOf("."), name.length(), ".jav");
-//		int mtpInd = name.indexOf("MTP");
-//		if (mtpInd>=0){
-//			name.replace(mtpInd, 3, "BTP");
-//		}
+		if (name.lastIndexOf(".")>name.lastIndexOf(File.separator)){//if there is a file extension in the name
+			name.replace(name.lastIndexOf("."), name.length(), ".jav");
+		} else {
+			name.append(".jav");
+		}
+		
 		String[] FitExPathParts = {path.toString(), name.toString()};
 		return FitExPathParts;
 	}
@@ -140,8 +151,8 @@ class ProcPanel extends JPanel {
 	JPanel minTrackLenPanel;
 	String minTrackLengthName = "Minimum track length for fitting";
 	
-	JCheckBox viewExBox;
-	String viewExName = "View experiment after processing";
+	JCheckBox toCSVBox;
+	String toCSVName = "Save track data to CSV";
 	
 	public ProcPanel(ProcessingParameters pp){
 		if (pp==null){
@@ -157,12 +168,13 @@ class ProcPanel extends JPanel {
 		buildComponents();
 		
 		//add components to panel
-		setLayout(new GridLayout(3, 1));
-		add(dofitBox);
-		add(minTrackLenPanel);
-		add(viewExBox);
+		JPanel mainPanel = new JPanel();
+		mainPanel.setLayout(new GridLayout(3, 1));
+		mainPanel.add(dofitBox);
+		mainPanel.add(minTrackLenPanel);
+		mainPanel.add(toCSVBox);
 		
-		
+		add(mainPanel);
 	}
 	
 	public void buildComponents(){
@@ -173,7 +185,7 @@ class ProcPanel extends JPanel {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				prPs.doFitting = dofitBox.isSelected();
-				
+				prPs.saveFitEx = dofitBox.isSelected();
 			}
 		});
 		
@@ -193,15 +205,12 @@ class ProcPanel extends JPanel {
 		minTrackLenPanel.add(minTrackLenField, BorderLayout.WEST);
 		minTrackLenPanel.add(minTrackLenLabel);
 		
-		viewExBox = new  JCheckBox(viewExName, (prPs.doFitting)?prPs.showFitEx:prPs.showMagEx);
-		viewExBox.addActionListener(new ActionListener() {
+		toCSVBox = new  JCheckBox(toCSVName, prPs.savetoCSV);
+		toCSVBox.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				//Both parameters are changed; if viewEx is selected, the appropriate
-				//param is DEselected based on doFitting, so that only one is shown
-				prPs.showFitEx = viewExBox.isSelected();
-				prPs.showMagEx = viewExBox.isSelected();
+				prPs.savetoCSV = toCSVBox.isSelected();
 				
 			}
 		});

@@ -48,7 +48,7 @@ public class CSVPrefs {
 			
 			
 			boolean[] initVals = {
-				true,//"pointID",  //Start of Trackpoint data
+				false,//"pointID",  //Start of Trackpoint data
 				false,//"pointType", 
 				false,//"trackID",
 				true,//"x", 
@@ -59,8 +59,8 @@ public class CSVPrefs {
 				false,//"rect.height",
 				true,//"area",
 				false,//"thresh"//End of TrackPointData
-				true,//"imOriginX",//Start of ImTrackPoint data
-				true,//"imOriginY",//End of ImTrackPoint data
+				false,//"imOriginX",//Start of ImTrackPoint data
+				false,//"imOriginY",//End of ImTrackPoint data
 				false,//"prevPointID",//Start of MaggotTrackPoint data
 				false,//"nextPointID",
 				true,//"htValid",
@@ -70,7 +70,7 @@ public class CSVPrefs {
 				false,//"mid.y",
 				false,//"tail.x",
 				false,//"tail.y",//End of MaggotTrackPoint
-				true//"artificialMid"//Start&End of BackboneTrackPoint data
+				false//"artificialMid"//Start&End of BackboneTrackPoint data
 			};
 			includeValue=initVals;
 			

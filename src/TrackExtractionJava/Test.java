@@ -1,5 +1,7 @@
 package TrackExtractionJava;
 
+import ij.ImageJ;
+
 import java.awt.BorderLayout;
 import java.util.Scanner;
 import java.util.Vector;
@@ -19,6 +21,11 @@ public class Test {//extends JFrame
 
 	public static void main(String[] args) {
 		
+		/*
+		
+		testEx_Proc();
+		*/
+		
 		
 		/*
 		testExParamaPanel();
@@ -29,9 +36,9 @@ public class Test {//extends JFrame
 		testProcParamPanel();
 		*/
 		
+		
 		testExractionWindow();
 		/*
-		
 		*/
 		
 		
@@ -101,6 +108,35 @@ public class Test {//extends JFrame
 		testGapDilation();
 		*/
 		
+	}
+
+	
+	public static void testEx_Proc(){
+		
+		ImageJ imj = new ImageJ(ImageJ.NO_SHOW);
+		ProcessingParameters p = new ProcessingParameters();
+		ExtractionParameters e = new ExtractionParameters();
+		FittingParameters f = new  FittingParameters();
+		
+		Experiment_Processor ep = new Experiment_Processor();
+		
+		
+		//Set params from input
+		ep.runningFromMain = true;
+//		ep.prParams = p;
+//		ep.extrParams = e;
+//		ep.fitParams = f;
+		
+		//Set src and dest
+		String[] epArgs = new String[3];
+		epArgs[0] = "C:\\Users\\Natalie\\Documents\\Testing\\Interface testing\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.mmf";
+		epArgs[1] = "C:\\Users\\Natalie\\Documents\\Testing\\Interface testing\\";
+		epArgs[2] = "Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541";
+		
+		ep.run(epArgs[0]);
+		
+
+		imj.quit();
 	}
 	
 	public static void testExParamaPanel(){
