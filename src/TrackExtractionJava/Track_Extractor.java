@@ -10,6 +10,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 
 import javax.swing.BoxLayout;
+import javax.swing.ButtonModel;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -20,6 +21,8 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import ij.IJ;
 import ij.ImageJ;
@@ -42,6 +45,10 @@ public class Track_Extractor implements PlugIn{
 	//ep= new ExtractionParameters()
 	ExperimentFrame ef;
 	
+//	public Track_Extractor(){
+//		run(null);
+//	}
+//	
 	public void run(String arg) {
 				
 		
@@ -84,7 +91,7 @@ class ExtractorFrame extends JFrame{
 	JButton runButton;
 	
 	public ExtractorFrame(){
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 	}
 	
 	
@@ -109,6 +116,8 @@ class ExtractorFrame extends JFrame{
 		runButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+//				runButton.setText("Running...");
+				
 				int statecode = validRunState();
 				if (statecode==0){
 					runProcessor();
@@ -126,8 +135,24 @@ class ExtractorFrame extends JFrame{
 					
 					new TextWindow("Processing Message", message, 200, 200);	
 				}
+				
+
+//				runButton.setText("Run Extraction");
 			}
 		} );
+		runButton.getModel().addChangeListener(new ChangeListener() {
+			
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				ButtonModel model = (ButtonModel) e.getSource();
+				if(model.isPressed()){
+					runButton.setText("Running...");
+				} else {
+					runButton.setText("Run Extraction");
+				}
+				
+			}
+		});
 		
 		buttonPanel = new JPanel();
 		buttonPanel.add(runButton);

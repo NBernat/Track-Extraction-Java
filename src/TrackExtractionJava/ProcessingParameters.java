@@ -86,41 +86,53 @@ public class ProcessingParameters {
 	}
 	
 	
-	public String[] setLogPath(String srcDir, String srcName){
+	public String[] setLogPath(String srcDir, String dstDir){
 		String[] logPathParts = {srcDir, "ProcessingLog.txt"};
+		if (logPathParts[0]==null || logPathParts[0].equals("")){
+			if (dstDir!=null){
+				logPathParts[0] = dstDir;
+			} else {
+				logPathParts[0] = "";
+			}
+		}
 		return logPathParts;
 	}
 	
-	public String[] setMagExPath(String srcDir, String srcName){
-		StringBuilder path = new StringBuilder(srcDir);
-		StringBuilder name = new StringBuilder(srcName);
-		if (sendDataToExtracted){
-			path = new StringBuilder(getOutFromInDir(srcDir));
-		}
-		if (name.lastIndexOf(".")>name.lastIndexOf(File.separator)){//if there is a file extension in the name
-			name.replace(name.lastIndexOf("."), name.length(), ".prejav");
+	public String setExPath(String srcDir, String srcName, String dstDir, String dstName, String ext){
+		StringBuilder dir;// = new StringBuilder(srcDir);
+		StringBuilder name;// = new StringBuilder(srcName);
+		
+		//set intital path parts
+		if (dstDir!=null && dstDir!=""){
+			dir = new StringBuilder(dstDir);
 		} else {
-			name.append(".prejav");
+			dir = new StringBuilder(dstName);
 		}
-		String[] MagExPathParts = {path.toString(), name.toString()};
-		return MagExPathParts;
-	}
-	
-	public String[] setFitExPath(String srcDir, String srcName){
-		//Clean up use of stringbuilder vs string 
-		StringBuilder path = new StringBuilder(srcDir);
-		StringBuilder name = new StringBuilder(srcName);
 		if (sendDataToExtracted){
-			path = new StringBuilder(getOutFromInDir(srcDir));
-		}
-		if (name.lastIndexOf(".")>name.lastIndexOf(File.separator)){//if there is a file extension in the name
-			name.replace(name.lastIndexOf("."), name.length(), ".jav");
-		} else {
-			name.append(".jav");
+			dir = new StringBuilder(getOutFromInDir(srcDir));
 		}
 		
-		String[] FitExPathParts = {path.toString(), name.toString()};
-		return FitExPathParts;
+		if (dstName!=null && dstName!=""){
+			name = new StringBuilder(dstName);
+		} else {
+			 name = new StringBuilder(srcName);
+		}
+		
+		//set extension
+		if (name.lastIndexOf(".")>name.lastIndexOf(File.separator)){//if there is a file extension in the name
+			name.replace(name.lastIndexOf("."), name.length(), ext);
+		} else {
+			name.append(ext);
+		}
+		
+		return dir+File.separator+name;
+	}
+	
+	public String setMagExPath(String srcDir, String srcName, String dstDir, String dstName){
+		return setExPath(srcDir, srcName, dstDir, dstName, ".prejav");
+	}
+	public String setFitExPath(String srcDir, String srcName, String dstDir, String dstName){
+		return setExPath(srcDir, srcName, dstDir, dstName, ".jav");
 	}
 	
 	
