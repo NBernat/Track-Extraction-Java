@@ -344,7 +344,8 @@ public class Experiment_Processor implements PlugIn{
 	}
 	
 	private boolean openWithIJ(String dir, String filename){
-		mmfStack = new Opener().openImage(dir, filename);
+//		mmfStack = new Opener().openImage(dir, filename);
+		mmfStack = IJ.openImage(dir+File.pathSeparator+filename);
 		return (mmfStack!=null);// && mmfStack.getNSlices()>1);
 	}
 	
