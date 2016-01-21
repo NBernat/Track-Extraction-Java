@@ -4,25 +4,24 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 
 import javax.swing.BoxLayout;
+import javax.swing.ButtonModel;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
-import javax.swing.JTabbedPane;
-import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
-import ij.IJ;
-import ij.ImageJ;
+//import ij.ImageJ;
 import ij.ImageStack;
 import ij.WindowManager;
 import ij.plugin.PlugIn;
@@ -84,7 +83,7 @@ class ExtractorFrame extends JFrame{
 	JButton runButton;
 	
 	public ExtractorFrame(){
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 	}
 	
 	
@@ -128,6 +127,19 @@ class ExtractorFrame extends JFrame{
 				}
 			}
 		} );
+		runButton.getModel().addChangeListener(new ChangeListener() {
+			
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				ButtonModel model = (ButtonModel) e.getSource();
+				if(model.isPressed()){
+					runButton.setText("Running...");
+				} else {
+					runButton.setText("Run Extraction");
+				}
+				
+			}
+		});
 		
 		buttonPanel = new JPanel();
 		buttonPanel.add(runButton);
@@ -170,7 +182,7 @@ class ExtractorFrame extends JFrame{
 	private void runProcessor(){
 		
 
-		ImageJ imj = new ImageJ(ImageJ.NO_SHOW);
+//		ImageJ imj = new ImageJ(ImageJ.NO_SHOW);
 		Experiment_Processor ep = new Experiment_Processor();
 		
 		
@@ -189,7 +201,7 @@ class ExtractorFrame extends JFrame{
 		
 		ep.run(epArgs);
 
-		imj.quit();
+//		imj.quit();
 	}
 	
 	public JPanel makeLabelPanel(String labelText){

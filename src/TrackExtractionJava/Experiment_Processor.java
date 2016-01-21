@@ -15,9 +15,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
 
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-
 import edu.nyu.physics.gershowlab.mmf.mmf_Reader;
 import ij.IJ;
 import ij.ImageJ;
@@ -25,7 +22,6 @@ import ij.ImagePlus;
 import ij.WindowManager;
 import ij.gui.ImageWindow;
 import ij.io.OpenDialog;
-import ij.io.Opener;
 import ij.plugin.PlugIn;
 import ij.text.TextWindow;
 
@@ -218,18 +214,14 @@ public class Experiment_Processor implements PlugIn{
 	
 	private void testFromDisk(boolean btpData, PrintWriter pw){
 		
-		String[] pathParts;
+//		String[] pathParts;
+		String path;
 		if (btpData){
-			pathParts = prParams.setFitExPath(srcDir, srcName);
+			path = prParams.setFitExPath(srcDir, srcName, dstDir, dstName);
 		} else {
-			pathParts = prParams.setMagExPath(srcDir, srcName);
+			path = prParams.setMagExPath(srcDir, srcName, dstDir, dstName);
 		}
-		File f;
-		if (dstDir==null || dstDir.equals("")){
-			f = new File(pathParts[0]+File.separator+pathParts[1]);
-		}else {
-			f = new File(dstDir+File.separator+pathParts[1]);
-		}
+		File f = new File(path);
 		IJ.showStatus("Loading Experiment...");
 		System.out.println("Testing fromDisk method on file "+f.getPath());
 		if (pw!=null) pw.println("Loading experiment "+f.getPath());
@@ -298,7 +290,7 @@ public class Experiment_Processor implements PlugIn{
 		}
 		
 		//Open the file with the appropriate method
-		if (dir!=null){
+		if (dir!=null || fileName.equals("current")){
 			
 			srcDir = dir;
 			srcName = fileName;
@@ -317,7 +309,7 @@ public class Experiment_Processor implements PlugIn{
 			} else if (fileName.substring(fileName.length()-7).equalsIgnoreCase(".prejav")){
 				success = openExp(dir, fileName);
 				
-			} else if (fileName.substring(fileName.length()-7).equalsIgnoreCase("current")) {
+			} else if (fileName.equalsIgnoreCase("current")) {
 				success = useCurrentWindow();
 			} else{ 
 				
@@ -431,14 +423,14 @@ public class Experiment_Processor implements PlugIn{
 	 */
 	private String setupLog(){
 		
-		if (srcDir==null || srcName==null){
-			return "";
-		}
+//		if (srcDir==null || srcName==null){
+//			return "";
+//		}
 		
 		indentLevel++;
 		
 		try{
-			String[] logPathParts = prParams.setLogPath(srcDir, srcName);
+			String[] logPathParts = prParams.setLogPath(srcDir, dstDir);
 			String fname = new File(logPathParts[0], logPathParts[1]).getPath();
 			processLog = new PrintWriter(new FileWriter(fname, true));
 			
@@ -614,20 +606,7 @@ public class Experiment_Processor implements PlugIn{
 	 */
 	private boolean saveOldTracks(){
 		indentLevel++;
-		File f;
-		String[] pathParts = prParams.setMagExPath(srcDir, srcName);
-		String name = pathParts[1];
-		if (dstName!=null && dstName!=""){
-			name = dstName;
-			if (name.lastIndexOf(".")<0){
-				name = name+".prejav";
-			}
-		}
-		if (dstDir==null || dstDir.equals("")){
-			f = new File(pathParts[0]+File.separator+name);
-		}else {
-			f = new File(dstDir+File.separator+name);
-		}
+		File f = new File(prParams.setMagExPath(srcDir, srcName, dstDir, dstName));
 		System.out.println("Saving MaggotTrack experiment to "+f.getPath());
 		log("Saving MaggotTrack experiment to "+f.getPath());
 		boolean status;
@@ -654,20 +633,7 @@ public class Experiment_Processor implements PlugIn{
 	private boolean saveNewTracks(){
 		indentLevel++;
 		
-		File f;
-		String[] pathParts = prParams.setFitExPath(srcDir, srcName);
-		String name = pathParts[1];
-		if (dstName!=null && dstName!=""){
-			name = dstName;
-			if (name.lastIndexOf(".")<0){
-				name = name+".jav";
-			}
-		}
-		if (dstDir==null || dstDir.equals("")){
-			f = new File(pathParts[0]+File.separator+name);
-		}else {
-			f = new File(dstDir+File.separator+name);
-		}
+		File f = new File(prParams.setFitExPath(srcDir, srcName, dstDir, dstName));
 		System.out.println("Saving LarvaTrack experiment to "+f.getPath());
 		boolean status;
 		try{

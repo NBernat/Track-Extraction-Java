@@ -28,7 +28,7 @@ public class ExtractionParameters implements Serializable{
 	
 	
 
-	boolean subset = true;
+	boolean subset = false;
 	int startFrame = 1;
 	int endFrame = 200;
 	

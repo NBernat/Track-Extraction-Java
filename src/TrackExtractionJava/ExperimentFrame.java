@@ -56,7 +56,6 @@ public class ExperimentFrame extends JFrame{
 	/**
 	 * A list of tracks
 	 */
-	@SuppressWarnings("rawtypes")
 	JList trackList;
 	
 	/**
@@ -148,7 +147,6 @@ public class ExperimentFrame extends JFrame{
 	}
 	
 	
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	protected void buildExPanel(){
 		
 		exPanel = new JPanel();
