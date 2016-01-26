@@ -257,7 +257,7 @@ class extrPanel extends JPanel {
 	JFormattedTextField startFrameField;
 	JLabel startFrameLabel;
 	JPanel startFramePanel;
-	String startFrameName = "Start frame";
+	String startFrameName = "Start frame(<=1)";
 	
 	JFormattedTextField endFrameField;
 	JLabel endFrameLabel;

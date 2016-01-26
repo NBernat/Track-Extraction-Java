@@ -242,7 +242,7 @@ class InputPanel extends JPanel{
 	JTextField outputNameFld;
 	
 
-	static String txFldDisplay = "Choose an experiment...";
+	static String txFldDisplay = "Choose a file (or type 'current')";
 	int txFldNColumns = 20;
 	
 	//Constructors

@@ -674,11 +674,12 @@ public class Track implements Serializable{
 		
 		if(!addInfo.equals("")) d += addInfo+lb+lb;
 		
-		if (pointList!=null){
-			d += "Points("+pointList.firstElement().getTypeName()+"; "+pointList.size()+"):"+lb;
-			for (int i=0; i<pointList.size(); i++){
+		if (pointList!=null){d += "Points("+pointList.firstElement().getTypeName()+"; "+pointList.size()+"):"+lb;
+
+		d+= String.format("%5s: %5s %8s %13s %10s", "Point", "Frame", "Point ID", "Loc(x,y)[px]", "Area[px]" )+lb;
+		for (int i=0; i<pointList.size(); i++){
 				TrackPoint pt = pointList.get(i);
-				d += (i+1)+": "+pt.getTPDescription()+lb;
+				d += pt.getTPDescription(i+1)+lb;//d += (i+1)+": "+pt.getTPDescription(i)+lb;
 			}
 		}else {
 			d += "Frames: "+lb+lb;

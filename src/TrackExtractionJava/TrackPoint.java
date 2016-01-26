@@ -251,8 +251,12 @@ public class TrackPoint implements Serializable {
 	}
 	
 	public String getTPDescription(){
-		
-		return frameNum+" trID"+pointID+" ("+(int)x+","+(int)y+") A="+area;
+		return getTPDescription(-1);
+//		return frameNum+" ptID"+pointID+" ("+(int)x+","+(int)y+") A="+area;
+	}
+	
+	public String getTPDescription(int pointNum){
+		return String.format("%5d: %5d %8d %13s %10d", pointNum, frameNum, pointID, "("+(int)x+","+(int)y+")", (int)area );
 	}
 	
 	public static String getEmptyCSVinfo(CSVPrefs prefs){

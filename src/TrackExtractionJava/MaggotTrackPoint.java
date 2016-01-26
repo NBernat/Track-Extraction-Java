@@ -756,8 +756,8 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		int centerX = (int)(x-rect.x)*(expandFac);
 		int centerY = (int)(y-rect.y)*(expandFac);
 		ImageProcessor pIm = CVUtils.padAndCenter(new ImagePlus("Point "+pointID, bigIm), expandFac*trackWindowWidth, expandFac*trackWindowHeight, centerX, centerY);
-		int offX = trackWindowWidth*(expandFac/2) - ((int)x-rect.x)*expandFac;//rect.x-imOriginX;
-		int offY = trackWindowHeight*(expandFac/2) - ((int)y-rect.y)*expandFac;//rect.y-imOriginY;
+		int offX = trackWindowWidth*(expandFac/2) - (int)(x-rect.x-.5)*expandFac;//rect.x-imOriginX;
+		int offY = trackWindowHeight*(expandFac/2) - (int)(y-rect.y-.5)*expandFac;//rect.y-imOriginY;
 		
 		
 		return drawFeatures(pIm, offX, offY, expandFac, mdp.mid, mdp.contour, mdp.ht); 
@@ -853,6 +853,8 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	
 	protected ImageProcessor drawFeatures(ImageProcessor grayIm, int offX, int offY, int expandFac, boolean mid, boolean contour, boolean ht){
 		
+		
+		
 		ImageProcessor im = grayIm.convertToRGB();
 		
 		//MIDLINE
@@ -932,8 +934,8 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		}
 	}
 	
-	public String getTPDescription(){
-		String s = super.getTPDescription();
+	public String getTPDescription(int num){
+		String s = super.getTPDescription(num);
 		
 		if (midline==null || !htValid){
 			if (midline==null) s+=" M-X"; else s+="    ";

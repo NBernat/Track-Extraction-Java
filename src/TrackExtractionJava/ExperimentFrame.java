@@ -5,6 +5,7 @@ import ij.io.SaveDialog;
 import ij.text.TextWindow;
 
 import java.awt.BorderLayout;
+import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -23,9 +24,14 @@ import java.util.Vector;
 
 
 
+
+
+
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -89,7 +95,7 @@ public class ExperimentFrame extends JFrame{
 	 */
 	public ExperimentFrame(String fname) throws Exception{
 		//TODO check file name
-		ex = Experiment.deserialize(fname);
+//		ex = Experiment.deserialize(fname);
 	}
 	
 	
@@ -110,6 +116,7 @@ public class ExperimentFrame extends JFrame{
 		
 		//Build the trackPanel
 		trackPanel = new TrackPanel(mdp);
+		trackPanel.setSize(500, 500);
 		
 		//Build the trackList 
 		buildExPanel();
@@ -140,7 +147,7 @@ public class ExperimentFrame extends JFrame{
 	}
 	
 	protected void showFrame(){
-		setSize(550, 600);
+		setSize(750, 600);
 		setTitle("("+ex.getNumTracks()+" tracks) Experiment "+ex.getFileName());
 //		setTitle("("+Experiment.getNumTracks(ex.getFileName())+" tracks) Experiment "+ex.getFileName());
 		setVisible(true);
@@ -210,14 +217,25 @@ public class ExperimentFrame extends JFrame{
 		
 		//Add list and button to panel
 		exPanel.add(trackListPanel, BorderLayout.CENTER);
-		exPanel.add(buttonPanel, BorderLayout.SOUTH);
+//		exPanel.add(buttonPanel, BorderLayout.SOUTH);
 		
 	}
 	
 	protected void buildOpPanel(){
 		playPanel = new JPanel();
+		playPanel.setLayout(new BoxLayout(playPanel, BoxLayout.Y_AXIS));
 		
-		playPanel.add(new DisplayOpPanel(mdp));
+		JLabel label = new JLabel("Play Options");
+		label.setFont(new Font(label.getFont().getName(), Font.BOLD, label.getFont().getSize()*2));
+		label.setAlignmentX(CENTER_ALIGNMENT);
+		
+		DisplayOpPanel dop = new DisplayOpPanel(mdp);
+		JPanel ops = new JPanel();
+		ops.setAlignmentX(CENTER_ALIGNMENT);
+		ops.add(dop);
+		
+		playPanel.add(label);
+		playPanel.add(ops);
 		
 	}
 	
@@ -279,17 +297,18 @@ class TrackPanel extends JPanel {
 	public void buildTrackPanel(){
 		
 		setLayout(new BorderLayout(5, 5));
-		
+		setFont(Font.getFont("Courier New"));
 		
 		
 		//Build & add the description panel
 		trackDescription = new JTextArea(Track.emptyDescription());
 		trackDescription.setLineWrap(false);
+		trackDescription.setFont(new Font("Courier New", Font.PLAIN, trackDescription.getFont().getSize()));
 		descriptionPanel = new JScrollPane(trackDescription);
 		
 		
 		//Build and add the play button 
-		JButton playButton = new JButton("Play Track");
+		JButton playButton = new JButton("Play Track Movie");
 		playButton.setSize(100, 40);
 		playButton.addActionListener(new ActionListener() {
 			@Override
@@ -379,13 +398,13 @@ class DisplayOpPanel extends JPanel{
 		setLayout(new GridLayout(7, 1));
 		
 		buildCheckBoxes();
-		add(clusterBox);
-		add(midBox);
-		add(initialBBBox);
-		add(contourBox);
+//		add(clusterBox);
+//		add(initialBBBox);
 		add(htBox);
-//		add(forcesBox);
+		add(contourBox);
+		add(midBox);
 		add(backboneBox);
+//		add(forcesBox);
 	}
 	
 	private void buildCheckBoxes(){

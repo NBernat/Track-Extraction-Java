@@ -152,7 +152,7 @@ class ProcPanel extends JPanel {
 	ProcessingParameters prPs;
 	
 	JCheckBox dofitBox;
-	String dofitName = "Do fitting";
+	String dofitName = "Do backbone fitting";
 	
 	JFormattedTextField minTrackLenField;
 	JLabel minTrackLenLabel;
