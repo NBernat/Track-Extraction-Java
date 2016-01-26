@@ -205,7 +205,7 @@ public class Experiment implements Serializable{
 	 */
 	public static Experiment fromPath(String path){
 		
-		return fromPath(path, new ExtractionParameters(), new FittingParameters(), null);
+		return fromPath(path, new ExtractionParameters(), new FittingParameters(), new PrintWriter(System.out));
 		
 	}
 	

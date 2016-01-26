@@ -82,7 +82,7 @@ public class CVUtils {
 	    	
 //	    	debS+="thresh="+j+", numAbove0="+ct+"; ";
 	    	
-	    		goodness = findGoodness(new ImagePlus("", thrIm), ep, numPts, minArea, maxArea, targetArea);
+	    		goodness = findGoodness(new ImagePlus("", thrIm), j, ep, numPts, minArea, maxArea, targetArea);
 //	    		debS+="goodness="+goodness;
 	    		if (goodness > bestGoodness) {
 //	    			debS+="; BEST";
@@ -112,14 +112,14 @@ public class CVUtils {
 	}
 	*/
 	
-	public static double findGoodness(ImagePlus threshIm, ExtractionParameters ep, int nregions, int minArea, int maxArea, int bestArea) {
+	public static double findGoodness(ImagePlus threshIm, int thresh, ExtractionParameters ep, int nregions, int minArea, int maxArea, int bestArea) {
 		
 		double goodness = 0;
 	    //-100 for every contour# you are away from nregions
 	    //-10 for every contour below minArea or above maxArea
 	    //-1 * (area - bestArea)^2 / (maxArea - minArea)^2 for each contour
 	    int area;
-	    ResultsTable rt = findPoints(threshIm, null, ep, minArea, maxArea, false);
+	    ResultsTable rt = findPoints(threshIm, thresh, null, ep, minArea, maxArea, false);
 	    int nc = rt.getCounter();
 //	    goodness -= Math.abs(nc - nregions) * 100;
 	    //nc = number of results; iterate through resulting areas
@@ -145,8 +145,8 @@ public class CVUtils {
 	 * @return A ResultsTable with the appropriate info
 	 * @return
 	 */
-	static ResultsTable findPoints(ImagePlus threshIm, ExtractionParameters ep, boolean showResults) {
-		return findPoints(threshIm, null, ep, (int)ep.minArea, (int)ep.maxArea, showResults);
+	static ResultsTable findPoints(ImagePlus threshIm, int thresh, ExtractionParameters ep, boolean showResults) {
+		return findPoints(threshIm, thresh, null, ep, (int)ep.minArea, (int)ep.maxArea, showResults);
 	}
 
 	/**
@@ -155,7 +155,7 @@ public class CVUtils {
 	 * @param ep Extraction Parameters
 	 * @return A ResultsTable with the appropriate info
 	 */
-	static ResultsTable findPoints(ImagePlus threshIm, Rectangle analysisRect, ExtractionParameters ep, int minArea, int maxArea, boolean showResults) {
+	static ResultsTable findPoints(ImagePlus threshIm, int thresh, Rectangle analysisRect, ExtractionParameters ep, int minArea, int maxArea, boolean showResults) {
 		
 		
 		boolean excludeEdges = analysisRect==null && ep.excludeEdges;
@@ -165,15 +165,33 @@ public class CVUtils {
 		
 		ParticleAnalyzer partAn = new ParticleAnalyzer(options, measurements, rt, minArea, maxArea);
 		
+		//ParticleAnalyzer partAn = new ParticleAnalyzer(options, measurements, rt, 1, 100000);
+		
+		
 		//Populate the results table
 		Roi r = threshIm.getRoi();
+		
+		double mint = threshIm.getProcessor().getMinThreshold();
+		double maxt = threshIm.getProcessor().getMaxThreshold();
+		
+		threshIm.getProcessor().setThreshold((double) thresh, (double) 255, ImageProcessor.NO_LUT_UPDATE);
+		
 		if (analysisRect!=null){
 			threshIm.getProcessor().setRoi(analysisRect);
 		} else {
 			threshIm.deleteRoi();
 		}
-		partAn.analyze(threshIm);
+		
+//		threshIm.show();
+		
+		
+		if (!partAn.analyze(threshIm)) {
+			System.out.println ("partAN returned error");
+		};
+		threshIm.getProcessor().setThreshold(mint, maxt, ImageProcessor.NO_LUT_UPDATE);
 		threshIm.setRoi(r);
+		
+		
 		return rt;
 	}
 	

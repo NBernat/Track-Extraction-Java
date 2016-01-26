@@ -7,7 +7,6 @@ import java.util.Scanner;
 import java.util.Vector;
 
 import javax.swing.JFrame;
-import javax.swing.JWindow;
 
 
 
@@ -114,9 +113,6 @@ public class Test {//extends JFrame
 	public static void testEx_Proc(){
 		
 		ImageJ imj = new ImageJ(ImageJ.NO_SHOW);
-		ProcessingParameters p = new ProcessingParameters();
-		ExtractionParameters e = new ExtractionParameters();
-		FittingParameters f = new  FittingParameters();
 		
 		Experiment_Processor ep = new Experiment_Processor();
 		

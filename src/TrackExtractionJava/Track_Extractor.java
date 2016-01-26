@@ -4,7 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
@@ -17,15 +16,12 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
-import javax.swing.JTabbedPane;
-import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import ij.IJ;
-import ij.ImageJ;
+//import ij.ImageJ;
 import ij.ImageStack;
 import ij.WindowManager;
 import ij.plugin.PlugIn;
@@ -45,10 +41,6 @@ public class Track_Extractor implements PlugIn{
 	//ep= new ExtractionParameters()
 	ExperimentFrame ef;
 	
-//	public Track_Extractor(){
-//		run(null);
-//	}
-//	
 	public void run(String arg) {
 				
 		
@@ -116,8 +108,6 @@ class ExtractorFrame extends JFrame{
 		runButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-//				runButton.setText("Running...");
-				
 				int statecode = validRunState();
 				if (statecode==0){
 					runProcessor();
@@ -135,9 +125,6 @@ class ExtractorFrame extends JFrame{
 					
 					new TextWindow("Processing Message", message, 200, 200);	
 				}
-				
-
-//				runButton.setText("Run Extraction");
 			}
 		} );
 		runButton.getModel().addChangeListener(new ChangeListener() {
@@ -195,7 +182,7 @@ class ExtractorFrame extends JFrame{
 	private void runProcessor(){
 		
 
-		ImageJ imj = new ImageJ(ImageJ.NO_SHOW);
+//		ImageJ imj = new ImageJ(ImageJ.NO_SHOW);
 		Experiment_Processor ep = new Experiment_Processor();
 		
 		
@@ -214,7 +201,7 @@ class ExtractorFrame extends JFrame{
 		
 		ep.run(epArgs);
 
-		imj.quit();
+//		imj.quit();
 	}
 	
 	public JPanel makeLabelPanel(String labelText){
@@ -255,7 +242,7 @@ class InputPanel extends JPanel{
 	JTextField outputNameFld;
 	
 
-	static String txFldDisplay = "Choose an experiment...";
+	static String txFldDisplay = "Choose a file (or type 'current')";
 	int txFldNColumns = 20;
 	
 	//Constructors

@@ -15,9 +15,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
 
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-
 import edu.nyu.physics.gershowlab.mmf.mmf_Reader;
 import ij.IJ;
 import ij.ImageJ;
@@ -25,7 +22,6 @@ import ij.ImagePlus;
 import ij.WindowManager;
 import ij.gui.ImageWindow;
 import ij.io.OpenDialog;
-import ij.io.Opener;
 import ij.plugin.PlugIn;
 import ij.text.TextWindow;
 
@@ -218,13 +214,14 @@ public class Experiment_Processor implements PlugIn{
 	
 	private void testFromDisk(boolean btpData, PrintWriter pw){
 		
+//		String[] pathParts;
 		String path;
 		if (btpData){
 			path = prParams.setFitExPath(srcDir, srcName, dstDir, dstName);
 		} else {
 			path = prParams.setMagExPath(srcDir, srcName, dstDir, dstName);
 		}
-		File f= new File(path);
+		File f = new File(path);
 		IJ.showStatus("Loading Experiment...");
 		System.out.println("Testing fromDisk method on file "+f.getPath());
 		if (pw!=null) pw.println("Loading experiment "+f.getPath());
@@ -312,7 +309,7 @@ public class Experiment_Processor implements PlugIn{
 			} else if (fileName.substring(fileName.length()-7).equalsIgnoreCase(".prejav")){
 				success = openExp(dir, fileName);
 				
-			} else if (fileName.substring(fileName.length()-7).equalsIgnoreCase("current")) {
+			} else if (fileName.equalsIgnoreCase("current")) {
 				success = useCurrentWindow();
 			} else{ 
 				
@@ -339,7 +336,8 @@ public class Experiment_Processor implements PlugIn{
 	}
 	
 	private boolean openWithIJ(String dir, String filename){
-		mmfStack = new Opener().openImage(dir, filename);
+//		mmfStack = new Opener().openImage(dir, filename);
+		mmfStack = IJ.openImage(dir+File.pathSeparator+filename);
 		return (mmfStack!=null);// && mmfStack.getNSlices()>1);
 	}
 	
@@ -442,7 +440,6 @@ public class Experiment_Processor implements PlugIn{
 			processLog.println("Log entry at "+df.format(new Date()));
 			processLog.println("----------------------------------------------");
 			processLog.println();
-			//new TextWindow("Log", "Created Processing Log file '"+srcName+"' in '"+srcDir+"'", 500, 500);
 			
 			return fname;
 		} catch (Exception e){
@@ -635,6 +632,7 @@ public class Experiment_Processor implements PlugIn{
 	 */
 	private boolean saveNewTracks(){
 		indentLevel++;
+		
 		File f = new File(prParams.setFitExPath(srcDir, srcName, dstDir, dstName));
 		System.out.println("Saving LarvaTrack experiment to "+f.getPath());
 		boolean status;

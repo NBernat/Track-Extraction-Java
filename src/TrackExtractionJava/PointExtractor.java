@@ -289,11 +289,11 @@ public class PointExtractor {
 //		boolean excl = ep.excludeEdges;
 //		ep.excludeEdges = false;
 		if (comm!=null && analysisRect!=null) comm.message("Analysis Rect: ("+analysisRect.x+","+analysisRect.y+"), "+analysisRect.width+"x"+analysisRect.height, VerbLevel.verb_message);
-		ResultsTable pointTable = CVUtils.findPoints(threshIm, analysisRect, ep, (int)ep.minArea, (int)ep.maxArea, showResults);
+		ResultsTable pointTable = CVUtils.findPoints(threshIm, thresh, analysisRect, ep, (int)ep.minArea, (int)ep.maxArea, showResults);
 //		ep.excludeEdges = excl;
 		
 //		if (showResults) {
-			if (comm!=null) comm.message("Frame "+frameNum+": "+pointTable.getCounter()+" points in ResultsTable", VerbLevel.verb_message);
+		if (comm!=null) comm.message("Frame "+frameNum+": "+pointTable.getCounter()+" points in ResultsTable", VerbLevel.verb_message);
 //	    }
 
 			//ResultsTable rt, int frameNum, Rectangle analysisRect, int[] frameSize, ImagePlus currentIm, ImagePlus threshIm, ExtractionParameters ep, int thresh, Communicator comm

@@ -28,9 +28,9 @@ public class ExtractionParameters implements Serializable{
 	
 	
 
-	boolean subset = true;
-	int startFrame = 2000;
-	int endFrame = 2200;
+	boolean subset = false;
+	int startFrame = 1;
+	int endFrame = 200;
 	
 	int GCInterval = 500;
 
@@ -257,7 +257,7 @@ class extrPanel extends JPanel {
 	JFormattedTextField startFrameField;
 	JLabel startFrameLabel;
 	JPanel startFramePanel;
-	String startFrameName = "Start frame";
+	String startFrameName = "Start frame(<=1)";
 	
 	JFormattedTextField endFrameField;
 	JLabel endFrameLabel;

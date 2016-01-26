@@ -55,7 +55,7 @@ public class ProcessingParameters {
 	
 	boolean saveErrors = true;
 	
-	boolean savetoCSV = false;
+	boolean savetoCSV = true;
 	
 	boolean testMagFromDisk = false;
 	boolean testFitFromDisk = false;
@@ -91,13 +91,10 @@ public class ProcessingParameters {
 		if (logPathParts[0]==null || logPathParts[0].equals("")){
 			if (dstDir!=null){
 				logPathParts[0] = dstDir;
-			} else {
-				logPathParts[0] = "";
-			}
+			} 
 		}
 		return logPathParts;
 	}
-	
 	public String setExPath(String srcDir, String srcName, String dstDir, String dstName, String ext){
 		StringBuilder dir;// = new StringBuilder(srcDir);
 		StringBuilder name;// = new StringBuilder(srcName);
@@ -106,7 +103,7 @@ public class ProcessingParameters {
 		if (dstDir!=null && dstDir!=""){
 			dir = new StringBuilder(dstDir);
 		} else {
-			dir = new StringBuilder(dstName);
+			dir = new StringBuilder(srcDir);
 		}
 		if (sendDataToExtracted){
 			dir = new StringBuilder(getOutFromInDir(srcDir));
@@ -135,7 +132,6 @@ public class ProcessingParameters {
 		return setExPath(srcDir, srcName, dstDir, dstName, ".jav");
 	}
 	
-	
 	public ProcPanel getPanel(){
 		if (ppPanel==null){
 			ppPanel = ProcPanel.makePanel(this);
@@ -156,7 +152,7 @@ class ProcPanel extends JPanel {
 	ProcessingParameters prPs;
 	
 	JCheckBox dofitBox;
-	String dofitName = "Do fitting";
+	String dofitName = "Do backbone fitting";
 	
 	JFormattedTextField minTrackLenField;
 	JLabel minTrackLenLabel;
