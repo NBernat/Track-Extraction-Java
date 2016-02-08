@@ -2,18 +2,29 @@ package TrackExtractionJava;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Field;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
+import java.util.Hashtable;
+import java.util.Scanner;
+import java.util.Stack;
 import java.util.Vector;
+
+import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
 
 import edu.nyu.physics.gershowlab.mmf.mmf_Reader;
 import ij.IJ;
@@ -28,12 +39,14 @@ import ij.text.TextWindow;
 
 public class Experiment_Processor implements PlugIn{
 
+
+	protected String paramFileName;
 	ProcessingParameters prParams; 
 	ExtractionParameters extrParams;
 	FittingParameters fitParams;
 	CSVPrefs csvPrefs;
 	
-	private String srcDir;
+	protected String srcDir;
 	private String srcName;
 	private String dstDir;
 	private String dstName;
@@ -78,12 +91,16 @@ public class Experiment_Processor implements PlugIn{
 	
 	public void run(String[] args){
 		
-		if (args.length==2){
+		if (args.length>=2){
 			dstDir = args[1];
-		} else if(args.length==3){
-			dstDir = args[1];
+		} 
+		if(args.length>=3){
 			dstName = args[2];
 		}
+		if(args.length>=4){
+			paramFileName = args[3];
+		}
+		
 		run(args[0]);
 	}
 	
@@ -94,21 +111,9 @@ public class Experiment_Processor implements PlugIn{
 		indentLevel=0;
 		runTime = new TicToc();
 		
-		if (prParams==null){
-			prParams = new ProcessingParameters();
-		}
-		
-		
-		if (bbf==null){
-			
-			if (fitParams==null){
-				fitParams = new FittingParameters();
-			}
-			
-			bbf = new BackboneFitter(fitParams);
-		}
-		
-		boolean success = (loadFile(arg0) );
+		boolean success = (loadFile(arg0));
+		setupParams();
+
 		try {
 			runTime.tic();
 			String logpathname = setupLog();
@@ -117,16 +122,13 @@ public class Experiment_Processor implements PlugIn{
 			if(success){
 				if (ex==null){
 					
-					if (extrParams==null){
-						extrParams = new ExtractionParameters();
-					}
 					
 					log("Loaded mmf; Extracting tracks...");
 					if (!extractTracks()) {
 						log("Error extracting tracks; aborting experiment_processor.");
 						return;
 					}
-					log("...done extracting tracks");
+					log("...done extracting tracks"); 
 					if (prParams.closeMMF && mmfWin!=null) {
 						log("Closing MMF Window");
 						mmfWin.close();
@@ -187,7 +189,6 @@ public class Experiment_Processor implements PlugIn{
 				if(prParams.savetoCSV){
 					Experiment.toCSV(ex, dstDir+File.separator+dstName+".csv", csvPrefs);
 				}
-				
 				
 				
 			} else {
@@ -251,9 +252,35 @@ public class Experiment_Processor implements PlugIn{
 	/**
 	 * Set ups the processing objects
 	 */
-	private void init(){
-		prParams = new ProcessingParameters();
-		bbf = new BackboneFitter();
+	private void setupParams(){
+
+		if (paramFileName!=null){
+			
+			readParamsFromFile();
+		
+		} else {
+			
+			paramFileName = srcDir+System.getProperty("file.separator")+"ProcessingParams.txt";
+			
+			//Any method of parameter input other than from file will generate a file here
+			if (prParams==null){
+				prParams = new ProcessingParameters();
+			}
+			if (extrParams==null){
+				extrParams = new ExtractionParameters();
+			}
+			if (bbf==null){
+				if (fitParams==null){
+					fitParams = new FittingParameters();
+				}
+				bbf = new BackboneFitter(fitParams);
+			}
+			if (csvPrefs==null){
+				csvPrefs = new CSVPrefs();
+			}
+			
+			//writeParamsToFile();
+		}
 	}
 	
 	
@@ -664,7 +691,219 @@ public class Experiment_Processor implements PlugIn{
 		}
 	}
 	
+	private void readParamsFromFile(){
+
+		//Overwrite any other parameters
+		prParams = new ProcessingParameters();
+		extrParams = new ExtractionParameters();
+		fitParams = new FittingParameters();
+		csvPrefs = new CSVPrefs();
+		
+		String delimiter = ":";
+		
+		Scanner s = null;
+		try{
+			//Open the file
+			s = new Scanner(new File(paramFileName));
+			
+			//Read the data
+			int paramType = -1;
+			Hashtable<String, Integer> paramTable = initTable();
+
+			String line;
+			String nameStr;
+			String valueStr;
+			boolean success = true;
+
+			while (s.hasNextLine() && success){
+			
+				line = s.nextLine();
+				int dInd = line.indexOf(delimiter);
+				nameStr = line.substring(0, dInd);
+				int typeVal = paramTable.get(nameStr);
+				
+				if(typeVal>0){ //this is a new heading
+					paramType = typeVal;
+				} else { //this is a parameter
+					valueStr = line.substring(dInd+1);//Skip char for delimiter
+					success = setParam(paramType, nameStr, valueStr);
+				}
+				
+			}
+		} catch (Exception e){
+			System.out.println(e.getMessage());
+		} finally {
+			if (s!=null){
+				s.close();
+			}
+		}
+
+		
+
+	}
 	
+	private Hashtable<String, Integer> initTable(){
+		
+		Hashtable<String, Integer> paramTable = new Hashtable<String, Integer>();
+		
+		paramTable.put("PROCESSING", 1);
+		paramTable.put("EXTRACTION", 2);
+		paramTable.put("FITTING", 3);
+		paramTable.put("CSV", 4);
+
+		return paramTable;
+	}
+	
+	private boolean setParam(int paramType, String paramName, String paramVal){
+		
+		//get the Field for the param
+		Field f = null;
+		Object oVal;
+		try{
+			switch (paramType) {
+			case 1:
+				f = ProcessingParameters.class.getField(paramName);
+				oVal = toObject(f.getType(), paramVal);
+				f.set(prParams, oVal);
+				break;
+			case 2:
+				f = ExtractionParameters.class.getField(paramName);
+				oVal = toObject(f.getType(), paramVal);
+				f.set(extrParams, oVal);
+			case 3:
+				f = FittingParameters.class.getField(paramName);
+				oVal = toObject(f.getType(), paramVal);
+				f.set(fitParams, oVal);
+			case 4:
+				f = CSVPrefs.class.getField(paramName);
+				oVal = toObject(f.getType(), paramVal);
+				f.set(csvPrefs, oVal);
+			default:
+				break;
+			}
+			return true;
+		} catch (Exception e){
+			System.out.println("Error setting parameters from file");
+			System.out.println(e.getMessage());
+			return false;
+		}
+		
+		
+	}
+	
+	public static Object toObject( Class<?> clazz, String value ) {
+		
+		if(clazz.isArray()){
+			return arrayToObject(clazz.getComponentType(), value);			
+		}
+		
+	    if( Boolean.class == clazz || clazz.getName().equals("boolean")) return Boolean.parseBoolean( value );
+	    if( Byte.class == clazz || clazz.getName().equals("byte")) return Byte.parseByte( value );
+	    if( Short.class == clazz || clazz.getName().equals("short")) return Short.parseShort( value );
+	    if( Integer.class == clazz || clazz.getName().equals("int")) return Integer.parseInt( value );
+	    if( Long.class == clazz || clazz.getName().equals("long")) return Long.parseLong( value );
+	    if( Float.class == clazz || clazz.getName().equals("float")) return Float.parseFloat( value );
+	    if( Double.class == clazz  || clazz.getName().equals("double")) return Double.parseDouble( value );
+	    return value;
+	}
+	
+	public static Object arrayToObject(Class<?> clazz, String value){
+		//TODO
+		//remove all white space and and the outermost brackets 
+		String arrStr = value.replaceAll("\\s+", "").substring(value.indexOf("[")+1, value.length()-1);
+		String[] arr = new String[0];
+		if (!clazz.isArray()){
+			arr = arrStr.split(",");
+		} else {
+			
+			ArrayList<String> subStrs = new ArrayList<String>();
+			int nOnStack=0;
+			int startInd = 0;
+			for (int i=0; i<arrStr.length(); i++){
+				//do something with the character/stack
+				if (arrStr.charAt(i)=='['){
+					nOnStack++;
+				} else if (arrStr.charAt(i)==']'){
+					nOnStack--;
+					if (nOnStack==0){
+						subStrs.add(arrStr.substring(startInd, i+1));
+						startInd = i+1;
+					}
+				}
+			}
+			
+			arr = subStrs.toArray(arr);
+			
+		}
+		int nItems = arr.length;
+		
+		Object[] obj = new Object[nItems];
+		for (int i=0; i<nItems; i++){
+			obj[i] = toObject(clazz, arr[i]); 
+		}
+		
+		return (Object)obj;
+	}
+	
+	protected void writeParamsToFile(){
+		
+		//Open file 
+		BufferedWriter bw = null;
+		File f = new File(paramFileName);
+		if(!f.exists()){
+			try {
+				f.createNewFile();
+			} catch(Exception e) {
+				System.out.println("Error creating File for param data");
+				return;
+			}
+		}
+		
+		try {
+			bw = new BufferedWriter(new FileWriter(f));
+			
+			bw.write("PROCESSING:");
+			bw.newLine();
+			classToDisk(bw,ProcessingParameters.class,prParams);
+			bw.write("EXTRACTION:");
+			bw.newLine();
+			classToDisk(bw, ExtractionParameters.class, extrParams);
+			bw.write("FITTING:");
+			bw.newLine();
+			classToDisk(bw, FittingParameters.class, fitParams);
+			bw.write("CSV:");
+			bw.newLine();
+			classToDisk(bw, CSVPrefs.class, csvPrefs);
+			
+			bw.close();
+			
+		} catch (Exception e){
+			System.out.println(e.getMessage());
+		} finally {
+			if (bw!=null){
+			}
+		}
+		
+		
+	}
+	
+	public static void classToDisk(BufferedWriter bw, Class<?> c, Object obj ) throws IOException, IllegalArgumentException, IllegalAccessException{
+		
+		for (Field f : c.getFields()){
+			String s;
+			if (f.get(obj).getClass().isArray()){
+				ArrayList<Object> objArr = new ArrayList<Object>();
+				objArr.addAll((Collection<? extends Object>) f.get(obj));
+				s = Arrays.deepToString((Object[]) f.get(obj));
+			} else {
+				s = f.get(obj).toString();
+			}
+			
+			bw.write(f.getName()+": "+s+System.getProperty("line.separator"));
+		}
+		
+		
+	}
 	
 	private void log(String message){
 //		System.out.println(message);

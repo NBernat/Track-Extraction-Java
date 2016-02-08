@@ -9,7 +9,9 @@ import ij.plugin.PlugIn;
 
 public class Test_ implements PlugIn {//extends JFrame
 
-	
+
+	public int fld1;
+	public String fld2;
 	
 
 	public static void main(String[] args) {
@@ -383,4 +385,17 @@ public class Test_ implements PlugIn {//extends JFrame
 //		IJ.showStatus("Playing track");
 	}
 
+	public Test_(int i, String s){
+		
+		fld1 = i;
+		fld2 = s;
+		
+	}
+	public String str(){
+		String ret = "";
+		for (int i=0; i<fld1; i++){
+			ret+=fld2;
+		}
+		return ret;
+	}
 }

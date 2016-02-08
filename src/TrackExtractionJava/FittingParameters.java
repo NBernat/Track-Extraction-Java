@@ -11,34 +11,33 @@ public class FittingParameters {
 	
 	int GCInterval = 5;
 	
-	int numBBPts = 9;
+	public int numBBPts = 9;
 	
-	int[] grains = {32,16, 1}; //{32,16,1};//edit 17 {32, 16, 8, 1}, edit18 {32, 16, 4, 1}, edit 19 {32, 8, 1}, edit 20 {32, 16, 2, 1} edit 23, edit 24 {8,4, 1}
-	int smallGapMaxLen = 10;//The maximum gap length for which the previous midline will be carried forward (otherwise interpolate)
-	int minValidSegmentLen = 5;//The minimum segment length (in frames) which is situated between two midline gaps and which is considered valid
-	double minFlickerDist = numBBPts;//The minimum distance between spines which indicates an erroneous midline flicker 
-	int gapDilation = 5;
-	boolean dilateToEdges = true;
-	boolean checkArea= true;
-	
+	public int[] grains = {32,16, 1}; //{32,16,1};//edit 17 {32, 16, 8, 1}, edit18 {32, 16, 4, 1}, edit 19 {32, 8, 1}, edit 20 {32, 16, 2, 1} edit 23, edit 24 {8,4, 1}
+	public int smallGapMaxLen = 10;//The maximum gap length for which the previous midline will be carried forward (otherwise interpolate)
+	public int minValidSegmentLen = 5;//The minimum segment length (in frames) which is situated between two midline gaps and which is considered valid
+	public double minFlickerDist = numBBPts;//The minimum distance between spines which indicates an erroneous midline flicker 
+	public int gapDilation = 5;
+	public boolean dilateToEdges = true;
 	
 	
-	int divergenceConstant = 1;//
 	
-	float imageWeight = 1.0f;
-	float spineLengthWeight = .5f;//.6f;// edit 21 to .4, edit 22 to .5
-	float spineSmoothWeight = 1.0f;//.8f;//edit 1 up to 1.0//edit 15 back to .8 (also timelength), edit 16 back to 1.0(also timelength)
-	float[] timeLengthWeight = {3.0f, .3f, .3f};//{3.0f, 0.1f};//edit 2 (swap back, 5)(upped to .5, 6)(back down to .2, 9)(14 up to .3) (15 back to .2, also spinesmooth)(16 back to .3, also spinesmooth)
-	float[] timeSmoothWeight = {1.0f, 0.5f, 0.5f};//{.1f, .1f};//edit 7 (1.0,0.1), edit 8(1.0, 0.3), edit 10(upped to (1.0,1.0)), 11 (10., .5) ) 
+	public int divergenceConstant = 1;//
+	
+	public float imageWeight = 1.0f;
+	public float spineLengthWeight = .5f;//.6f;// edit 21 to .4, edit 22 to .5
+	public float spineSmoothWeight = 1.0f;//.8f;//edit 1 up to 1.0//edit 15 back to .8 (also timelength), edit 16 back to 1.0(also timelength)
+	public float[] timeLengthWeight = {3.0f, .3f, .3f};//{3.0f, 0.1f};//edit 2 (swap back, 5)(upped to .5, 6)(back down to .2, 9)(14 up to .3) (15 back to .2, also spinesmooth)(16 back to .3, also spinesmooth)
+	public float[] timeSmoothWeight = {1.0f, 0.5f, 0.5f};//{.1f, .1f};//edit 7 (1.0,0.1), edit 8(1.0, 0.3), edit 10(upped to (1.0,1.0)), 11 (10., .5) ) 
 	
 	//Head=0, Tail=end
-	float[] imageWeights = {1,1,1, 1,1,1, 1,1,1};
-	float[] spineLengthWeights = {.7f,1,1, 1,1,1, 1,1,1};//{.1f,1,1, 1,1,1, 1,1,1};//{0,1,1, 1,1,1, 1,1,1};//edit 3,4
-	float[] spineSmoothWeights = {.8f,1,1, 1,1,1, 1,1,1};//{.1f,1,1, 1,1,1, 1,1,1};//edit 12 (head to .5), edit 13 (head to .8)
-	float[][] timeLengthWeights = { {1,1,1, 1,1,1, 1,1,1},
+	public float[] imageWeights = {1,1,1, 1,1,1, 1,1,1};
+	public float[] spineLengthWeights = {.7f,1,1, 1,1,1, 1,1,1};//{.1f,1,1, 1,1,1, 1,1,1};//{0,1,1, 1,1,1, 1,1,1};//edit 3,4
+	public float[] spineSmoothWeights = {.8f,1,1, 1,1,1, 1,1,1};//{.1f,1,1, 1,1,1, 1,1,1};//edit 12 (head to .5), edit 13 (head to .8)
+	public float[][] timeLengthWeights = { {1,1,1, 1,1,1, 1,1,1},
 									{1,1,1, 1,1,1, 1,1,1},
 									{1,1,1, 1,1,1, 1,1,1}	};
-	float[][] timeSmoothWeights = { {1,1,1, 1,1,1, 1,1,1},
+	public float[][] timeSmoothWeights = { {1,1,1, 1,1,1, 1,1,1},
 									{1,1,1, 1,1,1, 1,1,1},
 									{1,1,1, 1,1,1, 1,1,1}	};
 	

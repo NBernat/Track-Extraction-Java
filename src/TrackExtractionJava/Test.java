@@ -1,8 +1,10 @@
 package TrackExtractionJava;
 
 import ij.ImageJ;
+import ij.ImagePlus;
 
 import java.awt.BorderLayout;
+import java.io.File;
 import java.util.Scanner;
 import java.util.Vector;
 
@@ -20,8 +22,16 @@ public class Test {//extends JFrame
 
 	public static void main(String[] args) {
 		
-		/*
 		
+		testDiagIm();
+		/*
+		*/
+		
+		/*
+		testParamToDisk();
+		*/
+		
+		/*
 		testEx_Proc();
 		*/
 		
@@ -36,8 +46,8 @@ public class Test {//extends JFrame
 		*/
 		
 		
-		testExractionWindow();
 		/*
+		testExractionWindow();
 		*/
 		
 		
@@ -109,6 +119,37 @@ public class Test {//extends JFrame
 		
 	}
 
+	
+	
+	public static void testDiagIm(){
+		
+		String dir = "E:\\extracted\\optogenetics\\Or42a@Chrimson(X)\\RWN_0.3ohm_BWN_39ohm";
+		String filename = "Or42a@Chrimson(X)_RWN_0.3ohm_BWN_39ohm_201504191707.jav";
+		
+		Experiment ex = new Experiment(Experiment.fromPath(new File(dir, filename).getPath())); 
+		
+		int width = 2048;
+		int height = 2048;
+		
+		ImagePlus diagIm = ex.getDiagnIm(width, height);
+		diagIm.show();
+		
+	}
+	
+	public static void testParamFromDisk(){
+		
+	}
+	
+	public static void testParamToDisk(){
+		Experiment_Processor ep = new Experiment_Processor();
+		ep.paramFileName = "C:\\Users\\Natalie\\Documents\\Testing\\Parameter_toDisk\\test.txt"; 
+		ep.prParams = new ProcessingParameters();
+		ep.extrParams = new ExtractionParameters();
+		ep.fitParams = new FittingParameters();
+		ep.csvPrefs = new CSVPrefs();
+		ep.writeParamsToFile();
+		
+	}
 	
 	public static void testEx_Proc(){
 		

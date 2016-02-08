@@ -5,8 +5,10 @@ import ij.gui.Roi;
 import ij.io.FileSaver;
 import ij.io.Opener;
 import ij.process.ByteProcessor;
+import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
 
+import java.awt.Color;
 import java.awt.Rectangle;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -63,6 +65,19 @@ public class ImTrackPoint extends TrackPoint{
 		imOriginY = (int)y-(trackWindowHeight/2)-1;
 		return CVUtils.padAndCenter(new ImagePlus("Point "+pointID, im), trackWindowWidth, trackWindowHeight, (int)x-rect.x, (int)y-rect.y);
 		 
+	}
+	
+	public void drawPoint(ColorProcessor backIm, Color c){
+		
+		for (int xc=0; xc<im.getWidth(); xc++){
+			for (int yc=0; yc<im.getHeight(); yc++){
+				int val = im.getPixel(xc, yc);
+				if (backIm.getColor(xc+rect.x, yc+rect.y).getRed()<val){
+					backIm.setColor(new Color(c.getRed()*val/255, c.getGreen()*val/255, c.getBlue()*val/255));
+					backIm.drawPixel(xc+rect.x, yc+rect.y);
+				}
+			}
+		}
 	}
 	
 	public void findAndStoreIm(ImagePlus frameIm){

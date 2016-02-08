@@ -1,6 +1,10 @@
 package TrackExtractionJava;
 
 import ij.IJ;
+import ij.ImagePlus;
+import ij.process.ByteProcessor;
+import ij.process.ColorProcessor;
+import ij.process.ImageProcessor;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
@@ -548,6 +552,22 @@ public class Experiment implements Serializable{
 		return fname;
 	}
 
+	
+	
+	
+	public ImagePlus getDiagnIm(int width, int height){
+		
+		ColorProcessor dIm = new ColorProcessor(width, height);
+		
+		for (int i=0; i<tracks.size(); i++){
+			tracks.get(i).drawTrack(dIm);
+		}
+		
+		
+		return new ImagePlus("Diagnostic Image", dIm);
+	}
+	
+	
 	public int getTypeCode(){
 		int trackType = -1;
 		

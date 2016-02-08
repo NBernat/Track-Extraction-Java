@@ -24,11 +24,11 @@ public class ProcessingParameters {
 	/**
 	 * Min length that the fitter can handle
 	 */
-	int minTrackLen = 500;
+	public int minTrackLen = 200;
 	
 	
 	
-	boolean doFitting = false;
+	public boolean doFitting = true;
 	
 	/**
 	 * Closes the MMF window
@@ -55,7 +55,9 @@ public class ProcessingParameters {
 	
 	boolean saveErrors = true;
 	
-	boolean savetoCSV = true;
+	boolean diagnosticIm = false;
+	
+	public boolean savetoCSV = false;
 	
 	boolean testMagFromDisk = false;
 	boolean testFitFromDisk = false;

@@ -3,6 +3,7 @@ package TrackExtractionJava;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.gui.Plot;
+import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
 import ij.text.TextWindow;
 
@@ -302,43 +303,6 @@ public class Track implements Serializable{
 
 	}
 	
-//	public void playRawMovie(){
-//		ListIterator<TrackPoint> tpIt = points.listIterator();
-//		if (tpIt.hasNext()) {
-//		
-//			
-//			TrackPoint point = tpIt.next();
-//			point.setTrack(this);
-//			
-//			//Get the first image
-//			ImageProcessor firstIm;
-//			
-//			firstIm = point.getRawIm();
-//			
-//			
-//			ImageStack trackStack = new ImageStack(firstIm.getWidth(), firstIm.getHeight());
-//			
-//			trackStack.addSlice(firstIm);
-//			
-//			//Add the rest of the images to the movie
-//			while(tpIt.hasNext()){
-//				point = tpIt.next();
-//				point.setTrack(this);
-//				
-//				//Get the next image
-//				ImageProcessor img;
-//				img = point.getRawIm();
-//				trackStack.addSlice(img);
-//			}
-//				
-//			//Show the stack
-//			ImagePlus trackPlus = new ImagePlus("Track "+trackID+": frames "+points.firstElement().frameNum+"-"+points.lastElement().frameNum ,trackStack);
-//			
-//			trackPlus.show();
-//			
-//		}
-//	}
-	
 	
 	public void playMovie(int labelInd, MaggotDisplayParameters mdp){
 		
@@ -387,7 +351,22 @@ public class Track implements Serializable{
 		}
 	}
 	
-
+	public void drawTrack(ColorProcessor im){
+		
+		if (points==null){
+			return;
+		}
+		
+		//draw white for valid, red for invalid
+		Color c = (valid)? new Color(255, 255, 255):new Color(255, 0, 0);
+		
+		for (int i=0; i<points.size(); i++){
+			ImTrackPoint itp = (ImTrackPoint)points.get(i);
+			itp.drawPoint(im, c);
+		}
+		
+		
+	}
 	
 	public String infoString(){
 		String info = "";

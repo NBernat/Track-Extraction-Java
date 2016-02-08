@@ -28,9 +28,9 @@ public class ExtractionParameters implements Serializable{
 	
 	
 
-	boolean subset = false;
-	int startFrame = 1;
-	int endFrame = 200;
+	public boolean subset = false;
+	public int startFrame = 1;
+	public int endFrame = 300;
 	
 	int GCInterval = 500;
 
@@ -48,7 +48,7 @@ public class ExtractionParameters implements Serializable{
 	 * <p>
 	 * 2: Level 2, then comb through collisions after tracks are made 
 	 */
-	int collisionLevel = 1;
+	public int collisionLevel = 1;
 	
 	/**
 	 *  Distance in pixels which indicates a collision
@@ -58,7 +58,7 @@ public class ExtractionParameters implements Serializable{
 	/**
 	 * Max distance in pixels for a point match 
 	 */
-	double maxMatchDist = 20;
+	public double maxMatchDist = 20;
 	
 	/**
 	 * How many frames to move forward when extracting points
@@ -111,11 +111,11 @@ public class ExtractionParameters implements Serializable{
     /**
      * The global threshold value
      */
-    int globalThreshValue = 40;
+    public int globalThreshValue = 25;
     
-    boolean excludeEdges = true; 
-    boolean clipBoundaries = true;
-    int boundarySize = 10; //Size (in pixels) of the boundary that should be clipped when CLIPBOUNDARIES is set to true 
+    public boolean excludeEdges = true; 
+    public boolean clipBoundaries = true;
+    public int boundarySize = 10; //Size (in pixels) of the boundary that should be clipped when CLIPBOUNDARIES is set to true 
     /**
      * The fraction from which the area of a maggot can deviate from the target area when splitting a point
      * <p>
@@ -139,7 +139,7 @@ public class ExtractionParameters implements Serializable{
     /**
      * Number of midline coordinates to extract
      */
-    int numMidCoords = 11;
+    public int numMidCoords = 11;
     
     /**
      * Add-on for the string which specifies the center coordinates of the points
@@ -153,11 +153,11 @@ public class ExtractionParameters implements Serializable{
     /**
      * Minimum blob area
      */
-    double minArea = 20;
+    public double minArea = 20;
     /**
      * Maximum blob area
      */
-    double maxArea = 1000;
+    public double maxArea = 1000;
     /**
      * Minimum blob area used when rethresholding a maggot
      */

@@ -109,10 +109,6 @@ public class BackboneFitter {
 
 		clearPrev();
 		boolean noError = true;
-		
-		if (params.checkArea){
-			noError = checkArea();
-		}
 
 		// Extract the points, and move on (if successful)
 		comm.message("Extracting maggot tracks", VerbLevel.verb_debug);
@@ -160,14 +156,6 @@ public class BackboneFitter {
 		BTPendFrame=-1;
 	}
 
-	
-	private boolean checkArea(){
-		
-		
-		
-		return false;
-	}
-	
 	
 	
 	/**
