@@ -9,6 +9,7 @@ import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -22,6 +23,7 @@ public class ImTrackPoint extends TrackPoint{
 	 */
 	private static final long serialVersionUID = 1L;
 	transient protected ImageProcessor im;
+	protected ImageProcessor imDeriv;
 	protected byte[] serializableIm;
 	protected int imOriginX;
 	protected int imOriginY;
@@ -53,6 +55,93 @@ public class ImTrackPoint extends TrackPoint{
 		this.im = im;
 		trackWindowWidth = dispWidth;
 		trackWindowHeight = dispHeight;
+	}
+	
+	public void calcImDeriv(ImTrackPoint prevITP, ImTrackPoint nextITP, int derivMethod){
+		
+		Rectangle newRect;
+		
+		switch(derivMethod){
+			case ExtractionParameters.DERIV_FORWARD:
+				newRect = getCombinedBounds(nextITP, this);
+				
+				imDeriv = new  ColorProcessor(newRect.width, newRect.height);
+				for (int i=0; i<newRect.width; i++){
+					for (int j=0; j<newRect.height; j++){
+						int val1 = getPixVal(nextITP, i+newRect.x, j+newRect.y);
+						int val2 = getPixVal(this, i+newRect.x, j+newRect.y);
+						int val = val1-val2;
+						if (val>0){
+							imDeriv.setColor(new Color(0, val, 0));
+							imDeriv.drawPixel(i, j);
+						} else {
+							imDeriv.setColor(new Color(-val, 0, 0));
+							imDeriv.drawPixel(i, j);
+						}
+					}
+				}
+				break;
+			case ExtractionParameters.DERIV_BACKWARD:
+				newRect = getCombinedBounds(this, prevITP);
+				
+				imDeriv = new ColorProcessor(newRect.width, newRect.height);
+				for (int i=0; i<newRect.width; i++){
+					for (int j=0; j<newRect.height; j++){
+						int val = getPixVal(this, i+newRect.x, j+newRect.y)-getPixVal(prevITP, i+newRect.x, j+newRect.y);
+						if (val>0){
+							imDeriv.setColor(new Color(0, val, 0));
+							imDeriv.drawPixel(i, j);
+						} else {
+							imDeriv.setColor(new Color(-val, 0, 0));
+							imDeriv.drawPixel(i, j);
+						}
+					}
+				}
+				break;
+			case ExtractionParameters.DERIV_SYMMETRIC:
+				newRect = getCombinedBounds(nextITP, prevITP);
+				
+				imDeriv = new ColorProcessor(newRect.width, newRect.height);
+				for (int i=0; i<newRect.width; i++){
+					for (int j=0; j<newRect.height; j++){
+						int val = (getPixVal(nextITP, i+newRect.x, j+newRect.y)-getPixVal(prevITP, i+newRect.x, j+newRect.y))/2;
+						if (val>0){
+							imDeriv.setColor(new Color(0, val, 0));
+							imDeriv.drawPixel(i, j);
+						} else {
+							imDeriv.setColor(new Color(-val, 0, 0));
+							imDeriv.drawPixel(i, j);
+						}
+					}
+				}
+				break;
+			default:
+				break;
+		}
+		
+		
+	}
+	
+	public static Rectangle getCombinedBounds(ImTrackPoint im1, ImTrackPoint im2){
+		
+		int x = (im1.rect.x<im2.rect.x)? im1.rect.x : im2.rect.x;
+		int y = (im1.rect.y<im2.rect.y)? im1.rect.y : im2.rect.y;
+		int w = ((im2.rect.x+im2.rect.width-im1.rect.x)>(im1.rect.x+im1.rect.width-im2.rect.x))? (im2.rect.x+im2.rect.width-im1.rect.x) : (im1.rect.x+im1.rect.width-im2.rect.x);
+		int h = ((im2.rect.y+im2.rect.height-im1.rect.y)>(im1.rect.y+im1.rect.height-im2.rect.y))? (im2.rect.y+im2.rect.height-im1.rect.y) : (im1.rect.y+im1.rect.height-im2.rect.y);
+		
+		return new Rectangle(x, y, w, h);
+	}
+	
+	public static int getPixVal(ImTrackPoint itp, int xx, int yy){
+		
+		int i = xx-itp.rect.x;
+		int j = yy-itp.rect.y;
+		if (i>=0 && j>=0 && i<itp.im.getWidth() && j<itp.im.getHeight()){
+			return itp.im.get(i, j);//TODO add mask?
+		} else {
+			return 0;
+		}
+		
 	}
 	
 	public ImageProcessor getRawIm(){
@@ -130,6 +219,21 @@ public class ImTrackPoint extends TrackPoint{
 				}
 			}
 			
+//			if (imDeriv==null){
+//				dos.writeByte(0);
+//				dos.writeByte(0);
+//			} else {
+//				dos.writeByte(imDeriv.getWidth());
+//				dos.writeByte(imDeriv.getHeight());
+//				for (int j=0; j<imDeriv.getWidth(); j++){
+//					for (int k=0; k<imDeriv.getHeight(); k++){
+//						dos.writeByte(((ColorProcessor)imDeriv).getColor(j, k).getRed()-128);
+//						dos.writeByte(((ColorProcessor)imDeriv).getColor(j, k).getGreen()-128);
+//						//Blue is empty
+//					}
+//				}
+//			}
+			
 		} catch (Exception e) {
 			if (pw!=null) pw.println("Error writing ImTrackPoint image for point "+pointID+"; aborting save");
 			return 1;
@@ -174,9 +278,10 @@ public class ImTrackPoint extends TrackPoint{
 				
 			trackWindowWidth = ep.trackWindowWidth;
 			trackWindowHeight = ep.trackWindowHeight;
+			
+			//Get image data
 			int w = dis.readByte();
 			int h = dis.readByte();
-//			pw.println("Image ("+w+"x"+h+")");
 			byte[] pix = new byte[w*h];
 			for (int x=0; x<w; x++){
 				for(int y=0; y<h; y++){
@@ -186,6 +291,23 @@ public class ImTrackPoint extends TrackPoint{
 			ImagePlus imp = new ImagePlus("new",new ByteProcessor(w, h, pix));
 
 			im = imp.getProcessor();
+			
+			//Get imderiv data	
+//			w = dis.readByte();
+//			h = dis.readByte();
+//			imDeriv = new ColorProcessor(w, h);
+//			for (int x=0; x<w; x++){
+//				for(int y=0; y<h; y++){
+//					int [] colors = new int[2];
+//					for (int cc=0; cc<2; cc++){
+//						colors[cc] = (int)dis.readByte()+128;
+//					}
+//					imDeriv.setColor(new Color(colors[0], colors[1], 0));
+//					imDeriv.drawPixel(x, y);
+//				}
+//			}
+			
+			
 			
 		} catch (Exception e) {
 			e.printStackTrace(pw);

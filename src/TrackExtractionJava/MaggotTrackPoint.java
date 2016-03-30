@@ -756,8 +756,8 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		int centerX = (int)(x-rect.x)*(expandFac);
 		int centerY = (int)(y-rect.y)*(expandFac);
 		ImageProcessor pIm = CVUtils.padAndCenter(new ImagePlus("Point "+pointID, bigIm), expandFac*trackWindowWidth, expandFac*trackWindowHeight, centerX, centerY);
-		int offX = trackWindowWidth*(expandFac/2) - (int)(x-rect.x-.5)*expandFac;//rect.x-imOriginX;
-		int offY = trackWindowHeight*(expandFac/2) - (int)(y-rect.y-.5)*expandFac;//rect.y-imOriginY;
+		int offX = trackWindowWidth*(expandFac/2) - ((int)x-rect.x)*expandFac;//rect.x-imOriginX;
+		int offY = trackWindowHeight*(expandFac/2) - ((int)y-rect.y)*expandFac;//rect.y-imOriginY;
 		
 		
 		return drawFeatures(pIm, offX, offY, expandFac, mdp.mid, mdp.contour, mdp.ht); 
@@ -1252,7 +1252,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 					
 				case 2:
 					//Distribute pixels between larvae using distance maps of pixels to each contour
-					splitPts = DistanceMapSpliter.splitPoint(mtp, nPts, thr, targetArea, ep, pe.fl.getStackDims(), comm);
+					splitPts = DistanceMapSplitter.splitPoint(mtp, nPts, thr, targetArea, ep, pe.fl.getStackDims(), comm);
 					
 				default:
 				

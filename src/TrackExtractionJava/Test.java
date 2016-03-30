@@ -2,6 +2,7 @@ package TrackExtractionJava;
 
 import ij.ImageJ;
 import ij.ImagePlus;
+import ij.Prefs;
 
 import java.awt.BorderLayout;
 import java.io.File;
@@ -23,8 +24,19 @@ public class Test {//extends JFrame
 	public static void main(String[] args) {
 		
 		
-		testDiagIm();
+		
+		testDistanceMapSplitter();
+		
 		/*
+		testImDerivs();
+		*/
+		
+		/*
+		testParamFromDisk();
+		*/
+		
+		/*
+		testDiagIm();
 		*/
 		
 		/*
@@ -118,13 +130,108 @@ public class Test {//extends JFrame
 		*/
 		
 	}
-
 	
+	
+	public static void testDistanceMapSplitter(){
+		
+		ImageJ IJ = new ImageJ();
+//		Prefs p = new Prefs();
+//		p.blackBackground = false;
+		
+		
+		
+		//Grab experiment
+		String dir = "C:\\Users\\Natalie\\Documents\\Testing\\Building and Fitting - TestExProc\\Fitting from Prejav\\Divergence investigation\\5 before new pointsplitting";
+		String filename = "divergedTrackExp.prejav";
+		Experiment ex = new Experiment(Experiment.fromPath(new File(dir, filename).getPath())); 
+
+		//Grab point
+		int dataInd = 3;
+		int[] trackNums = { 17, 21, 23, 26};
+		int[] pointInds = {197, 32, 77, 10};
+		int[] numPts    = {  2,  2,  2,  2};
+		int trackNum = trackNums[dataInd];
+		Track tr = ex.getTrack(trackNum);
+		ImTrackPoint itp = (ImTrackPoint)tr.points.get(pointInds[dataInd]);
+		
+		ExtractionParameters ep = new ExtractionParameters();
+		int nPts = numPts[dataInd];
+
+		int targetArea = 0;
+		for (int j=0; j<tr.points.size(); j++){
+			targetArea+=tr.points.get(j).area;
+		}
+		targetArea = targetArea/tr.points.size();
+		
+		int rethreshVal = CVUtils.findThreshforNumPts(new ImagePlus("",itp.getRawIm().duplicate()), ep, nPts, (int)ep.minSubMaggotArea, (int)ep.maxArea, targetArea, itp.thresh, 255);//117;//139;//
+		
+		int[] frameSize = {2592,1944}; 
+		
+		Vector<TrackPoint> splitPts =  DistanceMapSplitter.splitPoint(itp, nPts, rethreshVal, targetArea, ep, frameSize, null);
+		
+		for (int i=0; i<splitPts.size(); i++){
+			new ImagePlus("split point "+i, ((ImTrackPoint)splitPts.get(i)).getRawIm()).show();
+		}
+		
+		
+		IJ.quit();
+		
+	}
+	
+	
+
+	public static void testImDerivs(){
+		ImageJ imj = new ImageJ();
+		String dir = "E:\\extracted\\optogenetics\\Or42a@Chrimson(X)\\RWN_0.3ohm_BWN_39ohm";
+		String filename = "Or42a@Chrimson(X)_RWN_0.3ohm_BWN_39ohm_201504191707.prejav";
+		
+		Experiment ex = new Experiment(Experiment.fromPath(new File(dir, filename).getPath())); 
+		Track t = ex.getTrackFromInd(200);
+		
+		t.playMovie();
+		int i = 6;
+		ImTrackPoint itp = (ImTrackPoint)t.getPoint(i);
+		ImTrackPoint itp_prev = (ImTrackPoint)t.getPoint(i-1);
+		ImTrackPoint itp_next = (ImTrackPoint)t.getPoint(i+1);
+		ImTrackPoint itp_prev5 = (ImTrackPoint)t.getPoint(i-5);
+		ImTrackPoint itp_next5 = (ImTrackPoint)t.getPoint(i+5);
+		
+		new ImagePlus("Pt"+(i-5),itp_prev5.getRawIm()).show();
+		new ImagePlus("Pt"+(i-1),itp_prev.getRawIm()).show();
+		new ImagePlus("**Pt"+(i),itp.getRawIm()).show();
+		new ImagePlus("Pt"+(i+1),itp_next.getRawIm()).show();
+		new ImagePlus("Pt"+(i+5),itp_next5.getRawIm()).show();
+		
+		System.out.println("calculating forward deriv...");
+		itp.calcImDeriv(itp_prev, itp_next, ExtractionParameters.DERIV_FORWARD);
+		new ImagePlus("Forward",itp.imDeriv.duplicate()).show();;
+		System.out.println("calculating backward deriv...");
+		itp.calcImDeriv(itp_prev, itp_next, ExtractionParameters.DERIV_BACKWARD);
+		new ImagePlus("Backward",itp.imDeriv.duplicate()).show();;
+		System.out.println("calculating symmetric deriv...");
+		itp.calcImDeriv(itp_prev, itp_next, ExtractionParameters.DERIV_SYMMETRIC);
+		new ImagePlus("Symmetric",itp.imDeriv.duplicate()).show();;
+		
+		
+		System.out.println("calculating forward deriv...");
+		itp.calcImDeriv(itp_prev5, itp_next5, ExtractionParameters.DERIV_FORWARD);
+		new ImagePlus("Forward 5",itp.imDeriv.duplicate()).show();
+		System.out.println("calculating backward deriv...");
+		itp.calcImDeriv(itp_prev5, itp_next5, ExtractionParameters.DERIV_BACKWARD);
+		new ImagePlus("Backward 5",itp.imDeriv.duplicate()).show();
+		System.out.println("calculating symmetric deriv...");
+		itp.calcImDeriv(itp_prev5, itp_next5, ExtractionParameters.DERIV_SYMMETRIC);
+		new ImagePlus("Symmetric 5",itp.imDeriv.duplicate()).show();
+		
+		System.out.println("DONE");
+		
+		
+	}
 	
 	public static void testDiagIm(){
 		
 		String dir = "E:\\extracted\\optogenetics\\Or42a@Chrimson(X)\\RWN_0.3ohm_BWN_39ohm";
-		String filename = "Or42a@Chrimson(X)_RWN_0.3ohm_BWN_39ohm_201504191707.jav";
+		String filename = "Or42a@Chrimson(X)_RWN_0.3ohm_BWN_39ohm_201504191707.prejav";
 		
 		Experiment ex = new Experiment(Experiment.fromPath(new File(dir, filename).getPath())); 
 		
@@ -137,6 +244,11 @@ public class Test {//extends JFrame
 	}
 	
 	public static void testParamFromDisk(){
+		Experiment_Processor ep = new Experiment_Processor();
+		ep.paramFileName = "C:\\Users\\Natalie\\Documents\\Testing\\Parameter_toDisk\\test.txt";
+		ep.readParamsFromFile();
+		
+		System.out.println("blah");
 		
 	}
 	

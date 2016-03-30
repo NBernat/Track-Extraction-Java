@@ -12,6 +12,7 @@ import ij.measure.Measurements;
 import ij.measure.ResultsTable;
 import ij.plugin.ImageCalculator;
 import ij.plugin.filter.ParticleAnalyzer;
+import ij.process.ByteProcessor;
 import ij.process.FloatPolygon;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
@@ -345,14 +346,72 @@ public class CVUtils {
 //		result.getProcessor().setPixels(1, new FloatProcessor(im1.getWidth(), im1.getHeight()));
 //		result.getProcessor().invert();//Sets image white
 //		result = ic.run("AND", result, ic.run("Subtract", im2, im1));
+
 		if (orEqualTo){
 			im2.getProcessor().add(1);
 		}
 		ImagePlus result = ic.run("Subtract create", im2, im1);
 		
-		//TODO Convert to binary
+		result.getProcessor().setThreshold(1, 255, ImageProcessor.NO_LUT_UPDATE);
+		result.getProcessor().threshold(1);
 		return result;
 	}
 	
+	
+	
+	public static ImagePlus lessThan(ImagePlus im1, ImagePlus im2){
+		
+		ImageProcessor ip1 = im1.getProcessor();
+		ImageProcessor ip2 = im2.getProcessor();
+		ImageProcessor rIm = new ByteProcessor(im1.getWidth(), im2.getHeight());
+		
+		for (int w=0; w<rIm.getWidth(); w++){
+			for (int h=0; h<rIm.getHeight(); h++){
+				rIm.set(w, h, (ip1.get(w,h)<ip2.get(w,h))? 255:0);
+			}
+		}
+		
+		ImagePlus result = new ImagePlus("lessthan", rIm);
+		return result;
+		
+	}
+	
+	public static ImagePlus equalTo(ImagePlus im1, ImagePlus im2){
+		
+		ImageProcessor ip1 = im1.getProcessor();
+		ImageProcessor ip2 = im2.getProcessor();
+		ImageProcessor rIm = new ByteProcessor(im1.getWidth(), im2.getHeight());
+		
+		for (int w=0; w<rIm.getWidth(); w++){
+			for (int h=0; h<rIm.getHeight(); h++){
+				rIm.set(w, h, (ip1.get(w,h)==ip2.get(w,h))? 255:0);
+			}
+		}
+		
+		ImagePlus result = new ImagePlus("equalto", rIm);
+		return result;
+		
+	}
+
+	public static ImagePlus greaterThan(ImagePlus im1, ImagePlus im2){
+		
+		return lessThan(im2, im1);
+		
+	}
+	
+	public static ImagePlus lessThanOrEqualTo(ImagePlus im1, ImagePlus im2){
+		ImageCalculator ic = new ImageCalculator();
+		
+		return ic.run("OR create", lessThan(im1, im2), equalTo(im1, im2) );
+		
+	}
+	
+	
+	public static ImagePlus greaterThanOrEqualTo(ImagePlus im1, ImagePlus im2){
+		ImageCalculator ic = new ImageCalculator();
+		
+		return ic.run("OR create", greaterThan(im1, im2), equalTo(im1, im2) );
+		
+	}
 	
 }

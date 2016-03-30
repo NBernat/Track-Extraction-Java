@@ -55,7 +55,7 @@ public class ProcessingParameters {
 	
 	boolean saveErrors = true;
 	
-	boolean diagnosticIm = false;
+	boolean diagnosticIm = true;
 	
 	public boolean savetoCSV = false;
 	

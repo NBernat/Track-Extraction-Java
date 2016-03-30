@@ -38,6 +38,8 @@ public class Track implements Serializable{
 	 * 
 	 */
 	protected boolean valid=true;
+	
+	protected boolean diverged = false;
 	/**
 	 * Unique identifier for the track 
 	 */
@@ -250,6 +252,14 @@ public class Track implements Serializable{
 		return valid;
 	}
 	
+	protected void setDiverged(boolean v){
+		diverged=v;
+	}
+	
+	public boolean diverged(){
+		return diverged;
+	}
+	
 	public int getTrackID(){
 		return trackID;
 	}
@@ -358,7 +368,17 @@ public class Track implements Serializable{
 		}
 		
 		//draw white for valid, red for invalid
-		Color c = (valid)? new Color(255, 255, 255):new Color(255, 0, 0);
+		Color c;// = (valid)? new Color(255, 255, 255):new Color(255, 0, 0);
+		if (valid){
+			if (diverged){
+				c = new Color(255, 255, 0);//yellow
+			} else{
+				c = new Color(255, 255, 255);//white
+			}
+		} else {
+			c = new Color(255, 0, 0);//red
+		}
+		
 		
 		for (int i=0; i<points.size(); i++){
 			ImTrackPoint itp = (ImTrackPoint)points.get(i);
@@ -428,7 +448,7 @@ public class Track implements Serializable{
 			return 3;
 		}
 
-		//Write the valid flag
+		//Write the flags
 		try{
 			String v;
 			if (valid){
@@ -438,6 +458,14 @@ public class Track implements Serializable{
 			}
 			if (pw!=null) pw.println("Writing valid flag ("+v+")");
 			dos.writeBoolean(valid);
+			
+			if (diverged){
+				v="true";
+			} else{
+				v="false";
+			}
+			if (pw!=null) pw.println("Writing diverged flag ("+v+")");
+			dos.writeBoolean(diverged);
 		} catch(Exception e){
 			if (pw!=null) pw.println("...Error writing valid flag in track "+trackID+"; aborting save");
 			return 4;
@@ -525,6 +553,8 @@ public class Track implements Serializable{
 		try {
 			valid = dis.readBoolean();
 			if (pw!=null) pw.println("Valid track: "+valid);
+			diverged = dis.readBoolean();
+			if (pw!=null) pw.println("Diverged track: "+diverged);
 		} catch (Exception e) {
 			if (pw!=null) pw.println("ERROR: Unable to gather 'valid' field");
 			return 4;
@@ -534,7 +564,7 @@ public class Track implements Serializable{
 		try {
 			int nPts = dis.readInt();
 			if (pw!=null) pw.println(nPts+" Points to load...");
-			if (pointType==3 && !valid){
+			if (pointType==3 && (!valid || diverged)){
 				pointType=2;
 			}
 			

@@ -25,7 +25,9 @@ public class ExtractionParameters implements Serializable{
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	
+	static final int DERIV_FORWARD = 1;
+	static final int DERIV_BACKWARD = 2;
+	static final int DERIV_SYMMETRIC = 3;
 	
 
 	public boolean subset = false;
@@ -77,8 +79,8 @@ public class ExtractionParameters implements Serializable{
 	 */
 	int showSampleData =0; 
 	int sampleInd = 10;
-	int trackWindowHeight = 50;
-	int trackWindowWidth = 50;
+	int trackWindowHeight = 30;
+	int trackWindowWidth = 30;
 	int trackZoomFac = 10;
 	int[] matchSpill = {};//{234,251,356,367};
 	boolean flagAbnormalMatches = false;
@@ -172,6 +174,10 @@ public class ExtractionParameters implements Serializable{
      * PLAYMOVIE NOT YET SUPPORTED FOR SAVED FILES WHEN TRACKPOINTTYPE=0
      */
     int trackPointType = 2;
+    
+    boolean calcDerivs = true;
+    int imDerivType = DERIV_SYMMETRIC;
+    int imDerivWidth = 1;
     
     extrPanel epPanel;
     
@@ -321,7 +327,6 @@ class extrPanel extends JPanel {
 	}
 	
 	public void buildComponents(){
-		//TODO
 		
 		subsetBox = new  JCheckBox(subsetName, exPs.subset);
 		subsetBox.addActionListener(new ActionListener() {

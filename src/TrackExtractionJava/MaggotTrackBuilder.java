@@ -25,6 +25,9 @@ public class MaggotTrackBuilder extends TrackBuilder {
 		ep.trackPointType=2;//Make sure the track is loaded as MaggotTrackPoints
 		buildTracks();
 		orientMaggots();
+		if (ep.calcDerivs){
+			calcImDerivs();
+		}
 	}
 
 	/**
@@ -323,6 +326,35 @@ public class MaggotTrackBuilder extends TrackBuilder {
 	}
 	
 	
+	protected void calcImDerivs(){
+		for (Track t : finishedTracks){
+			
+			for (int i=0; i<ep.imDerivWidth; i++){
+				if (ep.imDerivType==ExtractionParameters.DERIV_FORWARD && (i+ep.imDerivWidth)<t.getNumPoints()){
+					((ImTrackPoint)t.getPoint(i)).calcImDeriv(null, (ImTrackPoint)t.getPoint(i+ep.imDerivWidth), ep.imDerivType);
+				} else {
+					//For now, do nothing
+				}
+			}
+			
+			for (int i=ep.imDerivWidth; i<(t.getNumPoints()-ep.imDerivWidth); i++){
+				//Calculate the deriv of the point's im 
+				((ImTrackPoint)t.getPoint(i)).calcImDeriv((ImTrackPoint)t.getPoint(i-ep.imDerivWidth), (ImTrackPoint)t.getPoint(i+ep.imDerivWidth), ep.imDerivType);
+			}
+			
+			
+			for (int i=(t.getNumPoints()-ep.imDerivWidth); i<t.getNumPoints(); i++){
+				if (ep.imDerivType==ExtractionParameters.DERIV_BACKWARD && (i-ep.imDerivWidth)>=0){
+					((ImTrackPoint)t.getPoint(i)).calcImDeriv((ImTrackPoint)t.getPoint(i-ep.imDerivWidth), null, ep.imDerivType);
+				} else {
+					//For now, do nothing
+				}
+			}
+			
+			
+		}
+	}
+		
 	
 }
 

@@ -514,6 +514,19 @@ public class Experiment_Processor implements PlugIn{
 			
 			System.out.println("Extracted "+ex.getNumTracks()+" tracks");
 			
+			if (prParams.diagnosticIm){
+				ImagePlus dIm1 = ex.getDiagnIm(mmfStack.getWidth(), mmfStack.getHeight());
+				String ps = File.separator;
+				String diagnPath = (dstDir!=null)? dstDir : srcDir;
+				diagnPath += "diagnostics"+ps;
+				if (!new File(diagnPath).exists()){
+					new File(diagnPath).mkdir();
+				}
+				diagnPath+= srcName;
+				diagnPath = diagnPath.replace(diagnPath.substring(diagnPath.lastIndexOf("."), diagnPath.length()), " diagnostic foreground.bmp");
+				IJ.save(dIm1, diagnPath);
+			}
+			
 		} catch  (Exception e){
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
@@ -566,7 +579,7 @@ public class Experiment_Processor implements PlugIn{
 					System.out.println(msg);
 				} else if (bbf.diverged()){
 					divergedCount++;
-					tr.setValid(false);
+					tr.setDiverged(true); 
 					System.out.println(trStr+": diverged "+timStr);
 					toRemove.add(tr);
 					errorsToSave.add(tr);
@@ -598,6 +611,19 @@ public class Experiment_Processor implements PlugIn{
 //		for(Track t : toRemove){
 //			ex.removeTrack(t);
 //		}
+		
+		if (prParams.diagnosticIm){
+			ImagePlus dIm1 = ex.getDiagnIm(mmfStack.getWidth(), mmfStack.getHeight());
+			String ps = File.separator;
+			String diagnPath = (dstDir!=null)? dstDir : srcDir;
+			diagnPath += "fit diagnostics"+ps;
+			if (!new File(diagnPath).exists()){
+				new File(diagnPath).mkdir();
+			}
+			diagnPath+= srcName;
+			diagnPath = diagnPath.replace(diagnPath.substring(diagnPath.lastIndexOf("."), diagnPath.length()), " diagnostic foreground.bmp");
+			IJ.save(dIm1, diagnPath);
+		}
 		
 		if (prParams.saveErrors){
 			System.out.println("Saving Error tracks...");
@@ -677,6 +703,8 @@ public class Experiment_Processor implements PlugIn{
 		return status;
 	}
 	
+
+	
 	private void saveErrorTracks(Vector<Track> errTracks){
 		File f = new File(srcDir+File.separator+"divergedTrackExp.prejav");
 		System.out.println("Saving error track experiment to "+f.getPath());
@@ -691,7 +719,7 @@ public class Experiment_Processor implements PlugIn{
 		}
 	}
 	
-	private void readParamsFromFile(){
+	protected void readParamsFromFile(){
 
 		//Overwrite any other parameters
 		prParams = new ProcessingParameters();
@@ -720,13 +748,19 @@ public class Experiment_Processor implements PlugIn{
 				line = s.nextLine();
 				int dInd = line.indexOf(delimiter);
 				nameStr = line.substring(0, dInd);
-				int typeVal = paramTable.get(nameStr);
+				int typeVal;
+				if (paramTable.get(nameStr)==null){
+					typeVal=-1;
+				} else {
+					typeVal = paramTable.get(nameStr);
+				}
 				
 				if(typeVal>0){ //this is a new heading
 					paramType = typeVal;
 				} else { //this is a parameter
-					valueStr = line.substring(dInd+1);//Skip char for delimiter
+					valueStr = line.substring(dInd+1).replaceAll(" ", "");//Skip char for delimiter
 					success = setParam(paramType, nameStr, valueStr);
+					System.out.print("");
 				}
 				
 			}
@@ -770,21 +804,27 @@ public class Experiment_Processor implements PlugIn{
 				f = ExtractionParameters.class.getField(paramName);
 				oVal = toObject(f.getType(), paramVal);
 				f.set(extrParams, oVal);
+				break;
 			case 3:
 				f = FittingParameters.class.getField(paramName);
 				oVal = toObject(f.getType(), paramVal);
 				f.set(fitParams, oVal);
+				break;
 			case 4:
 				f = CSVPrefs.class.getField(paramName);
 				oVal = toObject(f.getType(), paramVal);
 				f.set(csvPrefs, oVal);
+				break;
 			default:
 				break;
 			}
 			return true;
 		} catch (Exception e){
 			System.out.println("Error setting parameters from file");
-			System.out.println(e.getMessage());
+			StringWriter sw = new StringWriter();
+			PrintWriter prw = new PrintWriter(sw);
+			e.printStackTrace(prw);
+			System.out.println(sw.toString());
 			return false;
 		}
 		
@@ -807,15 +847,156 @@ public class Experiment_Processor implements PlugIn{
 	    return value;
 	}
 	
-	public static Object arrayToObject(Class<?> clazz, String value){
-		//TODO
-		//remove all white space and and the outermost brackets 
-		String arrStr = value.replaceAll("\\s+", "").substring(value.indexOf("[")+1, value.length()-1);
-		String[] arr = new String[0];
-		if (!clazz.isArray()){
-			arr = arrStr.split(",");
+	public static Object arrayToObject(Class<?> clazz_in, String value){
+		
+		//remove all white space and and the outermost brackets
+		String[] arr = stringToStringArray(value, !clazz_in.isArray());
+		int nItems = arr.length;
+		
+		boolean arrofarr = false;
+		Class<?> clazz;
+		if(clazz_in.isArray()){
+			arrofarr = true;
+			clazz = clazz_in.getComponentType();
 		} else {
-			
+			clazz = clazz_in;
+		}
+		
+		if (clazz.isArray()){
+			return null;
+		} else if( Integer.class == clazz || clazz.getName().equals("int")){
+	    	if (arrofarr){
+	    		int[][] obj = new int[nItems][];
+				for (int i=0; i<nItems; i++){
+					int[] objrow= (int[])toObject(clazz_in, arr[i]);
+					for (int j=0; j<objrow.length; j++){
+						obj[i][j] = objrow[j];
+					}
+				}
+				return obj;
+	    	} else{
+	    		int[] obj = new int[nItems];
+				for (int i=0; i<nItems; i++){
+					obj[i] = (Integer)toObject(clazz, arr[i]); 
+				}
+				return obj;
+	    	}
+	    } else if( Boolean.class == clazz || clazz.getName().equals("boolean")){
+	    	if (arrofarr){
+	    		boolean[][] obj = new boolean[nItems][];
+				for (int i=0; i<nItems; i++){
+					boolean[] objrow= (boolean[])toObject(clazz_in, arr[i]);
+					for (int j=0; j<objrow.length; j++){
+						obj[i][j] = objrow[j];
+					}
+				}
+				return obj;
+	    	} else{
+	    		boolean[] obj = new boolean[nItems];
+				for (int i=0; i<nItems; i++){
+					obj[i] = (Boolean)toObject(clazz, arr[i]); 
+				}
+				return obj;
+	    	}
+		} else if( Byte.class == clazz || clazz.getName().equals("byte")){
+			if (arrofarr){
+				byte[][] obj = new byte[nItems][];
+				for (int i=0; i<nItems; i++){
+					byte[] objrow= (byte[])toObject(clazz_in, arr[i]);
+					for (int j=0; j<objrow.length; j++){
+						obj[i][j] = objrow[j];
+					}
+				}
+				return obj;
+	    	} else{
+	    		byte[] obj = new byte[nItems];
+				for (int i=0; i<nItems; i++){
+					obj[i] = (Byte)toObject(clazz, arr[i]); 
+				}
+				return obj;
+			}
+	    } else if( Short.class == clazz || clazz.getName().equals("short")){
+	    	if (arrofarr){
+	    		short[][] obj = new short[nItems][];
+				for (int i=0; i<nItems; i++){
+					short[] objrow= (short[])toObject(clazz_in, arr[i]);
+					for (int j=0; j<objrow.length; j++){
+						obj[i][j] = objrow[j];
+					}
+				}
+				return obj;
+	    	} else{
+	    		short[] obj = new short[nItems];
+				for (int i=0; i<nItems; i++){
+					obj[i] = (Short)toObject(clazz, arr[i]); 
+				}
+				return obj;
+	    	}
+	    } else if( Long.class == clazz || clazz.getName().equals("long")){
+	    	if (arrofarr){
+	    		short[][] obj = new short[nItems][];
+				for (int i=0; i<nItems; i++){
+					short[] objrow= (short[])toObject(clazz_in, arr[i]);
+					for (int j=0; j<objrow.length; j++){
+						obj[i][j] = objrow[j];
+					}
+				}
+				return obj;
+	    	} else{
+	    		long[] obj = new long[nItems];
+				for (int i=0; i<nItems; i++){
+					obj[i] = (Long)toObject(clazz, arr[i]); 
+				}
+		    	return obj;
+	    	}
+	    } else if( Float.class == clazz || clazz.getName().equals("float")){
+	    	if (arrofarr){
+	    		float[][] obj = new float[nItems][((float[])toObject(clazz_in, arr[0])).length];
+				for (int i=0; i<nItems; i++){
+					float[] objrow= (float[])toObject(clazz_in, arr[i]);
+					for (int j=0; j<objrow.length; j++){
+						obj[i][j] = objrow[j];
+					}
+				}
+				return obj;
+	    	} else{
+	    		float[] obj = new float[nItems];
+				for (int i=0; i<nItems; i++){
+					obj[i] = (Float)toObject(clazz, arr[i]); 
+				}
+				return obj;
+	    	}
+	    } else if( Double.class == clazz  || clazz.getName().equals("double")){
+	    	if (arrofarr){
+	    		double[][] obj = new double[nItems][];
+				for (int i=0; i<nItems; i++){
+					double[] objrow= (double[])toObject(clazz_in, arr[i]);
+					for (int j=0; j<objrow.length; j++){
+						obj[i][j] = objrow[j];
+					}
+				}
+				return obj;
+	    	} else{
+	    		double[] obj = new double[nItems];
+				for (int i=0; i<nItems; i++){
+					obj[i] = (Double)toObject(clazz, arr[i]); 
+				}
+				return obj;
+	    	}
+	    } else {
+	    	return null;
+	    }
+		
+	}
+	
+	private static String[] stringToStringArray(String value, boolean oneDimArray){
+		
+		String arrStr = value.replaceAll("\\s+", "").substring(value.indexOf("[")+1, value.length()-1);
+		String[] arr;
+		
+		if (oneDimArray){
+			arr = arrStr.split(",");
+		}else{
 			ArrayList<String> subStrs = new ArrayList<String>();
 			int nOnStack=0;
 			int startInd = 0;
@@ -827,22 +1008,18 @@ public class Experiment_Processor implements PlugIn{
 					nOnStack--;
 					if (nOnStack==0){
 						subStrs.add(arrStr.substring(startInd, i+1));
-						startInd = i+1;
+						startInd = i+2;//add 2 to skip comma
 					}
 				}
 			}
 			
-			arr = subStrs.toArray(arr);
-			
-		}
-		int nItems = arr.length;
-		
-		Object[] obj = new Object[nItems];
-		for (int i=0; i<nItems; i++){
-			obj[i] = toObject(clazz, arr[i]); 
+			arr = new String[subStrs.size()];
+			for (int j=0; j<subStrs.size(); j++){
+				arr[j]=subStrs.get(j);
+			}
 		}
 		
-		return (Object)obj;
+		return arr;
 	}
 	
 	protected void writeParamsToFile(){
@@ -892,9 +1069,7 @@ public class Experiment_Processor implements PlugIn{
 		for (Field f : c.getFields()){
 			String s;
 			if (f.get(obj).getClass().isArray()){
-				ArrayList<Object> objArr = new ArrayList<Object>();
-				objArr.addAll((Collection<? extends Object>) f.get(obj));
-				s = Arrays.deepToString((Object[]) f.get(obj));
+				s = objectArrayToString(f.get(obj));
 			} else {
 				s = f.get(obj).toString();
 			}
@@ -904,6 +1079,53 @@ public class Experiment_Processor implements PlugIn{
 		
 		
 	}
+	
+	private static String objectArrayToString(Object obj){
+		
+		if (!obj.getClass().isArray()){
+			//handle non-arrays
+			return obj.toString();
+		} else {
+			char c = obj.getClass().getName().charAt(1);
+			boolean arrofarr = false;
+			
+			//handle Object arrays
+			if (c=='L'){
+				return Arrays.deepToString((Object[])obj);
+			}
+			
+			if (c=='['){
+				//handle arrays of arrays
+				arrofarr=true;
+				c=obj.getClass().getName().charAt(2);
+			}
+			
+			//handle primitive type arrays
+			if (c=='['){
+				return "multidimensional array (>2 levels)";
+			} else if (c=='I'){
+				return (arrofarr)? Arrays.deepToString((int[][])obj)	: Arrays.toString((int[])obj);
+			} else if (c=='Z'){
+				return (arrofarr)? Arrays.deepToString((boolean[][])obj): Arrays.toString((boolean[])obj);
+			} else if (c=='B'){
+				return (arrofarr)? Arrays.deepToString((byte[][])obj)	: Arrays.toString((byte[])obj);
+			} else if (c=='C'){
+				return (arrofarr)? Arrays.deepToString((char[][])obj)	: Arrays.toString((char[])obj);
+			} else if (c=='D'){
+				return (arrofarr)? Arrays.deepToString((double[][])obj)	: Arrays.toString((double[])obj);
+			} else if (c=='F'){
+				return (arrofarr)? Arrays.deepToString((float[][])obj)	: Arrays.toString((float[])obj);
+			} else if (c=='J'){
+				return (arrofarr)? Arrays.deepToString((long[][])obj)	: Arrays.toString((long[])obj);
+			} else if (c=='S'){
+				return (arrofarr)? Arrays.deepToString((short[][])obj)	: Arrays.toString((short[])obj);
+			} else {
+				return "array (error getting string)";
+			}
+			
+		}
+	}
+
 	
 	private void log(String message){
 //		System.out.println(message);
