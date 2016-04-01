@@ -58,6 +58,7 @@ public class BackboneFitter {
 	private boolean diverged = false;
 
 	
+	Vector<EnergyProfile> energyProfiles;
 	
 	transient Communicator comm;
 	transient Communicator bbcomm;
@@ -66,25 +67,27 @@ public class BackboneFitter {
 	 * Constructs a backbone fitter
 	 */
 	public BackboneFitter() {
-
-		params = new FittingParameters();
-
-		pass = 0;
-		Forces = params.getForces(pass);
-
-		comm = new Communicator();
-		comm.setVerbosity(VerbLevel.verb_error);
-		bbcomm = new Communicator();
-		bbcomm.setVerbosity(VerbLevel.verb_off);
-
+		init(null);
 	}
 	
-	public BackboneFitter(FittingParameters fp) {
+	BackboneFitter(FittingParameters fp){
+		init(fp);
+	}
+	
+	private void init(FittingParameters fp) {
 
 		if (fp==null){
 			params = new FittingParameters();
 		} else{
 			params = fp;
+		}
+		
+		if (params.storeEnergies){
+			//TODO
+			energyProfiles = new Vector<EnergyProfile>();
+			for (int i=0; i<Forces.size(); i++){
+				energyProfiles.add(new EnergyProfile(Forces.get(i)));
+			}
 		}
 			
 		pass = 0;
@@ -108,6 +111,7 @@ public class BackboneFitter {
 	public void fitTrack(Track tr) {
 
 		clearPrev();
+		
 		boolean noError = true;
 
 		// Extract the points, and move on (if successful)
@@ -840,16 +844,20 @@ public class BackboneFitter {
 	private boolean runFitter() {
 		
 		do {
-//			if (updater.getIterNum()>20) comm.setVerbosity(VerbLevel.verb_error);
-//			if (updater.getIterNum()>20) bbcomm.setVerbosity(VerbLevel.verb_off);
 			comm.message("Iteration number " + updater.getIterNum(), VerbLevel.verb_debug);
 
 			// Do a relaxation step
-			comm.message("Updating " + updater.inds2Update().length
-					+ " backbones", VerbLevel.verb_debug);
-			
+			comm.message("Updating " + updater.inds2Update().length+ " backbones", VerbLevel.verb_debug);
 			bbcomm.message("\n\nIteration "+updater.getIterNum(), VerbLevel.verb_debug);
 			relaxBackbones(updater.inds2Update());
+
+			if (params.storeEnergies){
+				//TODO Generate Energy 
+				for (EnergyProfile enPr : energyProfiles){
+					enPr.generateProfile(BTPs);
+				}
+			}
+
 
 			// Setup for the next step
 			for (int i = 0; (i<BTPs.size() && !diverged); i++) {
@@ -857,7 +865,6 @@ public class BackboneFitter {
 				
 				//Check for divergence
 				if (BTPs.get(i).diverged(params.divergenceConstant)){
-					//System.out.println("Track ID="+track.getTrackID()+" diverged");
 					diverged = true;
 				} else {
 					BTPs.get(i).setupForNextRelaxationStep();
@@ -868,6 +875,7 @@ public class BackboneFitter {
 			if (!updater.comm.outString.equals("")) {
 				new TextWindow("TrackFitting Updater, pass "+pass, updater.comm.outString, 500, 500);
 			}
+			
 		} while (!diverged && updater.keepGoing(shifts));
 		
 		if (!diverged) finalizeBackbones();
@@ -905,7 +913,7 @@ public class BackboneFitter {
 		Vector<FloatPolygon> targetBackbones = getTargetBackbones(btpInd);
 		bbcomm.message("Frame "+btpInd+" Components:", VerbLevel.verb_debug);
 		BTPs.get(btpInd).setBBNew(generateNewBackbone(targetBackbones));
-
+		
 	}
 
 	/**
@@ -1070,5 +1078,35 @@ class Gap{
 	public String toString(){
 		return start+"-"+end;
 	}
+	
+}
+
+
+class EnergyProfile {
+	
+	Force f;
+	//energies.get(i)[j] = energy of j'th trackpoint at i'th iteration of bbf algorithm
+	Vector<Float[]> energies;
+	
+	public EnergyProfile(Force f){
+		//TODO
+		this.f = f;
+	}
+	
+	public void generateProfile(Vector<BackboneTrackPoint> BTPs){
+		//TODO
+		Float[] en = new Float[BTPs.size()];
+		for (int i=0; i<en.length; i++){
+			en[i] = f.getEnergy(i, BTPs);
+		}
+		energies.add(en);
+	}
+	
+	
+	public void printEnergies(){
+		//TODO
+		
+	}
+	
 	
 }

@@ -14,11 +14,16 @@ import ij.plugin.ImageCalculator;
 import ij.plugin.filter.ParticleAnalyzer;
 import ij.process.ByteProcessor;
 import ij.process.FloatPolygon;
-import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 
 
 public class CVUtils {
+	
+	static final int ET = 0;//Equal to 
+	static final int LT = 1;//Less than
+	static final int GT = 2;//Greater than
+	static final int LTE = 4;//Less than or equal to
+	static final int GTE = 8;//Greater than or equal to
 	
 	public static double[][] fPoly2Array(FloatPolygon fp, int offX, int offY){
 		
@@ -309,61 +314,11 @@ public class CVUtils {
 		
 	}
 	
-	public static ImagePlus lessThan(ImagePlus im1, Vector<ImagePlus> im2, boolean orEqualTo){
-		return lessThan(im1, im2, -1, orEqualTo);
-	}
-	public static ImagePlus lessThan(ImagePlus im1, Vector<ImagePlus> im2, int skipInd, boolean orEqualTo){
-		
-		if(im2.size()==1){
-			return lessThan(im1, im2.firstElement(), orEqualTo);
-		}
-		
-		ImageCalculator ic = new ImageCalculator();
-		ImagePlus result = new ImagePlus("", new BufferedImage(im1.getWidth(), im1.getHeight(), BufferedImage.TYPE_BYTE_GRAY));
-		result.getProcessor().setPixels(1, new FloatProcessor(im1.getWidth(), im1.getHeight()));
-		result.getProcessor().invert();//Sets image white
-		for (int i=0; i<im2.size(); i++){
-			if (i!=skipInd){
-				result = ic.run("AND create", result, lessThan(im1, im2.get(i), orEqualTo));
-			}
-		}
-
-		result.getProcessor().threshold(1);
-		//TODO Convert to binary
-		return result;
-	}
-	
-	
-	
-//	public static ImagePlus lessThan(ImagePlus im1, ImagePlus im2 ){
-//		return lessThan(im1, im2, false);
-//	}
-//	
-	
-	public static ImagePlus lessThan(ImagePlus im1, ImagePlus im2, boolean orEqualTo){
-		ImageCalculator ic = new ImageCalculator();
-//		ImagePlus result = new ImagePlus();
-//		result.getProcessor().setPixels(1, new FloatProcessor(im1.getWidth(), im1.getHeight()));
-//		result.getProcessor().invert();//Sets image white
-//		result = ic.run("AND", result, ic.run("Subtract", im2, im1));
-
-		if (orEqualTo){
-			im2.getProcessor().add(1);
-		}
-		ImagePlus result = ic.run("Subtract create", im2, im1);
-		
-		result.getProcessor().setThreshold(1, 255, ImageProcessor.NO_LUT_UPDATE);
-		result.getProcessor().threshold(1);
-		return result;
-	}
-	
-	
-	
 	public static ImagePlus lessThan(ImagePlus im1, ImagePlus im2){
 		
 		ImageProcessor ip1 = im1.getProcessor();
 		ImageProcessor ip2 = im2.getProcessor();
-		ImageProcessor rIm = new ByteProcessor(im1.getWidth(), im2.getHeight());
+		ImageProcessor rIm = new ByteProcessor(im1.getWidth(), im1.getHeight());
 		
 		for (int w=0; w<rIm.getWidth(); w++){
 			for (int h=0; h<rIm.getHeight(); h++){
@@ -380,7 +335,7 @@ public class CVUtils {
 		
 		ImageProcessor ip1 = im1.getProcessor();
 		ImageProcessor ip2 = im2.getProcessor();
-		ImageProcessor rIm = new ByteProcessor(im1.getWidth(), im2.getHeight());
+		ImageProcessor rIm = new ByteProcessor(im1.getWidth(), im1.getHeight());
 		
 		for (int w=0; w<rIm.getWidth(); w++){
 			for (int h=0; h<rIm.getHeight(); h++){
@@ -414,4 +369,56 @@ public class CVUtils {
 		
 	}
 	
+	
+	public static ImagePlus compareImages(int operation, ImagePlus im, Vector<ImagePlus> imList){
+		
+		ImageCalculator ic = new ImageCalculator();
+		ImagePlus result = new ImagePlus("result", new ByteProcessor(im.getWidth(), im.getHeight()));//im.getProcessor().duplicate());
+		for (int j=0; j<result.getWidth(); j++){
+			for (int k=0; k<result.getHeight(); k++){
+				result.getProcessor().set(j, k, 255);//Set all pixels to true/white		
+			}
+		}
+		
+		for (int i=0; i<imList.size(); i++){
+			
+			switch (operation){
+				case ET:
+					result = ic.run("AND create", result, equalTo(im, imList.get(i)));
+					break;
+				case LT:
+					result = ic.run("AND create", result, lessThan(im, imList.get(i)));
+					break;
+				case GT:
+					result = ic.run("AND create", result, greaterThan(im, imList.get(i)));
+					break;
+				case LTE:
+					result = ic.run("AND create", result, lessThanOrEqualTo(im, imList.get(i)));
+					break;
+				case GTE:
+					result = ic.run("AND create", result, greaterThanOrEqualTo(im, imList.get(i)));
+					break;
+				default:
+					result = null;
+			}
+		}
+		
+		return result;
+	}
+	
+	public static ImagePlus maskIm(ImagePlus im, ImagePlus mask){
+		
+		ImageProcessor ip = im.getProcessor();
+		ImageProcessor ipM = mask.getProcessor();
+		ImageProcessor rIm = new ByteProcessor(im.getWidth(), im.getHeight());
+		
+		for (int w=0; w<rIm.getWidth(); w++){
+			for (int h=0; h<rIm.getHeight(); h++){
+				rIm.set(w, h, (ipM.get(w,h)>0)? ip.get(w,h):0); 
+			}
+		}
+		
+		ImagePlus result = new ImagePlus("masked", rIm);
+		return result;
+	}
 }

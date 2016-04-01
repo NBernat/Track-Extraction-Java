@@ -2,7 +2,6 @@ package TrackExtractionJava;
 
 import ij.ImageJ;
 import ij.ImagePlus;
-import ij.Prefs;
 
 import java.awt.BorderLayout;
 import java.io.File;
@@ -24,8 +23,14 @@ public class Test {//extends JFrame
 	public static void main(String[] args) {
 		
 		
+		testDMSinProcessing();
+		/*
+		*/
 		
+		
+		/*
 		testDistanceMapSplitter();
+		*/
 		
 		/*
 		testImDerivs();
@@ -131,6 +136,39 @@ public class Test {//extends JFrame
 		
 	}
 	
+	public static void testDMSinProcessing(){
+		
+		String baseDir = "C:\\Users\\Natalie\\Documents\\Testing\\Building and Fitting - TestExProc\\Point Splitting\\";
+		String threshDir = "2000\\Rethresh\\";
+		String DMDir = "2000\\DistanceMap\\";
+		String mmfName = "Or42a@Chrimson(3)_N_Bl_B0to159s13_120Hz_50W_S1-3#T_Bl_Sq_0to96_30#C_Re_400uW_201603081647.mmf";
+		
+		ExtractionParameters exParams = new ExtractionParameters();
+		exParams.subset = true;
+		exParams.endFrame = 2000;
+		
+		String[] args = new String[3]; //Name-of-mmf; dstdir; dstname
+		args[0] = baseDir+mmfName;
+		args[2] = mmfName.substring(0, mmfName.length()-4);//remove extension
+		
+		//Run extraction with basic rethresholding method of point splitting
+		exParams.pointSplittingMethod = 1;
+		args[1] = baseDir+threshDir;
+		Experiment_Processor ep = new Experiment_Processor();
+		ep.runningFromMain = true;
+		ep.extrParams = exParams;
+		ep.run(args);
+		
+		//Run extraction with distance map method of point splitting
+		exParams.pointSplittingMethod = 2;
+		args[1] = baseDir+DMDir;
+		ep = new Experiment_Processor();
+		ep.runningFromMain = true;
+		ep.extrParams = exParams;
+		ep.run(args);
+		
+	}
+	
 	
 	public static void testDistanceMapSplitter(){
 		
@@ -150,6 +188,8 @@ public class Test {//extends JFrame
 		int[] trackNums = { 17, 21, 23, 26};
 		int[] pointInds = {197, 32, 77, 10};
 		int[] numPts    = {  2,  2,  2,  2};
+		
+		
 		int trackNum = trackNums[dataInd];
 		Track tr = ex.getTrack(trackNum);
 		ImTrackPoint itp = (ImTrackPoint)tr.points.get(pointInds[dataInd]);
@@ -167,11 +207,8 @@ public class Test {//extends JFrame
 		
 		int[] frameSize = {2592,1944}; 
 		
-		Vector<TrackPoint> splitPts =  DistanceMapSplitter.splitPoint(itp, nPts, rethreshVal, targetArea, ep, frameSize, null);
-		
-		for (int i=0; i<splitPts.size(); i++){
-			new ImagePlus("split point "+i, ((ImTrackPoint)splitPts.get(i)).getRawIm()).show();
-		}
+		//NOTE: Turn on debugger in DMS.splitPoint
+		DistanceMapSplitter.splitPoint(itp, nPts, rethreshVal, targetArea, ep, frameSize, null);
 		
 		
 		IJ.quit();
@@ -225,7 +262,7 @@ public class Test {//extends JFrame
 		
 		System.out.println("DONE");
 		
-		
+		imj.quit();
 	}
 	
 	public static void testDiagIm(){

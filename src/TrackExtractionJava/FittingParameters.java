@@ -13,6 +13,9 @@ public class FittingParameters {
 	
 	public int numBBPts = 9;
 	
+	boolean storeEnergies = false;
+	
+	
 	public int[] grains = {32,16, 1}; //{32,16,1};//edit 17 {32, 16, 8, 1}, edit18 {32, 16, 4, 1}, edit 19 {32, 8, 1}, edit 20 {32, 16, 2, 1} edit 23, edit 24 {8,4, 1}
 	public int smallGapMaxLen = 10;//The maximum gap length for which the previous midline will be carried forward (otherwise interpolate)
 	public int minValidSegmentLen = 5;//The minimum segment length (in frames) which is situated between two midline gaps and which is considered valid
