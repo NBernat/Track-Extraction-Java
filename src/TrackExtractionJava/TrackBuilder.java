@@ -330,9 +330,10 @@ public class TrackBuilder implements Serializable{
 	 * Corrects initial matching errors
 	 */
 	private void modifyMatches(){
-		
-		int numCutByDist = cutMatchesByDistance();
-		comm.message("Number of matches cut from frame "+frameNum+" by distance: "+numCutByDist, VerbLevel.verb_debug);
+		if (ep.splitMatchesByDist){
+			int numCutByDist = cutMatchesByDistance();
+			comm.message("Number of matches cut from frame "+frameNum+" by distance: "+numCutByDist, VerbLevel.verb_debug);
+		}
 		
 		if (ep.flagAbnormalMatches){
 			for (TrackMatch m : matches){
@@ -346,6 +347,10 @@ public class TrackBuilder implements Serializable{
 		
 		manageCollisions();
 		
+		if (ep.splitMatchesByAreaFrac){
+			int numCutByFrac = cutMatchesByAreaFraction();
+			comm.message("Number of matches cut from frame "+frameNum+" by area fraction: "+numCutByFrac, VerbLevel.verb_debug);
+		}
 	}
 	
 	
@@ -363,6 +368,16 @@ public class TrackBuilder implements Serializable{
 		return numRemoved;
 	}
 	
+	
+	private int cutMatchesByAreaFraction(){
+		 
+		ListIterator<TrackMatch> it = matches.listIterator();
+		int numRemoved = 0;
+		while (it.hasNext()) {
+			numRemoved += it.next().cutPointsByAreaFraction(ep.lowerAreaFrac, ep.upperAreaFrac);
+		}
+		return numRemoved;
+	}
 	
 	/**
 	 * Maintains the collision structures by adding new collisions, trying basic methods of fixing current collisions, and ending finished collisions 

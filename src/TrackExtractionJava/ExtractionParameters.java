@@ -57,10 +57,17 @@ public class ExtractionParameters implements Serializable{
 	 */
 	//double collisionDist;
 	
+	
+	
+	public boolean splitMatchesByDist = true;
+	
+	public boolean splitMatchesByAreaFrac = true;
 	/**
 	 * Max distance in pixels for a point match 
 	 */
 	public double maxMatchDist = 20;
+	public double lowerAreaFrac = 0.7;
+	public double upperAreaFrac = 1.4;
 	
 	/**
 	 * How many frames to move forward when extracting points
@@ -129,7 +136,7 @@ public class ExtractionParameters implements Serializable{
      * 1=extracting points from rethresholded im
      * 2=distributing maggot points 
      */
-    int pointSplittingMethod = 1;
+    int pointSplittingMethod = 2;
     /**
      *  The area change which indicates that a collision has ended, expressed as a fraction of the previous area
      */

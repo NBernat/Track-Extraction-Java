@@ -118,7 +118,7 @@ public class DistanceMapSplitter {
 				if (newPt.size()==1){
 					spPts.add(newPt.firstElement());
 				} else {
-					System.out.println("Error splitting point "+itp.pointID+": masked im has multiple points ");
+					if (debug>1) System.out.println("Error splitting point "+itp.pointID+": masked im has multiple points ");
 				}
 			} catch (Exception e){
 				StringWriter sw = new StringWriter();

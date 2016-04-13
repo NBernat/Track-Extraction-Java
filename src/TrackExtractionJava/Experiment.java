@@ -47,7 +47,7 @@ public class Experiment implements Serializable{
 	/**
 	 * List of tracks contained within the experiment
 	 */
-	private Vector<Track> tracks;
+	Vector<Track> tracks;
 	/**
 	 * 
 	 */

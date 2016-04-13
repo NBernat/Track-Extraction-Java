@@ -4,7 +4,12 @@ import ij.ImageJ;
 import ij.ImagePlus;
 
 import java.awt.BorderLayout;
+import java.io.BufferedOutputStream;
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 import java.util.Scanner;
 import java.util.Vector;
 
@@ -23,8 +28,43 @@ public class Test {//extends JFrame
 	public static void main(String[] args) {
 		
 		
-		testDMSinProcessing();
+		
+		runDefaultFitting();
 		/*
+		*/
+		
+		/*
+		testNumPtsOnDiverged();
+		*/
+		
+		/*
+		analyzeTrackBreakdown();
+		*/
+
+		/*
+		testTrackBreakdown();
+		*/
+		
+		/*
+		testDefaultFitterParams();
+		*/
+		
+		
+		/*
+		testAreaSplitter();
+		*/
+		
+		/*
+		testFittingParams();
+		*/
+		
+		/*
+		testEndClippingForDivergance();
+		*/
+		
+		
+		/*
+		testDMSinProcessing();
 		*/
 		
 		
@@ -136,6 +176,621 @@ public class Test {//extends JFrame
 		
 	}
 	
+	
+	public static void testNumPtsOnDiverged(){
+		String srcName = "E:\\testing\\Java Backbone Fitting\\Fitting Params\\fullExptWithAreaSplit_0.7-1.4_otherPtSplit\\divergedTrackExp.prejav";
+		String dstBaseDir = "E:\\testing\\Java Backbone Fitting\\Targeted PointNum Variation\\";
+		
+		String[] args = new String[2];
+		args[0] = srcName;
+		
+		FittingParameters fitPar = new FittingParameters();
+		
+		
+		args[1] = dstBaseDir+"5pts\\";
+		fitPar = new FittingParameters();
+		fitPar.numBBPts = 5;
+		float[] timeLengthWeight_m5 = {3.0f, .1f, .1f};
+		float[] timeSmoothWeight_m5 = {1.0f, 0.1f, 0.1f};
+		fitPar.timeLengthWeight = timeLengthWeight_m5;
+		fitPar.timeSmoothWeight = timeSmoothWeight_m5;
+		float[] imageWeights_m5 = {1,1,1, 1,1};
+		float[] spineLengthWeights_m5 = {0,1,1, 1,1};
+		float[] spineSmoothWeights_m5 = {.6f,1,1, 1,1};
+		float[][] timeLengthWeights_m5 = { {1,1,1, 1,1},
+										{1,1,1, 1,1},
+										{1,1,1, 1,1} };
+		float[][] timeSmoothWeights_m5 = { {1,1,1, 1,1},
+										{1,1,1, 1,1},
+										{1,1,1, 1,1} };
+		fitPar.imageWeights = imageWeights_m5;
+		fitPar.spineLengthWeights = spineLengthWeights_m5;
+		fitPar.spineSmoothWeights = spineSmoothWeights_m5;
+		fitPar.timeLengthWeights = timeLengthWeights_m5;
+		fitPar.timeSmoothWeights = timeSmoothWeights_m5;
+		
+		Experiment_Processor ep = new Experiment_Processor();
+		ep.runningFromMain = true;
+		ep.fitParams = fitPar;
+		ep.run(args);
+		
+	}
+	
+	public static void analyzeTrackBreakdown(){
+		
+		String fname = "E:\\testing\\Java Backbone Fitting\\Track Breakdown\\tracks\\SystemDOTout.txt";
+//		String outputFname = "E:\\testing\\Java Backbone Fitting\\Track Breakdown\\analysis.txt";
+		
+		Vector<Integer> numFit = new Vector<Integer>();
+		Vector<Integer> numTotal = new Vector<Integer>();
+		
+		Scanner s = null;
+		
+		try {
+			
+//			System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream(outputFname))));
+			
+			s = new Scanner(new File(fname));
+			
+			String signal = "...Done fitting: ";
+			//Iterate over each line
+			while (s.hasNextLine()){
+				//When the line contains a result.... 
+				String line = s.nextLine();
+				if (line.startsWith(signal)){
+					//...parse the info and store it
+					
+					//collect the string containing the fraction of tracks, e.g. "4/5"
+					String info = line.substring(signal.length(), line.indexOf(" ", signal.length()));
+					
+					
+					//break that into two nums and store
+					String[] numStrs = info.split("/");
+					numFit.add(Integer.valueOf(numStrs[0]));
+					numTotal.add(Integer.valueOf(numStrs[1]));
+					
+
+					System.out.println(info+"\t"+"("+(100*Integer.valueOf(numStrs[0]))/Integer.valueOf(numStrs[1])+")");
+					
+				}
+			}
+			
+			
+			
+			
+			
+			
+			
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		if (s!=null) s.close();
+	}
+	
+	public static void testTrackBreakdown(){
+		ImageJ imj = new ImageJ(ImageJ.NO_SHOW);
+		
+//		Experiment_Processor ep;
+		
+//		ProcessingParameters prParam = new ProcessingParameters();
+//		prParam.diagnosticIm = false;
+		
+		//Set src and dest
+		String srcName = "E:\\testing\\Java Backbone Fitting\\Fitting Params\\fullExptWithAreaSplit_0.7-1.4_otherPtSplit\\divergedTrackExp.prejav";
+		String dstBaseDir = "E:\\testing\\Java Backbone Fitting\\Track Breakdown\\";
+		
+		Experiment ex = new Experiment(srcName);
+		//Find a long track
+		
+//		int len = 16726;
+		//Find a track that's the length of the experiment
+//		System.out.println("Finding full-experiment track in "+ex.tracks.size()+" tracks...");
+		Track longTrack = null;
+//		int i;
+//		for (i=0; (i<ex.tracks.size() && longTrack==null); i++){
+//			if (ex.getTrackFromInd(i).points.size()==len) longTrack=ex.getTrackFromInd(i);
+//		}
+//		System.out.println("Found track (ind="+i+")");
+		
+		
+		Vector<Track> fits = new Vector<Track>();
+		Vector<Track> divs = new Vector<Track>();
+		BackboneFitter bbf;
+		for (int j=0; j<ex.tracks.size(); j++){
+			
+			longTrack = ex.tracks.get(j);
+			int len = longTrack.points.size();
+			int clipLen = 500;
+			if (len>(clipLen*3)){
+				Vector<Track> fitTracks = new Vector<Track>();
+				Vector<Track> divTracks = new Vector<Track>();
+				
+				System.out.println("Clipping and Fitting track...");
+				for (int i=0; i<=len/clipLen; i++){
+				
+					bbf = new BackboneFitter();
+		//			bbf.clipEnds = true;
+					int sf = 1+i*clipLen;
+					int ef = (len<((i+1)*clipLen))? len-1: (i+1)*clipLen;
+					
+					Track clipTrack = new Track(longTrack.getPoints().subList(sf, ef), i);
+							
+					bbf.fitTrack(clipTrack);
+					
+					if (bbf.getTrack()!=null){
+						fitTracks.add(bbf.getTrack());				
+					} else {
+						divTracks.add(clipTrack);
+					}
+					
+				}
+				fits.addAll(fitTracks);
+				divs.addAll(divTracks);
+				
+				System.out.println("...Done fitting: "+fitTracks.size()+"/"+(fitTracks.size()+divTracks.size()+" were fit properly"));
+				
+				Experiment fitEx = new Experiment();
+				fitEx.tracks = fitTracks;
+				Experiment divEx = new Experiment();
+				divEx.tracks = divTracks;
+				
+				try {
+					File f = new File(dstBaseDir+"tracks\\track"+j+"\\");
+					if (!f.exists()) f.mkdirs();
+					
+					
+					f = new File(dstBaseDir+"tracks\\track"+j+"\\"+"fitTrackExp.jav");
+					System.out.println("Saving fit track experiment to "+f.getPath());
+					try{
+						DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f))); 
+								
+						fitEx.toDisk(dos, null);
+						dos.close();
+						System.out.println("Done saving fit tracks");
+					} catch(Exception e){
+						System.out.println("Save error");
+					}
+					
+					f = new File(dstBaseDir+"tracks\\track"+j+"\\"+"divergedTrackExp.prejav");
+					System.out.println("Saving error track experiment to "+f.getPath());
+					try{
+						DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f))); 
+								
+						divEx.toDisk(dos, null);
+						dos.close();
+						System.out.println("Done saving diverged tracks");
+					} catch(Exception e){
+						System.out.println("Save error");
+					}
+		
+				} catch (Exception e){
+					
+				}
+			} else {
+			}
+		}
+		
+		
+		Experiment fitEx = new Experiment();
+		fitEx.tracks = fits;
+		Experiment divEx = new Experiment();
+		divEx.tracks = divs;
+		
+		try {
+			File f = new File(dstBaseDir+"allFitTracks.jav");
+			System.out.println("Saving fit track experiment to "+f.getPath());
+			try{
+				DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f))); 
+						
+				fitEx.toDisk(dos, null);
+				dos.close();
+				System.out.println("Done saving fit tracks");
+			} catch(Exception e){
+				System.out.println("Save error");
+			}
+			
+			f = new File(dstBaseDir+"allDivTracks.prejav");
+			System.out.println("Saving error track experiment to "+f.getPath());
+			try{
+				DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f))); 
+						
+				divEx.toDisk(dos, null);
+				dos.close();
+				System.out.println("Done saving diverged tracks");
+			} catch(Exception e){
+				System.out.println("Save error");
+			}
+
+		} catch (Exception e){
+			
+		}
+		
+		
+		imj.quit();
+	}
+	
+	public static void runDefaultFitting(){
+		
+		ImageJ IJ = new ImageJ();
+		String srcName = "E:\\testing\\Java Backbone Fitting\\Fitting Params\\fullExptWithAreaSplit_0.7-1.4_otherPtSplit\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.prejav";
+		String dstBaseDir = "E:\\testing\\Java Backbone Fitting\\";
+		
+		String[] args = new String[2];
+		args[0] = srcName;
+		
+		ProcessingParameters prP = new ProcessingParameters();
+		prP.diagnosticIm = false;
+		Experiment_Processor ep = new Experiment_Processor();
+		ep.prParams = prP;
+		args[1] = dstBaseDir+"saveDivergedBB\\";
+		ep.runningFromMain = true;
+		ep.run(args);
+		IJ.quit();
+	}
+	
+	public static void testDefaultFitterParams(){
+		ImageJ imj = new ImageJ(ImageJ.NO_SHOW);
+		
+		Experiment_Processor ep;
+		
+		ProcessingParameters prParam = new ProcessingParameters();
+		prParam.diagnosticIm = false;
+		ExtractionParameters exParam = new ExtractionParameters();
+		
+		//Set src and dest
+		String[] args = new String[2];//[src path, dst dir]
+		String fName = "E:\\testing\\Java Backbone Fitting\\Fitting Params\\fullExptWithAreaSplit_0.7-1.4_otherPtSplit\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.prejav";
+		String baseDir = "E:\\testing\\Java Backbone Fitting\\Fitting Params\\fullExptWithAreaSplit_0.7-1.4_otherPtSplit\\";
+		args[0] = fName;
+		
+		
+		
+		ep = new Experiment_Processor();
+		ep.runningFromMain = true;
+		exParam.subset = false;
+		FittingParameters fp = new FittingParameters();
+		fp.spineLengthWeight = 0.5f;
+		ep.extrParams = exParam;
+		ep.prParams = prParam;
+		ep.fitParams = fp;
+		args[1] = baseDir+"uppedSpineLength\\";
+		System.out.println("Fitting tracks");
+		ep.run(args);
+		System.out.println("DONE fitting tracks");
+		
+		ep = new Experiment_Processor();
+		ep.runningFromMain = true;
+		exParam.subset = false;
+		fp = new FittingParameters();
+		int[] gr = {8,4,1};
+		fp.grains = gr;
+		ep.extrParams = exParam;
+		ep.prParams = prParam;
+		ep.fitParams = fp;
+		args[1] = baseDir+"grain8-4-1\\";
+		System.out.println("Fitting tracks");
+		ep.run(args);
+		System.out.println("DONE fitting tracks");
+		
+		imj.quit();
+		
+		
+		
+		
+	}
+	
+	public static void testAreaSplitter(){
+		
+		ImageJ imj = new ImageJ(ImageJ.NO_SHOW);
+		
+		Experiment_Processor ep;
+		
+		ProcessingParameters prParam = new ProcessingParameters();
+		prParam.diagnosticIm = false;
+		ExtractionParameters exParam = new ExtractionParameters();
+		exParam.subset = true;
+		exParam.startFrame = 1;
+		exParam.endFrame = 1000;
+		
+		//Set src and dest
+		String[] args = new String[2];//[src path, dst dir]
+		String mmfName = "E:\\data\\phototaxis2\\berlin@berlin\\2NDs_B_Square_SW_96-160\\201411201541\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.mmf";
+		String dstBaseDir = "E:\\testing\\Java Extraction\\Area Splitting\\";
+		String fullExptBaseDir = "E:\\testing\\Java Backbone Fitting\\Fitting Params\\";
+		args[0] = mmfName;
+		/*
+		ep = new Experiment_Processor();
+		ep.runningFromMain = true;
+		exParam.splitMatchesByAreaFrac = false;
+		ep.extrParams = exParam;
+		ep.prParams = prParam;
+		args[1] = dstBaseDir+"withoutAreaSplit\\";
+		System.out.println("Extracting tracks without area split");
+		ep.run(args);
+		System.out.println("Without area split: DONE");
+		
+		ep = new Experiment_Processor();
+		ep.runningFromMain = true;
+		exParam.splitMatchesByAreaFrac = true;
+		exParam.lowerAreaFrac = 0.5;
+		exParam.upperAreaFrac = 1.5;
+		ep.extrParams = exParam;
+		ep.prParams = prParam;
+		args[1] = dstBaseDir+"withAreaSplit_0.5-1.5\\";
+		System.out.println("Extracting tracks with area split 0.5-1.5");
+		ep.run(args);
+		System.out.println("With area split 0.5-1.5: DONE");
+		
+		ep = new Experiment_Processor();
+		ep.runningFromMain = true;
+		exParam.splitMatchesByAreaFrac = true;
+		exParam.lowerAreaFrac = 0.7;
+		exParam.upperAreaFrac = 1.4;
+		ep.extrParams = exParam;
+		ep.prParams = prParam;
+		args[1] = dstBaseDir+"withAreaSplit_0.7-1.4_otherPtSplit\\";
+		System.out.println("Extracting tracks with area split 0.7-1.4");
+		ep.run(args);
+		System.out.println("With area split 0.7-1.4: DONE");
+		
+
+		
+		ep = new Experiment_Processor();
+		ep.runningFromMain = true;
+		exParam.subset = false;
+		exParam.splitMatchesByAreaFrac = true;
+		exParam.lowerAreaFrac = 0.7;
+		exParam.upperAreaFrac = 1.4;
+		ep.extrParams = exParam;
+		ep.prParams = prParam;
+		args[1] = fullExptBaseDir+"fullExptWithAreaSplit_0.7-1.4_otherPtSplit\\";
+		System.out.println("Extracting tracks");
+		ep.run(args);
+		System.out.println("DONE extracting tracks");
+		
+		ep = new Experiment_Processor();
+		ep.runningFromMain = true;
+		exParam.subset = false;
+		exParam.splitMatchesByAreaFrac = true;
+		exParam.lowerAreaFrac = 0.7;
+		exParam.upperAreaFrac = 1.4;
+		FittingParameters fp = new FittingParameters();
+		int[] gr = {8,4,1};
+		fp.grains = gr;
+		fp.imageWeight = 0.6f;
+		fp.spineLengthWeight = 0.4f;
+		ep.extrParams = exParam;
+		ep.prParams = prParam;
+		ep.fitParams = fp;
+		args[1] = fullExptBaseDir+"fullExptWithAreaSplit_0.7-1.4_otherPtSplit_grain8-4-1_loweredImageTerm\\";
+		System.out.println("Extracting tracks");
+		ep.run(args);
+		System.out.println("DONE extracting tracks");
+		
+		ep = new Experiment_Processor();
+		ep.runningFromMain = true;
+		exParam.subset = false;
+		exParam.splitMatchesByAreaFrac = true;
+		exParam.lowerAreaFrac = 0.7;
+		exParam.upperAreaFrac = 1.4;
+		FittingParameters fp = new FittingParameters();
+		fp.imageWeight = 0.6f;
+		fp.spineLengthWeight = 0.6f;
+		ep.extrParams = exParam;
+		ep.prParams = prParam;
+		ep.fitParams = fp;
+		args[1] = fullExptBaseDir+"fullExptWithAreaSplit_0.7-1.4_otherPtSplit_loweredImageUppedSpineLengthTerm\\";
+		System.out.println("Extracting tracks");
+		ep.run(args);
+		System.out.println("DONE extracting tracks");
+		
+		ep = new Experiment_Processor();
+		ep.runningFromMain = true;
+		exParam.subset = false;
+		exParam.splitMatchesByAreaFrac = true;
+		exParam.lowerAreaFrac = 0.7;
+		exParam.upperAreaFrac = 1.4;
+		fp = new FittingParameters();
+		int[] gr = {8,4,1};
+		fp.grains = gr;
+		fp.imageWeight = 0.4f;
+		fp.spineLengthWeight = 0.6f;
+		ep.extrParams = exParam;
+		ep.prParams = prParam;
+		ep.fitParams = fp;
+		args[1] = fullExptBaseDir+"fullExptWithAreaSplit_0.7-1.4_otherPtSplit_grain8-4-1_loweredImageUppedSpineLengthTerm\\";
+		System.out.println("Extracting tracks");
+		ep.run(args);
+		System.out.println("DONE extracting tracks");
+
+		*/
+		ep = new Experiment_Processor();
+		ep.runningFromMain = true;
+		exParam.subset = false;
+		exParam.splitMatchesByAreaFrac = true;
+		exParam.lowerAreaFrac = 0.7;
+		exParam.upperAreaFrac = 1.4;
+		FittingParameters fp = new FittingParameters();
+		ep.extrParams = exParam;
+		ep.prParams = prParam;
+		ep.fitParams = fp;
+		args[1] = fullExptBaseDir+"test\\";
+		System.out.println("Extracting tracks");
+		ep.run(args);
+		System.out.println("DONE extracting tracks");
+		
+		
+		imj.quit();
+		
+		
+	}
+	
+	public static void testFittingParams(){
+
+		
+		
+		ImageJ imj = new ImageJ(ImageJ.NO_SHOW);
+		
+		//Setup I/O
+		String[] args = new String[2];//[src path, dst dir]
+		args[0] = "E:\\data\\phototaxis2\\berlin@berlin\\2NDs_B_Square_SW_96-160\\201411201541\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.mmf";
+		String dstBaseDir = "E:\\testing\\Java Backbone Fitting\\Fitting Params\\NumPts\\"; 
+//		String outputFileName = "SDout.txt";
+//		try {
+//			//Set system.out to a file
+//			System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream(dstBaseDir+outputFileName))));
+//		} catch (FileNotFoundException e) {
+//			e.printStackTrace();
+//			return;
+//		}
+		
+		//Setup parameters for all tests
+		Experiment_Processor ep;
+		FittingParameters fitPar;
+//		ExtractionParameters exPar;
+//		exPar = new ExtractionParameters();
+//		exPar.subset = true;
+//		exPar.startFrame = 1;
+//		exPar.endFrame = 5000;
+		
+		
+		//FIRST RUN: 9 BB points, old params
+		args[1] = dstBaseDir+"9pts_oldParams\\";
+		fitPar = new FittingParameters();
+
+		ep = new Experiment_Processor();
+		ep.runningFromMain = true;
+		ep.fitParams = fitPar;
+		ep.run(args);
+		
+		
+		//SECOND RUN: 7 BB points, old params (modified)
+		args[1] = dstBaseDir+"7pts_oldParams\\";
+		fitPar = new FittingParameters();
+		float[] imageWeights = {1,1,1, 1,1,1, 1};
+		float[] spineLengthWeights = {.7f,1,1, 1,1,1, 1};
+		float[] spineSmoothWeights = {.8f,1,1, 1,1,1, 1};
+		float[][] timeLengthWeights = { {1,1,1, 1,1,1, 1},
+										{1,1,1, 1,1,1, 1},
+										{1,1,1, 1,1,1, 1} };
+		float[][] timeSmoothWeights = { {1,1,1, 1,1,1, 1},
+										{1,1,1, 1,1,1, 1},
+										{1,1,1, 1,1,1, 1} };
+		fitPar.numBBPts = 7;
+		fitPar.imageWeights = imageWeights;
+		fitPar.spineLengthWeights = spineLengthWeights;
+		fitPar.spineSmoothWeights = spineSmoothWeights;
+		fitPar.timeLengthWeights = timeLengthWeights;
+		fitPar.timeSmoothWeights = timeSmoothWeights;
+		
+		ep = new Experiment_Processor();
+		ep.runningFromMain = true;
+		ep.fitParams = fitPar;
+		ep.run(args);
+		
+		//THIRD RUN: 7 BB points, matlab params
+		args[1] = dstBaseDir+"7pts_matlabParams\\";
+		fitPar = new FittingParameters();
+		fitPar.numBBPts = 7;
+		fitPar.imageWeight = 1;
+		fitPar.spineLengthWeight = .4f;
+		fitPar.spineSmoothWeight = .8f;
+		float[] timeLengthWeight_m = {3.0f, .1f, .1f};
+		float[] timeSmoothWeight_m = {1.0f, 0.1f, 0.1f};
+		fitPar.timeLengthWeight = timeLengthWeight_m;
+		fitPar.timeSmoothWeight = timeSmoothWeight_m;
+		float[] imageWeights_m = {1,1,1, 1,1,1, 1};
+		float[] spineLengthWeights_m = {0,1,1, 1,1,1, 1};
+		float[] spineSmoothWeights_m = {.6f,1,1, 1,1,1, 1};
+		float[][] timeLengthWeights_m = { {1,1,1, 1,1,1, 1},
+										{1,1,1, 1,1,1, 1},
+										{1,1,1, 1,1,1, 1} };
+		float[][] timeSmoothWeights_m = { {1,1,1, 1,1,1, 1},
+										{1,1,1, 1,1,1, 1},
+										{1,1,1, 1,1,1, 1} };
+		fitPar.imageWeights = imageWeights_m;
+		fitPar.spineLengthWeights = spineLengthWeights_m;
+		fitPar.spineSmoothWeights = spineSmoothWeights_m;
+		fitPar.timeLengthWeights = timeLengthWeights_m;
+		fitPar.timeSmoothWeights = timeSmoothWeights_m;
+		
+		ep = new Experiment_Processor();
+		ep.runningFromMain = true;
+		ep.fitParams = fitPar;
+		ep.run(args);
+		
+		//FOURTH RUN:
+		args[1] = dstBaseDir+"5pts_matlabParams\\";
+		fitPar = new FittingParameters();
+		fitPar.numBBPts = 5;
+		fitPar.imageWeight = 1;
+		fitPar.spineLengthWeight = .4f;
+		fitPar.spineSmoothWeight = .8f;
+		float[] timeLengthWeight_m5 = {3.0f, .1f, .1f};
+		float[] timeSmoothWeight_m5 = {1.0f, 0.1f, 0.1f};
+		fitPar.timeLengthWeight = timeLengthWeight_m5;
+		fitPar.timeSmoothWeight = timeSmoothWeight_m5;
+		float[] imageWeights_m5 = {1,1,1, 1,1};
+		float[] spineLengthWeights_m5 = {0,1,1, 1,1};
+		float[] spineSmoothWeights_m5 = {.6f,1,1, 1,1};
+		float[][] timeLengthWeights_m5 = { {1,1,1, 1,1},
+										{1,1,1, 1,1},
+										{1,1,1, 1,1} };
+		float[][] timeSmoothWeights_m5 = { {1,1,1, 1,1},
+										{1,1,1, 1,1},
+										{1,1,1, 1,1} };
+		fitPar.imageWeights = imageWeights_m5;
+		fitPar.spineLengthWeights = spineLengthWeights_m5;
+		fitPar.spineSmoothWeights = spineSmoothWeights_m5;
+		fitPar.timeLengthWeights = timeLengthWeights_m5;
+		fitPar.timeSmoothWeights = timeSmoothWeights_m5;
+		
+		ep = new Experiment_Processor();
+		ep.runningFromMain = true;
+		ep.fitParams = fitPar;
+		ep.run(args);
+		
+		imj.quit();
+	}
+	
+	public static void testEndClippingForDivergance(){
+		
+		
+		/* PASTE THIS VVV INTO Experiment_Processor.fitTrack();
+		int numFramesClipped = 140; //10 seconds
+		bbf.clipEnds = true;
+		bbf.BTPstartFrame = tr.getStart().frameNum+numFramesClipped;
+		bbf.BTPendFrame = tr.getEnd().frameNum-numFramesClipped;
+		
+		if (bbf.BTPendFrame-bbf.BTPstartFrame < prParams.minTrackLen){
+			System.out.println("Too short after clipping");
+			return null;
+		}
+		*/
+		
+		
+		String baseDir = "C:\\Users\\Natalie\\Documents\\Testing\\Building and Fitting - TestExProc\\Fitting diverged with clipped ends\\";
+		String fileName = "divergedTrackExp.prejav";
+		
+		Experiment_Processor ep = new Experiment_Processor();
+		ExtractionParameters exParams = new ExtractionParameters();
+		exParams.subset = true;
+		exParams.endFrame = 2000;
+		ep.extrParams = exParams;
+		ProcessingParameters prParams= new ProcessingParameters();
+		prParams.saveErrors = false;
+		prParams.diagnosticIm = false;
+		ep.prParams = prParams;
+		
+		ep.run(baseDir+fileName);
+		
+		
+		
+	}
+	
 	public static void testDMSinProcessing(){
 		
 		String baseDir = "C:\\Users\\Natalie\\Documents\\Testing\\Building and Fitting - TestExProc\\Point Splitting\\";
@@ -168,7 +823,6 @@ public class Test {//extends JFrame
 		ep.run(args);
 		
 	}
-	
 	
 	public static void testDistanceMapSplitter(){
 		
@@ -215,8 +869,6 @@ public class Test {//extends JFrame
 		
 	}
 	
-	
-
 	public static void testImDerivs(){
 		ImageJ imj = new ImageJ();
 		String dir = "E:\\extracted\\optogenetics\\Or42a@Chrimson(X)\\RWN_0.3ohm_BWN_39ohm";
@@ -351,7 +1003,6 @@ public class Test {//extends JFrame
 		ef.run(null);
 		
 	}
-	
 	
 	public static void testCSVwriterFrame(){
 		

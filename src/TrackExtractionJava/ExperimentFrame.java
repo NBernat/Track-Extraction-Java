@@ -399,7 +399,7 @@ class DisplayOpPanel extends JPanel{
 		
 		buildCheckBoxes();
 //		add(clusterBox);
-//		add(initialBBBox);
+		add(initialBBBox);
 		add(htBox);
 		add(contourBox);
 		add(midBox);

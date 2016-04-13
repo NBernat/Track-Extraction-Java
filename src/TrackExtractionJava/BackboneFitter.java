@@ -3,6 +3,10 @@ package TrackExtractionJava;
 import ij.gui.PolygonRoi;
 import ij.process.FloatPolygon;
 import ij.text.TextWindow;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
@@ -33,13 +37,15 @@ public class BackboneFitter {
 	Track track;
 	int newTrID=-1;
 	
+	Track errTrack=null;
+	
 	/**
 	 * A List of (references to) the BTP's in track, worked on during fitting algorithm
 	 */
 	Vector<BackboneTrackPoint> BTPs;
-	private boolean clipEnds = false;
-	private int BTPstartFrame = -1;
-	private int BTPendFrame = -1;
+	protected boolean clipEnds = false;
+	protected int BTPstartFrame = -1;
+	protected int BTPendFrame = -1;
 	private Vector<TrackPoint> startClippings;
 	private Vector<TrackPoint> endClippings;
 	
@@ -125,6 +131,7 @@ public class BackboneFitter {
 				noError = doPass(params.grains[i]);
 				if (!noError) {
 					comm.message("Error on track "+tr.getTrackID()+"("+track.getTrackID()+") pass "+i+"(grain "+params.grains[i]+") \n ---------------------------- \n \n", VerbLevel.verb_error);
+					errTrack = track;
 					track = null;
 					pass++;
 					Forces = params.getForces(pass);
@@ -264,6 +271,8 @@ public class BackboneFitter {
 			} 
 			
 			
+		} else{
+			comm.message("Error generating backbones at grain "+grain, VerbLevel.verb_error);
 		}
 		
 		return noError;
@@ -878,7 +887,11 @@ public class BackboneFitter {
 			
 		} while (!diverged && updater.keepGoing(shifts));
 		
-		if (!diverged) finalizeBackbones();
+		if (!diverged) {
+			finalizeBackbones();
+		} else {
+			//storeDiverganceInfo();
+		}
 		return !diverged;
 
 	}
@@ -1007,6 +1020,16 @@ public class BackboneFitter {
 		}
 	}
 
+	protected void storeDiverganceInfo(){
+		//TODO
+		ListIterator<BackboneTrackPoint> btpIt = BTPs.listIterator();
+		while (btpIt.hasNext()) {
+			btpIt.next().finalizeBackbone();
+		}
+	}
+	
+	
+	
 	public Vector<BackboneTrackPoint> getBackboneTrackPoints() {
 		return BTPs;
 	}
@@ -1026,6 +1049,35 @@ public class BackboneFitter {
 		 }
 		if (!bbcomm.outString.equals("")){
 			new TextWindow("Backbone Generation", bbcomm.outString, 500, 500);
+		}
+	}
+	
+	public void saveCommOutput(String dstDir){
+		if (!comm.outString.equals("")){
+			PrintWriter out;
+			File f =new File(dstDir+"TrackFitter.txt"); 
+			try{
+				if (!f.exists()) f.createNewFile();
+				out = new PrintWriter(f);
+				out.print(comm.outString);
+				
+			} catch (Exception e){
+				e.printStackTrace();
+			}
+			
+		 }
+		
+		if (!bbcomm.outString.equals("")){
+			PrintWriter out;
+			File f =new File(dstDir+"Backbone Generation.txt"); 
+			try{
+				if (!f.exists()) f.createNewFile();
+				out = new PrintWriter(f);
+					out.print(bbcomm.outString);
+				
+			} catch (Exception e){
+				e.printStackTrace();
+			}
 		}
 	}
 	

@@ -147,8 +147,13 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 			
 			setInitialBB(new PolygonRoi(initBB, PolygonRoi.POLYLINE), numBBPts);
 			setMagPix();
-			setVoronoiClusters();
 			
+			if (bf.params.pixelMethod==0){
+				setVoronoiClusters();
+			} else if (bf.params.pixelMethod==1){
+				//TODO
+				setGaussianMixtureInfo();
+			}
 		}
 	}
 	
@@ -200,7 +205,6 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		}
 		
 		
-		//TODO MASK THE IMAGE SO IT ONLY SEES THE ONE MAGGOT
 		ImageProcessor maskIm = getMask();
 		
 		MagPixX = new float[maskIm.getWidth()*maskIm.getHeight()];
@@ -265,6 +269,11 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 			clusterInds[pix] = minInd;
 		}
 		
+	}
+	
+	
+	private void setGaussianMixtureInfo(){
+		//TODO
 	}
 
 
@@ -369,9 +378,9 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		int yL = rect.y-dc*h;
 		int yU = rect.y+(dc+1)*h;
 		
-		for (int i=0; i<bbOld.npoints; i++){
-			double xc = bbOld.xpoints[i];
-			double yc = bbOld.ypoints[i];
+		for (int i=0; i<bbNew.npoints; i++){
+			double xc = bbNew.xpoints[i];
+			double yc = bbNew.ypoints[i];
 			if (xc<xL || xc>xU || yc<yL || yc>yU){
 				return true;
 			}

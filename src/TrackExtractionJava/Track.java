@@ -14,6 +14,7 @@ import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.Collections;
+import java.util.List;
 import java.util.ListIterator;
 import java.util.Vector;
 
@@ -92,7 +93,17 @@ public class Track implements Serializable{
 
 	}
 	
-	
+	public Track(List<? extends TrackPoint> pts, int ID){
+		maxHeight=0;
+		maxWidth=0;
+		
+		points = new Vector<TrackPoint>();
+		points.addAll(pts);
+		isCollision = new Vector<Boolean>();
+		
+		trackID = ID;
+
+	}
 	public Track(Vector<? extends TrackPoint> pts, int ID){
 		maxHeight=0;
 		maxWidth=0;
@@ -103,6 +114,27 @@ public class Track implements Serializable{
 		
 		trackID = ID;
 
+	}
+	
+	public Track(Track tr, int startInd, int endInd){
+		
+		nextIDNum = tr.getNextIDNum();
+		maxHeight = tr.maxHeight;
+		maxWidth = tr.maxWidth;
+		exp = tr.exp;
+		isCollision = tr.isCollision;
+		
+		points = new Vector<TrackPoint>();
+		for (int i=startInd; i<=endInd; i++){
+			points.add(tr.getPoint(i));
+			points.get(i-startInd).track = this;
+		}
+		
+		
+		trackID = nextIDNum;
+		nextIDNum++;
+		
+		
 	}
 	
 	public Track(Vector<BackboneTrackPoint> pts, Track tr){
@@ -494,7 +526,7 @@ public class Track implements Serializable{
 					return 1;
 				}
 				if (i==(points.size()-1)){
-					pw.println("Last point in track "+trackID+" written");
+					if (pw!=null) pw.println("Last point in track "+trackID+" written");
 				}
 			}
 			if (pw!=null) pw.println("...done writing points");

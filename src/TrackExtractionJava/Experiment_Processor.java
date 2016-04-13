@@ -136,8 +136,10 @@ public class Experiment_Processor implements PlugIn{
 					}
 					if (prParams.saveMagEx) {
 						log("Saving Maggot Tracks...");
+						System.out.println("Saving maggot Tracks...");
 						saveOldTracks();
 						log("...done saving Maggot Tracks");
+						System.out.println("...Done saving maggot Tracks");
 					}
 					IJ.showStatus("Done Saving MaggotTrackPoint Experiment");
 				}
@@ -163,8 +165,11 @@ public class Experiment_Processor implements PlugIn{
 					log("...done fitting tracks");
 					if (prParams.saveFitEx) {
 						log("Saving backbone tracks...");
+						System.out.println("Saving backbone Tracks...");
 						if (saveNewTracks()){
 							log("...done saving backbone tracks");
+							System.out.println("...Done saving backbone Tracks");
+							
 						} else {
 							log("Error saving tracks");
 						}
@@ -597,7 +602,7 @@ public class Experiment_Processor implements PlugIn{
 			}
 		}
 		
-		bbf.showCommOutput();
+		bbf.saveCommOutput(dstDir);//bbf.showCommOutput();
 		
 		
 		
@@ -613,6 +618,7 @@ public class Experiment_Processor implements PlugIn{
 //		}
 		
 		if (prParams.diagnosticIm){
+			System.out.println("Generating diagnostic im...");
 			ImagePlus dIm1 = ex.getDiagnIm(mmfStack.getWidth(), mmfStack.getHeight());
 			String ps = File.separator;
 			String diagnPath = (dstDir!=null)? dstDir : srcDir;
@@ -623,6 +629,7 @@ public class Experiment_Processor implements PlugIn{
 			diagnPath+= srcName;
 			diagnPath = diagnPath.replace(diagnPath.substring(diagnPath.lastIndexOf("."), diagnPath.length()), " diagnostic foreground.bmp");
 			IJ.save(dIm1, diagnPath);
+			System.out.println("...Done generating diagnostic im");
 		}
 		
 		if (prParams.saveErrors){
@@ -647,6 +654,9 @@ public class Experiment_Processor implements PlugIn{
 	 */
 	private Track fitTrack(Track tr){
 		indentLevel++;
+		
+		
+		
 		bbf.fitTrack(tr);
 		indentLevel--;
 		return bbf.getTrack();
@@ -706,7 +716,8 @@ public class Experiment_Processor implements PlugIn{
 
 	
 	private void saveErrorTracks(Vector<Track> errTracks){
-		File f = new File(srcDir+File.separator+"divergedTrackExp.prejav");
+		String fDst = (dstDir!=null)? dstDir : srcDir;
+		File f = new File(fDst+File.separator+"divergedTrackExp.jav");
 		System.out.println("Saving error track experiment to "+f.getPath());
 		try{
 			DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f))); 

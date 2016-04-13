@@ -222,6 +222,18 @@ public class TrackMatch implements Serializable {
 	}
 	
 	
+	protected void cutMatch(int i){
+		
+		validMatch[i] = 0;
+		
+		int topInd = getTopMatchInd();
+		if (i==topInd){
+			matchPts[topInd].setNumMatches(matchPts[topInd].getNumMatches()-1);
+			topInd = getTopMatchInd();
+			if (topInd>=0) matchPts[topInd].setNumMatches(matchPts[topInd].getNumMatches()+1);
+		}
+	}
+	
 	/**
 	 *  Marks as invalid matches that are farther than DISTCUT away from the track 
 	 * @param distCut Maximum valid distance between a point and the end of the track
@@ -234,6 +246,7 @@ public class TrackMatch implements Serializable {
 		int i=0;
 		while (i<matchPts.length){
 			if (dist2MatchPts[i]>distCut){
+//				cutMatch(i);
 				
 				validMatch[i] = 0;
 				
@@ -250,6 +263,31 @@ public class TrackMatch implements Serializable {
 		return numInvalidated;
 	}
 	
+	public int cutPointsByAreaFraction(double lowerFrac, double upperFrac){
+
+		double[] areaFracs = getAreaFracs();
+		int numInvalidated = 0;
+		int i=0;
+		while (i<matchPts.length){
+			if (areaFracs[i]<lowerFrac || areaFracs[i]>upperFrac){
+				cutMatch(i);
+			}
+			i++;
+		}
+		
+		return numInvalidated;
+	}
+	
+	public double[] getAreaFracs(){
+		double[] af = new double[matchPts.length];
+		double lastArea = track.getEnd().area;
+		
+		for (int i=0; i<af.length; i++){
+			af[i] = matchPts[i].area/lastArea;
+		}
+		
+		return af;
+	}
 	
 	/**
 	 * Moves point data from one index to another

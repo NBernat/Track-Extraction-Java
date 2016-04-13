@@ -388,7 +388,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 				
 				
 				htValid=false;
-				comm.message("Frame "+frameNum+": Segments have different numbers of Coordinates, L="+leftSeg.getNCoordinates()+" R="+rightSeg.getNCoordinates(), VerbLevel.verb_message);
+				if (comm!=null) comm.message("Frame "+frameNum+": Segments have different numbers of Coordinates, L="+leftSeg.getNCoordinates()+" R="+rightSeg.getNCoordinates(), VerbLevel.verb_message);
 			}
 			
 			
