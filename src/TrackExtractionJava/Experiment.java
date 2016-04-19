@@ -24,7 +24,11 @@ import java.io.Writer;
 import java.util.ListIterator;
 import java.util.Vector;
 
-
+/**
+ * This object contains a set of tracks
+ * @author Natalie
+ *
+ */
 public class Experiment implements Serializable{
 
 	/**

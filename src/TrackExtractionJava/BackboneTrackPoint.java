@@ -10,6 +10,7 @@ import java.awt.Rectangle;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.Vector;
 
 
@@ -51,12 +52,19 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	 * Contains numPix valid elements
 	 */
 	private transient int[] MagPixI;
+	
+	private transient double[][] MagPixWold;
+	private transient double[][] MagPixWnew;
+	
 	/**
 	 * A list of cluster indices (0;numBBpoints-1) corresponding to the nearest bbOld point to each MagPix point 
 	 * <p>
 	 * Contains numPix valid elements
 	 */
 	private transient int[] clusterInds;
+	
+	
+	private int clusterMethod=0;
 	
 	/**
 	 * The number of points in the backbone
@@ -124,14 +132,15 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		return btp;
 	}
 	
-	protected void fillInBackboneInfo(PolygonRoi newMidline, float[] prevOrigin){
+	protected void fillInBackboneInfo(int clusterMethod, PolygonRoi newMidline, float[] prevOrigin){
 		artificialMid = true;
-		setBackboneInfo(newMidline, prevOrigin);
+		setBackboneInfo(clusterMethod, newMidline, prevOrigin);
 	}
 	
-	protected void setBackboneInfo(PolygonRoi newMidline, float[] prevOrigin){
+	protected void setBackboneInfo(int clusterMethod, PolygonRoi newMidline, float[] prevOrigin){
 		
 		if(newMidline!=null){
+			
 			
 			//Correct the origin of the midline
 			FloatPolygon newMid = newMidline.getFloatPolygon();
@@ -145,15 +154,14 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 			}
 			FloatPolygon initBB = new FloatPolygon(xmid, ymid);//midline.getFloatPolygon();
 			
+			
+			if (this.clusterMethod!=clusterMethod){
+				this.clusterMethod=clusterMethod;
+			}
 			setInitialBB(new PolygonRoi(initBB, PolygonRoi.POLYLINE), numBBPts);
 			setMagPix();
+			setInitialClusterInfo(); 
 			
-			if (bf.params.pixelMethod==0){
-				setVoronoiClusters();
-			} else if (bf.params.pixelMethod==1){
-				//TODO
-				setGaussianMixtureInfo();
-			}
 		}
 	}
 	
@@ -210,10 +218,8 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		MagPixX = new float[maskIm.getWidth()*maskIm.getHeight()];
 		MagPixY = new float[maskIm.getWidth()*maskIm.getHeight()];
 		MagPixI = new int[maskIm.getWidth()*maskIm.getHeight()];
-		clusterInds = new int[maskIm.getWidth()*maskIm.getHeight()];
+		
 		numPix = 0;
-		
-		
 		for(int X=0; X<maskIm.getWidth(); X++){
 			for (int Y=0; Y<maskIm.getHeight(); Y++){
 				if(maskIm.getPixel(X,Y)>thresh && im.getPixel(X, Y)>thresh){
@@ -225,8 +231,11 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 				}
 			}
 		}
+		MagPixX = Arrays.copyOfRange(MagPixX, 0, numPix);
+		MagPixY = Arrays.copyOfRange(MagPixY, 0, numPix);
+		MagPixI = Arrays.copyOfRange(MagPixI, 0, numPix);
 		
-
+		
 		if(comm!=null){
 			comm.message("Number of MagPix: "+numPix, VerbLevel.verb_debug);
 		}
@@ -238,6 +247,26 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		
 	}
 		
+	private void setInitialClusterInfo(){
+		if (clusterMethod==0){
+			clusterInds = new int[numPix];
+			setVoronoiClusters();
+		} else if (clusterMethod==1){
+			MagPixWold = new double[numBBPts][numPix];
+			MagPixWnew = new double[numBBPts][numPix];
+			setInitialWeights();
+		}
+	}
+	
+	private void setClusterInfo(){
+		if (clusterMethod==0){
+			setVoronoiClusters();
+		} else if (clusterMethod==1){
+			setGaussianMixtureWeights();
+		}
+	}
+	
+	
 	/**
 	 * Finds the nearest backbone point to each maggot pixel, stores index of bbOld for each pixel in clusterInds
 	 */
@@ -247,35 +276,85 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 			bf.comm.message("Setting Voronoi clusters", VerbLevel.verb_debug);
 		}
 		
-		//For each maggot pixel, find the nearest backbone point
+		//Assign cluster info 
 		for (int pix=0; pix<numPix; pix++){
 			
 			double minDistSqr = java.lang.Double.POSITIVE_INFINITY;
 			int minInd = -1;
 			double distSqr;
 			for(int cl=0; cl<numBBPts; cl++){
+				
 				distSqr = ((double)MagPixX[pix]-bbOld.xpoints[cl])*((double)MagPixX[pix]-bbOld.xpoints[cl]);
 				distSqr+= ((double)MagPixY[pix]-bbOld.ypoints[cl])*((double)MagPixY[pix]-bbOld.ypoints[cl]);
 				if(distSqr<minDistSqr){
 					minDistSqr = distSqr;
 					minInd = cl;
 				}
+				
 			}
 			if (minInd==-1) {
 				bf.comm.message("Voronoi clusters went unset in frame "+frameNum, VerbLevel.verb_error);
-				
-				
 			}
 			clusterInds[pix] = minInd;
 		}
 		
 	}
 	
-	
-	private void setGaussianMixtureInfo(){
-		//TODO
+	private void setInitialWeights(){
+		clusterInds = new int[numPix];
+		setVoronoiClusters();
+		//Set the initial weights to be the voronoi clusters
+		for (int pix=0; pix<numPix; pix++){
+			MagPixWold[ clusterInds[pix] ][pix] = 1;
+		}
+		clusterInds = null;
+		
+		setGaussianMixtureWeights();//Sets MagPixWnew, which is used for generation of the backbone
 	}
+	
+	private void setGaussianMixtureWeights(){
 
+		double var = calcVariance();
+		
+		double[] wDenom = new double[numPix]; 
+		//Calculate the denominator of the weight
+		for (int pix=0; pix<numPix; pix++){
+			for (int cl=0; cl<numBBPts; cl++){
+				wDenom[pix] += Math.exp(((-0.5)*calcDistSqrBtwnPixAndBBPt(cl, pix))/var);
+			}
+		}
+		
+		//Calculate the weight
+		for (int pix=0; pix<numPix; pix++){
+			for (int cl=0; cl<numBBPts; cl++){
+				double wNumer = Math.exp(((-0.5)*calcDistSqrBtwnPixAndBBPt(cl, pix))/var);
+				MagPixWnew[cl][pix] = wNumer/wDenom[pix];
+			}
+		}
+			
+		
+	}
+	
+	private double calcVariance(){
+		double numer = 0;
+		double denom = 0;
+		for (int pix=0; pix<numPix; pix++){
+			denom += MagPixI[pix];
+			for (int cl=0; cl<numBBPts; cl++){
+				numer+=MagPixWold[cl][pix]*calcDistSqrBtwnPixAndBBPt(cl, pix)*MagPixI[pix];
+			}
+		}
+		return numer/denom;
+	}
+	
+	private double calcDistSqrBtwnPixAndBBPt(int clusterInd, int pixInd){
+		//dist^2 = x^2...
+		double distSqr = ((double)MagPixX[pixInd]-bbOld.xpoints[clusterInd])*((double)MagPixX[pixInd]-bbOld.xpoints[clusterInd]);
+		//...+y^2
+		distSqr+= ((double)MagPixY[pixInd]-bbOld.ypoints[clusterInd])*((double)MagPixY[pixInd]-bbOld.ypoints[clusterInd]);
+		
+		return distSqr;
+	}
 
 	public double calcPointShift(){
 		//Calculate the change between the old and new backbones
@@ -303,7 +382,8 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	 */
 	protected void setupForNextRelaxationStep(){
 		bbOld = bbNew;
-		setVoronoiClusters();
+		MagPixWold = MagPixWnew;
+		setClusterInfo();//fills in MagPixWnew using MagPixWold 
 	}
 	
 	/**
@@ -338,8 +418,16 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		return MagPixI[ind];
 	}
 	
+	public int getClusterMethod(){
+		return clusterMethod;
+	}
+	
 	public int getClusterInds(int ind){
-		return clusterInds[ind];
+		return (clusterMethod==0)? clusterInds[ind]:-1;
+	}
+	
+	public double getClusterWeight(int cl, int pix){
+		return MagPixWnew[cl][pix];
 	}
 	
 	public int getNumBBPoints(){
@@ -433,7 +521,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	public void reloadMagPix(){
 		setInitialBB(backbone, numBBPts);
 		setMagPix();
-		setVoronoiClusters();
+		setInitialClusterInfo();
 	}
 	
 	public ImageProcessor getImWithMidline(PolygonRoi mid){

@@ -30,6 +30,12 @@ public class ProcessingParameters {
 	
 	public boolean doFitting = true;
 	
+	public boolean loadSingleTrackForFitting = false;
+	
+	public boolean saveSingleTracksFromFitting = false;
+	
+	
+	
 	/**
 	 * Closes the MMF window
 	 */

@@ -420,14 +420,44 @@ public class Test {//extends JFrame
 		
 		String[] args = new String[2];
 		args[0] = srcName;
+		args[1] = dstBaseDir+"testClusterEdits\\voronoi\\";//gaussianMixture
 		
+//		FittingParameters fP = new FittingParameters();
+//		fP.clusterMethod=0;
+//		ExtractionParameters exP = new ExtractionParameters();
+//		exP.subset = true;
+//		exP.startFrame=1;
+//		exP.endFrame=2000;
+//		ProcessingParameters prP = new ProcessingParameters();
+//		prP.diagnosticIm = false;
+//		
+//		Experiment_Processor ep = new Experiment_Processor();
+//		ep.runningFromMain = true;
+//		ep.prParams = prP;
+//		ep.extrParams = exP;
+//		ep.fitParams = fP;
+//		
+//		ep.run(args);
+		
+		args[1] = dstBaseDir+"testClusterEdits\\gaussianMixture\\";//
+		
+		FittingParameters fP = new FittingParameters();
+		fP.clusterMethod=1;
+		ExtractionParameters exP = new ExtractionParameters();
+		exP.subset = true;
+		exP.startFrame=1;
+		exP.endFrame=2000;
 		ProcessingParameters prP = new ProcessingParameters();
 		prP.diagnosticIm = false;
+		
 		Experiment_Processor ep = new Experiment_Processor();
-		ep.prParams = prP;
-		args[1] = dstBaseDir+"saveDivergedBB\\";
 		ep.runningFromMain = true;
+		ep.prParams = prP;
+		ep.extrParams = exP;
+		ep.fitParams = fP;
+		
 		ep.run(args);
+		
 		IJ.quit();
 	}
 	

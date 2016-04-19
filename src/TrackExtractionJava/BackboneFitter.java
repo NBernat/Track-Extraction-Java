@@ -342,7 +342,7 @@ public class BackboneFitter {
 				for (int i=0; i<BTPs.size(); i++){
 					origin[0] = BTPs.get(i).rect.x;
 					origin[1] = BTPs.get(i).rect.y;
-					BTPs.get(i).setBackboneInfo(BTPs.get(i).midline, origin);
+					BTPs.get(i).setBackboneInfo(params.clusterMethod, BTPs.get(i).midline, origin);
 					comm.message("Adding backbone info to BTP "+i+"(frame "+BTPs.get(i).frameNum+")", VerbLevel.verb_debug);
 				}
 				boolean noError = cleanUpBTPs(findEmptyMids(), params.minFlickerDist*params.grains[pass]);
@@ -359,7 +359,7 @@ public class BackboneFitter {
 						interpdBBs = interpBackbones(i-prev-1, origin, origin, BTPs.get(prev).backbone.getFloatPolygon(), BTPs.get(i).backbone.getFloatPolygon());
 						//fill in the midlines
 						for (int j=prev; j<i; j++){
-							BTPs.get(j).setBackboneInfo(new PolygonRoi(interpdBBs.get(j-prev), PolygonRoi.POLYLINE), origin);
+							BTPs.get(j).setBackboneInfo(params.clusterMethod, new PolygonRoi(interpdBBs.get(j-prev), PolygonRoi.POLYLINE), origin);
 						} 
 						prev = i;
 					}
@@ -624,7 +624,7 @@ public class BackboneFitter {
 				}
 	
 				for (int i = gapStart; i <= gapEnd; i++) {
-					BTPs.get(i).fillInBackboneInfo(fillerMidline, origin);
+					BTPs.get(i).fillInBackboneInfo(params.clusterMethod, fillerMidline, origin);
 				}
 	
 			} else if (gapStart != 0 && gapEnd != (BTPs.size() - 1)) {
@@ -646,7 +646,7 @@ public class BackboneFitter {
 					PolygonRoi newMid = new PolygonRoi(newMids.get(i-gapStart), PolygonRoi.POLYLINE);
 					comm.message("Filling in midline "+i+"; new midline has "+newMid.getNCoordinates()+" pts", VerbLevel.verb_debug);
 					BTPs.get(i).bf = this;
-					BTPs.get(i).fillInBackboneInfo(newMid, origin);
+					BTPs.get(i).fillInBackboneInfo(params.clusterMethod, newMid, origin);
 				}
 				comm.message("Gap filled", VerbLevel.verb_debug);
 			} else if (gapStart==0 && gapEnd == (BTPs.size()-1)){

@@ -19,7 +19,7 @@ public class FittingParameters {
 	 * 0= voronoi clusters 
 	 * 1= gaussian mixture
 	 */
-	int pixelMethod = 0;
+	int clusterMethod = 0;
 	
 	public int[] grains = {32,16, 1}; 
 	public int smallGapMaxLen = 10;//The maximum gap length for which the previous midline will be carried forward (otherwise interpolate)

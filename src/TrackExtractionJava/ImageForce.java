@@ -25,19 +25,29 @@ public class ImageForce extends Force {
 		float[] targetY = new float[numBBPts];
 		Arrays.fill(targetY, 0);
 		
-		int[] norm = new int[numBBPts];
+		float[] norm = new float[numBBPts];
 		Arrays.fill(norm, 0);
 
 		//Calculate the center of mass of each backbone cluster
 		
 		//Sum the coordinates and build the normalization factor from the weights
-		for (int pix=0; pix<btp.getNumPix(); pix++){
-			int k=btp.getClusterInds(pix);
-			
-			targetX[k] += btp.getMagPixI(pix)*(btp.getMagPixX(pix));
-			targetY[k] += btp.getMagPixI(pix)*(btp.getMagPixY(pix));
-			norm[k] += btp.getMagPixI(pix);
+		if (btp.getClusterMethod()==0){
+			for (int pix=0; pix<btp.getNumPix(); pix++){
+				int k=btp.getClusterInds(pix);
+				targetX[k] += btp.getMagPixI(pix)*(btp.getMagPixX(pix));
+				targetY[k] += btp.getMagPixI(pix)*(btp.getMagPixY(pix));
+				norm[k] += btp.getMagPixI(pix);
+			}
+		} else {
+			for (int pix=0; pix<btp.getNumPix(); pix++){
+				for (int k=0; k<numBBPts; k++){
+					targetX[k] += btp.getMagPixI(pix)*(btp.getMagPixX(pix))*(btp.getClusterWeight(k, pix));
+					targetY[k] += btp.getMagPixI(pix)*(btp.getMagPixY(pix))*(btp.getClusterWeight(k, pix));
+					norm[k] += btp.getMagPixI(pix)*(btp.getClusterWeight(k, pix));
+				}
+			}
 		}
+		
 		//Normalize the coordinates
 		for (int k=0; k<numBBPts; k++){
 			if (norm[k]!=0){
@@ -45,7 +55,6 @@ public class ImageForce extends Force {
 				targetY[k] = targetY[k]/norm[k];
 			} 
 		}
-		
 		
 		return new FloatPolygon(targetX, targetY);
 	}
