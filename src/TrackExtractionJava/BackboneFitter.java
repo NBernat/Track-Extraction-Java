@@ -4,9 +4,16 @@ import ij.gui.PolygonRoi;
 import ij.process.FloatPolygon;
 import ij.text.TextWindow;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
@@ -62,7 +69,7 @@ public class BackboneFitter {
 	private int pass;
 	
 	private boolean diverged = false;
-
+	protected int divergedInd = -1;
 	
 	Vector<EnergyProfile> energyProfiles;
 	
@@ -87,18 +94,14 @@ public class BackboneFitter {
 		} else{
 			params = fp;
 		}
-		
-		if (params.storeEnergies){
-			//TODO
-			energyProfiles = new Vector<EnergyProfile>();
-			for (int i=0; i<Forces.size(); i++){
-				energyProfiles.add(new EnergyProfile(Forces.get(i)));
-			}
-		}
 			
 		pass = 0;
 		Forces = params.getForces(pass);
-
+		
+		if (params.storeEnergies){
+			initEnergyProfiles();
+		}
+	
 		comm = new Communicator();
 		comm.setVerbosity(VerbLevel.verb_error);
 		bbcomm = new Communicator();
@@ -106,6 +109,32 @@ public class BackboneFitter {
 
 	}
 
+	private void initEnergyProfiles(){
+		energyProfiles = new Vector<EnergyProfile>();
+		for (int i=0; i<Forces.size(); i++){
+			energyProfiles.add(new EnergyProfile(Forces.get(i).getName()));
+		}
+		energyProfiles.add(new EnergyProfile("Total"));
+	}
+	
+	
+	private void clearPrev(){
+		track = null;
+		BTPs = null;
+		shifts = null;
+		updater = null;
+		pass = 0;
+		diverged = false;
+		BTPs = new Vector<BackboneTrackPoint>();
+		clipEnds = false;
+		BTPstartFrame=-1;
+		BTPendFrame=-1;
+		if (params.storeEnergies){
+			initEnergyProfiles();
+		}
+	}
+	
+	
 	/**
 	 * Fits backbones to the points in the given track.
 	 * <p>
@@ -115,8 +144,18 @@ public class BackboneFitter {
 	 * @param tr
 	 */
 	public void fitTrack(Track tr) {
-
+		
 		clearPrev();
+		
+		if (params.subset){
+			int si = (params.startInd>=tr.points.size())? si=tr.points.size()-1 : params.startInd;
+			int ei = (params.endInd>=tr.points.size())? tr.points.size()-1 : params.startInd;
+			tr = new Track(tr, si, ei);
+			if (tr.points.size()<params.minTrackLen){
+				System.out.println("Track too short for fitting");
+				return;
+			}
+		}
 		
 		boolean noError = true;
 
@@ -150,22 +189,9 @@ public class BackboneFitter {
 			comm.message("Error converting track points to btp", VerbLevel.verb_error);
 		}
 		
-		
+		System.out.println("Done fitting track");
 	}
 
-	
-	private void clearPrev(){
-		track = null;
-		BTPs = null;
-		shifts = null;
-		updater = null;
-		pass = 0;
-		diverged = false;
-		BTPs = new Vector<BackboneTrackPoint>();
-		clipEnds = false;
-		BTPstartFrame=-1;
-		BTPendFrame=-1;
-	}
 
 	
 	
@@ -205,8 +231,6 @@ public class BackboneFitter {
 						comm.message("convertMTPtoBTP successful", VerbLevel.verb_debug);
 					}
 					
-					//TODO make emptyMidlines[i] true when it's too far from the previous spine
-					
 		
 					btp.bf = this;
 					BTPs.add(btp);
@@ -218,9 +242,8 @@ public class BackboneFitter {
 				
 			} else {
 				comm.message(
-						"Points were not maggotTrackPoints; no points were made",
+						"Points were not maggotTrackPoints; no backbone points were made",
 						VerbLevel.verb_error);
-				// TODO reload the points as BTP
 				noerror=false;
 			}
 				
@@ -254,6 +277,7 @@ public class BackboneFitter {
 			
 			// Run the fitting algorithm
 			try {
+				
 				runFitter();
 				if (diverged) {
 					comm.message("Track "+track.getTrackID()+" diverged", VerbLevel.verb_error);
@@ -851,22 +875,34 @@ public class BackboneFitter {
 	 * returns convergence status
 	 */
 	private boolean runFitter() {
-		
+		boolean firstPass=true;
 		do {
 			comm.message("Iteration number " + updater.getIterNum(), VerbLevel.verb_debug);
 
 			// Do a relaxation step
 			comm.message("Updating " + updater.inds2Update().length+ " backbones", VerbLevel.verb_debug);
 			bbcomm.message("\n\nIteration "+updater.getIterNum(), VerbLevel.verb_debug);
-			relaxBackbones(updater.inds2Update());
-
+			
 			if (params.storeEnergies){
-				//TODO Generate Energy 
-				for (EnergyProfile enPr : energyProfiles){
-					enPr.generateProfile(BTPs);
+				if (!firstPass){
+					for (int i=0; i<energyProfiles.size(); i++){
+						energyProfiles.get(i).initEnergyEntryWithPrev();
+					}
+				} else {
+					for (int i=0; i<energyProfiles.size(); i++){
+						energyProfiles.get(i).initEnergyEntry(BTPs.size());
+					}
+					firstPass=false;
 				}
 			}
-
+			
+			relaxBackbones(updater.inds2Update());
+			
+			if (params.storeEnergies){
+				for (int i=0; i<energyProfiles.size(); i++){
+					energyProfiles.get(i).storeProfile();
+				}
+			}
 
 			// Setup for the next step
 			for (int i = 0; (i<BTPs.size() && !diverged); i++) {
@@ -875,8 +911,14 @@ public class BackboneFitter {
 				//Check for divergence
 				if (BTPs.get(i).diverged(params.divergenceConstant)){
 					diverged = true;
+					divergedInd=i;
+					//TODO
+//					storeDiverganceInfo(BTPs.get(i));
 				} else {
 					BTPs.get(i).setupForNextRelaxationStep();
+					//TODO
+					
+					//if (storeTrackDivergance) BTPs.insertElementAt(btps.getNextIter(), i); somewhere.add(BTPs.removeElementAt(i))
 				}
 			}
 			
@@ -887,9 +929,12 @@ public class BackboneFitter {
 			
 		} while (!diverged && updater.keepGoing(shifts));
 		
+		System.out.println("Number of iterations: "+updater.getIterNum());
+		
 		if (!diverged) {
 			finalizeBackbones();
 		} else {
+			//TODO
 			//storeDiverganceInfo();
 		}
 		return !diverged;
@@ -904,12 +949,31 @@ public class BackboneFitter {
 	 */
 	private void relaxBackbones(int[] inds) {
 
+		
+//		if (params.storeEnergies){
+//			if (energyProfiles.firstElement().hasPrev()){
+//				for (int i=0; i<energyProfiles.size(); i++){
+//					energyProfiles.get(i).initEnergyEntryWithPrev();
+//				}
+//			} else {
+//				for (int i=0; i<energyProfiles.size(); i++){
+//					energyProfiles.get(i).initEnergyEntry(BTPs.size());
+//				}
+//			}
+//		}
+		
 		for (int i = 0; i < inds.length; i++) {
 			comm.message("Relaxing frame " + inds[i], VerbLevel.verb_debug);
 			// Relax each backbone
 			bbRelaxationStep(inds[i]);
 
 		}
+		
+//		if (params.storeEnergies){
+//			for (int i=0; i<energyProfiles.size(); i++){
+//				energyProfiles.get(i).storeProfile();
+//			}
+//		}
 
 	}
 
@@ -924,8 +988,22 @@ public class BackboneFitter {
 		// IJ.showStatus("Getting target backbones in frame "+btpInd);
 		// Get the lower-energy backbones for each individual force
 		Vector<FloatPolygon> targetBackbones = getTargetBackbones(btpInd);
+		
+		if (params.storeEnergies){
+			for (int i=0; i<targetBackbones.size(); i++){
+				energyProfiles.get(i).addEnergyEntry(btpInd, Force.getEnergy(targetBackbones.get(i), BTPs.get(btpInd)));
+			}
+		}
+		
 		bbcomm.message("Frame "+btpInd+" Components:", VerbLevel.verb_debug);
-		BTPs.get(btpInd).setBBNew(generateNewBackbone(targetBackbones));
+		
+		FloatPolygon newBB = generateNewBackbone(targetBackbones);
+		
+		if (params.storeEnergies){
+			energyProfiles.lastElement().addEnergyEntry(btpInd, Force.getEnergy(newBB, BTPs.get(btpInd)));
+		}
+		
+		BTPs.get(btpInd).setBBNew(newBB);
 		
 	}
 
@@ -941,10 +1019,15 @@ public class BackboneFitter {
 		Vector<FloatPolygon> targetBackbones = new Vector<FloatPolygon>();
 
 		// Store the backbones which are relaxed under individual forces
-		ListIterator<Force> fIt = Forces.listIterator(); 
+//		ListIterator<Force> fIt = Forces.listIterator(); 
 		try{
-			while (fIt.hasNext()) {
-				targetBackbones.add(fIt.next().getTargetPoints(btpInd, BTPs));
+			for (int i=0; i<Forces.size(); i++){			//while (fIt.hasNext()) {
+				
+				FloatPolygon tb = Forces.get(i).getTargetPoints(btpInd, BTPs);
+//				if (params.storeEnergies){
+//					energyProfiles.get(i).addEnergyEntry(btpInd, Force.getEnergy(tb, BTPs.get(btpInd)));
+//				}
+				targetBackbones.add(tb);;//targetBackbones.add(fIt.next().getTargetPoints(btpInd, BTPs));
 			}
 		} catch(Exception e){
 			StringWriter sw = new StringWriter();
@@ -1081,6 +1164,13 @@ public class BackboneFitter {
 		}
 	}
 	
+	public void saveEnergyProfiles(String dstDir){
+		for (int i=0; i<energyProfiles.size(); i++){
+			EnergyProfile.saveProfile(energyProfiles.get(i),dstDir);
+		}
+	}
+	
+	
 	public boolean diverged(){
 		return diverged;
 	}
@@ -1134,30 +1224,79 @@ class Gap{
 }
 
 
-class EnergyProfile {
+class EnergyProfile implements java.io.Serializable{
 	
-	Force f;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	public String name;
 	//energies.get(i)[j] = energy of j'th trackpoint at i'th iteration of bbf algorithm
-	Vector<Float[]> energies;
+	public Vector<Float[]> energies;
+	transient Float[] energyIter;
 	
-	public EnergyProfile(Force f){
-		//TODO
-		this.f = f;
+	public EnergyProfile(String name){
+		this.name = name;
+		energies = new Vector<Float[]>();
 	}
 	
-	public void generateProfile(Vector<BackboneTrackPoint> BTPs){
-		//TODO
-		Float[] en = new Float[BTPs.size()];
-		for (int i=0; i<en.length; i++){
-			en[i] = f.getEnergy(i, BTPs);
+	
+//	public void generateProfile(Vector<BackboneTrackPoint> BTPs){
+//		Float[] en = new Float[BTPs.size()];
+//		for (int i=0; i<en.length; i++){
+//			en[i] = f.getEnergy(i, BTPs);
+//		}
+//		energies.add(en);
+//	}
+
+	public void storeProfile(){
+		energies.addElement(energyIter);
+	}
+	
+	public void initEnergyEntry(int btpLen){
+		energyIter = new Float[btpLen];
+	}
+	
+	public void initEnergyEntryWithPrev(){
+		energyIter = energies.lastElement().clone();
+	}
+	
+	public boolean hasPrev(){
+		return energies.size()>0;
+	}
+	
+	public void addEnergyEntry(int ind, float entry){
+		energyIter[ind] = entry;
+	}
+	
+	public static void saveProfile(EnergyProfile enPr, String dstDir){
+		File f = new File(dstDir+"\\"+enPr.name+".ser");
+		try {
+			ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(f)));
+			out.writeObject(enPr);
+			out.close();
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		energies.add(en);
 	}
 	
+	public static EnergyProfile loadEnergyProfile(String fname){
+		File f = new File(fname);
+		EnergyProfile enPr = null;
+		try {
+			ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(f)));
+			enPr = (EnergyProfile) in.readObject();
+			in.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return enPr;
+	}
 	
 	public void printEnergies(){
 		//TODO
-		
+		//JK gonna load them up in matlab
 	}
 	
 	

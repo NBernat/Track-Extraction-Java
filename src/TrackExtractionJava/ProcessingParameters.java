@@ -24,15 +24,15 @@ public class ProcessingParameters {
 	/**
 	 * Min length that the fitter can handle
 	 */
-	public int minTrackLen = 200;
+	public int minTrackLen = 200;//NOTE: SHOULD BE SAME AS FITTINGPARAMS.MINTRACKLEN
 	
 	
 	
 	public boolean doFitting = true;
 	
-	public boolean loadSingleTrackForFitting = false;
+//	public boolean loadSingleTrackForFitting = false;
 	
-	public boolean saveSingleTracksFromFitting = false;
+//	public boolean saveSingleTracksFromFitting = false;
 	
 	
 	

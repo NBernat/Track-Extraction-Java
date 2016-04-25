@@ -273,7 +273,7 @@ public class MaggotTrackBuilder extends TrackBuilder {
 			
 		} else {
 			if (comm!=null) comm.message("Track was not oriented", VerbLevel.verb_error);
-			if (comm!=null && !(points.get(0) instanceof MaggotTrackPoint)) comm.message("TrackPoints not MTPs", VerbLevel.verb_error);
+//			if (comm!=null && !(points.get(0) instanceof MaggotTrackPoint)) comm.message("TrackPoints not MTPs", VerbLevel.verb_error);
 		}
 		
 		

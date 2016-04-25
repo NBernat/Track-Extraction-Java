@@ -111,11 +111,11 @@ public class BBFUpdateScheme {
 			currentSchemeCount = 0;
 			inds2Update = defaultInds;
 			if(totalCount>=maxIterations){
-				comm.message("Passed maxIterations", VerbLevel.verb_warning);
+				if (comm!=null) comm.message("Passed maxIterations", VerbLevel.verb_warning);
 				
 				//IJ.showMessage("Passed maxIterations");
 			} else{
-				comm.message("Converged (shifts:"+shifts[0]+","+shifts[1]+","+shifts[2]+",...)", VerbLevel.verb_debug);
+				if (comm!=null && shifts!=null && shifts.length!=0) comm.message("Converged (shifts:"+shifts[0]+","+shifts[1]+","+shifts[2]+",...)", VerbLevel.verb_debug);
 			}
 			
 			

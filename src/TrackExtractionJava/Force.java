@@ -45,24 +45,55 @@ public class Force {
 		return weights;
 	}
 	
-	public float getEnergy(int btpInd, Vector<? extends TrackPoint> allBTPs){
-		if (allBTPs.firstElement() instanceof BackboneTrackPoint){
-			
-			//TODO get actual energy
-			return 0;
-			
-			
-		} else {
-			return -1;
-		}
+
+	public float getEnergy(int btpInd, Vector<BackboneTrackPoint> allBTPs) {
+		//TODO make sure the btps are prepped for getTargetPoints
+		return getEnergy(getTargetPoints(btpInd, allBTPs), allBTPs.get(btpInd));
 	}
 	
-	public void getForce(int btpInd, Vector<BackboneTrackPoint> allBTPs){
+	
+	public static float getEnergy(FloatPolygon targetBackbone, BackboneTrackPoint btp){
+		
+		float energy=0;
+		float[] bbOldX = btp.bbOld.xpoints;
+		float[] bbOldY = btp.bbOld.ypoints;
+		float[] targetX = targetBackbone.xpoints;
+		float[] targetY = targetBackbone.ypoints;
+		for (int i=0; i<btp.bbOld.npoints; i++){
+			energy+=(bbOldX[i]-targetX[i])*(bbOldX[i]-targetX[i]);
+			energy+=(bbOldY[i]-targetY[i])*(bbOldY[i]-targetY[i]);
+		}
+		
+		return energy;
+		
+	}
+	
+	public float[][] getForce(int btpInd, Vector<BackboneTrackPoint> allBTPs){
+		//TODO make sure the btps are prepped for getTargetPoints
+		return getForce(getTargetPoints(btpInd, allBTPs), allBTPs.get(btpInd));
+	}
+	
+	public static float[][] getForce(FloatPolygon targetBackbone, BackboneTrackPoint btp){
+		
+		float[] bbOldX = btp.bbOld.xpoints;
+		float[] bbOldY = btp.bbOld.ypoints;
+		float[] targetX = targetBackbone.xpoints;
+		float[] targetY = targetBackbone.ypoints;
+		float[][] forces = new float[2][btp.bbOld.npoints];
+		for (int i=0; i<btp.bbOld.npoints; i++){
+			forces[0][i]+=targetX[i]-bbOldX[i];
+			forces[1][i]+=targetY[i]-bbOldY[i];
+			
+		}
+		
+		return forces;
 		
 	}
 	
 	public String getName(){
 		return name;
 	}
-	
+
+
+
 }

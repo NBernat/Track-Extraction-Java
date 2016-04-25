@@ -13,6 +13,12 @@ public class FittingParameters {
 	
 	public int numBBPts = 7;
 	
+	int minTrackLen = 200;//NOTE: SHOULD BE SAME AS PROCESSINGPARAMS.MINTRACKLEN
+	boolean subset;
+	int startInd = 0;
+	int endInd = 1000;
+	
+	
 	boolean storeEnergies = false;
 	
 	/*

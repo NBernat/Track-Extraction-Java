@@ -757,7 +757,8 @@ public class Track implements Serializable{
 				
 				float[] energy = new float[points.size()];
 				for (int j=0; j<frames.length; j++){
-					energy[j] = exp.getForces().get(i).getEnergy(j, points);;
+					//TODO
+//					energy[j] = exp.getForces().get(i).getEnergy(j, points);;
 				}
 					
 				energies.add(energy);

@@ -27,10 +27,12 @@ public class Test {//extends JFrame
 
 	public static void main(String[] args) {
 		
-		
-		
-		runDefaultFitting();
+		generateEnergyProfiles();
 		/*
+		*/
+		
+		/*
+		runDefaultFitting();
 		*/
 		
 		/*
@@ -176,6 +178,33 @@ public class Test {//extends JFrame
 		
 	}
 	
+	public static void generateEnergyProfiles(){
+		
+		ImageJ IJ = new ImageJ();
+		String baseDir = "E:\\testing\\Java Backbone Fitting\\testClusterEdits\\voronoi\\subset_runonshortenedexp\\";
+		
+		String[] args = new String[2];
+		args[0] = baseDir+"divergedTrackExp.prejav";		
+		args[1] = baseDir+"divergedOutput\\";
+		
+		
+		FittingParameters fP = new FittingParameters();
+		fP.clusterMethod=0;
+		fP.storeEnergies = true;
+		
+		ProcessingParameters prP = new ProcessingParameters();
+		prP.diagnosticIm = false;
+		
+		Experiment_Processor ep = new Experiment_Processor();
+		ep.runningFromMain = true;
+		ep.prParams = prP;
+		ep.fitParams = fP;
+		
+		ep.run(args);
+		
+		
+		IJ.quit();
+	}
 	
 	public static void testNumPtsOnDiverged(){
 		String srcName = "E:\\testing\\Java Backbone Fitting\\Fitting Params\\fullExptWithAreaSplit_0.7-1.4_otherPtSplit\\divergedTrackExp.prejav";
@@ -420,14 +449,56 @@ public class Test {//extends JFrame
 		
 		String[] args = new String[2];
 		args[0] = srcName;
-		args[1] = dstBaseDir+"testClusterEdits\\voronoi\\";//gaussianMixture
+//		args[1] = dstBaseDir+"testClusterEdits\\voronoi\\subset\\";//gaussianMixture
+//		
+//		FittingParameters fP = new FittingParameters();
+//		fP.clusterMethod=0;
+//		fP.subset = true;
+//		fP.startInd=1;
+//		fP.endInd=2000;
+//		ExtractionParameters exP = new ExtractionParameters();
+//		
+//		ProcessingParameters prP = new ProcessingParameters();
+//		prP.diagnosticIm = false;
+//		
+//		Experiment_Processor ep = new Experiment_Processor();
+//		ep.runningFromMain = true;
+//		ep.prParams = prP;
+//		ep.extrParams = exP;
+//		ep.fitParams = fP;
+//		
+//		ep.run(args);
+//		
+//		args[1] = dstBaseDir+"testClusterEdits\\gaussianMixture\\subset\\";//
+//		
+//		fP = new FittingParameters();
+//		fP.clusterMethod=1;
+//		fP.subset = true;
+//		fP.startInd=1;
+//		fP.endInd=2000;
+//		exP = new ExtractionParameters();
+//		
+//		prP = new ProcessingParameters();
+//		prP.diagnosticIm = false;
+//		
+//		ep = new Experiment_Processor();
+//		ep.runningFromMain = true;
+//		ep.prParams = prP;
+//		ep.extrParams = exP;
+//		ep.fitParams = fP;
+//		
+//		ep.run(args);
 		
+//		args[0] =  "E:\\data\\phototaxis2\\berlin@berlin\\2NDs_B_Square_SW_96-160\\201411201541\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.mmf";
+		args[1] = dstBaseDir+"testClusterEdits\\voronoi\\subset_runonshortenedexp\\";//gaussianMixture
+//		
 //		FittingParameters fP = new FittingParameters();
 //		fP.clusterMethod=0;
 //		ExtractionParameters exP = new ExtractionParameters();
 //		exP.subset = true;
-//		exP.startFrame=1;
-//		exP.endFrame=2000;
+//		exP.startFrame = 1;
+//		exP.endFrame = 2000;
+//		
 //		ProcessingParameters prP = new ProcessingParameters();
 //		prP.diagnosticIm = false;
 //		
@@ -439,14 +510,34 @@ public class Test {//extends JFrame
 //		
 //		ep.run(args);
 		
-		args[1] = dstBaseDir+"testClusterEdits\\gaussianMixture\\";//
+		
+		
+		args[0] = dstBaseDir+"testClusterEdits\\voronoi\\subset_runonshortenedexp\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.prejav";
+//		args[1] = dstBaseDir+"testClusterEdits\\gaussianMixture\\subset_runonshortenedexp\\";//gaussianMixture
+//		
+//		fP = new FittingParameters();
+//		fP.clusterMethod=1;
+//		exP = new ExtractionParameters();
+//		
+//		prP = new ProcessingParameters();
+//		prP.diagnosticIm = false;
+//		
+//		ep = new Experiment_Processor();
+//		ep.runningFromMain = true;
+//		ep.prParams = prP;
+//		ep.extrParams = exP;
+//		ep.fitParams = fP;
+//		
+//		ep.run(args);
 		
 		FittingParameters fP = new FittingParameters();
-		fP.clusterMethod=1;
+		fP.clusterMethod=0;
+		fP.storeEnergies = true;
 		ExtractionParameters exP = new ExtractionParameters();
 		exP.subset = true;
-		exP.startFrame=1;
-		exP.endFrame=2000;
+		exP.startFrame = 1;
+		exP.endFrame = 2000;
+		
 		ProcessingParameters prP = new ProcessingParameters();
 		prP.diagnosticIm = false;
 		
@@ -457,6 +548,7 @@ public class Test {//extends JFrame
 		ep.fitParams = fP;
 		
 		ep.run(args);
+		
 		
 		IJ.quit();
 	}

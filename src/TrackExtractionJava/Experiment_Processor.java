@@ -7,6 +7,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -48,6 +49,7 @@ public class Experiment_Processor implements PlugIn{
 	
 	protected String srcDir;
 	private String srcName;
+	private String exName;
 	private String dstDir;
 	private String dstName;
 	private PrintWriter processLog;
@@ -337,9 +339,10 @@ public class Experiment_Processor implements PlugIn{
 				
 			} else if (fileName.substring(fileName.length()-4).equalsIgnoreCase(".jav")){
 				success = openExp(dir, fileName);
-				
+				exName = new File(dir, fileName).getPath();
 			} else if (fileName.substring(fileName.length()-7).equalsIgnoreCase(".prejav")){
 				success = openExp(dir, fileName);
+				exName = new File(dir, fileName).getPath();
 				
 			} else if (fileName.equalsIgnoreCase("current")) {
 				success = useCurrentWindow();
@@ -570,7 +573,11 @@ public class Experiment_Processor implements PlugIn{
 			TicToc trTic = new TicToc();
 			trTic.tic();
 			IJ.showStatus("Fitting Track "+(i+1)+"/"+ex.getNumTracks());
-			tr = ex.getTrackFromInd(i);
+			tr = getTrackFromEx(i);//ex.getTrackFromInd(i);
+			if (tr==null) { 
+				System.out.println("Error loading track");
+				break;
+			}
 			String trStr = "Track "+tr.getTrackID();
 			if (tr.getNumPoints()>prParams.minTrackLen) {//Check track length
 				newTr = fitTrack(tr);
@@ -594,7 +601,17 @@ public class Experiment_Processor implements PlugIn{
 					toRemove.add(tr);
 //					errorsToSave.add(tr);
 				}
+				
+
+				if (fitParams.storeEnergies){
+					File f = new File(dstDir+"\\energyProfiles\\track"+i+"\\");
+					if (!f.exists()) f.mkdirs();
+					bbf.saveEnergyProfiles(f.getAbsolutePath());
+				}
+				
+				
 			} else {
+				toRemove.add(tr);
 				tr.setValid(false);
 				shortCount++;
 				System.out.println(trStr+": too short to fit");
@@ -647,6 +664,25 @@ public class Experiment_Processor implements PlugIn{
 		} 
 		indentLevel--;
 	}
+	
+	
+	private Track getTrackFromEx(int ind){
+		
+//		if (prParams.loadSingleTrackForFitting){
+//			if (exName==null || exName.length()==0){
+//				System.out.println("You told me to open one track at a time but there's no experiment file");
+//				return null;
+//			}
+//			
+//			return Experiment.getTrack(ind, exName);
+//		} else {
+			return ex.tracks.get(ind);
+//		}
+		
+		
+		
+	}
+	
 	/**
 	 * Fits backbones to a Track of MaggotTrackPoints
 	 * @param tr The track of MaggotTrackPoints to be fit
@@ -655,10 +691,9 @@ public class Experiment_Processor implements PlugIn{
 	private Track fitTrack(Track tr){
 		indentLevel++;
 		
-		
-		
 		bbf.fitTrack(tr);
 		indentLevel--;
+		
 		return bbf.getTrack();
 		
 	}
@@ -678,6 +713,8 @@ public class Experiment_Processor implements PlugIn{
 			ex.toDisk(dos, processLog);
 			status=true;
 			dos.close();
+			exName = f.getPath();
+			
 		} catch(Exception e){
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);

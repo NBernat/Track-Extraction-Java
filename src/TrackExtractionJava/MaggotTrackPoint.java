@@ -110,7 +110,10 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			bim = tempIm;
 		}
 		ByteProcessor thIm = new ByteProcessor(bim);
+		
+		//TODO
 		thIm.threshold(thresh);
+		
 		
 		Wand wand = new Wand(thIm);
 		wand.autoOutline(getStart().x-rect.x, getStart().y-rect.y);//, 0, Wand.LEGACY_MODE);//);//
