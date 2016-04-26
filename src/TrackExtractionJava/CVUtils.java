@@ -84,6 +84,10 @@ public class CVUtils {
 	    for (int j=minTh; j<=maxThres; j++) {
 	    	
 	    	ImageProcessor thrIm = image.getProcessor().duplicate();
+	    	
+	    	double mint = thrIm.getMinThreshold();
+			double maxt = thrIm.getMaxThreshold();
+			thrIm.setThreshold((double) j, (double) 255, ImageProcessor.NO_LUT_UPDATE);
 	    	thrIm.threshold(j);
 	    	
 //	    	debS+="thresh="+j+", numAbove0="+ct+"; ";
@@ -95,6 +99,8 @@ public class CVUtils {
 	    			bestGoodness = goodness;
 	    			bestThres = j;
 	        	}
+	    		
+			thrIm.setThreshold(mint, maxt, ImageProcessor.NO_LUT_UPDATE);
 //	    	debS+="\n";
 	    }
 

@@ -604,7 +604,12 @@ public class Experiment_Processor implements PlugIn{
 				
 
 				if (fitParams.storeEnergies){
-					File f = new File(dstDir+"\\energyProfiles\\track"+i+"\\");
+					File f;
+					if (!bbf.diverged()){
+						f = new File(dstDir+"\\energyProfiles\\track"+i+"\\");
+					} else {
+						f = new File(dstDir+"\\energyProfiles\\diverged\\track"+i+"\\");
+					}
 					if (!f.exists()) f.mkdirs();
 					bbf.saveEnergyProfiles(f.getAbsolutePath());
 				}
@@ -627,7 +632,7 @@ public class Experiment_Processor implements PlugIn{
 		System.out.println("Done fitting tracks: ");
 		System.out.println(shortCount+"/"+ex.getNumTracks()+" were too short (minlength="+prParams.minTrackLen+")");
 		System.out.println(divergedCount+"/"+(ex.getNumTracks()-shortCount)+" remaining diverged");
-		System.out.println((ex.getNumTracks()-toRemove.size())+"/"+(ex.getNumTracks()-shortCount-divergedCount)+" remaining were fit successfully");
+		System.out.println((ex.getNumTracks()-toRemove.size()+shortCount)+"/"+(ex.getNumTracks()-shortCount-divergedCount)+" remaining were fit successfully");
 		
 		//Remove the tracks that couldn't be fit
 //		for(Track t : toRemove){

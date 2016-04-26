@@ -27,12 +27,12 @@ public class Test {//extends JFrame
 
 	public static void main(String[] args) {
 		
-		generateEnergyProfiles();
 		/*
+		generateEnergyProfiles();
 		*/
 		
-		/*
 		runDefaultFitting();
+		/*
 		*/
 		
 		/*
@@ -444,11 +444,11 @@ public class Test {//extends JFrame
 	public static void runDefaultFitting(){
 		
 		ImageJ IJ = new ImageJ();
-		String srcName = "E:\\testing\\Java Backbone Fitting\\Fitting Params\\fullExptWithAreaSplit_0.7-1.4_otherPtSplit\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.prejav";
-		String dstBaseDir = "E:\\testing\\Java Backbone Fitting\\";
+//		String srcName = "E:\\testing\\Java Backbone Fitting\\Fitting Params\\fullExptWithAreaSplit_0.7-1.4_otherPtSplit\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.prejav";
+//		String dstBaseDir = "E:\\testing\\Java Backbone Fitting\\";
 		
 		String[] args = new String[2];
-		args[0] = srcName;
+//		args[0] = srcName;
 //		args[1] = dstBaseDir+"testClusterEdits\\voronoi\\subset\\";//gaussianMixture
 //		
 //		FittingParameters fP = new FittingParameters();
@@ -490,7 +490,7 @@ public class Test {//extends JFrame
 //		ep.run(args);
 		
 //		args[0] =  "E:\\data\\phototaxis2\\berlin@berlin\\2NDs_B_Square_SW_96-160\\201411201541\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.mmf";
-		args[1] = dstBaseDir+"testClusterEdits\\voronoi\\subset_runonshortenedexp\\";//gaussianMixture
+//		args[1] = dstBaseDir+"testClusterEdits\\voronoi\\subset_runonshortenedexp\\";//gaussianMixture
 //		
 //		FittingParameters fP = new FittingParameters();
 //		fP.clusterMethod=0;
@@ -512,7 +512,7 @@ public class Test {//extends JFrame
 		
 		
 		
-		args[0] = dstBaseDir+"testClusterEdits\\voronoi\\subset_runonshortenedexp\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.prejav";
+//		args[0] = dstBaseDir+"testClusterEdits\\voronoi\\subset_runonshortenedexp\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.prejav";
 //		args[1] = dstBaseDir+"testClusterEdits\\gaussianMixture\\subset_runonshortenedexp\\";//gaussianMixture
 //		
 //		fP = new FittingParameters();
@@ -529,6 +529,9 @@ public class Test {//extends JFrame
 //		ep.fitParams = fP;
 //		
 //		ep.run(args);
+		
+		args[0] = "E:\\data\\phototaxis2\\berlin@berlin\\2NDs_B_Square_SW_96-160\\201411201541\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.mmf";
+		args[1] = "E:\\testing\\Java Backbone Fitting\\test contour fix\\";
 		
 		FittingParameters fP = new FittingParameters();
 		fP.clusterMethod=0;

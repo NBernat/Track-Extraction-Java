@@ -111,18 +111,21 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		}
 		ByteProcessor thIm = new ByteProcessor(bim);
 		
-		//TODO
+		double mint = thIm.getMinThreshold();
+		double maxt = thIm.getMaxThreshold();
+		thIm.setThreshold((double) thresh, (double) 255, ImageProcessor.NO_LUT_UPDATE);
 		thIm.threshold(thresh);
 		
 		
 		Wand wand = new Wand(thIm);
-		wand.autoOutline(getStart().x-rect.x, getStart().y-rect.y);//, 0, Wand.LEGACY_MODE);//);//
+		wand.autoOutline(getStart().x-rect.x, getStart().y-rect.y, (double)thresh, (double)255, Wand.EIGHT_CONNECTED);//, 0, Wand.LEGACY_MODE);//);//
 		
 		nConPts = wand.npoints;
 		if (comm!=null) comm.message("Wand arrays have "+wand.xpoints.length+" points, and report "+nConPts+" points", VerbLevel.verb_debug);
 		int[] contourX = wand.xpoints;//Arrays.copyOfRange(wand.xpoints, 0, wand.npoints);//
 		int[] contourY = wand.ypoints;//Arrays.copyOfRange(wand.ypoints, 0, wand.npoints);//
 		
+		thIm.setThreshold(mint, maxt, ImageProcessor.NO_LUT_UPDATE);
 		
 		
 		if (comm!=null) comm.message("Point coords were gathered", VerbLevel.verb_debug);
