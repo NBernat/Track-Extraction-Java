@@ -43,26 +43,13 @@ public class MaggotTrackBuilder extends TrackBuilder {
 		if (!c.outString.equals("")) new TextWindow("Orientation debugging output", c.outString, 500, 500);
 	}
 
-	/**
-	 * Orients the maggots in a track in the direction of their motion
-	 * @param track Track to be oriented
-	 */
+	
+	
 	protected static void orientMaggotTrack(Track track, Communicator c){
-		
-		omt(track, c);
-//		orientMaggotTrack(track.getPoints(), comm, track.getTrackID());
-	}
-		
-	
-	protected static void omt(Track track){
-		omt(track, null);
-	}
-	
-	protected static void omt(Track track, Communicator c){
 		
 		if (c!=null) c.message("Track "+track.getTrackID(), VerbLevel.verb_debug);
 
-		boolean debug = false; // (track.trackID<10 || track.points.size()<150);
+		boolean debug = false;
 		
 		Vector<? extends TrackPoint> points = track.getPoints();
 		
@@ -88,17 +75,11 @@ public class MaggotTrackBuilder extends TrackBuilder {
 			alignSegment(points, seg);
 		}
 		for(Segment seg: segList){
-//			orientSegment(points, seg);
 			if (c!=null) c.message("Orienting segment #"+segList.indexOf(seg)+"/"+segList.indexOf(segList.lastElement())+",  ("+seg.length()+"pts)", VerbLevel.verb_debug);
 			orientSegment(points, seg, c);
 		}
 		
-//		int i=0;
-//		while (i<segList.size()){
-//			orientSegment(points, segList.get(i));
-//			i++;
-//		}
-//		
+		//ensureContinuity(points, segList);
 	}
 	
 	
@@ -212,7 +193,21 @@ public class MaggotTrackBuilder extends TrackBuilder {
 	}
 	
 	
-	
+	/*
+	protected static void ensureContinuity(Vector<? extends TrackPoint> points, Vector<Segment> segList){
+		
+		//Check that the ends of the segments are aligned
+		for (Segment seg : segList){
+			
+			
+		}
+		//If so (i.e. both segments tell this one not to flip), do nothing
+		//If both surrounding segments tell this one to flip, flip it
+		//If only one surrounding segment tells it to flip, consider the length of the gap in deciding which one to believe
+		
+		
+	}
+	*/
 	
 	protected static void orientMaggotTrack(Vector<? extends TrackPoint> points, Communicator comm, int trackID){
 		
@@ -254,7 +249,7 @@ public class MaggotTrackBuilder extends TrackBuilder {
 					if (comm!=null) comm.message("Midline invalid, frame "+(i+points.firstElement().frameNum), VerbLevel.verb_message);
 					
 					//Analyze the direction of motion for the segment leading up to this frame, starting with lastEndFrameAnalyzed (or 0)
-					if ( AMDSegStart!=-1 && (AMDSegEnd-AMDSegStart)>1 ){ //TODO && (AMDSegEnd-AMDSegStart)<AMDSegEnd (?)
+					if ( AMDSegStart!=-1 && (AMDSegEnd-AMDSegStart)>1 ){
 						analyzeMaggotDirection(points, AMDSegStart, AMDSegEnd, comm, trackID);
 					}
 					

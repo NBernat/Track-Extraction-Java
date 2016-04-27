@@ -531,13 +531,13 @@ public class Test {//extends JFrame
 //		ep.run(args);
 		
 		args[0] = "E:\\data\\phototaxis2\\berlin@berlin\\2NDs_B_Square_SW_96-160\\201411201541\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.mmf";
-		args[1] = "E:\\testing\\Java Backbone Fitting\\test contour fix\\";
+		args[1] = "E:\\testing\\Java Backbone Fitting\\test contour fix\\full\\";
 		
 		FittingParameters fP = new FittingParameters();
 		fP.clusterMethod=0;
 		fP.storeEnergies = true;
 		ExtractionParameters exP = new ExtractionParameters();
-		exP.subset = true;
+//		exP.subset = true;
 		exP.startFrame = 1;
 		exP.endFrame = 2000;
 		
