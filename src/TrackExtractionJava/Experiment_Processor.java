@@ -593,7 +593,7 @@ public class Experiment_Processor implements PlugIn{
 					divergedCount++;
 					tr.setDiverged(true); 
 					System.out.println(trStr+": diverged "+timStr);
-					toRemove.add(tr);
+//					toRemove.add(tr);
 					errorsToSave.add(tr);
 				} else {
 					tr.setValid(false);

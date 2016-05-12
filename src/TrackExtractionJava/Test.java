@@ -530,19 +530,42 @@ public class Test {//extends JFrame
 //		
 //		ep.run(args);
 		
+//		args[0] = "E:\\data\\phototaxis2\\berlin@berlin\\2NDs_B_Square_SW_96-160\\201411201541\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.mmf";
+//		args[1] = "E:\\testing\\Java Backbone Fitting\\test contour fix\\full\\";
+//		
+//		FittingParameters fP = new FittingParameters();
+//		fP.clusterMethod=0;
+//		fP.storeEnergies = true;
+//		ExtractionParameters exP = new ExtractionParameters();
+//		exP.startFrame = 1;
+//		exP.endFrame = 2000;
+//		
+//		ProcessingParameters prP = new ProcessingParameters();
+//		prP.diagnosticIm = false;
+//		
+//		Experiment_Processor ep = new Experiment_Processor();
+//		ep.runningFromMain = true;
+//		ep.prParams = prP;
+//		ep.extrParams = exP;
+//		ep.fitParams = fP;
+//		
+//		ep.run(args);
+		
+		
 		args[0] = "E:\\data\\phototaxis2\\berlin@berlin\\2NDs_B_Square_SW_96-160\\201411201541\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.mmf";
-		args[1] = "E:\\testing\\Java Backbone Fitting\\test contour fix\\full\\";
+		args[1] = "E:\\testing\\Java Backbone Fitting\\test orientation fix\\";
 		
 		FittingParameters fP = new FittingParameters();
 		fP.clusterMethod=0;
 		fP.storeEnergies = true;
 		ExtractionParameters exP = new ExtractionParameters();
-//		exP.subset = true;
+		exP.subset = true;
 		exP.startFrame = 1;
 		exP.endFrame = 2000;
 		
 		ProcessingParameters prP = new ProcessingParameters();
 		prP.diagnosticIm = false;
+		prP.showFitEx = true;
 		
 		Experiment_Processor ep = new Experiment_Processor();
 		ep.runningFromMain = true;
@@ -551,6 +574,7 @@ public class Test {//extends JFrame
 		ep.fitParams = fP;
 		
 		ep.run(args);
+		
 		
 		
 		IJ.quit();

@@ -178,11 +178,17 @@ public class ExtractionParameters implements Serializable{
     int roiPadding = 0;
     
     /**
+     * Max number of frames in a gap between mtp's to allow the surrounding segments to be considered continuous  
+     */
+    int framesBtwnContSegs = 20;//~1.5 sec
+    
+    
+    /**
      * PLAYMOVIE NOT YET SUPPORTED FOR SAVED FILES WHEN TRACKPOINTTYPE=0
      */
     int trackPointType = 2;
     
-    boolean calcDerivs = true;
+    boolean calcDerivs = false;
     int imDerivType = DERIV_SYMMETRIC;
     int imDerivWidth = 1;
     

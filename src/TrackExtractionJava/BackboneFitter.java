@@ -1000,7 +1000,7 @@ public class BackboneFitter {
 		FloatPolygon newBB = generateNewBackbone(targetBackbones);
 		
 		if (params.storeEnergies){
-			energyProfiles.lastElement().addEnergyEntry(btpInd, Force.getEnergy(newBB, BTPs.get(btpInd)));
+			energyProfiles.lastElement().addEnergyEntry(btpInd, Force.getEnergy(newBB, BTPs.get(btpInd))/params.grains[pass]);
 		}
 		
 		BTPs.get(btpInd).setBBNew(newBB);

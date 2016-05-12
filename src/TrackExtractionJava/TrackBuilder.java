@@ -157,6 +157,9 @@ public class TrackBuilder implements Serializable{
 	    } else {
 	    	System.out.println("Building tracks for frames "+ep.startFrame+"-"+ep.endFrame);
 	    }
+	    
+	    
+	    
 		while ( (!ep.subset && (pe.nextFrameNum()<=pe.fl.getStackSize()) ) || 
 				(ep.subset && (pe.nextFrameNum()<=pe.endFrameNum && pe.nextFrameNum()<=ep.endFrame)) ){
 			frameNum = pe.nextFrameNum();

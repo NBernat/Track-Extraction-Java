@@ -2,6 +2,8 @@ package TrackExtractionJava;
 
 import java.util.Vector;
 
+import com.sun.xml.internal.ws.api.addressing.AddressingVersion.EPR;
+
 import ij.ImageStack;
 import ij.text.TextWindow;
 
@@ -38,14 +40,14 @@ public class MaggotTrackBuilder extends TrackBuilder {
 		Communicator c = new Communicator();
 		c.setVerbosity(VerbLevel.verb_off);
 		for (int i=0; i<finishedTracks.size(); i++){
-			orientMaggotTrack(finishedTracks.get(i), c);  
+			orientMaggotTrack(finishedTracks.get(i), ep.framesBtwnContSegs, c);  
 		}
 		if (!c.outString.equals("")) new TextWindow("Orientation debugging output", c.outString, 500, 500);
 	}
 
 	
 	
-	protected static void orientMaggotTrack(Track track, Communicator c){
+	protected static void orientMaggotTrack(Track track, int maxGap, Communicator c){
 		
 		if (c!=null) c.message("Track "+track.getTrackID(), VerbLevel.verb_debug);
 
@@ -79,7 +81,7 @@ public class MaggotTrackBuilder extends TrackBuilder {
 			orientSegment(points, seg, c);
 		}
 		
-		//ensureContinuity(points, segList);
+		ensureContinuity(points, segList, maxGap);
 	}
 	
 	
@@ -193,21 +195,31 @@ public class MaggotTrackBuilder extends TrackBuilder {
 	}
 	
 	
-	/*
-	protected static void ensureContinuity(Vector<? extends TrackPoint> points, Vector<Segment> segList){
+	
+	protected static void ensureContinuity(Vector<? extends TrackPoint> points, Vector<Segment> segList, int maxGap){
 		
 		//Check that the ends of the segments are aligned
 		for (Segment seg : segList){
+			boolean flipPrev = false;
+			boolean flipNext = false;
 			
-			
+			if (seg.prevSeg!=null && (seg.start-seg.prevSeg.end)<maxGap){
+				MaggotTrackPoint pt = (MaggotTrackPoint) points.get(seg.start);
+				flipPrev = (pt.chooseOrientation((MaggotTrackPoint) points.get(seg.prevSeg.end), false))>0;
+			}
+			if (seg.nextSeg!=null && (seg.nextSeg.start-seg.end)<maxGap){
+				MaggotTrackPoint pt = (MaggotTrackPoint) points.get(seg.end);
+				flipNext = (pt.chooseOrientation((MaggotTrackPoint) points.get(seg.nextSeg.start), false))>0;
+				
+			}
+				
+			if (flipPrev && flipNext){
+				flipSeg(points, seg.start, seg.end);
+			}
 		}
-		//If so (i.e. both segments tell this one not to flip), do nothing
-		//If both surrounding segments tell this one to flip, flip it
-		//If only one surrounding segment tells it to flip, consider the length of the gap in deciding which one to believe
-		
 		
 	}
-	*/
+	
 	
 	protected static void orientMaggotTrack(Vector<? extends TrackPoint> points, Communicator comm, int trackID){
 		

@@ -381,6 +381,8 @@ public class MaggotTrackPoint extends ImTrackPoint {
 				
 			} else {
 				midline=null; //TODO this causes an empty spine
+				head = null;
+				tail = null;
 				
 				//Assign the midpoint to be the avg of all contour points 
 				float midpointX=0;
@@ -634,7 +636,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	/**
 	 * Calculates the dot product between the velocity and the body orientation of this maggot. 
 	 * @param prevPt The previous point in the track, used to calculate the velocity
-	 * @return Dot product between the velocity and the body orientation, or -1.0 if there is no midline/midpoint
+	 * @return Dot product between the velocity and the body orientation, or 0 if there is no midline/midpoint
 	 */
 	public double MaggotDotProduct(MaggotTrackPoint prevPt){
 		
