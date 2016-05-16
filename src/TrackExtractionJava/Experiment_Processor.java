@@ -580,7 +580,14 @@ public class Experiment_Processor implements PlugIn{
 			}
 			String trStr = "Track "+tr.getTrackID();
 			if (tr.getNumPoints()>prParams.minTrackLen) {//Check track length
-				newTr = fitTrack(tr);
+				
+//				bbf = new BackboneFitter(bbf.params);
+//				newTr = fitTrack(tr);
+				
+				BackboneFitter bbf = new BackboneFitter(tr, fitParams);
+				bbf.fitTrack();
+				newTr = bbf.getTrack();
+				
 				long[] minSec = trTic.tocMinSec();
 				String timStr = "("+(int)minSec[0]+"m"+minSec[1]+"s)";
 				trStr+=" (#"+bbf.newTrID+")";
@@ -593,7 +600,7 @@ public class Experiment_Processor implements PlugIn{
 					divergedCount++;
 					tr.setDiverged(true); 
 					System.out.println(trStr+": diverged "+timStr);
-//					toRemove.add(tr);
+					toRemove.add(tr);
 					errorsToSave.add(tr);
 				} else {
 					tr.setValid(false);
@@ -622,9 +629,12 @@ public class Experiment_Processor implements PlugIn{
 				System.out.println(trStr+": too short to fit");
 				toRemove.add(tr);
 			}
+			
+			
+//			bbf.saveCommOutput(dstDir);//bbf.showCommOutput();
 		}
 		
-		bbf.saveCommOutput(dstDir);//bbf.showCommOutput();
+		
 		
 		
 		
@@ -696,6 +706,7 @@ public class Experiment_Processor implements PlugIn{
 	private Track fitTrack(Track tr){
 		indentLevel++;
 		
+//		bbf = new BackboneFitter(tr, fitParams);
 		bbf.fitTrack(tr);
 		indentLevel--;
 		

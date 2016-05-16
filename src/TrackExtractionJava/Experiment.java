@@ -638,4 +638,9 @@ public class Experiment implements Serializable{
 		tracks.setElementAt(newTrack, ind);
 	}
 	
+	public void showEx(){
+		ExperimentFrame ef = new ExperimentFrame(this);
+		ef.run(null);
+	}
+	
 }

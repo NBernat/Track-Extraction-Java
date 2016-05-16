@@ -37,11 +37,16 @@ public class BackboneFitter {
 	 * Forces which act upon the backbones
 	 */
 	Vector<Force> Forces;
+	
+	/**
+	 * Place to store the full track when working on segments of tracks
+	 */
+	Track fullTrack = null;
 
 	/**
 	 * The track that is being fit
 	 */
-	Track track;
+	Track workingTrack;
 	int newTrID=-1;
 	
 	Track errTrack=null;
@@ -68,6 +73,9 @@ public class BackboneFitter {
 	
 	private int pass;
 	
+	
+	private boolean subsets = false;
+	
 	private boolean diverged = false;
 	protected int divergedInd = -1;
 	
@@ -79,15 +87,29 @@ public class BackboneFitter {
 	/**
 	 * Constructs a backbone fitter
 	 */
+	public BackboneFitter(Track t) {
+		init(t, null);
+	}
+	
+	/*
+	 * For backwards compatibility
+	 */
 	public BackboneFitter() {
-		init(null);
+		init(null, null);
 	}
 	
+	BackboneFitter(Track t, FittingParameters fp){
+		init(t, fp);
+	}
+	
+	/*
+	 * For backwards compatibility
+	 */
 	BackboneFitter(FittingParameters fp){
-		init(fp);
+		init(null, fp);
 	}
 	
-	private void init(FittingParameters fp) {
+	private void init(Track t, FittingParameters fp) {
 
 		if (fp==null){
 			params = new FittingParameters();
@@ -107,6 +129,9 @@ public class BackboneFitter {
 		bbcomm = new Communicator();
 		bbcomm.setVerbosity(VerbLevel.verb_off);
 
+		initTrack(t);
+		
+		
 	}
 
 	private void initEnergyProfiles(){
@@ -117,13 +142,39 @@ public class BackboneFitter {
 		energyProfiles.add(new EnergyProfile("Total"));
 	}
 	
+	private void initTrack(Track tr){
+		
+		if (tr==null){
+			return;
+		}
+		
+		
+		clearPrev();
+		if (params.subset){
+			int si = (params.startInd>=tr.points.size())? si=tr.points.size()-1 : params.startInd;
+			int ei = (params.endInd>=tr.points.size())? tr.points.size()-1 : params.startInd;
+			tr = new Track(tr, si, ei);
+			if (tr.points.size()<params.minTrackLen){
+				System.out.println("Track too short for fitting");
+				return;
+			}
+		}
+		
+		if (!generateFullWorkingTrack(tr)) {//creates the new track
+			comm.message("Error converting track points to btp", VerbLevel.verb_error);
+		}
+		 
+		
+	}
+	
 	
 	private void clearPrev(){
-		track = null;
+		workingTrack = null;
 		BTPs = null;
 		shifts = null;
 		updater = null;
 		pass = 0;
+		Forces = params.getForces(pass);
 		diverged = false;
 		BTPs = new Vector<BackboneTrackPoint>();
 		clipEnds = false;
@@ -136,12 +187,7 @@ public class BackboneFitter {
 	
 	
 	/**
-	 * Fits backbones to the points in the given track.
-	 * <p>
-	 * After fitting, the Vector of BackboneTrackPoints can be accessed via
-	 * getBackbonePoints()
-	 * 
-	 * @param tr
+	 * For backwards compatibility
 	 */
 	public void fitTrack(Track tr) {
 		
@@ -163,15 +209,15 @@ public class BackboneFitter {
 		comm.message("Extracting maggot tracks", VerbLevel.verb_debug);
 		
 		
-		if (noError && convertTrack2BTP(tr)) {//creates the new track
+		if (noError && generateFullWorkingTrack(tr)) {//creates the new track
 			//If there was no error extraction points, run the different grain passes of the algorithm
 			noError = true;
 			for(int i=0; (i<params.grains.length && noError); i++){
 				noError = doPass(params.grains[i]);
 				if (!noError) {
-					comm.message("Error on track "+tr.getTrackID()+"("+track.getTrackID()+") pass "+i+"(grain "+params.grains[i]+") \n ---------------------------- \n \n", VerbLevel.verb_error);
-					errTrack = track;
-					track = null;
+					comm.message("Error on track "+tr.getTrackID()+"("+workingTrack.getTrackID()+") pass "+i+"(grain "+params.grains[i]+") \n ---------------------------- \n \n", VerbLevel.verb_error);
+					errTrack = workingTrack;
+					workingTrack = null;
 					pass++;
 					Forces = params.getForces(pass);
 				}
@@ -191,10 +237,59 @@ public class BackboneFitter {
 		
 		System.out.println("Done fitting track");
 	}
-
-
 	
 	
+	
+	/**
+	 * Fits backbones to the points in the given track.
+	 * <p>
+	 * After fitting, the Vector of BackboneTrackPoints can be accessed via
+	 * getBackbonePoints()
+	 * 
+	 */
+	public void fitTrack() {
+		
+//		clearPrev();
+		
+		boolean noError = true;
+
+		// Extract the points, and move on (if successful)
+		comm.message("Extracting maggot tracks", VerbLevel.verb_debug);
+		
+		noError = true;
+		for(int i=0; (i<params.grains.length && noError); i++){
+			noError = doPass(params.grains[i]);
+			if (!noError) {
+				comm.message("Error on track ("+workingTrack.getTrackID()+") pass "+i+"(grain "+params.grains[i]+") \n ---------------------------- \n \n", VerbLevel.verb_error);
+				errTrack = workingTrack;
+				workingTrack = null;
+				pass++;
+				Forces = params.getForces(pass);
+			}
+			
+			//TODO run divergence fixer 
+			if (params.divFix){
+				fixDiverged(i);
+			}
+			
+		}
+		System.out.println("Done fitting track");
+	}
+
+
+	public void fitTrackSubset(int startInd, int endInd){
+		fitTrackSubset(startInd, endInd, true);
+	}
+	
+	/**
+	 * Fits a subset of the working track. the full track is stored in fullTrack
+	 */
+	private void fitTrackSubset(int startInd, int endInd, boolean saveFullTrack){
+		subsets = true;
+		if (saveFullTrack) fullTrack = workingTrack;
+		workingTrack = new Track(workingTrack, startInd, endInd);
+		fitTrack();
+	}
 	/**
 	 * Creates a new track full of BTPs out of the points in the track
 	 * <p>
@@ -202,11 +297,13 @@ public class BackboneFitter {
 	 * @return A list of booleans indicating whether or not the midline in the
 	 *         corresponding BTP is empty
 	 */
-	private boolean convertTrack2BTP(Track tr) {
+	private boolean generateFullWorkingTrack(Track tr) {
 		
 		boolean noerror=true;
 		try {
-	
+
+			BTPs = new Vector<BackboneTrackPoint>();
+			
 			if (tr.getStart() instanceof MaggotTrackPoint) {
 				for (int i = 0; i < tr.getNumPoints(); i++) {
 		
@@ -236,8 +333,8 @@ public class BackboneFitter {
 					BTPs.add(btp);
 				} 
 				
-				track = new Track(BTPs, tr);
-				newTrID = track.getTrackID();
+				workingTrack = new Track(BTPs, tr);
+				newTrID = workingTrack.getTrackID();
 				BTPs.removeAllElements();
 				
 			} else {
@@ -256,7 +353,7 @@ public class BackboneFitter {
 			comm.message(sw.toString(), VerbLevel.verb_error);
 		}
 
-		if (!noerror) track = null;
+		if (!noerror) workingTrack = null;
 		return noerror;
 	}
 
@@ -267,38 +364,27 @@ public class BackboneFitter {
 		comm.message("Generating BTPs at grain "+grain, VerbLevel.verb_debug);
 		BTPs.removeAllElements();
 		boolean noError = generateBTPList(grain);
-		
 		if (noError) {
-			
 			// Set the updater
 			updater = new BBFUpdateScheme(BTPs.size());
 			shifts = new double[BTPs.size()];
-
-			
 			// Run the fitting algorithm
 			try {
-				
 				runFitter();
 				if (diverged) {
-					comm.message("Track "+track.getTrackID()+" diverged", VerbLevel.verb_error);
+					comm.message("Track "+workingTrack.getTrackID()+" diverged", VerbLevel.verb_error);
 					return false;
 				}
-				
 			} catch(Exception e){
-				
 				noError = false;
-				
 				StringWriter sw = new StringWriter();
 				PrintWriter pw = new PrintWriter(sw);
 				e.printStackTrace(pw);
 				comm.message("Error during BackboneFitter.runFitter() at grain "+grain+"\n"+sw.toString(), VerbLevel.verb_error);
 			} 
-			
-			
 		} else{
 			comm.message("Error generating backbones at grain "+grain, VerbLevel.verb_error);
 		}
-		
 		return noError;
 	}
 	
@@ -339,12 +425,12 @@ public class BackboneFitter {
 	private void sampleTrackPoints(int grain){
 		
 		
-		int numTPs = track.getNumPoints()/grain;
+		int numTPs = workingTrack.getNumPoints()/grain;
 		try {
 			
 			for (int i=0; i<numTPs; i++){
 				
-				BTPs.add((BackboneTrackPoint)track.getPoint(i*grain));
+				BTPs.add((BackboneTrackPoint)workingTrack.getPoint(i*grain));
 				
 			}
 			
@@ -425,7 +511,7 @@ public class BackboneFitter {
 			Vector<Gap> gaps = findGaps(sampledEmptyMids);
 				comm.message("Cleaning gaps", VerbLevel.verb_debug);
 			sanitizeGaps(gaps);
-			MaggotTrackBuilder.orientMaggotTrack(BTPs, comm, track.getTrackID());
+			MaggotTrackBuilder.orientMaggotTrack(BTPs, comm, workingTrack.getTrackID());
 				comm.message("Filling midlines", VerbLevel.verb_debug);
 			boolean noError = fillGaps(gaps);
 			if (!noError){
@@ -565,26 +651,16 @@ public class BackboneFitter {
 
 	private void invalidateGaps(Vector<Gap> gaps){
 		for (int i=0; i<gaps.size(); i++){
-			invalidateGapMidlines(gaps.get(i));
+			Gap gap = gaps.get(i);
+			for (int j=gap.start; j<=gap.end; j++){
+				BackboneTrackPoint btp = BTPs.get(j);
+				btp.htValid = false;
+			}
 		}
 	}
 	
-	private void invalidateGapMidlines(Gap gap){
-		
-		for (int i=gap.start; i<=gap.end; i++){
-			BackboneTrackPoint btp = BTPs.get(i);
-			btp.htValid = false;
-		}
-		
-		
-		
-	}
 	
-	
-	
-	
-	
-		/**
+	/**
 	 * Finds and fills all the empty midlines
 	 * 
 	 * @param emptyMidlines
@@ -674,8 +750,8 @@ public class BackboneFitter {
 				}
 				comm.message("Gap filled", VerbLevel.verb_debug);
 			} else if (gapStart==0 && gapEnd == (BTPs.size()-1)){
-				comm.message("All midlines are invalid in track "+track.getTrackID(), VerbLevel.verb_error);
-				System.out.println("All midlines are invalid in track "+track.getTrackID());
+				comm.message("All midlines are invalid in track "+workingTrack.getTrackID(), VerbLevel.verb_error);
+				System.out.println("All midlines are invalid in track "+workingTrack.getTrackID());
 				return false;
 			} else {
 				clipEnds=true;
@@ -689,8 +765,65 @@ public class BackboneFitter {
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
 			e.printStackTrace(pw);
-			comm.message("Error filling gap ("+gapStart+"-"+gapEnd+") in track "+track.getTrackID()+"\n"+sw.toString(), VerbLevel.verb_error);
+			comm.message("Error filling gap ("+gapStart+"-"+gapEnd+") in track "+workingTrack.getTrackID()+"\n"+sw.toString(), VerbLevel.verb_error);
 		}
+		return true;
+	}
+
+
+	private boolean clipEnds(){
+		
+		comm.message("Clipping ends on track "+newTrID+": startFrame="+BTPstartFrame+" endFrame="+BTPendFrame, VerbLevel.verb_message);
+		
+		if (BTPendFrame>0){//new end frame
+			
+			//Clip the actual track
+			endClippings = workingTrack.clipPoints(BTPendFrame+1,workingTrack.points.lastElement().frameNum+1);
+			
+			//Find the index of the endFrame BTP
+			int i=BTPs.size();//i = index of first element to remove
+			while (i>1 && BTPs.get(i-1).getFrameNum()!=BTPendFrame){
+				i--;
+			}
+			
+			if (BTPs.get(i-1).getFrameNum()==BTPendFrame){
+				//invalidate BTPs
+				for (int j=i; j<BTPs.size(); j++){
+					BTPs.get(j).htValid = false;
+					BTPs.get(j).finalizeBackbone();
+				}
+				//Remove elements
+				BTPs.subList(i, BTPs.size()).clear();
+			} else {
+				comm.message("Error clipping ends in track "+workingTrack.getTrackID()+": could not find index of new end frame ("+BTPendFrame+")", VerbLevel.verb_error);
+				return false;
+			}
+		}
+		
+		if (BTPstartFrame>0){// New Start frame:
+			
+			startClippings = workingTrack.clipPoints(workingTrack.points.firstElement().frameNum,BTPstartFrame);
+			
+			//Find the index of last element to remove
+			int i=-1; //i = index 
+			while (i<(BTPs.size()-2) && BTPs.get(i+1).getFrameNum()!=BTPstartFrame){
+				i++;
+			}
+			
+			if (BTPs.get(i+1).getFrameNum()==BTPstartFrame){
+				//Invalidate BTPs
+				for (int j=0; j<=i; j++){
+					BTPs.get(j).htValid = false;
+					BTPs.get(j).finalizeBackbone();
+				}
+				//Remove elements
+				BTPs.subList(0, i+1).clear();
+			} else {
+				comm.message("Error clipping ends in track "+workingTrack.getTrackID()+": could not find index of new start frame ("+BTPstartFrame+")", VerbLevel.verb_error);
+				return false;
+			}
+		}
+		
 		return true;
 	}
 
@@ -808,63 +941,6 @@ public class BackboneFitter {
 		return newMids;
 	}
 
-
-	private boolean clipEnds(){
-		
-		comm.message("Clipping ends on track "+newTrID+": startFrame="+BTPstartFrame+" endFrame="+BTPendFrame, VerbLevel.verb_message);
-		
-		if (BTPendFrame>0){//new end frame
-			
-			//Clip the actual track
-			endClippings = track.clipPoints(BTPendFrame+1,track.points.lastElement().frameNum+1);
-			
-			//Find the index of the endFrame BTP
-			int i=BTPs.size();//i = index of first element to remove
-			while (i>1 && BTPs.get(i-1).getFrameNum()!=BTPendFrame){
-				i--;
-			}
-			
-			if (BTPs.get(i-1).getFrameNum()==BTPendFrame){
-				//invalidate BTPs
-				for (int j=i; j<BTPs.size(); j++){
-					BTPs.get(j).htValid = false;
-					BTPs.get(j).finalizeBackbone();
-				}
-				//Remove elements
-				BTPs.subList(i, BTPs.size()).clear();
-			} else {
-				comm.message("Error clipping ends in track "+track.getTrackID()+": could not find index of new end frame ("+BTPendFrame+")", VerbLevel.verb_error);
-				return false;
-			}
-		}
-		
-		if (BTPstartFrame>0){// New Start frame:
-			
-			startClippings = track.clipPoints(track.points.firstElement().frameNum,BTPstartFrame);
-			
-			//Find the index of last element to remove
-			int i=-1; //i = index 
-			while (i<(BTPs.size()-2) && BTPs.get(i+1).getFrameNum()!=BTPstartFrame){
-				i++;
-			}
-			
-			if (BTPs.get(i+1).getFrameNum()==BTPstartFrame){
-				//Invalidate BTPs
-				for (int j=0; j<=i; j++){
-					BTPs.get(j).htValid = false;
-					BTPs.get(j).finalizeBackbone();
-				}
-				//Remove elements
-				BTPs.subList(0, i+1).clear();
-			} else {
-				comm.message("Error clipping ends in track "+track.getTrackID()+": could not find index of new start frame ("+BTPstartFrame+")", VerbLevel.verb_error);
-				return false;
-			}
-		}
-		
-		return true;
-	}
-	
 	
 	/**
 	 * Runs the fitting algorithm
@@ -905,20 +981,16 @@ public class BackboneFitter {
 			}
 
 			// Setup for the next step
-			for (int i = 0; (i<BTPs.size() && !diverged); i++) {
+			//TODO move this to updater
+			for (int i = 0; i<BTPs.size(); i++) {//for (int i = 0; (i<BTPs.size() && !diverged); i++) {
 				shifts[i] = BTPs.get(i).calcPointShift();
 				
 				//Check for divergence
 				if (BTPs.get(i).diverged(params.divergenceConstant)){
 					diverged = true;
 					divergedInd=i;
-					//TODO
-//					storeDiverganceInfo(BTPs.get(i));
 				} else {
 					BTPs.get(i).setupForNextRelaxationStep();
-					//TODO
-					
-					//if (storeTrackDivergance) BTPs.insertElementAt(btps.getNextIter(), i); somewhere.add(BTPs.removeElementAt(i))
 				}
 			}
 			
@@ -933,9 +1005,6 @@ public class BackboneFitter {
 		
 		if (!diverged) {
 			finalizeBackbones();
-		} else {
-			//TODO
-			//storeDiverganceInfo();
 		}
 		return !diverged;
 
@@ -1102,14 +1171,65 @@ public class BackboneFitter {
 			btpIt.next().finalizeBackbone();
 		}
 	}
-
-	protected void storeDiverganceInfo(){
-		//TODO
-		ListIterator<BackboneTrackPoint> btpIt = BTPs.listIterator();
-		while (btpIt.hasNext()) {
-			btpIt.next().finalizeBackbone();
+	
+	
+	
+	protected Vector<Track> fixDiverged(int pass){
+		
+		
+		//Find easy subsets
+		//TODO 
+		//Use the pass to 
+		int[] startInds = {};
+		int[] endInds = {};
+		
+		
+		//Run fitter on easy subsets 
+		fullTrack = workingTrack;
+		Vector<Track> fitTracks = new Vector<Track>();
+		boolean allFit = true;
+		for (int i=0; i<startInds.length; i++){
+			fitTrackSubset(startInds[i], endInds[i], false);
+			if (diverged) {
+				allFit = false;
+			} else {
+				fitTracks.add(workingTrack);
+			}
 		}
+		
+		
+		if (allFit){
+			//Try to fix diverged areas? If it works, replace fitTracks with fullTrack
+			//	fill in unfit pts with btp info
+			//	set updater defaultInds to these points
+			//	make updater mode that only works on defaultInds, followed by wholeTrack if they converge
+		} else {
+			//TODO Mark unfit invalid and return fullTrack 
+		}
+		
+		
+		
+		
+		return fitTracks;
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	
@@ -1123,7 +1243,8 @@ public class BackboneFitter {
 	
 	
 	public Track getTrack(){
-		return track;
+//		return (subsets)? fullTrack : workingTrack;
+		return workingTrack;
 	}
 
 	public void showCommOutput(){
@@ -1295,7 +1416,6 @@ class EnergyProfile implements java.io.Serializable{
 	}
 	
 	public void printEnergies(){
-		//TODO
 		//JK gonna load them up in matlab
 	}
 	
