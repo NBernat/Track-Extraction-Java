@@ -2,9 +2,7 @@ package TrackExtractionJava;
 
 import ij.IJ;
 import ij.ImagePlus;
-import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
-import ij.process.ImageProcessor;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedWriter;

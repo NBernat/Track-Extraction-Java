@@ -188,6 +188,9 @@ public class Test {//extends JFrame
 	}
 	
 	public static void testBBFsubset(){
+		
+		ImageJ ij = new ImageJ();
+		
 		String outputDir = "E:\\testing\\Java Backbone Fitting\\test bbf subset\\";
 		String inputFileName = outputDir+"Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.prejav";
 			
@@ -208,7 +211,8 @@ public class Test {//extends JFrame
 		Experiment newExperiment = new Experiment(ex, newTracks);
 		newExperiment.showEx();
 		
-		System.out.println("Done");
+		
+		ij.quit();
 	}
 	
 	public static void testNewBBFArchitecture(){
@@ -1258,9 +1262,9 @@ public class Test {//extends JFrame
 		boolean dilateToEdges = true;
 		
 		sb.append("Before Dilation: ("+gaps.size()+")\n"+printGaps(gaps)+"\n");
-		BackboneFitter.dilateGaps(gaps, 2, 10, startFrame, endFrame, dilateToEdges);
+		BBFPointListGenerator.dilateGaps(gaps, 2, 10, startFrame, endFrame, dilateToEdges);
 		sb.append("After Dilation, before Merging: ("+gaps.size()+")\n"+printGaps(gaps)+"\n");
-		BackboneFitter.mergeGaps(gaps, 10, null);
+		BBFPointListGenerator.mergeGaps(gaps, 10, null);
 		sb.append("After Merging: ("+gaps.size()+")\n"+printGaps(gaps)+"\n");
 		
 		System.out.println(sb.toString());
