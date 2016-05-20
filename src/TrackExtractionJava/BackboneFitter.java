@@ -38,6 +38,8 @@ public class BackboneFitter {
 	 * Place to store the full track when working on segments of tracks
 	 */
 	Track fullTrack = null;
+	
+	Track oldTrack = null;
 
 	/**
 	 * The track that is being fit
@@ -148,7 +150,7 @@ public class BackboneFitter {
 		if (tr==null){
 			return;
 		}
-		
+		oldTrack = tr;
 		
 		clearPrev();
 		if (params.subset){
@@ -264,20 +266,72 @@ public class BackboneFitter {
 				comm.message("Error on track ("+workingTrack.getTrackID()+") pass "+i+"(grain "+params.grains[i]+") \n ---------------------------- \n \n", VerbLevel.verb_error);
 				errTrack = workingTrack;
 				workingTrack = null;
-				pass++;
-				Forces = params.getForces(pass);
 			}
-			
-			//TODO run divergence fixer 
-			if (params.divFix){
-				fixDiverged(i);
-			}
-			
+			pass++;
+			if (pass<params.grains.length) Forces = params.getForces(pass);
 		}
+		
+
+		//run divergence fixer 
+//		if (diverged && params.divFix){
+//			System.out.println("Track diverged, attempting to fix");
+//			fixDiverged();
+//		}
+		
 		System.out.println("Done fitting track");
 	}
 
 
+	public void fitTrackNewScheme(){
+		
+		//Run one iteration of fitter on entire track to get energies 
+		boolean noError = bplg.generateFullBTPList();
+		BTPs = bplg.getBTPs();
+		if (noError){
+			updater = new BBFUpdateScheme(BTPs.size());
+			shifts = new double[BTPs.size()];
+			
+			relaxBackbones(updater.inds2Update());
+			calcShifts();
+			setupForNextRelaxationStep();
+		} else {
+			System.out.println("Error generating btplist");
+		}
+		
+		//Find high energy areas
+		Vector<Gap> lowEnergyGaps = findLowEnergyGaps();
+		Vector<Gap> highEnergyGaps = findHighFromLowGaps(lowEnergyGaps);
+		
+		fullTrack = workingTrack;
+		//Run fitter on low energy energy gaps
+		for (Gap leGap : lowEnergyGaps){
+			fitTrackSubset(leGap.start, leGap.end, false);
+		}
+		
+		for (Gap heGap : highEnergyGaps){
+			fitTrackSubsetWithBuffer(heGap.start, heGap.end, false);
+		}
+		
+		
+		//Fit entire track?
+	}
+	
+	
+	private Vector<Gap> findLowEnergyGaps(){
+		
+		// TODO
+		
+		return null;
+	}
+	
+	private Vector<Gap> findHighFromLowGaps(Vector<Gap> heGaps){
+		
+		// TODO
+		
+		return null;
+	}
+	
+	
 	public void fitTrackSubset(int startInd, int endInd){
 		fitTrackSubset(startInd, endInd, true);
 	}
@@ -288,9 +342,22 @@ public class BackboneFitter {
 	private void fitTrackSubset(int startInd, int endInd, boolean saveFullTrack){
 		subsets = true;
 		if (saveFullTrack) fullTrack = workingTrack;
-		workingTrack = new Track(workingTrack, startInd, endInd);
+		workingTrack = new Track(fullTrack, startInd, endInd);
+		bplg.workingTrack = workingTrack;
 		fitTrack();
 	}
+	
+	
+	private void fitTrackSubsetWithBuffer(int startInd, int endInd, boolean saveFullTrack){
+		subsets = true;
+		if (saveFullTrack) fullTrack = workingTrack;
+		workingTrack = new Track(fullTrack, startInd, endInd);
+		bplg.workingTrack = workingTrack;
+		//Set updater properties
+		// TODO
+		fitTrack();
+	}
+	
 	/**
 	 * Creates a new track full of BTPs out of the points in the track
 	 * <p>
@@ -361,36 +428,44 @@ public class BackboneFitter {
 	
 	private boolean doPass(int grain){
 				
-		//Set the BTPs for this pass's grain
-		comm.message("Generating BTPs at grain "+grain, VerbLevel.verb_debug);
+		//Set the BTPs for this pass
+		if (!setupForPass()) {
+			return false;
+		}
+		
+		//Run the actual fitter
+		try {
+			runFitter();
+			if (diverged) {
+				comm.message("Track "+workingTrack.getTrackID()+" diverged", VerbLevel.verb_error);
+				return false;
+			}
+		} catch(Exception e){
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			e.printStackTrace(pw);
+			comm.message("Error during BackboneFitter.runFitter() at grain "+grain+"\n"+sw.toString(), VerbLevel.verb_error);
+			return false;
+		} 
+		
+		return true;
+	}
+	
+	private boolean setupForPass(){
 		BTPs.removeAllElements();
-		// TODO change to plg.generatelist
 		boolean noError = bplg.generateBTPList(pass);
 		BTPs = bplg.getBTPs();
-//		boolean noError = generateBTPList(grain);
-		if (noError) {
-			// Set the updater
+		
+		if (noError){
 			updater = new BBFUpdateScheme(BTPs.size());
 			shifts = new double[BTPs.size()];
-			// Run the fitting algorithm
-			try {
-				runFitter();
-				if (diverged) {
-					comm.message("Track "+workingTrack.getTrackID()+" diverged", VerbLevel.verb_error);
-					return false;
-				}
-			} catch(Exception e){
-				noError = false;
-				StringWriter sw = new StringWriter();
-				PrintWriter pw = new PrintWriter(sw);
-				e.printStackTrace(pw);
-				comm.message("Error during BackboneFitter.runFitter() at grain "+grain+"\n"+sw.toString(), VerbLevel.verb_error);
-			} 
 		} else{
-			comm.message("Error generating backbones at grain "+grain, VerbLevel.verb_error);
+			comm.message("Error generating backbones at pass "+pass, VerbLevel.verb_error);
 		}
+		
 		return noError;
 	}
+	
 	
 	
 	/**
@@ -432,18 +507,8 @@ public class BackboneFitter {
 			}
 
 			// Setup for the next step
-			//TODO move this to updater
-			for (int i = 0; i<BTPs.size(); i++) {//for (int i = 0; (i<BTPs.size() && !diverged); i++) {
-				shifts[i] = BTPs.get(i).calcPointShift();
-				
-				//Check for divergence
-				if (BTPs.get(i).diverged(params.divergenceConstant)){
-					diverged = true;
-					divergedInd=i;
-				} else {
-					BTPs.get(i).setupForNextRelaxationStep();
-				}
-			}
+			calcShifts();
+			setupForNextRelaxationStep();
 			
 			// Show the fitting messages, if necessary
 			if (!updater.comm.outString.equals("")) {
@@ -468,19 +533,6 @@ public class BackboneFitter {
 	 *            The indices of the BTPs which should be relaxed
 	 */
 	private void relaxBackbones(int[] inds) {
-
-		
-//		if (params.storeEnergies){
-//			if (energyProfiles.firstElement().hasPrev()){
-//				for (int i=0; i<energyProfiles.size(); i++){
-//					energyProfiles.get(i).initEnergyEntryWithPrev();
-//				}
-//			} else {
-//				for (int i=0; i<energyProfiles.size(); i++){
-//					energyProfiles.get(i).initEnergyEntry(BTPs.size());
-//				}
-//			}
-//		}
 		
 		for (int i = 0; i < inds.length; i++) {
 			comm.message("Relaxing frame " + inds[i], VerbLevel.verb_debug);
@@ -489,12 +541,6 @@ public class BackboneFitter {
 
 		}
 		
-//		if (params.storeEnergies){
-//			for (int i=0; i<energyProfiles.size(); i++){
-//				energyProfiles.get(i).storeProfile();
-//			}
-//		}
-
 	}
 
 	/**
@@ -539,15 +585,11 @@ public class BackboneFitter {
 		Vector<FloatPolygon> targetBackbones = new Vector<FloatPolygon>();
 
 		// Store the backbones which are relaxed under individual forces
-//		ListIterator<Force> fIt = Forces.listIterator(); 
 		try{
-			for (int i=0; i<Forces.size(); i++){			//while (fIt.hasNext()) {
+			for (int i=0; i<Forces.size(); i++){
 				
 				FloatPolygon tb = Forces.get(i).getTargetPoints(btpInd, BTPs);
-//				if (params.storeEnergies){
-//					energyProfiles.get(i).addEnergyEntry(btpInd, Force.getEnergy(tb, BTPs.get(btpInd)));
-//				}
-				targetBackbones.add(tb);;//targetBackbones.add(fIt.next().getTargetPoints(btpInd, BTPs));
+				targetBackbones.add(tb);
 			}
 		} catch(Exception e){
 			StringWriter sw = new StringWriter();
@@ -616,6 +658,28 @@ public class BackboneFitter {
 
 	}
 
+	
+	private void calcShifts(){
+		for (int i = 0; i<BTPs.size(); i++) {//for (int i = 0; (i<BTPs.size() && !diverged); i++) {
+			shifts[i] = BTPs.get(i).calcPointShift();
+			
+			//Check for divergence
+			if (BTPs.get(i).diverged(params.divergenceConstant)){
+				diverged = true;
+				divergedInd=i;
+			} else {
+				//BTPs.get(i).setupForNextRelaxationStep();
+			}
+		}
+	}
+	
+	private void setupForNextRelaxationStep(){
+		for (int i = 0; i<BTPs.size(); i++) {
+			BTPs.get(i).setupForNextRelaxationStep();
+		}
+	}
+	
+	
 	protected void finalizeBackbones() {
 		ListIterator<BackboneTrackPoint> btpIt = BTPs.listIterator();
 		while (btpIt.hasNext()) {
@@ -625,48 +689,67 @@ public class BackboneFitter {
 	
 	
 	
-	protected Vector<Track> fixDiverged(int pass){
-		
-		
-		//Find easy subsets
-		//TODO 
-		//Use the pass to 
-		int[] startInds = {};
-		int[] endInds = {};
-		
-		
-		//Run fitter on easy subsets 
-		fullTrack = workingTrack;
-		Vector<Track> fitTracks = new Vector<Track>();
-		boolean allFit = true;
-		for (int i=0; i<startInds.length; i++){
-			fitTrackSubset(startInds[i], endInds[i], false);
-			//TODO deal with energy profile
-			//TODO deal with end clippings
-			if (diverged) {
-				allFit = false;
-			} else {
-				fitTracks.add(workingTrack);
-			}
-		}
-		
-		
-		if (allFit){
-			//Try to fix diverged areas? If it works, replace fitTracks with fullTrack
-			//	fill in unfit pts with btp info
-			//	set updater defaultInds to these points
-			//	make updater mode that only works on defaultInds, followed by wholeTrack if they converge
-		} else {
-			//TODO Mark unfit invalid and return fullTrack 
-		}
-		
-		
-		
-		
-		return fitTracks;
-	}
-	
-	
+//	private Vector<Track> fixDiverged(){
+//		
+//		
+//		//Find easy subsets
+//	
+//		Gap divGap = findDivergedGap();
+//		
+//		//Use the pass to 
+//		int[] startInds = {0, divGap.end+1};
+//		int[] endInds = {divGap.start-1, workingTrack.points.size()-1};
+//		
+//		
+//		//MAKE TWO NEW BBFS? 
+//		//Run fitter on easy subsets 
+//		BackboneFitter leftSegment = new BackboneFitter(new Track(oldTrack, startInds[0], endInds[0]), params);
+//		BackboneFitter rightSegment = new BackboneFitter(new Track(oldTrack, startInds[1], endInds[1]), params);
+//		
+//		
+//		
+//		
+//		
+//		fullTrack = workingTrack;
+//		Vector<Track> fitTracks = new Vector<Track>();
+//		boolean allFit = true;
+//		for (int i=0; i<startInds.length; i++){
+//			fitTrackSubset(startInds[i], endInds[i], false);
+//			//deal with energy profile
+//			//deal with end clippings
+//			if (diverged) {
+//				allFit = false;
+//			} else {
+//				fitTracks.add(workingTrack);
+//			}
+//		}
+//		
+//		
+//		if (allFit){
+//			//Try to fix diverged areas? If it works, replace fitTracks with fullTrack
+//			//	fill in unfit pts with btp info
+//			//	set updater defaultInds to these points
+//			//	make updater mode that only works on defaultInds, followed by wholeTrack if they converge
+//		} else {
+//			//Mark unfit invalid and return fullTrack 
+//		}
+//		
+//		
+//		
+//		
+//		return fitTracks;
+//	}
+//	
+//	private Gap findDivergedGap(){
+//		//
+//		
+//		//shifts, pass, divergedInd
+//		//use shifts to find list of inds
+//		
+//		//use inds to find frames
+//		return null;
+//		
+//	}
 	
 	
 	

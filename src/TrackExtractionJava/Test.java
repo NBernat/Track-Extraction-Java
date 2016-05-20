@@ -27,9 +27,8 @@ public class Test {//extends JFrame
 
 	public static void main(String[] args) {
 		
-		
-		testBBFsubset();
 		/*
+		testBBFsubset();
 		*/
 			
 		/*
@@ -40,8 +39,8 @@ public class Test {//extends JFrame
 		generateEnergyProfiles();
 		*/
 		
-		/*
 		runDefaultFitting();
+		/*
 		*/
 		
 		/*
@@ -196,12 +195,12 @@ public class Test {//extends JFrame
 			
 		Experiment ex = new Experiment(inputFileName);
 		Vector<Track> newTracks = new Vector<Track>();
-		BackboneFitter bbf = new BackboneFitter(ex.getTrackFromInd(30));
+		BackboneFitter bbf = new BackboneFitter(ex.getTrackFromInd(51));
 		bbf.fitTrack();
 		if (bbf.getTrack()!=null) newTracks.add(bbf.getTrack());
 		
 		
-		BackboneFitter bbf2 = new BackboneFitter(ex.getTrackFromInd(30));
+		BackboneFitter bbf2 = new BackboneFitter(ex.getTrackFromInd(51));
 		int startInd = 0;
 		int endInd = 500;
 		bbf2.fitTrackSubset(startInd, endInd);
@@ -607,15 +606,17 @@ public class Test {//extends JFrame
 //		ep.run(args);
 		
 		
-		args[0] = "E:\\data\\phototaxis2\\berlin@berlin\\2NDs_B_Square_SW_96-160\\201411201541\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.mmf";
-		args[1] = "E:\\testing\\Java Backbone Fitting\\test new bbf architecture\\";
+//		args[0] = "E:\\data\\phototaxis2\\berlin@berlin\\2NDs_B_Square_SW_96-160\\201411201541\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.mmf";
+		args[1] = "E:\\testing\\Java Backbone Fitting\\test interpolation fix\\";
+		args[0] = args[1]+"Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.prejav";
+		
 		
 		FittingParameters fP = new FittingParameters();
-		float[] timeLengthWeight = {0.1f, 0.1f, 0.1f};
-		float[] timeSmoothWeight = {0.1f, 0.1f, 0.1f}; 
+		float[] timeLengthWeight = {.3f, 0.3f, 0.1f};
+		float[] timeSmoothWeight = {.3f, 0.3f, 0.1f}; 
 		fP.timeLengthWeight = timeLengthWeight;
 		fP.timeSmoothWeight = timeSmoothWeight;
-		fP.imageWeight = 0.9f;
+//		fP.imageWeight = 0.9f;
 		fP.clusterMethod=0;
 		fP.storeEnergies = true;
 		ExtractionParameters exP = new ExtractionParameters();
