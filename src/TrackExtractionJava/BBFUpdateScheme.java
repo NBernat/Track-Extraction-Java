@@ -16,7 +16,7 @@ public class BBFUpdateScheme {
 	/**
 	 * Parameters
 	 */
-	private final double convThres = .03;
+	private final double convThres = .01;
 	private final int maxIterations = 200;
 	private final int allFramesIterations = 10;
 	private final int topOnlyIterations = 10;
@@ -38,8 +38,8 @@ public class BBFUpdateScheme {
 	/**
 	 * Index lists
 	 */
-	private int[] defaultInds;
-	private int[] inds2Update;
+	private boolean[] defaultInds;
+	private boolean[] inds2Update;
 	
 	/**
 	 * Debugging
@@ -53,8 +53,8 @@ public class BBFUpdateScheme {
 	 */
 	public BBFUpdateScheme(int numPts){
 		
-		defaultInds = new int[numPts];
-		for(int i=0; i<defaultInds.length; i++) defaultInds[i]=i;
+		defaultInds = new boolean[numPts];
+		for(int i=0; i<defaultInds.length; i++) defaultInds[i]=true;
 		
 		done = false;
 		finalIters = false;
@@ -68,6 +68,21 @@ public class BBFUpdateScheme {
 		
 		comm = new Communicator();
 		comm.setVerbosity(VerbLevel.verb_warning);
+	}
+	
+	
+	public void hidePoints(boolean[] hidden){
+		for (int i=0; i<hidden.length; i++){
+			if (hidden[i]) defaultInds[i] = false;
+		}
+		inds2Update = defaultInds;
+	}
+	
+	public void unhidePoints(boolean[] hidden){
+		for (int i=0; i<hidden.length; i++){
+			if (hidden[i]) defaultInds[i] = true;
+		}
+		inds2Update = defaultInds;
 	}
 	
 	
@@ -162,30 +177,18 @@ public class BBFUpdateScheme {
 			
 		} else {
 			//Update the top inds
-			setInds(shifts);
+			setTopInds(shifts);
 		}
 	}	
 	
-	private void setInds(double[] shifts){
+	private void setTopInds(double[] shifts){
 		
-		//Count how many to put in the list
-		int numAboveThresh = 0;;
+		inds2Update = new boolean[shifts.length];
 		for (int i=0; i<shifts.length; i++) {
-			if(shifts[i]>=convThres){
-				numAboveThresh++;
+			if(defaultInds[i] && shifts[i]>=convThres){
+				inds2Update[i] = true;
 			}
 		}
-		
-		//Build the list
-		inds2Update = new int[numAboveThresh];
-		int j=0;
-		for (int i=0; i<shifts.length; i++) {
-			if(shifts[i]>=convThres){
-				inds2Update[j] = i;
-				j++;
-			}
-		}
-		
 		
 	}
 	
@@ -203,7 +206,7 @@ public class BBFUpdateScheme {
 		return totalCount;
 	}
 	
-	public int[] inds2Update(){
+	public boolean[] inds2Update(){
 		return inds2Update;
 	}
 	

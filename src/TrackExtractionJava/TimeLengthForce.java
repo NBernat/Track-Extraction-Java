@@ -27,17 +27,21 @@ public class TimeLengthForce extends Force {
 		
 		
 		//The Diff's account for the differences in 
-		if (btpInd>0 && btpInd<(allBTPs.size()-1)){
+		
+		boolean pv = prevValid(allBTPs, btpInd, 1);
+		boolean nv = nextValid(allBTPs, btpInd, 1);
+		
+		if (pv && nv){//btpInd>0 && btpInd<(allBTPs.size()-1)){
 			for (int k=0; k<btp.getNumBBPoints(); k++){
 				targetX[k] = .5f*(allBTPs.get(btpInd-1).bbOld.xpoints[k]+allBTPs.get(btpInd+1).bbOld.xpoints[k]);
 				targetY[k] = .5f*(allBTPs.get(btpInd-1).bbOld.ypoints[k]+allBTPs.get(btpInd+1).bbOld.ypoints[k]);
 			}
-		} else if(btpInd==0){
+		} else if(!pv && nv){//btpInd==0){
 			for (int k=0; k<btp.getNumBBPoints(); k++){
 				targetX[k] = allBTPs.get(btpInd+1).bbOld.xpoints[k];
 				targetY[k] = allBTPs.get(btpInd+1).bbOld.ypoints[k];
 			}
-		}  else if (btpInd==(allBTPs.size()-1)){
+		}  else if (pv && !nv){//btpInd==(allBTPs.size()-1)){
 			for (int k=0; k<btp.getNumBBPoints(); k++){
 				targetX[k] = allBTPs.get(btpInd-1).bbOld.xpoints[k];
 				targetY[k] = allBTPs.get(btpInd-1).bbOld.ypoints[k];

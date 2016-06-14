@@ -275,7 +275,7 @@ public class Experiment_Processor implements PlugIn{
 				if (fitParams==null){
 					fitParams = new FittingParameters();
 				}
-				bbf = new BackboneFitter(fitParams);
+				//bbf = new BackboneFitter(fitParams);
 			}
 			if (csvPrefs==null){
 				csvPrefs = new CSVPrefs();
@@ -562,7 +562,7 @@ public class Experiment_Processor implements PlugIn{
 		//Fit each track that is long enough for the course passes
 		for (int i=0; i<ex.getNumTracks(); i++){
 			
-			if (i%bbf.params.GCInterval==0){
+			if (i%fitParams.GCInterval==0){
 				System.gc();
 			}
 			TicToc trTic = new TicToc();
@@ -596,6 +596,10 @@ public class Experiment_Processor implements PlugIn{
 					tr.setDiverged(true); 
 					System.out.println(trStr+": diverged "+timStr);
 					toRemove.add(tr);
+					errorsToSave.add(tr);
+				} else if (bbf.divergedGaps!=null && bbf.divergedGaps.size()>0){
+					divergedCount++;
+					System.out.println(trStr+": diverged, but was frozen "+timStr);
 					errorsToSave.add(tr);
 				} else {
 					tr.setValid(false);
@@ -640,9 +644,9 @@ public class Experiment_Processor implements PlugIn{
 		System.out.println((ex.getNumTracks()-toRemove.size()+shortCount)+"/"+(ex.getNumTracks()-shortCount-divergedCount)+" remaining were fit successfully");
 		
 		//Remove the tracks that couldn't be fit
-//		for(Track t : toRemove){
-//			ex.removeTrack(t);
-//		}
+		for(Track t : toRemove){
+			ex.removeTrack(t);
+		}
 		
 		if (prParams.diagnosticIm){
 			System.out.println("Generating diagnostic im...");

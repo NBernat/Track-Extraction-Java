@@ -93,7 +93,7 @@ public class displayUtils {
 	
 	public static void drawBBInit(ImageProcessor im, FloatPolygon bbInit, int offX, int offY, Rectangle rect, int expandFac, Color color){
 		im.setColor(color);
-		if (bbInit!=null){
+		if (bbInit!=null && bbInit.npoints>0){
 			for (int i=0; i<bbInit.npoints; i++){
 				int x = (int)(expandFac*(bbInit.xpoints[i]-rect.x));
 				int y = (int)(expandFac*(bbInit.ypoints[i]-rect.y));
@@ -120,7 +120,7 @@ public class displayUtils {
 	
 	public static void drawBackbone(ImageProcessor im, FloatPolygon bbNew, int expandFac, int offX, int offY, Rectangle rect, Color color){
 		im.setColor(color);
-		if (bbNew!=null){
+		if (bbNew!=null && bbNew.npoints>0){
 			for (int i=0; i<bbNew.npoints; i++){
 				int x = (int)(expandFac*(bbNew.xpoints[i]-rect.x));
 				int y = (int)(expandFac*(bbNew.ypoints[i]-rect.y));

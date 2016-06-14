@@ -25,7 +25,7 @@ public class TrackPoint implements Serializable {
 	/**
 	 * Identitfies the point as a TRACKPOINT
 	 */
-	final int pointType = 0;
+	final static int pointType = 0;
 	/**
 	 * X location of the point
 	 */
@@ -448,6 +448,9 @@ public class TrackPoint implements Serializable {
 		return track;
 	}
 	
+	public int getPointType(){
+		return TrackPoint.pointType;
+	}
 	public String getTypeName(){
 		return "TrackPoint";
 	}

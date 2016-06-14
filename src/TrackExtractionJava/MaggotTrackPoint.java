@@ -32,7 +32,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	/**
 	 * Identifies the point as a MAGGOTTRACKPOINT
 	 */
-	final int pointType = 2;
+	final static int pointType = 2;
 	
 	protected MaggotTrackPoint prev;
 	protected MaggotTrackPoint next;
@@ -1271,7 +1271,10 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		
 		return splitPts;
 	}
-	
+
+	public int getPointType(){
+		return MaggotTrackPoint.pointType;
+	}
 	
 	public String getTypeName(){
 		return "MaggotTrackPoint";

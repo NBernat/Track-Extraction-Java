@@ -94,6 +94,21 @@ public class Force {
 		return name;
 	}
 
-
-
+	
+	public boolean prevValid(Vector<BackboneTrackPoint> allBTPs, int ind, int numPrev){
+		return ind-numPrev>=0 &&
+				ind-numPrev<allBTPs.size() &&
+				allBTPs.get(ind-numPrev)!=null && 
+				allBTPs.get(ind-numPrev).bbOld!=null && 
+				allBTPs.get(ind-numPrev).bbOld.npoints!=0 && 
+				!allBTPs.get(ind-numPrev).hidden;// &&
+//				!allBTPs.get(ind-numPrev).frozen; //EITHER we don't care about frozen, or we do and it's not frozen
+	}
+	
+	
+	public boolean nextValid(Vector<BackboneTrackPoint> allBTPs, int ind, int numNext){
+		return prevValid(allBTPs, ind, -numNext);
+	}
+	
+	
 }

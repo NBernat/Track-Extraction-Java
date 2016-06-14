@@ -28,7 +28,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	/**
 	 * Identifies the point as a BACKBONETRACKPOINT
 	 */
-	final int pointType = 3;
+	final static int pointType = 3;
 	 
 	/**
 	 * The number of pixels in the image considered as part of the maggot
@@ -92,6 +92,13 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	transient BackboneFitter bf;
 	
 	protected boolean artificialMid;
+	
+	public boolean bbvalid = true;
+	
+	protected boolean hidden = false;
+	protected boolean frozen = false;
+	
+	protected double scaleFactor = 1;
 	
 	public BackboneTrackPoint(){
 		
@@ -369,6 +376,15 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	}
 	
 
+	protected void setHidden(boolean h){
+		hidden = h;
+	}
+	
+	
+	protected void setFrozen(boolean f){
+		frozen = f;
+	}
+	
 	/**
 	 * Stores a working backbone
 	 * @param newBackbone The updated backbone
@@ -759,7 +775,10 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		}
         
 	}
-	
+
+	public int getPointType(){
+		return BackboneTrackPoint.pointType;
+	}
 	
 	public String getTypeName(){
 		if (backbone==null || backbone.getNCoordinates()==0){

@@ -116,6 +116,12 @@ public class Track implements Serializable{
 
 	}
 	
+	/**
+	 * StartInd and endInd are indices to trackpoints; both inclusive 
+	 * @param tr
+	 * @param startInd
+	 * @param endInd
+	 */
 	public Track(Track tr, int startInd, int endInd){
 		
 		nextIDNum = tr.getNextIDNum();
@@ -257,6 +263,24 @@ public class Track implements Serializable{
 		Collections.sort(areas);
 		return areas.get(areas.size()/2);
 		
+	}
+	
+	
+	public double[] getAreas(){
+		if (points==null) return new double[0];
+		double[] areas = new double[points.size()];
+		for (int i=0;i<points.size(); i++) areas[i]=points.get(i).area;
+		return areas;
+	}
+	
+	public double[] getHTdistSqrs(){
+		if (points==null || points.firstElement().getPointType()<MaggotTrackPoint.pointType) return new double[0];
+		double[] HTdistSqr = new double[points.size()];
+		for (int i=0;i<points.size(); i++) {
+			MaggotTrackPoint mtp = (MaggotTrackPoint)points.get(i);
+			HTdistSqr[i]=(mtp.head.x-mtp.tail.x)*(mtp.head.x-mtp.tail.x);
+		}
+		return HTdistSqr;
 	}
 	
 	/**

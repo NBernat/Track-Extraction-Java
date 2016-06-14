@@ -36,9 +36,38 @@ public class CVUtils {
 		return ar;
 	}
 	
-	
-	
+	/**
+	 * Multiplies all the values in fp by sf, and returns it in a new FloatPolygon
+	 * @param fp
+	 * @param sf
+	 * @return
+	 */
+	public static FloatPolygon fPolyMult(FloatPolygon fp, double sf){
 
+		float[] x = new float[fp.npoints];
+		float[] y = new float[fp.npoints];
+		
+		for (int i=0; i<fp.npoints; i++){
+			x[i] = (float)(fp.xpoints[i]*sf);
+			y[i] = (float)(fp.ypoints[i]*sf);
+		}
+		
+		return new FloatPolygon(x, y);
+	}
+
+	public static FloatPolygon fPolyAdd(FloatPolygon fp1, FloatPolygon fp2){
+		
+		float[] x = new float[fp1.npoints];
+		float[] y = new float[fp1.npoints];
+		
+		for (int i=0; i<fp1.npoints; i++){
+			x[i] = fp1.xpoints[i] + fp2.xpoints[i];
+			y[i] = fp1.ypoints[i] + fp2.ypoints[i];
+		}
+		
+		return new FloatPolygon(x, y);
+	}
+	
 	//rethreshold to a specified number of regions
 	
 	/**
