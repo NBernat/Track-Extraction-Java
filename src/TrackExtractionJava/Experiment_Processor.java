@@ -109,6 +109,7 @@ public class Experiment_Processor implements PlugIn{
 		runTime = new TicToc();
 		
 		boolean success = (loadFile(arg0));
+		if (dstDir==null) dstDir = srcDir;
 		setupParams();
 
 		try {
@@ -428,7 +429,7 @@ public class Experiment_Processor implements PlugIn{
 			ex = new Experiment(Experiment.deserialize(new File(dir, filename).getPath())); 
 			IJ.showStatus("Experiment open");*/
 			IJ.showStatus("Opening Experiment...");
-			ex = new Experiment(Experiment.fromPath(new File(dir, filename).getPath())); 
+			ex = new Experiment(Experiment.fromPath(new File(dir, filename).getPath()));//Experiment.fromPath(new File(dir, filename).getPath());// 
 			IJ.showStatus("Experiment open");
 			return true;
 		} catch (Exception e){
@@ -580,7 +581,11 @@ public class Experiment_Processor implements PlugIn{
 //				newTr = fitTrack(tr);
 				
 				BackboneFitter bbf = new BackboneFitter(tr, fitParams);
-				bbf.fitTrack();
+				if (prParams.fitType>0){
+					bbf.fitTrackNewScheme();
+				} else {
+					bbf.fitTrack();
+				}
 				newTr = bbf.getTrack();
 				
 				long[] minSec = trTic.tocMinSec();
@@ -649,8 +654,15 @@ public class Experiment_Processor implements PlugIn{
 		}
 		
 		if (prParams.diagnosticIm){
+			
+			int[] dim; 
+			if (mmfStack!=null){
+				dim = mmfStack.getDimensions();
+			} else {
+				dim = ex.getMaxPlateDimensions();
+			}
 			System.out.println("Generating diagnostic im...");
-			ImagePlus dIm1 = ex.getDiagnIm(mmfStack.getWidth(), mmfStack.getHeight());
+			ImagePlus dIm1 = ex.getDiagnIm(dim[0], dim[1]);
 			String ps = File.separator;
 			String diagnPath = (dstDir!=null)? dstDir : srcDir;
 			diagnPath += "fit diagnostics"+ps;
@@ -661,6 +673,7 @@ public class Experiment_Processor implements PlugIn{
 			diagnPath = diagnPath.replace(diagnPath.substring(diagnPath.lastIndexOf("."), diagnPath.length()), " diagnostic foreground.bmp");
 			IJ.save(dIm1, diagnPath);
 			System.out.println("...Done generating diagnostic im");
+			
 		}
 		
 		if (prParams.saveErrors){

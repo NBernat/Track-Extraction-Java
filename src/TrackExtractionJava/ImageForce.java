@@ -28,8 +28,6 @@ public class ImageForce extends Force {
 		float[] norm = new float[numBBPts];
 		Arrays.fill(norm, 0);
 
-		//Calculate the center of mass of each backbone cluster
-		
 		//Sum the coordinates and build the normalization factor from the weights
 		if (btp.getClusterMethod()==0){
 			for (int pix=0; pix<btp.getNumPix(); pix++){
@@ -48,12 +46,14 @@ public class ImageForce extends Force {
 			}
 		}
 		
-		//Normalize the coordinates
+		//Normalize the coordinates 
 		for (int k=0; k<numBBPts; k++){
 			if (norm[k]!=0){
 				targetX[k] = targetX[k]/norm[k];
 				targetY[k] = targetY[k]/norm[k];
-			} 
+			} else {
+				// TODO if target[k]==0, move it halfway between curr location and COM of pix?
+			}
 		}
 		
 		return new FloatPolygon(targetX, targetY);

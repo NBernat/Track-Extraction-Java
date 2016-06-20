@@ -32,12 +32,20 @@ public class Test {//extends JFrame
 
 	public static void main(String[] args) {
 		
+		fitExperimentNewScheme();
+		/*
+		*/
+		
+		/*
+		testNewBBFScheme();
+		*/
+		
 		/*
 		testFreezeDiverged();
 		*/
 		
-		testBBFsubset();
 		/*
+		testBBFsubset();
 		*/
 			
 		/*
@@ -198,25 +206,63 @@ public class Test {//extends JFrame
 	
 	
 	
-	public static void extractSubset(){
+	public static void fitExperimentNewScheme(){
 		
 		ImageJ ij = new ImageJ();
 		
-		String src = "";
+		String outputDir = "E:\\testing\\Java Backbone Fitting\\test bbf subset\\";
+		String inputFileName = outputDir+"Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.prejav";
+		
+		String args[] = new String[2];
+		args[0] = inputFileName;
+		args[1] = outputDir+"withFinalIteration\\";
 		
 		Experiment_Processor ep = new Experiment_Processor();
-		ExtractionParameters exP = new ExtractionParameters();
-		exP.subset = true;
-		exP.startFrame = 1;
-		exP.endFrame = 1000;
+//		ExtractionParameters exP = new ExtractionParameters();
+//		exP.subset = true;
+//		exP.startFrame = 1;
+//		exP.endFrame = 1000;
 
 		ProcessingParameters pp = new ProcessingParameters();
-		pp.doFitting = false;
-		
-		ep.extrParams = exP;
+		pp.doFitting = true;
+		pp.fitType=1;
+//		ep.extrParams = exP;
 		ep.prParams = pp;
 		
-		ep.run(src);
+		ep.run(args);
+		
+		ij.quit();
+	}
+	
+	public static void testNewBBFScheme(){
+		
+		ImageJ ij = new ImageJ();
+		
+		String outputDir = "E:\\testing\\Java Backbone Fitting\\test bbf subset\\";
+		String inputFileName = outputDir+"Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.prejav";
+		int trackInd = 49;
+		Experiment ex = new Experiment(inputFileName);
+		Track t = ex.getTrackFromInd(trackInd);
+		BackboneFitter bbf = new BackboneFitter(t);
+		
+		bbf.fitTrackNewScheme();
+//		bbf.patchTrackSubset(new Gap(1730, 1800), 32*5);
+		
+		if (bbf.getTrack()!=null){
+			Vector<Track> newTracks = new Vector<Track>();
+			newTracks.add(bbf.getTrack());
+			Experiment newExperiment = new Experiment(ex, newTracks);
+			newExperiment.showEx();
+		}
+		
+//		bbf.resetForNextExectution();
+//		bbf.setFrozen(0, bbf.workingTrack.points.size(), true);
+//		bbf.params.leaveFrozenBackbonesAlone = true;
+//		bbf.runSingleIteration();
+		double[] totalE = MathUtils.castFloatArray2Double(bbf.energyProfiles.lastElement().getLastEnergies());
+		double mean = MathUtils.mean(totalE);
+		double stdDev = MathUtils.stdDev(totalE, mean);
+		MathUtils.plotDataMeanStdDev(totalE,mean,stdDev, "Total Energy vs frame", "total e", bbf.workingTrack.points.firstElement().frameNum);
 		
 		ij.quit();
 	}
@@ -235,23 +281,22 @@ public class Test {//extends JFrame
 		Experiment ex = new Experiment(inputFileName);
 		
 		Track t = ex.getTrackFromInd(trackInd);
-		BackboneFitter bbf = new BackboneFitter(t);
+		MaggotDisplayParameters mdp = new MaggotDisplayParameters();
+		mdp.ht = true;
+		mdp.mid = true;
+		t.playMovie(mdp);
 		
-		double[] dstSqr = t.getHTdistSqrs();
-		double meanHTDistSqr = MathUtils.mean(dstSqr);
-		double stdDev = MathUtils.stdDev(dstSqr, meanHTDistSqr);
-		double[] frame = new double[t.points.size()];
-		for (int i=1;i<=t.points.size(); i++) frame[i-1]=i;
-		Plot p = new Plot("HT Dist sqr", "frame", "dstSqr", frame, dstSqr);
-		p.setColor(Color.BLUE);
-		p.drawDottedLine(0, meanHTDistSqr, t.points.size()+1, meanHTDistSqr, 1);
-		p.setColor(Color.RED);
-		p.drawDottedLine(0, meanHTDistSqr+stdDev, t.points.size()+1, meanHTDistSqr+stdDev, 1);
-		p.drawDottedLine(0, meanHTDistSqr-stdDev, t.points.size()+1, meanHTDistSqr-stdDev, 1);
-		p.show();
+		FittingParameters fp = new FittingParameters();
+		fp.storeEnergies = true;
+		BackboneFitter bbf = new BackboneFitter(t,fp);
+		bbf.runSingleIteration();
 		
-		
-		
+		double[] dists = t.getHTdists();
+		dists[501]=0;
+		MathUtils.plotDataMeanStdDev(dists, "HT Dist (Before Fitting)", "dstSqr");
+//		MathUtils.plotDataMeanStdDev(bbf.energyProfiles.lastElement().energies.firstElement(), "Total Backbone Energy (Before Fitting)", "total E");
+//		MathUtils.plotDataMeanStdDev(bbf.energyProfiles.get(1).energies.firstElement(), "Backbone Length Energy (Before Fitting)", "length E");
+//		MathUtils.plotDataMeanStdDev(bbf.energyProfiles.get(2).energies.firstElement(), "Backbone Smooth Energy (Before Fitting)", "smooth E");
 		
 		
 		
@@ -324,6 +369,8 @@ public class Test {//extends JFrame
 		
 		ij.quit();
 	}
+	
+	
 	
 	public static void testFreezeDiverged(){
 		

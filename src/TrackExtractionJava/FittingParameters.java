@@ -20,26 +20,14 @@ public class FittingParameters {
 	
 	
 	boolean storeEnergies = true;
-	
-	/**
-	 * Refits the segments of a diverged track surrounding the divergence event
-	 */
-	boolean refitDiverged = false;
-	
-	/**
-	 * Tries to mend the divergence event 
-	 */
-	boolean fixDiverged = false;
-	
 
-	boolean leaveFrozenBackbonesAlone = false;
-	
-	boolean freezeDiverged = false;
 	
 	/**
 	 * Number of points on either side of divergence event to freeze & include when trying to fix a divergence event  
 	 */
 	int divBufferSize = 100; //~7seconds of buffer
+	
+	double fracOfStdDevForBentCutoff = 0.5;
 	
 	/*
 	 * 0= voronoi clusters 
@@ -49,7 +37,7 @@ public class FittingParameters {
 	
 	public int[] grains = {32,16, 1}; 
 	public int smallGapMaxLen = 10;//The maximum gap length for which the previous midline will be carried forward (otherwise interpolate)
-	public int minValidSegmentLen = 5;//The minimum segment length (in frames) which is situated between two midline gaps and which is considered valid
+	public int minValidSegmentLen = 50;//The minimum segment length (in frames) which is situated between two midline gaps and which is considered valid
 	public double minFlickerDist = numBBPts;//The minimum distance between spines which indicates an erroneous midline flicker 
 	public int gapDilation = 5;
 	public boolean dilateToEdges = true;
@@ -74,6 +62,27 @@ public class FittingParameters {
 	public float[][] timeSmoothWeights = { {1,1,1, 1,1,1, 1},
 											{1,1,1, 1,1,1, 1},
 											{1,1,1, 1,1,1, 1} };
+	
+	
+	/**
+	 * Refits the segments of a diverged track surrounding the divergence event
+	 */
+	boolean refitDiverged = false;
+	
+	/**
+	 * Tries to mend the divergence event 
+	 */
+	boolean fixDiverged = false;
+	
+	boolean leaveBackbonesInPlace = false;
+	boolean leaveFrozenBackbonesAlone = false;
+	
+	boolean freezeDiverged = false;
+	
+	int divergedPatchBuffer = grains[0]*4;
+	
+	
+	
 	
 	fittingParamTableModel fpTableModel;
 	

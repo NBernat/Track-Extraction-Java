@@ -62,7 +62,8 @@ public class BackboneFitter {
 	private Vector<TrackPoint> startClippings;
 	private Vector<TrackPoint> endClippings;
 	
-	
+	Vector<Gap> bentLarvae;
+	Vector<Gap> straightLarvae;
 	
 	/**
 	 * The amount that each backbone in the track shifted during the last
@@ -213,6 +214,10 @@ public class BackboneFitter {
 	protected void resetParams(FittingParameters fp){
 		params = fp;
 		bplg.params = fp;
+		resetForNextExectution();
+	}
+	
+	protected void resetForNextExectution(){
 		pass = 0;
 		Forces = params.getForces(pass);
 	}
@@ -342,33 +347,89 @@ public class BackboneFitter {
 	
 	public void fitTrackNewScheme(){
 		
-		//find straight subsets
+		if (workingTrack.points.size()<params.minTrackLen){
+			errTrack = workingTrack; 
+			System.out.println("Track length below fitparams.mintracklen");
+			workingTrack = null;
+			return;
+		}
+		
+		//Segment the track 
+		bentLarvae = findBentGaps(workingTrack.getHTdists());
+		straightLarvae = findStraightGaps(bentLarvae);
+		
+		//Fit the straight larvae
+		FittingParameters spp = FittingParameters.getSinglePassParams();
+		resetParams(spp);
+		boolean hideGapPoints = true;
+		fitSubsets(straightLarvae, hideGapPoints);
+		if (workingTrack==null){
+			System.out.println("Error fitting straight larvae");
+			return;
+		}
 		
 		
-		//Set fitting params for grain 1 pass on straight subsets
+		//Fit the bent larvae
+		hideGapPoints = false;
+		spp.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
+		spp.freezeDiverged = true;
+		resetParams(spp);
+		fitSubsets(bentLarvae, hideGapPoints);
+		if (workingTrack==null){
+			System.out.println("Error fitting bent larvae");
+			return;
+		}
 		
-		//run pass
+		FittingParameters patchParams = new FittingParameters();
+		patchParams.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
+		patchParams.freezeDiverged = true;
+		patchParams.leaveBackbonesInPlace = true;
+//		patchParams.imageWeight = patchParams.imageWeight*1.3f;
+//		float[] tlw = {patchParams.timeLengthWeight[0]*1.3f, patchParams.timeLengthWeight[1]*1.3f, patchParams.timeLengthWeight[2]*1.3f};
+//		patchParams.timeLengthWeight = tlw;
+		for (Gap divd : divergedGaps){
+			patchTrackSubset(divd, params.divergedPatchBuffer, patchParams);
+		}
+		if (workingTrack==null){
+			System.out.println("Error patching diverged frames");
+			return;
+		}
 		
-		
-		
-		
-		
-		
+		spp = FittingParameters.getSinglePassParams();
+		spp.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
+		spp.freezeDiverged = true;
+		spp.leaveBackbonesInPlace = true;
+		resetParams(spp);
+		fitTrack();
 		
 	}	
-/*		
 		
 		
 		
-		
+	public void runSingleIteration(){
+			
 		//Run one iteration of fitter on entire track to get energies 
 		boolean noError = bplg.generateFullBTPList();
 		BTPs = bplg.getBTPs();
+		
+		if (params.storeEnergies){
+			for (int i=0; i<energyProfiles.size(); i++){
+				energyProfiles.get(i).initEnergyEntry(BTPs.size());
+			}
+		}
+		
 		if (noError){
 			updater = new BBFUpdateScheme(BTPs.size());
 			shifts = new double[BTPs.size()];
 			
 			relaxBackbones(updater.inds2Update());
+			
+			if (params.storeEnergies){
+				for (int i=0; i<energyProfiles.size(); i++){
+					energyProfiles.get(i).storeProfile();
+				}
+			}
+			
 			calcShifts();
 			setupForNextRelaxationStep();
 		} else {
@@ -376,39 +437,106 @@ public class BackboneFitter {
 		}
 		
 		//Find high energy areas
-		Vector<Gap> straightGaps = findStraightGaps();
-		Vector<Gap> bentGaps = findBentGaps();
+//		Vector<Gap> straightGaps = findStraightGaps();
+//		Vector<Gap> bentGaps = findBentGaps();
 		
-		fullTrack = workingTrack;
+//		fullTrack = workingTrack;
 		//Run fitter on low energy energy gaps
 //		for (Gap sGap : straightGaps){
-//			// TODO
 //			
 //			//fitTrackSubset_IgnoreSurrounding(leGap.start, leGap.end);
 //		}
 //		
-		for (Gap bGap : bentGaps){
-			//fitTrackSubset_IncludeSurrounding(heGap.start, heGap.end);//, params.divBufferSize, false);
-		}
-		
+//		for (Gap bGap : bentGaps){
+//			//fitTrackSubset_IncludeSurrounding(heGap.start, heGap.end);//, params.divBufferSize, false);
+//		}
+//		
 		
 		//Fit entire track?
-		// TODO
-	}
-	*/
-	
-	private Vector<Gap> findStraightGaps(){
-		
-		// TODO		
-		
-		return null;
 	}
 	
-	private Vector<Gap> findBentGaps(){
+	
+	private Vector<Gap> findStraightGaps(double[] htDists, double mean, double stdDev){
+			
+		return findStraightGaps(findBentGaps(htDists, mean, stdDev));
+	}
+	
+	private Vector<Gap> findStraightGaps(Vector<Gap> bent){
 		
-		// TODO
+		return complementarySegs(bent, 0, workingTrack.points.size()-1);
+	}
+	
+	private Vector<Gap> findBentGaps(double[] htDists){
+		double mean = MathUtils.mean(htDists);
+		return findBentGaps(htDists, mean, MathUtils.stdDev(htDists, mean));
+	}
+	private Vector<Gap> findBentGaps(double[] htDists, double mean, double stdDev){
 		
-		return null;
+		
+		boolean[] bent = new boolean[htDists.length];
+		for (int i=0; i<bent.length; i++){
+			bent[i] = htDists[i]<(mean-stdDev*params.fracOfStdDevForBentCutoff);
+		}
+		Vector<Gap> bentGaps = bools2Segs(bent);
+		if (bentGaps.size()>1) BBFPointListGenerator.mergeGaps(bentGaps, params.minValidSegmentLen, null);
+		
+		
+		return bentGaps;
+	}
+	
+	/**
+	 * Finds segments of TRUE values. 
+	 * @param data
+	 * @return
+	 */
+	public static Vector<Gap> bools2Segs(boolean[] data){
+		
+		Vector<Gap> segs = new Vector<Gap>();
+		
+		//Build the gap list
+		int segStart = -1;
+		int ptr = 0;
+		while (ptr < data.length) {
+
+			if (data[ptr]) {
+				segStart = ptr;
+				// Find the end of the gap
+				do ++ptr; while (ptr < data.length && data[ptr]);
+				//Make a new gap
+				segs.add(new Gap(segStart, ptr-1));
+				
+			} else {
+				++ptr;
+			}
+		}
+
+		return segs;
+	}
+	
+	
+	/**
+	 * Returns the list of segments within start:end (inclusive)) that are complementary to the given segments
+	 * @param segs
+	 * @param start
+	 * @param end
+	 * @return
+	 */
+	public static Vector<Gap> complementarySegs(Vector<Gap> segs, int start, int end){
+		
+		Vector<Gap> comps = new Vector<Gap>();
+		int s = start;
+		for (Gap seg : segs){
+			int e = seg.start-1;
+			if (e-s>0 && start<=s && e<=end){
+				comps.add(new Gap(s, e));
+			}
+			s = seg.end+1; 
+		}
+		if (end-s>0){
+			comps.add(new Gap(s, end));
+		}
+		
+		return comps;
 	}
 	
 	public void fitSubsets(Vector<Gap> subsets, boolean hideGapPoints, FittingParameters fp){
@@ -422,6 +550,10 @@ public class BackboneFitter {
 	
 	public void fitSubsets(Vector<Gap> subsets, boolean hideGapPoints){
 
+		if (subsets==null || subsets.size()==0){
+			return;
+		}
+		
 		boolean usfOld = useScaleFactors;
 		
 		useScaleFactors = true;
@@ -551,7 +683,7 @@ public class BackboneFitter {
 	 * @param startInd index of workingTrack 
 	 * @param endInd index of workingTrack 
 	 */
-	private void setFrozen(int startInd, int endInd, boolean freeze){
+	protected void setFrozen(int startInd, int endInd, boolean freeze){
 
 		for (int i=startInd; i<=endInd; i++){
 			if (i>=0 && i<bplg.workingTrack.points.size()) {
@@ -566,7 +698,7 @@ public class BackboneFitter {
 	 * @param startInd
 	 * @param endInd
 	 */
-	private void setHidden(int startInd, int endInd, boolean hide){
+	protected void setHidden(int startInd, int endInd, boolean hide){
 		
 		for (int i=startInd; i<=endInd; i++){
 			if (i>=0 && i<bplg.workingTrack.points.size()) {
@@ -675,6 +807,7 @@ public class BackboneFitter {
 	
 	private boolean setupForPass(){
 		BTPs.removeAllElements();
+		bplg.reset();
 		boolean noError = bplg.generateBTPList(pass);
 		BTPs = bplg.getBTPs();
 		
@@ -792,6 +925,11 @@ public class BackboneFitter {
 				} else {
 					bbRelaxationStep(i);
 				}
+			} else if (params.storeEnergies){
+				for (int j=0; j<energyProfiles.size(); j++){
+					energyProfiles.get(j).addEnergyEntry(i, -1);
+				}
+				
 			}
 		}
 		
@@ -831,6 +969,11 @@ public class BackboneFitter {
 			BTPs.get(btpInd).setBBNew(newBB);
 		} else {
 			BTPs.get(btpInd).setBBNew(BTPs.get(btpInd).bbOld);
+			if (params.storeEnergies){
+				for (int j=0; j<energyProfiles.size(); j++){
+					energyProfiles.get(j).addEnergyEntry(btpInd, -1);
+				}
+			}
 		}
 		
 	}
@@ -1045,7 +1188,7 @@ public class BackboneFitter {
 		//shifts, pass, divergedInd
 		//use shifts to find list of inds
 		
-		//find mode of shifts
+		//find median of shifts
 		double[] sorted = Arrays.copyOf(shifts, shifts.length);
 		Arrays.sort(sorted);
 		double median = sorted[sorted.length/2];
@@ -1230,6 +1373,15 @@ class Gap{
 		end = e;
 	}
 	
+	public void add(int i){
+		start+=i;
+		end+=i;
+	}
+	
+	public void subtract(int i){
+		add(-i);
+	}
+	
 	public int len(){
 		return end-start+1;
 	}
@@ -1250,6 +1402,8 @@ class Gap{
 	public String toString(){
 		return start+"-"+end;
 	}
+	
+	
 	
 }
 
@@ -1328,5 +1482,37 @@ class EnergyProfile implements java.io.Serializable{
 		//JK gonna load them up in matlab
 	}
 	
-	
+	public Float[] getLastEnergies(){
+		Float[] last = energies.lastElement();
+		Float[] f = new Float[last.length];
+		boolean[] empty = new boolean[f.length];
+		int numEmpty = 0;
+		for (int i=0; i<f.length; i++){
+			if (last[i]!=null){
+				f[i]=last[i];
+				empty[i]=false;
+			} else {
+				empty[i] = true;
+				numEmpty++;
+			}
+		}
+		
+		int lastInd = energies.size()-2;
+		last = energies.get(lastInd);
+		while (numEmpty>0){
+			if (last.length==f.length){
+				for (int j=0; j<f.length; j++){
+					if (empty[j] && last[j]!=null){
+						f[j]=last[j];
+						empty[j]=false;
+						numEmpty--;
+					}
+				}
+				last = energies.get(--lastInd);
+			}
+		}
+		
+		
+		return f;
+	}
 }

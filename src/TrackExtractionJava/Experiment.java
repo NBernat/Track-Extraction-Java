@@ -641,4 +641,20 @@ public class Experiment implements Serializable{
 		ef.run(null);
 	}
 	
+	public int[] getMaxPlateDimensions(){
+		int[] dim = {0,0};
+		
+		int tDim[];
+		for (Track t : tracks){
+			tDim = t.getMaxPlateDimensions();
+			if (tDim[0]>dim[0]){
+				dim[0]=tDim[0];
+			}
+			if (tDim[1]>dim[1]){
+				dim[1]=tDim[1];
+			}
+		}
+		
+		return dim;
+	}
 }

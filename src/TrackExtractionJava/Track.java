@@ -273,14 +273,14 @@ public class Track implements Serializable{
 		return areas;
 	}
 	
-	public double[] getHTdistSqrs(){
+	public double[] getHTdists(){
 		if (points==null || points.firstElement().getPointType()<MaggotTrackPoint.pointType) return new double[0];
-		double[] HTdistSqr = new double[points.size()];
+		double[] HTdist = new double[points.size()];
 		for (int i=0;i<points.size(); i++) {
 			MaggotTrackPoint mtp = (MaggotTrackPoint)points.get(i);
-			HTdistSqr[i]=(mtp.head.x-mtp.tail.x)*(mtp.head.x-mtp.tail.x);
+			HTdist[i]=Math.sqrt((mtp.head.x-mtp.tail.x)*(mtp.head.x-mtp.tail.x) + (mtp.head.y-mtp.tail.y)*(mtp.head.y-mtp.tail.y) );
 		}
-		return HTdistSqr;
+		return HTdist;
 	}
 	
 	/**
@@ -476,7 +476,23 @@ public class Track implements Serializable{
 		return false;
 	}
 
-	
+	public int[] getMaxPlateDimensions(){
+		int[] dim = {0,0};
+		
+		for (TrackPoint tp : points){
+			int tDim[] = {tp.rect.x+tp.rect.width, tp.rect.y+tp.rect.height};
+			if (tDim[0]>dim[0]){
+				dim[0]=tDim[0];
+			}
+			if (tDim[1]>dim[1]){
+				dim[1]=tDim[1];
+			}
+		}
+		
+		return dim;
+		
+		
+	}
 	
 	
 	public int toDisk(DataOutputStream dos, PrintWriter pw){
