@@ -72,6 +72,8 @@ public class ProcessingParameters {
 	
 	public boolean savetoCSV = false;
 	
+	public boolean saveSysOutToFile = true;
+	
 	boolean testMagFromDisk = false;
 	boolean testFitFromDisk = false;
 	

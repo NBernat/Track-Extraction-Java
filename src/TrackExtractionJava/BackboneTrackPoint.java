@@ -11,6 +11,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Vector;
 
 
@@ -418,6 +419,18 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		}
 	}
 	
+	public void storeEnergies(HashMap<String, Double> energies){
+		this.energies = energies;
+	}
+	
+	public BackboneTrackPoint getPrev(){
+		return (BackboneTrackPoint)prev;
+	}
+	
+	public BackboneTrackPoint getNext(){
+		return (BackboneTrackPoint)next;
+	}
+	
 	public int getNumPix(){
 		return numPix;
 	}
@@ -695,6 +708,17 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 			}
 			//Write artificial mid
 			dos.writeByte(artificialMid ? 1:0);
+			
+			if (energies==null){
+				dos.writeInt(0);
+			} else {
+				dos.writeInt(energies.keySet().size());
+				for(String key : energies.keySet()){
+					dos.writeUTF(key);
+					dos.writeDouble(energies.get(key));
+				}
+			}
+			
 		} catch (Exception e) {
 			if (pw!=null) pw.println("Error writing BackboneTrackPoint image for point "+pointID+"; aborting save");
 			return 1;
@@ -750,6 +774,16 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 			
 			//artificialMid
 			artificialMid = (dis.readByte()==1);
+			
+			// energies
+			int numKeys = dis.readInt();
+			if (numKeys>0) {
+				energies = new HashMap<String, Double>();
+				for (int i=0; i<numKeys; i++){
+					String key = dis.readUTF();
+					energies.put(key, dis.readDouble());
+				}
+			}
 			
 		} catch (Exception e) {
 			if (pw!=null) pw.println("Error writing BackboneTrackPoint Info");

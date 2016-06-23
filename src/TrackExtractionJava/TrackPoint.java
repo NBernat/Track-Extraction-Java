@@ -8,6 +8,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.PrintWriter;
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.ListIterator;
 import java.util.Vector;
 
@@ -70,7 +71,11 @@ public class TrackPoint implements Serializable {
 	 */
 	protected int thresh;
 	
+
+	protected TrackPoint prev;
+	protected TrackPoint next;
 	
+	protected HashMap<String, Double> energies;
 	
 	////////////////////////////////////
 	// Constructors & Related Methods
@@ -104,7 +109,6 @@ public class TrackPoint implements Serializable {
 //		track = null;
 		
 	}
-	
 	
 	
 	/////////////////////
@@ -186,6 +190,19 @@ public class TrackPoint implements Serializable {
 		
 	}
 
+//	
+//	public static Vector<Force> getApplicableForces(FittingParameters fp){
+//		Vector<Force> forces = fp.getForces(0);
+//		//Remove forces that cannot be applied to this type of point
+//		return forces;
+//	}
+//	
+//	protected void calcEnergies(FittingParameters fp){
+//		Vector<Force> forces = getApplicableForces(fp);
+//		for (Force f : forces){
+////			energies.put(f.name, f.getPointEnergy());
+//		}
+//	}
 	
 	/**
 	 * Angle formed between two points and this point as the vertex
@@ -364,6 +381,7 @@ public class TrackPoint implements Serializable {
 		//Write info
 		try {
 			dos.writeInt(frameNum);
+			dos.writeInt(pointID);
 			dos.writeDouble(x);
 			dos.writeDouble(y);
 			dos.writeInt(rect.x);
@@ -403,6 +421,7 @@ public class TrackPoint implements Serializable {
 		
 		try {
 			frameNum = dis.readInt();
+			pointID = dis.readInt();
 			x = dis.readDouble();
 			y = dis.readDouble();
 			rect = new Rectangle(dis.readInt(), dis.readInt(), dis.readInt(), dis.readInt());
@@ -443,9 +462,25 @@ public class TrackPoint implements Serializable {
 		int[] info = {rect.x, rect.y, rect.width, rect.height}; 
 		return info;
 	}
+
+	public TrackPoint getPrev(){
+		return prev;
+	}
+	
+	public TrackPoint getNext(){
+		return next;
+	}
 	
 	public Track getTrack(){
 		return track;
+	}
+	
+	public double getEnergy(String energyName){
+		return energies.get(energyName);
+	}
+	
+	public HashMap<String, Double> getEnergies(){
+		return energies;
 	}
 	
 	public int getPointType(){

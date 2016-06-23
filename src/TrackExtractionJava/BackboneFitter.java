@@ -13,6 +13,7 @@ import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.ListIterator;
 import java.util.Vector;
 
@@ -753,6 +754,7 @@ public class BackboneFitter {
 				} 
 				
 				workingTrack = new Track(BTPs, tr);
+				workingTrack.setTrackID(tr.getTrackID());
 				newTrID = workingTrack.getTrackID();
 				BTPs.removeAllElements();
 				
@@ -1087,9 +1089,15 @@ public class BackboneFitter {
 	
 	
 	protected void finalizeBackbones() {
-		ListIterator<BackboneTrackPoint> btpIt = BTPs.listIterator();
-		while (btpIt.hasNext()) {
-			btpIt.next().finalizeBackbone();
+		
+		for (int j=0; j<BTPs.size(); j++) {
+			HashMap<String, Double> energies = new HashMap<String, Double>();
+			for (int i=0; i<Forces.size(); i++){
+				energies.put(Forces.get(i).name, new Double(Forces.get(i).getEnergy(j, BTPs)));
+			}
+			energies.put("Total", new Double(Force.getEnergy(generateNewBackbone(getTargetBackbones(j)), BTPs.get(j))));
+			BTPs.get(j).storeEnergies(energies);
+			BTPs.get(j).finalizeBackbone();
 		}
 	}
 	

@@ -7,9 +7,11 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
@@ -110,6 +112,7 @@ public class Experiment_Processor implements PlugIn{
 		
 		boolean success = (loadFile(arg0));
 		if (dstDir==null) dstDir = srcDir;
+		if (prParams.saveSysOutToFile) setupSysOut();
 		setupParams();
 
 		try {
@@ -248,6 +251,24 @@ public class Experiment_Processor implements PlugIn{
 			System.out.println("Experiment_Processor.testFromDisk error");
 			return;
 			
+		}
+		
+	}
+	
+	protected void setupSysOut(){
+
+		File f = new File(dstDir+"SystemDOTout.txt");
+		if (!f.exists())
+			try {
+				f.createNewFile();
+			} catch (IOException e) {
+				e.printStackTrace();
+			} 
+
+		try {
+			System.setOut(new PrintStream(new BufferedOutputStream(new FileOutputStream(f.getAbsolutePath()))));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
 		}
 		
 	}

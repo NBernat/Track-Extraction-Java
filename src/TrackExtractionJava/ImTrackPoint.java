@@ -122,6 +122,14 @@ public class ImTrackPoint extends TrackPoint{
 		
 	}
 	
+	public ImTrackPoint getPrev(){
+		return (ImTrackPoint)prev;
+	}
+	
+	public ImTrackPoint getNext(){
+		return (ImTrackPoint)next;
+	}
+	
 	public static Rectangle getCombinedBounds(ImTrackPoint im1, ImTrackPoint im2){
 		
 		int x = (im1.rect.x<im2.rect.x)? im1.rect.x : im2.rect.x;

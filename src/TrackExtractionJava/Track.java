@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Vector;
 
+import sun.awt.SunToolkit.InfiniteLoop;
+
 
 public class Track implements Serializable{
 	
@@ -278,9 +280,54 @@ public class Track implements Serializable{
 		double[] HTdist = new double[points.size()];
 		for (int i=0;i<points.size(); i++) {
 			MaggotTrackPoint mtp = (MaggotTrackPoint)points.get(i);
-			HTdist[i]=Math.sqrt((mtp.head.x-mtp.tail.x)*(mtp.head.x-mtp.tail.x) + (mtp.head.y-mtp.tail.y)*(mtp.head.y-mtp.tail.y) );
+			if (mtp.htValid){
+				HTdist[i]=Math.sqrt((mtp.head.x-mtp.tail.x)*(mtp.head.x-mtp.tail.x) + (mtp.head.y-mtp.tail.y)*(mtp.head.y-mtp.tail.y) );
+			} else {
+				HTdist[i] = Double.POSITIVE_INFINITY;
+			}
 		}
 		return HTdist;
+	}
+	
+	/**
+	 * Calculates trackpoint energies using default fitting parameters
+	 * 
+	 */
+//	public void calcEnergies(){
+//		calcEnergies(new FittingParameters());
+//	}
+	
+	/**
+	 * Calculates trackpoint energies using 
+	 * @param fp
+	 */
+//	public void calcEnergies(FittingParameters fp){
+//		
+//		for (int i=0; i<points.size(); i++){
+//			points.get(i).calcEnergies(fp);
+//		}
+//	}
+	
+	/**
+	 * Gathers and returns energies of the given type from trackpoints
+	 * 
+	 * returns [] if energy type is not available for this type of point
+	 * 
+	 * @param energyType
+	 */
+	public double[] getEnergies(String energyType){
+		
+		if (points==null || points.size()==0){
+			System.out.println("No points in track");
+			return null;
+		}
+		
+		double[] e = new double[points.size()];
+		for (int i=0; i<e.length; i++){
+			e[i] = points.get(i).getEnergy(energyType);
+		}
+		
+		return e;
 	}
 	
 	/**
@@ -314,6 +361,10 @@ public class Track implements Serializable{
 	
 	public boolean diverged(){
 		return diverged;
+	}
+	
+	protected void setTrackID(int tid){
+		trackID = tid;
 	}
 	
 	public int getTrackID(){
@@ -507,6 +558,7 @@ public class Track implements Serializable{
 			if (nBytes>=0){
 				if (pw!=null) pw.println("Writing Track size");
 				dos.writeInt(nBytes);
+				dos.writeInt(trackID);
 			} else {
 				if (pw!=null) pw.println("...Error getting size of track "+trackID+"; aborting save");
 				return 3;
@@ -617,6 +669,7 @@ public class Track implements Serializable{
 		try {
 			int size = dis.readInt();
 			if (pw!=null) pw.println(size+" bytes to load...");
+			trackID = dis.readInt();
 		} catch (Exception e) {
 			if (pw!=null) pw.println("ERROR: Unable to advance past field 'size on disk'");
 			return 4;

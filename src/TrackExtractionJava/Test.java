@@ -210,23 +210,24 @@ public class Test {//extends JFrame
 		
 		ImageJ ij = new ImageJ();
 		
-		String outputDir = "E:\\testing\\Java Backbone Fitting\\test bbf subset\\";
-		String inputFileName = outputDir+"Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.prejav";
+		String outputDir = "E:\\testing\\Java Backbone Fitting\\test bbf subset\\newEnergySaving\\";
+		String inputFileName = outputDir+"Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.prejav";//"E:\\data\\phototaxis\\berlin@berlin\\2NDs_B_Square_SW_96-160\\201411201541\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.mmf";
 		
 		String args[] = new String[2];
 		args[0] = inputFileName;
-		args[1] = outputDir+"withFinalIteration\\";
+		args[1] = outputDir;
 		
 		Experiment_Processor ep = new Experiment_Processor();
-//		ExtractionParameters exP = new ExtractionParameters();
-//		exP.subset = true;
-//		exP.startFrame = 1;
-//		exP.endFrame = 1000;
+		ep.runningFromMain = true;
+		ExtractionParameters exP = new ExtractionParameters();
+		exP.subset = true;
+		exP.startFrame = 1;
+		exP.endFrame = 2000;
 
 		ProcessingParameters pp = new ProcessingParameters();
 		pp.doFitting = true;
 		pp.fitType=1;
-//		ep.extrParams = exP;
+		ep.extrParams = exP;
 		ep.prParams = pp;
 		
 		ep.run(args);
