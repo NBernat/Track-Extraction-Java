@@ -330,6 +330,15 @@ public class Track implements Serializable{
 		return e;
 	}
 	
+	public double[] getEnergyMeanStdDev(String energyType){
+		
+		double[] energies = getEnergies(energyType);
+		double[] meanStdDev = new double[2];
+		meanStdDev[0] = MathUtils.mean(energies);
+		meanStdDev[1] = MathUtils.stdDev(energies, meanStdDev[0]);
+		return meanStdDev;
+	}
+	
 	/**
 	 * Clips and returns the list of track points indicated by the startFrame (inclusive) and endFrame (exclusive)
 	 * @param startFrame

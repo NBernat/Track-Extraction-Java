@@ -657,4 +657,37 @@ public class Experiment implements Serializable{
 		
 		return dim;
 	}
+	
+	public int getNumPoints(){
+		int numPts = 0;
+		for (int i=0; i<tracks.size(); i++){
+			numPts += tracks.get(i).getNumPoints();
+		}
+		return numPts;
+	}
+	
+	
+	
+	public double[] getEnergyMeanStdDev(String energyType){
+		
+		int nPts = getNumPoints();
+
+		double[] energies = new double[nPts];
+		int startInd = 0;
+		for (int trackInd=0; trackInd<tracks.size(); trackInd++){
+			
+			double[] e = tracks.get(trackInd).getEnergies(energyType);
+			for (int eInd=0; eInd<e.length; eInd++){
+				energies[startInd+eInd] = e[eInd]; 
+			}
+			startInd+=e.length;
+			
+		}
+		
+		double[] meanStdDev = new double[2];
+		meanStdDev[0] = MathUtils.mean(energies);
+		meanStdDev[1] = MathUtils.stdDev(energies, meanStdDev[0]);
+		return meanStdDev;
+	}
+	
 }

@@ -1,5 +1,6 @@
 package TrackExtractionJava;
 
+import ij.gui.PolygonRoi;
 import ij.process.FloatPolygon;
 import ij.text.TextWindow;
 
@@ -360,7 +361,9 @@ public class BackboneFitter {
 		straightLarvae = findStraightGaps(bentLarvae);
 		
 		//Fit the straight larvae
+		// TODO turn this block into its own function
 		FittingParameters spp = FittingParameters.getSinglePassParams();
+		spp.freezeDiverged = true;
 		resetParams(spp);
 		boolean hideGapPoints = true;
 		fitSubsets(straightLarvae, hideGapPoints);
@@ -371,6 +374,7 @@ public class BackboneFitter {
 		
 		
 		//Fit the bent larvae
+		// TODO turn this block into its own function
 		hideGapPoints = false;
 		spp.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
 		spp.freezeDiverged = true;
@@ -381,21 +385,34 @@ public class BackboneFitter {
 			return;
 		}
 		
+
+		//Patch diverged sections
+		// TODO turn this block into its own function
 		FittingParameters patchParams = new FittingParameters();
 		patchParams.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
 		patchParams.freezeDiverged = true;
 		patchParams.leaveBackbonesInPlace = true;
-//		patchParams.imageWeight = patchParams.imageWeight*1.3f;
-//		float[] tlw = {patchParams.timeLengthWeight[0]*1.3f, patchParams.timeLengthWeight[1]*1.3f, patchParams.timeLengthWeight[2]*1.3f};
-//		patchParams.timeLengthWeight = tlw;
-		for (Gap divd : divergedGaps){
-			patchTrackSubset(divd, params.divergedPatchBuffer, patchParams);
+		for (Gap divG : divergedGaps){
+			patchTrackSubset(divG, params.divergedPatchBuffer, patchParams);
 		}
 		if (workingTrack==null){
 			System.out.println("Error patching diverged frames");
 			return;
 		}
 		
+		//Inch inwards on the remaining bad gaps
+		Vector<Gap> badGaps = findBadGaps();
+		FittingParameters edgeParams = FittingParameters.getSinglePassParams();
+		edgeParams.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
+		edgeParams.freezeDiverged = true;
+		edgeParams.leaveBackbonesInPlace = true;
+		resetParams(edgeParams); 
+		for (Gap badG : badGaps){
+			patchGap_InchInwards(badG, params.edgeSize);
+		}
+		
+		
+		//Do final run on the whole track for continuity
 		spp = FittingParameters.getSinglePassParams();
 		spp.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
 		spp.freezeDiverged = true;
@@ -478,40 +495,11 @@ public class BackboneFitter {
 		for (int i=0; i<bent.length; i++){
 			bent[i] = htDists[i]<(mean-stdDev*params.fracOfStdDevForBentCutoff);
 		}
-		Vector<Gap> bentGaps = bools2Segs(bent);
+		Vector<Gap> bentGaps = Gap.bools2Segs(bent);
 		if (bentGaps.size()>1) BBFPointListGenerator.mergeGaps(bentGaps, params.minValidSegmentLen, null);
 		
 		
 		return bentGaps;
-	}
-	
-	/**
-	 * Finds segments of TRUE values. 
-	 * @param data
-	 * @return
-	 */
-	public static Vector<Gap> bools2Segs(boolean[] data){
-		
-		Vector<Gap> segs = new Vector<Gap>();
-		
-		//Build the gap list
-		int segStart = -1;
-		int ptr = 0;
-		while (ptr < data.length) {
-
-			if (data[ptr]) {
-				segStart = ptr;
-				// Find the end of the gap
-				do ++ptr; while (ptr < data.length && data[ptr]);
-				//Make a new gap
-				segs.add(new Gap(segStart, ptr-1));
-				
-			} else {
-				++ptr;
-			}
-		}
-
-		return segs;
 	}
 	
 	
@@ -570,6 +558,69 @@ public class BackboneFitter {
 		useScaleFactors = usfOld;
 	}
 	
+	/**
+	 * Runs the fitter on 2*EDGESIZE points: the first EDGESIZE and last EDGESIZE points in the given subset
+	 * @param subset
+	 * @param edgeSize
+	 */
+	public boolean fitSubsetEdges(Gap subset, int edgeSize){
+		return fitSubsetEdges(subset, edgeSize, true);
+	}
+	
+	
+	public boolean fitSubsetEdges(Gap subset, int edgeSize, boolean freezeHideInner){
+		
+		Track tempTrack = workingTrack;
+		replaceBBInfoInSubsetEdges(subset, edgeSize);
+		
+		//Hide/Freeze inner points manually
+		if (freezeHideInner){
+			setFrozen(subset.start+edgeSize, subset.end-edgeSize, true);
+			setHidden(subset.start+edgeSize, subset.end-edgeSize, true);
+		}
+		
+		Vector<Gap> subs = new Vector<Gap>();
+		subs.add(subset);
+		fitSubsets(subs, false);
+		
+		//Unhide/Unfreeze inner points manually
+		if (freezeHideInner){
+			setFrozen(subset.start+edgeSize, subset.end-edgeSize, false);
+			setHidden(subset.start+edgeSize, subset.end-edgeSize, false);
+		}
+
+		if (workingTrack == null){
+			workingTrack = tempTrack;
+			return false;
+		}
+		
+		return true;
+		
+	}
+	
+	/**
+	 * Fills in the subset edges with backbone info from surrounding points
+	 * @param subset
+	 * @param edgeSize
+	 */
+	protected void replaceBBInfoInSubsetEdges(Gap subset, int edgeSize){
+		
+		float[] prevO = {0,0};
+		float[] nextO = {0,0};
+		PolygonRoi prevBB = ((BackboneTrackPoint)workingTrack.points.get(subset.start-1)).backbone;
+		PolygonRoi nextBB = ((BackboneTrackPoint)workingTrack.points.get(subset.end+1)).backbone;
+		for (int i=0; i<edgeSize; i++){
+			((BackboneTrackPoint)workingTrack.points.get(subset.start+i)).fillInBackboneInfo(params.clusterMethod, prevBB, prevO);
+			((BackboneTrackPoint)workingTrack.points.get(subset.end-i)).fillInBackboneInfo(params.clusterMethod, nextBB, nextO);
+		}
+		
+	}
+	
+	/**
+	 * Freezes all the points OTHER THAN the points contained within the "unfrozen" subsets
+	 * @param unfrozen
+	 * @param frozen
+	 */
 	private void setFrozenGapsInTrack(Vector<Gap> unfrozen, boolean frozen){
 		if (unfrozen.firstElement().start>0){//gap at beginning
 			setFrozen(0, unfrozen.firstElement().start-1, frozen);
@@ -583,7 +634,12 @@ public class BackboneFitter {
 			setFrozen(unfrozen.lastElement().end+1, bplg.workingTrack.points.size()-1, frozen);
 		}
 	}
-	
+
+	/**
+	 * Hides all the points OTHER THAN the points contained within the "hidden" subsets
+	 * @param unhidden
+	 * @param hidden
+	 */
 	private void setHiddenGapsInTrack(Vector<Gap> unhidden, boolean hidden){
 		if (unhidden.firstElement().start>0){//gap at beginning
 			setHidden(0, unhidden.firstElement().start-1, hidden);
@@ -598,15 +654,15 @@ public class BackboneFitter {
 		}
 	}
 	
-	protected void patchTrackSubset(Gap segment, int bufferSize){
+	protected boolean patchTrackSubset(Gap segment, int bufferSize){
 		FittingParameters patchParams = new FittingParameters();
 		patchParams.leaveFrozenBackbonesAlone = true;
 		patchParams.storeEnergies = true;
 		
-		patchTrackSubset(segment, bufferSize, patchParams); 
+		return patchTrackSubset(segment, bufferSize, patchParams); 
 	}
 	
-	protected void patchTrackSubset(Gap segment, int bufferSize, FittingParameters patchParams){
+	protected boolean patchTrackSubset(Gap segment, int bufferSize, FittingParameters patchParams){
 		
 		FittingParameters oldParams = params;
 		boolean usfOld = useScaleFactors;
@@ -623,17 +679,72 @@ public class BackboneFitter {
 		setFrozenGapsInTrack(unbuffered, true);
 		setHiddenGapsInTrack(buffered, true);
 		
+		boolean success = true;
+		Track prefit = workingTrack;
 		fitTrack();
+		if (workingTrack==null){
+			success=false;
+			workingTrack = prefit;
+		}
 		
 		setFrozenGapsInTrack(unbuffered, false);
 		setHiddenGapsInTrack(buffered, false);
 		
 		resetParams(oldParams);
 		useScaleFactors = usfOld;
+		
+		return success;
 	}
 	
+	protected Vector<Gap> findBadGaps(){
+		
+		double[] meanStdDev = workingTrack.getEnergyMeanStdDev(params.energyTypeForBadGap);
+		double thresh = meanStdDev[0] + params.numStdDevForBadGap*meanStdDev[1];
+		
+		double[] e = workingTrack.getEnergies(params.energyTypeForBadGap);
+		boolean[] bad = new boolean[e.length];
+		for (int i=0; i<bad.length; i++){
+			bad[i] = e[i]>thresh;
+		}
+		
+		Vector<Gap> badGaps = Gap.bools2Segs(bad);
+		if (badGaps.size()>1) BBFPointListGenerator.mergeGaps(badGaps, params.minValidSegmentLen, null);
+		
+		
+ 		return badGaps;
+	}
 	
-	
+	/**
+	 * Sequentially fits points on the edges of the gaps until all are fit. 
+	 * 
+	 * NOTE: Boundary cases need to be updated for case when edgeSize!=1
+	 * 
+	 * @param badG
+	 * @param edgeSize
+	 * @return
+	 */
+	protected boolean patchGap_InchInwards(Gap badG, int edgeSize){
+		
+		Gap unfit = new Gap(badG.start, badG.end);
+		boolean success = true;
+		while (unfit.size()>2 && success){
+			resetForNextExectution();
+			success = fitSubsetEdges(unfit, edgeSize); 
+			
+			if (success){
+				unfit.start++;
+				unfit.end--;
+				
+				if (unfit.size()<2){
+					resetForNextExectution();
+					success = fitSubsetEdges(unfit, 1, false);
+				}
+			}
+			
+		}
+		
+		return success;
+	}
 	
 	
 	
@@ -659,24 +770,6 @@ public class BackboneFitter {
 		bplg.workingTrack = workingTrack;
 		fitTrack();
 	}
-	
-	/*
-	private void fitTrackSubsetWithBuffer(int startInd, int endInd, int bufferSize, boolean saveFullTrack){
-		subsets = true;
-		if (saveFullTrack) fullTrack = workingTrack;
-		int s = ((startInd-bufferSize)>=0) ? (startInd-bufferSize) : 0;
-		int e = ((endInd+bufferSize)<fullTrack.points.size()) ? (startInd-bufferSize) : (fullTrack.points.size()-1);
-		workingTrack = new Track(fullTrack, s, e);
-		bplg.workingTrack = workingTrack;
-		freezePoints(0, bufferSize);
-		freezePoints(workingTrack.getNumPoints()-1-bufferSize, workingTrack.getNumPoints()-1);
-		
-		fitTrack();
-		
-		//todo unfreeze points
-		
-	}
-	*/
 	
 	
 	/**
@@ -1381,6 +1474,10 @@ class Gap{
 		end = e;
 	}
 	
+	public int size(){
+		return end-start;
+	}
+	
 	public void add(int i){
 		start+=i;
 		end+=i;
@@ -1411,7 +1508,34 @@ class Gap{
 		return start+"-"+end;
 	}
 	
-	
+	/**
+	 * Finds segments of TRUE values. 
+	 * @param data
+	 * @return
+	 */
+	public static Vector<Gap> bools2Segs(boolean[] data){
+		
+		Vector<Gap> segs = new Vector<Gap>();
+		
+		//Build the gap list
+		int segStart = -1;
+		int ptr = 0;
+		while (ptr < data.length) {
+
+			if (data[ptr]) {
+				segStart = ptr;
+				// Find the end of the gap
+				do ++ptr; while (ptr < data.length && data[ptr]);
+				//Make a new gap
+				segs.add(new Gap(segStart, ptr-1));
+				
+			} else {
+				++ptr;
+			}
+		}
+
+		return segs;
+	}
 	
 }
 

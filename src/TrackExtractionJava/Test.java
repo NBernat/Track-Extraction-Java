@@ -32,8 +32,12 @@ public class Test {//extends JFrame
 
 	public static void main(String[] args) {
 		
-		fitExperimentNewScheme();
+		testSubsetInchInwards();
 		/*
+		*/
+		
+		/*
+		fitExperimentNewScheme();
 		*/
 		
 		/*
@@ -204,7 +208,37 @@ public class Test {//extends JFrame
 	}
 	
 	
-	
+	public static void testSubsetInchInwards(){
+		ImageJ ij = new ImageJ();
+		
+		String outputDir = "E:\\testing\\Java Backbone Fitting\\test bbf subset\\newEnergySavingWFrozenDiverged\\";
+		String inputFileName = outputDir+"Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.prejav";
+		int trackID = 1;
+		Experiment ex = new Experiment(inputFileName);
+		Track t = ex.getTrack(trackID);
+		BackboneFitter bbf = new BackboneFitter(t);
+		
+		bbf.fitTrackNewScheme();
+//		bbf.resetForNextExectution();
+//		bbf.patchGap_InchInwards(new Gap(1730, 1800), 1);
+//		FittingParameters spp = FittingParameters.getSinglePassParams();
+//		spp.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
+//		spp.freezeDiverged = true;
+//		spp.leaveBackbonesInPlace = true;
+//		bbf.resetParams(spp);
+//		bbf.fitTrack();
+		
+		
+		if (bbf.getTrack()!=null){
+			Vector<Track> newTracks = new Vector<Track>();
+			newTracks.add(bbf.getTrack());
+			Experiment newExperiment = new Experiment(ex, newTracks);
+			newExperiment.showEx();
+		}
+		
+		
+		ij.quit();
+	}
 	
 	public static void fitExperimentNewScheme(){
 		
@@ -215,7 +249,7 @@ public class Test {//extends JFrame
 		
 		String args[] = new String[2];
 		args[0] = inputFileName;
-		args[1] = outputDir;
+		args[1] = "E:\\testing\\Java Backbone Fitting\\test bbf subset\\newEnergySavingWFrozenDiverged\\";
 		
 		Experiment_Processor ep = new Experiment_Processor();
 		ep.runningFromMain = true;

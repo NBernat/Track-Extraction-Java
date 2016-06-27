@@ -29,6 +29,10 @@ public class FittingParameters {
 	
 	double fracOfStdDevForBentCutoff = 0.5;
 	
+	String energyTypeForBadGap = "Time-Length";
+	int numStdDevForBadGap = 5;
+	int edgeSize = 1; //number of frames in the "edge" when fitting by inching inwards
+	
 	/*
 	 * 0= voronoi clusters 
 	 * 1= gaussian mixture
