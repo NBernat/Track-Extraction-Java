@@ -8,6 +8,7 @@ public class MaggotDisplayParameters {
 	static boolean DEFAULTclusters = false;
 	static boolean DEFAULTmid = true;
 	static boolean DEFAULTinitialBB = false; 
+	static boolean DEFAULTnewBB = false;
 	static boolean DEFAULTcontour = false;
 	static boolean DEFAULTht = false;
 	static boolean DEFAULTforces = false;
@@ -19,6 +20,7 @@ public class MaggotDisplayParameters {
 	boolean clusters;
 	boolean mid;
 	boolean initialBB; 
+	boolean newBB;
 	boolean contour;
 	boolean ht;
 	boolean forces;
@@ -37,6 +39,7 @@ public class MaggotDisplayParameters {
 		clusters = DEFAULTclusters;
 		mid = DEFAULTmid;
 		initialBB = DEFAULTinitialBB;
+		newBB = DEFAULTnewBB;
 		contour = DEFAULTcontour;
 		ht = DEFAULTht;
 		forces = DEFAULTforces;
@@ -48,6 +51,7 @@ public class MaggotDisplayParameters {
 		clusters = false;
 		mid = false;
 		initialBB = false;
+		newBB = false;
 		contour = false;
 		ht = false;
 		forces = false;
@@ -62,6 +66,8 @@ public class MaggotDisplayParameters {
 			return mid;
 		} else if (paramName.equalsIgnoreCase("initialbb")){
 			return initialBB;
+		} else if (paramName.equalsIgnoreCase("newbb")){
+			return newBB;
 		}else if (paramName.equalsIgnoreCase("contour")){
 			return contour;
 		}else if (paramName.equalsIgnoreCase("ht")){
@@ -82,6 +88,8 @@ public class MaggotDisplayParameters {
 			mid = value;
 		} else if (paramName.equalsIgnoreCase("initialbb")){
 			initialBB = value;
+		} else if (paramName.equalsIgnoreCase("newbb")){
+			newBB = value;
 		}else if (paramName.equalsIgnoreCase("contour")){
 			contour = value;
 		}else if (paramName.equalsIgnoreCase("ht")){

@@ -16,6 +16,7 @@ import java.io.StringWriter;
 import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Scanner;
 import java.util.Vector;
 
 import sun.awt.SunToolkit.InfiniteLoop;
@@ -430,8 +431,11 @@ public class Track implements Serializable{
 	}
 	
 	
-	public void playMovie(int labelInd, MaggotDisplayParameters mdp){
-		
+	public ImagePlus playMovie(int labelInd, MaggotDisplayParameters mdp){
+		return getMovieStack(labelInd, mdp, true); 
+	}
+	
+	public ImagePlus getMovieStack(int labelInd, MaggotDisplayParameters mdp, boolean showMovie){
 		if (tb!=null){
 			tb.comm.message("This track has "+points.size()+"points", VerbLevel.verb_message);
 		}
@@ -472,8 +476,10 @@ public class Track implements Serializable{
 			//Show the stack
 			ImagePlus trackPlus = new ImagePlus("Track "+trackID+": frames "+points.firstElement().frameNum+"-"+points.lastElement().frameNum ,trackStack);
 			
-			trackPlus.show();
-			
+			if (showMovie) trackPlus.show();
+			return trackPlus;
+		} else {
+			return null;
 		}
 	}
 	
@@ -553,6 +559,23 @@ public class Track implements Serializable{
 		
 		
 	}
+	
+	
+	public void showFitting(){
+		if (points==null || points.size()==0 || points.firstElement().getPointType()!=MaggotTrackPoint.pointType){
+			return;
+		}
+		
+		BackboneFitter bbf = new BackboneFitter(this);
+		bbf.doPause = true;
+		bbf.userIn = new Scanner(System.in);
+		bbf.userOut = System.out;
+		
+		// TODO pass in a track fitting scheme and/or Fitting Params
+		bbf.fitTrackNewScheme();
+		
+	}
+	
 	
 	
 	public int toDisk(DataOutputStream dos, PrintWriter pw){

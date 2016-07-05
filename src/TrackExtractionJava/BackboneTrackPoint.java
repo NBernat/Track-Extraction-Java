@@ -507,7 +507,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	
 	public ImageProcessor getIm(){
 
-		return getIm(MaggotDisplayParameters.DEFAULTexpandFac, MaggotDisplayParameters.DEFAULTclusters,MaggotDisplayParameters.DEFAULTmid, MaggotDisplayParameters.DEFAULTinitialBB, 	
+		return getIm(MaggotDisplayParameters.DEFAULTexpandFac, MaggotDisplayParameters.DEFAULTclusters,MaggotDisplayParameters.DEFAULTmid, MaggotDisplayParameters.DEFAULTinitialBB, MaggotDisplayParameters.DEFAULTnewBB, 	
 				MaggotDisplayParameters.DEFAULTcontour, MaggotDisplayParameters.DEFAULTht, MaggotDisplayParameters.DEFAULTforces, MaggotDisplayParameters.DEFAULTbackbone);
 		
 	}
@@ -517,13 +517,13 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		if (mdp==null){
 			return getIm();
 		} else {
-			return getIm(mdp.expandFac, mdp.clusters, mdp.mid, mdp.initialBB, 	
+			return getIm(mdp.expandFac, mdp.clusters, mdp.mid, mdp.initialBB, mdp.newBB, 	
 				mdp.contour, mdp.ht, mdp.forces, mdp.backbone);
 		}
 	}
 	
 	
-	public ImageProcessor getIm(int expandFac, boolean clusters, boolean mid, boolean initialBB, boolean contour, boolean ht, boolean forces, boolean bb){
+	public ImageProcessor getIm(int expandFac, boolean clusters, boolean mid, boolean initialBB, boolean newBB, boolean contour, boolean ht, boolean forces, boolean bb){
 
 		if (mid && MagPixX==null){
 			reloadMagPix();
@@ -543,7 +543,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		int offY = trackWindowHeight*(expandFac/2) - ((int)y-rect.y)*expandFac;//rect.y-imOriginY;
 		
 		
-		return drawFeatures(pIm, offX, offY, expandFac, clusters, mid, initialBB, contour, ht, forces, bb); 
+		return drawFeatures(pIm, offX, offY, expandFac, clusters, mid, initialBB, newBB, contour, ht, forces, bb); 
 		
 	}
 
@@ -578,7 +578,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		return im;
 	}
 	
-	protected ImageProcessor drawFeatures(ImageProcessor grayIm, int offX, int offY, int expandFac, boolean clusters, boolean mid, boolean initialBB, boolean contour, boolean ht, boolean forces, boolean bb){
+	protected ImageProcessor drawFeatures(ImageProcessor grayIm, int offX, int offY, int expandFac, boolean clusters, boolean mid, boolean initialBB, boolean newBB, boolean contour, boolean ht, boolean forces, boolean bb){
 		
 		ImageProcessor im = grayIm.convertToRGB();
 		
@@ -597,6 +597,9 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 
 		//INITIAL SPINE
 		if (initialBB) displayUtils.drawBBInit(im, bbInit, offX, offY, rect, expandFac, Color.MAGENTA);
+		
+		if (newBB) displayUtils.drawBackbone(im, bbNew, expandFac, offX, offY, rect, Color.blue);
+		
 		
 		//CONTOUR
 		if (contour) displayUtils.drawContour(im, contourX, contourY, expandFac, offX, offY, Color.BLUE);

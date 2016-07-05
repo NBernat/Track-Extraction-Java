@@ -32,12 +32,21 @@ public class Test {//extends JFrame
 
 	public static void main(String[] args) {
 		
-		testSubsetInchInwards();
-		/*
-		*/
+		
+		
+		
 		
 		/*
+		testFitterPauseDisplay();
+		*/
+		
+		
+		/*
+		testSubsetInchInwards();
+		*/
+		
 		fitExperimentNewScheme();
+		/*
 		*/
 		
 		/*
@@ -208,12 +217,42 @@ public class Test {//extends JFrame
 	}
 	
 	
+	public static void testFitterPauseDisplay(){
+		ImageJ ij = new ImageJ();
+		
+		
+
+		String outputDir = "E:\\testing\\Java Backbone Fitting\\test badness fixer\\";
+		String inputFileName = outputDir+"0 Before any fixing\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.prejav";//"E:\\data\\phototaxis\\berlin@berlin\\2NDs_B_Square_SW_96-160\\201411201541\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.mmf";
+		
+		
+		int trackID = 4;
+		Experiment ex = new Experiment(inputFileName);
+		Track t = ex.getTrack(trackID);
+		BackboneFitter bbf = new BackboneFitter(t);
+//		bbf.doPause = true;
+//		bbf.userIn = new Scanner(System.in);
+//		bbf.userOut = System.out;
+		
+		bbf.fitTrackNewScheme();
+		
+		
+		if (bbf.getTrack()!=null){
+			Vector<Track> newTracks = new Vector<Track>();
+			newTracks.add(bbf.getTrack());
+			Experiment newExperiment = new Experiment(ex, newTracks);
+			newExperiment.showEx();
+		}
+		
+		ij.quit();
+	}
+	
 	public static void testSubsetInchInwards(){
 		ImageJ ij = new ImageJ();
 		
 		String outputDir = "E:\\testing\\Java Backbone Fitting\\test bbf subset\\newEnergySavingWFrozenDiverged\\";
 		String inputFileName = outputDir+"Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.prejav";
-		int trackID = 1;
+		int trackID = 8;
 		Experiment ex = new Experiment(inputFileName);
 		Track t = ex.getTrack(trackID);
 		BackboneFitter bbf = new BackboneFitter(t);
@@ -244,12 +283,12 @@ public class Test {//extends JFrame
 		
 		ImageJ ij = new ImageJ();
 		
-		String outputDir = "E:\\testing\\Java Backbone Fitting\\test bbf subset\\newEnergySaving\\";
-		String inputFileName = outputDir+"Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.prejav";//"E:\\data\\phototaxis\\berlin@berlin\\2NDs_B_Square_SW_96-160\\201411201541\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.mmf";
+		String outputDir = "E:\\testing\\Java Backbone Fitting\\test badness fixer\\";
+		String inputFileName = outputDir+"0 Before any fixing\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.prejav";//"E:\\data\\phototaxis\\berlin@berlin\\2NDs_B_Square_SW_96-160\\201411201541\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.mmf";
 		
 		String args[] = new String[2];
 		args[0] = inputFileName;
-		args[1] = "E:\\testing\\Java Backbone Fitting\\test bbf subset\\newEnergySavingWFrozenDiverged\\";
+		args[1] = outputDir+"4 After Param adjustment\\";
 		
 		Experiment_Processor ep = new Experiment_Processor();
 		ep.runningFromMain = true;

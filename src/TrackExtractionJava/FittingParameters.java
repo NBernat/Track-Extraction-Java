@@ -25,7 +25,7 @@ public class FittingParameters {
 	/**
 	 * Number of points on either side of divergence event to freeze & include when trying to fix a divergence event  
 	 */
-	int divBufferSize = 100; //~7seconds of buffer
+	int divBufferSize = 50; //~7seconds of buffer
 	
 	double fracOfStdDevForBentCutoff = 0.5;
 	
@@ -40,7 +40,7 @@ public class FittingParameters {
 	int clusterMethod = 0;
 	
 	public int[] grains = {32,16, 1}; 
-	public int smallGapMaxLen = 10;//The maximum gap length for which the previous midline will be carried forward (otherwise interpolate)
+	public int smallGapMaxLen = 5;//The maximum gap length for which the previous midline will be carried forward (otherwise interpolate)
 	public int minValidSegmentLen = 50;//The minimum segment length (in frames) which is situated between two midline gaps and which is considered valid
 	public double minFlickerDist = numBBPts;//The minimum distance between spines which indicates an erroneous midline flicker 
 	public int gapDilation = 5;
