@@ -9,6 +9,8 @@ import java.util.Vector;
 
 public class TimeSmoothForce extends Force {
 
+
+	static final String defaultName = "Time-Smooth";
 	
 	public TimeSmoothForce(float[] weights, float totalWeight){
 		super(weights, totalWeight, 5, "Time-Smooth");

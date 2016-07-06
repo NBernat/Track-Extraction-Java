@@ -8,6 +8,9 @@ import ij.process.ImageProcessor;
 import ij.text.TextWindow;
 
 import java.awt.Color;
+import java.awt.Robot;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.PrintWriter;
@@ -18,6 +21,9 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Scanner;
 import java.util.Vector;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
 
 import sun.awt.SunToolkit.InfiniteLoop;
 
@@ -332,13 +338,43 @@ public class Track implements Serializable{
 	}
 	
 	public double[] getEnergyMeanStdDev(String energyType){
-		
 		double[] energies = getEnergies(energyType);
+		return getEnergyMeanStdDev(energies, energyType);
+	}
+	
+	
+	public double[] getEnergyMeanStdDev(double[] energies, String energyType){
+		
 		double[] meanStdDev = new double[2];
 		meanStdDev[0] = MathUtils.mean(energies);
 		meanStdDev[1] = MathUtils.stdDev(energies, meanStdDev[0]);
 		return meanStdDev;
 	}
+	
+	public Vector<Gap> findBapGaps(String eType, int numStdDevs){
+		return findBadGaps(eType, numStdDevs, 1);
+	}
+	
+	public Vector<Gap> findBadGaps(String eType, int numStdDevs, int minValidSegmentLen){
+		
+		double[] e = getEnergies(eType);
+		
+		double[] meanStdDev = getEnergyMeanStdDev(e, eType);
+		double thresh = meanStdDev[0] + numStdDevs*meanStdDev[1];
+		
+		boolean[] bad = new boolean[e.length];
+		for (int i=0; i<bad.length; i++){
+			bad[i] = e[i]>thresh;
+		}
+		
+		Vector<Gap> badGaps = Gap.bools2Segs(bad);
+		if (badGaps.size()>1) BBFPointListGenerator.mergeGaps(badGaps, minValidSegmentLen, null);
+		
+		
+ 		return badGaps;
+
+	}
+	
 	
 	/**
 	 * Clips and returns the list of track points indicated by the startFrame (inclusive) and endFrame (exclusive)
@@ -566,17 +602,46 @@ public class Track implements Serializable{
 			return;
 		}
 		
+		//Make a button
+		JFrame buttonFrame = new JFrame("NextIterationFrame");
+//		buttonFrame.setSize(200, 200);
+		
+		JButton nextButton = new JButton("Next Iteration");
+		nextButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+//				notify();
+			}
+		});
+		
+		buttonFrame.add(nextButton);
+		buttonFrame.setVisible(true);
+		
+		
 		BackboneFitter bbf = new BackboneFitter(this);
 		bbf.doPause = true;
-		bbf.userIn = new Scanner(System.in);
+//		bbf.userIn = new Scanner(System.in);
 		bbf.userOut = System.out;
 		
 		// TODO pass in a track fitting scheme and/or Fitting Params
 		bbf.fitTrackNewScheme();
 		
+		
+		
 	}
 	
+	public Track fitTrack(FittingParameters fp){
+		if (points==null || points.size()==0 || points.firstElement().getPointType()!=MaggotTrackPoint.pointType){
+			return null;
+		}
+		BackboneFitter bbf = new BackboneFitter(this, fp );
+		return fitTrack(bbf);
+	}
 	
+	public Track fitTrack(BackboneFitter bbf){
+		bbf.fitTrackNewScheme();
+		return bbf.workingTrack;
+	}
 	
 	public int toDisk(DataOutputStream dos, PrintWriter pw){
 		

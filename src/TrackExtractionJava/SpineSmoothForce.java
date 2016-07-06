@@ -9,6 +9,7 @@ import java.util.Vector;
 
 public class SpineSmoothForce extends Force{
 
+	static final String defaultName = "Spine-Smooth";
 	
 	public SpineSmoothForce(float[] weights, float totalWeight){
 		super(weights, totalWeight, 3, "Spine-Smooth");

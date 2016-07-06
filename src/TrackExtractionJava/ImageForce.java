@@ -9,6 +9,8 @@ import java.util.Vector;
 
 public class ImageForce extends Force {
 
+
+	static final String defaultName = "Image"; 
 	
 	public ImageForce(float[] weights, float totalWeight){
 		super(weights, totalWeight, 1,"Image");

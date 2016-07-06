@@ -1,6 +1,7 @@
 package TrackExtractionJava;
 
 import ij.process.FloatPolygon;
+
 import java.util.Arrays;
 import java.util.Vector;
 
@@ -8,6 +9,7 @@ import java.util.Vector;
 
 public class TimeLengthForce extends Force {
 
+	static final String defaultName = "Time-Length";
 	
 	public TimeLengthForce(float[] weights, float totalWeight){
 		super(weights, totalWeight, 4, "Time-Length");

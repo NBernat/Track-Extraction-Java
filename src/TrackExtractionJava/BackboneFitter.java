@@ -740,20 +740,23 @@ public class BackboneFitter {
 	
 	protected Vector<Gap> findBadGaps(){
 		
-		double[] meanStdDev = workingTrack.getEnergyMeanStdDev(params.energyTypeForBadGap);
-		double thresh = meanStdDev[0] + params.numStdDevForBadGap*meanStdDev[1];
+//		double[] meanStdDev = workingTrack.getEnergyMeanStdDev(params.energyTypeForBadGap);
+//		double thresh = meanStdDev[0] + params.numStdDevForBadGap*meanStdDev[1];
+//		
+//		double[] e = workingTrack.getEnergies(params.energyTypeForBadGap);
+//		boolean[] bad = new boolean[e.length];
+//		for (int i=0; i<bad.length; i++){
+//			bad[i] = e[i]>thresh;
+//		}
+//		
+//		Vector<Gap> badGaps = Gap.bools2Segs(bad);
+//		if (badGaps.size()>1) BBFPointListGenerator.mergeGaps(badGaps, params.minValidSegmentLen, null);
+//		
+//		
+// 		return badGaps;
 		
-		double[] e = workingTrack.getEnergies(params.energyTypeForBadGap);
-		boolean[] bad = new boolean[e.length];
-		for (int i=0; i<bad.length; i++){
-			bad[i] = e[i]>thresh;
-		}
+		return workingTrack.findBadGaps(params.energyTypeForBadGap, params.numStdDevForBadGap, params.minValidSegmentLen);
 		
-		Vector<Gap> badGaps = Gap.bools2Segs(bad);
-		if (badGaps.size()>1) BBFPointListGenerator.mergeGaps(badGaps, params.minValidSegmentLen, null);
-		
-		
- 		return badGaps;
 	}
 	
 	/**
@@ -1437,9 +1440,21 @@ public class BackboneFitter {
 		
 		outputData();
 
-		if (userOut!=null) userOut.println("Enter any character to continue...");
-		userIn.next();
-		if (userOut!=null) userOut.println("...Continuing");
+		if (userIn!=null){
+			
+			if (userOut!=null) userOut.println("Enter any character to continue...");
+			userIn.next();
+			if (userOut!=null) userOut.println("...Continuing");
+			
+		} else {
+//			try {
+//				wait();
+//			} catch (InterruptedException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+		}
+		
 		
 	}
 	

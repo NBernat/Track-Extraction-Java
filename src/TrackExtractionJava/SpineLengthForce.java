@@ -8,6 +8,8 @@ import java.util.Vector;
 
 
 public class SpineLengthForce extends Force{
+
+	static final String defaultName = "Spine-Length";
 	
 	public SpineLengthForce(float[] weights, float totalWeight){
 		super(weights, totalWeight, 2, "Spine-Length");

@@ -32,21 +32,20 @@ public class Test {//extends JFrame
 
 	public static void main(String[] args) {
 		
-		
-		
-		
-		
 		/*
-		testFitterPauseDisplay();
+		testBadTrackFinder();
 		*/
 		
+		testFitterPauseDisplay();
+		/*
+		*/
 		
 		/*
 		testSubsetInchInwards();
 		*/
 		
-		fitExperimentNewScheme();
 		/*
+		fitExperimentNewScheme();
 		*/
 		
 		/*
@@ -216,12 +215,27 @@ public class Test {//extends JFrame
 		
 	}
 	
+	public static void testBadTrackFinder(){
+		ImageJ ij = new ImageJ();
+		
+		String outputDir = "E:\\testing\\Java Backbone Fitting\\test badness fixer\\";
+		String inputFileName = outputDir+"4 After Param adjustment\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.jav";//"E:\\data\\phototaxis\\berlin@berlin\\2NDs_B_Square_SW_96-160\\201411201541\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.mmf";
+		
+		Experiment ex = new Experiment(inputFileName);
+		Experiment badEx = ex.flagBadTracks();
+		
+		if (badEx.getNumTracks()>0) {
+			badEx.showEx();
+		} else {
+			System.out.println("No bad tracks found in experiment");
+		}
+		
+		ij.quit();
+	}
 	
 	public static void testFitterPauseDisplay(){
 		ImageJ ij = new ImageJ();
 		
-		
-
 		String outputDir = "E:\\testing\\Java Backbone Fitting\\test badness fixer\\";
 		String inputFileName = outputDir+"0 Before any fixing\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.prejav";//"E:\\data\\phototaxis\\berlin@berlin\\2NDs_B_Square_SW_96-160\\201411201541\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.mmf";
 		
@@ -229,20 +243,22 @@ public class Test {//extends JFrame
 		int trackID = 4;
 		Experiment ex = new Experiment(inputFileName);
 		Track t = ex.getTrack(trackID);
-		BackboneFitter bbf = new BackboneFitter(t);
+		
+		t.showFitting();
+//		BackboneFitter bbf = new BackboneFitter(t);
 //		bbf.doPause = true;
-//		bbf.userIn = new Scanner(System.in);
+////		bbf.userIn = new Scanner(System.in);
 //		bbf.userOut = System.out;
+//		
+//		bbf.fitTrackNewScheme();
 		
-		bbf.fitTrackNewScheme();
 		
-		
-		if (bbf.getTrack()!=null){
-			Vector<Track> newTracks = new Vector<Track>();
-			newTracks.add(bbf.getTrack());
-			Experiment newExperiment = new Experiment(ex, newTracks);
-			newExperiment.showEx();
-		}
+//		if (bbf.getTrack()!=null){
+//			Vector<Track> newTracks = new Vector<Track>();
+//			newTracks.add(bbf.getTrack());
+//			Experiment newExperiment = new Experiment(ex, newTracks);
+//			newExperiment.showEx();
+//		}
 		
 		ij.quit();
 	}
@@ -314,9 +330,9 @@ public class Test {//extends JFrame
 		
 		String outputDir = "E:\\testing\\Java Backbone Fitting\\test bbf subset\\";
 		String inputFileName = outputDir+"Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.prejav";
-		int trackInd = 49;
+		int trackID = 4;
 		Experiment ex = new Experiment(inputFileName);
-		Track t = ex.getTrackFromInd(trackInd);
+		Track t = ex.getTrack(trackID);
 		BackboneFitter bbf = new BackboneFitter(t);
 		
 		bbf.fitTrackNewScheme();
@@ -324,6 +340,7 @@ public class Test {//extends JFrame
 		
 		if (bbf.getTrack()!=null){
 			Vector<Track> newTracks = new Vector<Track>();
+			newTracks.add(t);
 			newTracks.add(bbf.getTrack());
 			Experiment newExperiment = new Experiment(ex, newTracks);
 			newExperiment.showEx();

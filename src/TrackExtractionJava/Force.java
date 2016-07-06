@@ -16,6 +16,8 @@ public class Force {
 	 */
 	final String name;
 	
+	static final String defaultName = "Null"; 
+	
 
 	protected float[] weights;
 	
@@ -93,7 +95,6 @@ public class Force {
 	public String getName(){
 		return name;
 	}
-
 	
 	public boolean prevValid(Vector<BackboneTrackPoint> allBTPs, int ind, int numPrev){
 		return ind-numPrev>=0 &&

@@ -118,6 +118,34 @@ public class Experiment implements Serializable{
 		Forces = exOld.Forces;
 	}
 	
+	public Experiment flagBadTracks(){
+		FittingParameters fp = new FittingParameters(); 
+		
+		int numStdDevs = fp.numStdDevForBadGap;
+		int minValidSegmentLen = fp.minValidSegmentLen;
+		String[] eTypes = {TimeLengthForce.defaultName, ImageForce.defaultName};
+		
+		return flagBadTracks(eTypes, numStdDevs, minValidSegmentLen);
+	}
+	
+	public Experiment flagBadTracks(String[] eTypes, int numStdDevs, int minValidSegmentLen){
+		
+		Vector<Track> badTracks = new Vector<Track>();
+		for (Track t : tracks){
+			boolean in = false;
+			for (String eType : eTypes) {
+				if (!in && t.findBadGaps(eType, numStdDevs, minValidSegmentLen).size()>0) {
+					badTracks.add(t);
+					in = true;
+				}
+			}
+			
+		}
+		
+		Experiment badEx = new Experiment(this, badTracks);
+		return badEx;
+	}
+	
 	public int toDisk(DataOutputStream dos, PrintWriter pw){
 		
 		

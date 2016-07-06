@@ -30,7 +30,7 @@ public class FittingParameters {
 	double fracOfStdDevForBentCutoff = 0.5;
 	
 	String energyTypeForBadGap = "Time-Length";
-	int numStdDevForBadGap = 5;
+	int numStdDevForBadGap = 10;
 	int edgeSize = 1; //number of frames in the "edge" when fitting by inching inwards
 	
 	/*
@@ -41,7 +41,7 @@ public class FittingParameters {
 	
 	public int[] grains = {32,16, 1}; 
 	public int smallGapMaxLen = 5;//The maximum gap length for which the previous midline will be carried forward (otherwise interpolate)
-	public int minValidSegmentLen = 50;//The minimum segment length (in frames) which is situated between two midline gaps and which is considered valid
+	public int minValidSegmentLen = 20;//The minimum segment length (in frames) which is situated between two midline gaps and which is considered valid
 	public double minFlickerDist = numBBPts;//The minimum distance between spines which indicates an erroneous midline flicker 
 	public int gapDilation = 5;
 	public boolean dilateToEdges = true;
