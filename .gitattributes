@@ -22,4 +22,5 @@
 *.RTF	 diff=astextplain
 
 #Fix line end issues
+*.classpath text
 *.java text
