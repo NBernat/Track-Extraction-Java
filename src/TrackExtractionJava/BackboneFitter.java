@@ -192,7 +192,7 @@ public class BackboneFitter {
 		if (!generateFullWorkingTrack(tr)) {//creates the new track
 			comm.message("Error converting track points to btp", VerbLevel.verb_error);
 		}
-		 
+		tr.setVarianceFromHTdist(); //to use gmm clustering image force with fixed variance
 		
 	}
 	

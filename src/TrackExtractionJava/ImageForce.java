@@ -54,7 +54,10 @@ public class ImageForce extends Force {
 				targetX[k] = targetX[k]/norm[k];
 				targetY[k] = targetY[k]/norm[k];
 			} else {
-				// TODO if target[k]==0, move it halfway between curr location and COM of pix?
+				double alpha = 0.2;
+				targetX[k] = (float) (alpha * btp.getX() + (1-alpha) * btp.getBackbone()[0][k]);
+				targetY[k] = (float) (alpha * btp.getY() + (1-alpha) * btp.getBackbone()[1][k]);
+				// TODONE if target[k]==0, move it (alpha) of the way between curr location and COM of pix?
 			}
 		}
 		

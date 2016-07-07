@@ -37,6 +37,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	private transient int numPix;
 	/**
 	 * A list of X Coordinates of points that are considered as part of the maggot 
+	 * QUESTION: These coordinates are referenced to original video image, not to subimage stored in ImTrackPoint ?
 	 * <p>
 	 * Contains numPix valid elements
 	 */
@@ -71,6 +72,8 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	 * The number of points in the backbone
 	 */
 	private int numBBPts;
+	
+	private transient double gmmClusterVariance = -1;
 	
 	/**
 	 * The backbone of the maggot
@@ -117,6 +120,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	public BackboneTrackPoint(double x, double y, Rectangle rect, double area,
 			int frame, int thresh) {
 		super(x, y, rect, area, frame, thresh);
+		//QUESTION: needs numBBPts?
 	}
 	
 	
@@ -321,26 +325,30 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	}
 	
 	private void setGaussianMixtureWeights(){
-
-		double var = calcVariance();
 		
-		double[] wDenom = new double[numPix]; 
-		//Calculate the denominator of the weight
+		double var = (gmmClusterVariance <= 0) ? calcVariance() : gmmClusterVariance;
+		setVoronoiClusters();
 		for (int pix=0; pix<numPix; pix++){
 			for (int cl=0; cl<numBBPts; cl++){
-				wDenom[pix] += Math.exp(((-0.5)*calcDistSqrBtwnPixAndBBPt(cl, pix))/var);
+				MagPixWnew[cl][pix] = 0;
 			}
 		}
-		
-		//Calculate the weight
 		for (int pix=0; pix<numPix; pix++){
-			for (int cl=0; cl<numBBPts; cl++){
-				double wNumer = Math.exp(((-0.5)*calcDistSqrBtwnPixAndBBPt(cl, pix))/var);
-				MagPixWnew[cl][pix] = wNumer/wDenom[pix];
+			double denom = 0;
+			for (int cl = clusterInds[pix] - 1; cl < numBBPts; cl++ ) {
+				if (cl < 0){
+					continue;
+				}
+				MagPixWnew[cl][pix] = Math.exp(((-0.5)*calcDistSqrBtwnPixAndBBPt(cl, pix))/var);
+				denom += MagPixWnew[cl][pix];
 			}
-		}
-			
-		
+			for (int cl = clusterInds[pix] - 1; cl < numBBPts; cl++ ) {
+				if (cl < 0){
+					continue;
+				}
+				MagPixWnew[cl][pix] /= denom;
+			}
+		}	
 	}
 	
 	private double calcVariance(){
@@ -822,6 +830,14 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 			return "Empty BackboneTrackPoint";
 		}
 		return "BackboneTrackPoint";
+	}
+
+	public double getGmmClusterVariance() {
+		return gmmClusterVariance;
+	}
+
+	public void setGmmClusterVariance(double gmmClusterVariance) {
+		this.gmmClusterVariance = gmmClusterVariance;
 	}
 	
 }
