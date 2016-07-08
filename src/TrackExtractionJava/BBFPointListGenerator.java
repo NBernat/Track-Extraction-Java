@@ -217,6 +217,7 @@ public class BBFPointListGenerator {
 					}
 					return cleanUpBTPs(findEmptyMids(), params.minFlickerDist*grain);
 				}
+				workingTrack.setVarianceFromHTdist(2);//TODO make parameter? sets sqrt(variance) to 1/2 distance between backbone points
 				
 				return true;
 			}

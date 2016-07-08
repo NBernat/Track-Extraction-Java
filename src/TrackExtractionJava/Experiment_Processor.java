@@ -204,7 +204,7 @@ public class Experiment_Processor implements PlugIn{
 			log("Done Processing");
 			
 		} catch (Exception e){
-			
+			e.printStackTrace(processLog);			
 		} finally {
 			if (processLog!=null) processLog.close();
 			if (prParams.closeMMF && mmfWin!=null) {

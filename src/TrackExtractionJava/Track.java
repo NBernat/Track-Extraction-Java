@@ -298,7 +298,7 @@ public class Track implements Serializable{
 			if (mtp.htValid){
 				HTdist[i]=Math.sqrt((mtp.head.x-mtp.tail.x)*(mtp.head.x-mtp.tail.x) + (mtp.head.y-mtp.tail.y)*(mtp.head.y-mtp.tail.y) );
 			} else {
-				HTdist[i] = Double.POSITIVE_INFINITY; //QUESTION: Ok to change to NEGATIVE_INFINITY?
+				HTdist[i] = Double.NEGATIVE_INFINITY; //QUESTION: Ok to change to NEGATIVE_INFINITY?
 			}
 		}
 		return HTdist;
@@ -309,7 +309,12 @@ public class Track implements Serializable{
 	 * @param pointSpacingInSigmas
 	 */
 	public void setVarianceFromHTdist (double pointSpacingInSigmas) {
-		
+		if (points.isEmpty()) {
+			return;
+		}
+		if (!(points.firstElement() instanceof BackboneTrackPoint)){
+			return;
+		}
 		double[] HTdist = getHTdists();
 		java.util.Arrays.sort(HTdist);
 		double medianLength = HTdist[HTdist.length/2];

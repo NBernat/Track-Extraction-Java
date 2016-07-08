@@ -32,11 +32,13 @@ public class Test {//extends JFrame
 
 	public static void main(String[] args) {
 		
+		fitExperimentNewScheme();
+		
 		/*
 		testBadTrackFinder();
 		*/
 		
-		testFitterPauseDisplay();
+		//testFitterPauseDisplay();
 		/*
 		*/
 		
@@ -299,19 +301,20 @@ public class Test {//extends JFrame
 		
 		ImageJ ij = new ImageJ();
 		
-		String outputDir = "E:\\testing\\Java Backbone Fitting\\test badness fixer\\";
-		String inputFileName = outputDir+"0 Before any fixing\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.prejav";//"E:\\data\\phototaxis\\berlin@berlin\\2NDs_B_Square_SW_96-160\\201411201541\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.mmf";
+		String outputDir = "E:\\test\\trackTest\\output\\";
+		String inputFileNamePreJav = "E:\\test\\trackTest\\output\\Or42a(3)@Chrimson(3)_R_WN_S3_112Hz_B_5P_2ohm_atR+_201407211915.prejav";
+		String inputFileName = "E:\\test\\trackTest\\201407211915\\Or42a(3)@Chrimson(3)_R_WN_S3_112Hz_B_5P_2ohm_atR+_201407211915.mmf";
 		
 		String args[] = new String[2];
-		args[0] = inputFileName;
-		args[1] = outputDir+"4 After Param adjustment\\";
+		args[0] = inputFileNamePreJav;
+		args[1] = outputDir;
 		
 		Experiment_Processor ep = new Experiment_Processor();
 		ep.runningFromMain = true;
 		ExtractionParameters exP = new ExtractionParameters();
 		exP.subset = true;
-		exP.startFrame = 1;
-		exP.endFrame = 2000;
+		exP.startFrame = 2000;
+		exP.endFrame = 4000;
 
 		ProcessingParameters pp = new ProcessingParameters();
 		pp.doFitting = true;
