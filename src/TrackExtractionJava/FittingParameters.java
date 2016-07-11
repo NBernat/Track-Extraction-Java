@@ -30,7 +30,7 @@ public class FittingParameters {
 	double fracOfStdDevForBentCutoff = 0.5;
 	
 	String energyTypeForBadGap = "Time-Length";
-	int numStdDevForBadGap = 10;
+	int numStdDevForBadGap = 5;
 	int edgeSize = 1; //number of frames in the "edge" when fitting by inching inwards
 	
 	/*
