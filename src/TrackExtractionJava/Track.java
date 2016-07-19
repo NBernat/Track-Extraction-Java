@@ -635,24 +635,24 @@ public class Track implements Serializable{
 		}
 		
 		//Make a button
-		JFrame buttonFrame = new JFrame("NextIterationFrame");
-//		buttonFrame.setSize(200, 200);
-		
-		JButton nextButton = new JButton("Next Iteration");
-		nextButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
+//		JFrame buttonFrame = new JFrame("NextIterationFrame");
+////		buttonFrame.setSize(200, 200);
+//		
+//		JButton nextButton = new JButton("Next Iteration");
+//		nextButton.addActionListener(new ActionListener() {
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
 //				notify();
-			}
-		});
-		
-		buttonFrame.add(nextButton);
-		buttonFrame.setVisible(true);
+//			}
+//		});
+//		
+//		buttonFrame.add(nextButton);
+//		buttonFrame.setVisible(true);
 		
 		
 		BackboneFitter bbf = new BackboneFitter(this);
 		bbf.doPause = true;
-//		bbf.userIn = new Scanner(System.in);
+		bbf.userIn = new Scanner(System.in);
 		bbf.userOut = System.out;
 		
 		// TODO pass in a track fitting scheme and/or Fitting Params

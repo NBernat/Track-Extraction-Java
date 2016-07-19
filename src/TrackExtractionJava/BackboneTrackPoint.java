@@ -489,6 +489,38 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		}
 	}
 	
+	public float[] getCOM(){
+		
+		return getClusterCOM(-1);
+		
+	}
+	
+	public float[] getClusterCOM(int cluster){
+		
+		if (MagPixI==null || MagPixI.length==0 || cluster>=numBBPts){
+			float[] err = {-1,-1};
+			return err;
+		}
+		
+		float[] com = new float[2];
+		float comNorm = 0;
+		for (int i=0; i<MagPixI.length; i++){
+			if (cluster==-1 || clusterInds[i]==cluster){
+				int mpi = MagPixI[i];
+				
+				com[0]+=mpi*MagPixX[i];
+				com[1]+=mpi*MagPixY[i];
+				comNorm+=mpi;
+			}
+		}
+		
+		com[0]=com[0]/comNorm;
+		com[1]=com[1]/comNorm;
+		
+		return com;
+		
+	}
+	
 	public boolean getArtificialMid(){
 		return artificialMid;
 	}

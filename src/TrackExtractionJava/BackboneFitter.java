@@ -394,6 +394,7 @@ public class BackboneFitter {
 		hideGapPoints = false;
 		spp.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
 		spp.freezeDiverged = true;
+		spp.imageWeight = spp.imageWeight*2;
 		resetParams(spp);
 		if (userOut!=null) userOut.println("Fitting Bent Subsets: "+bentLarvae.toString());
 		fitSubsets(bentLarvae, hideGapPoints);
@@ -409,7 +410,10 @@ public class BackboneFitter {
 		patchParams.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
 		patchParams.freezeDiverged = true;
 		patchParams.leaveBackbonesInPlace = true;
+		patchParams.imageWeight = patchParams.imageWeight*2;
 		resetParams(patchParams); 
+//		Vector<Gap> divGaps = divergedGaps;//new Vector<Gap>();
+//		divGaps.addAll(divergedGaps);
 		for (Gap divG : divergedGaps){
 //			patchTrackSubset(divG, params.divergedPatchBuffer, patchParams);
 			boolean doPrev =  divG.start != 0;
@@ -429,10 +433,11 @@ public class BackboneFitter {
 		edgeParams.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
 		edgeParams.freezeDiverged = true;
 		edgeParams.leaveBackbonesInPlace = true;
+		edgeParams.imageWeight = edgeParams.imageWeight*2;
 		resetParams(edgeParams); 
-//		int count = 0;
-//		int maxCount = 10;
-//		while (badGaps.size()>0 && count<maxCount){
+		int count = 0;
+		int maxCount = 10;
+		while (badGaps.size()>0 && count<maxCount){
 			for (Gap badG : badGaps){
 				boolean doPrev =  badG.start != 0;
 				boolean doNext =  badG.end != (workingTrack.getNumPoints()-1);
@@ -440,8 +445,9 @@ public class BackboneFitter {
 				patchGap_InchInwards(badG, params.edgeSize, doPrev, doNext);
 			}
 			badGaps = findBadGaps();
-//			count++;
-//		}
+			count++;
+			params.imageWeight=params.imageWeight*1.02f;
+		}
 		
 		//Do final run on the whole track for continuity
 		spp = FittingParameters.getSinglePassParams();
@@ -1200,6 +1206,7 @@ public class BackboneFitter {
 
 			if (makeString) st.append(Forces.get(tb).name+": ");
 			
+			//note that getWeights should be called after getTargetPoints
 			float[] targetX = targetBackbones.get(tb).xpoints;
 			float[] targetY = targetBackbones.get(tb).ypoints;
 			float[] weights = Forces.get(tb).getWeights();
