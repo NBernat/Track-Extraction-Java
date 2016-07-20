@@ -3,7 +3,7 @@
 	<name>Track-Extraction-Java</name>
 	<comment></comment>
 	<projects>
-		<project>MMF-ImageJ-Plugin</project>
+		<project>mmf_reader</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

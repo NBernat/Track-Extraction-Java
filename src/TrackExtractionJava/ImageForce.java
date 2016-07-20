@@ -12,12 +12,16 @@ public class ImageForce extends Force {
 
 	static final String defaultName = "Image"; 
 	
+	private float[] persistentWeights;
+	
 	public ImageForce(float[] weights, float totalWeight){
 		super(weights, totalWeight, 1,"Image");
-		
+		persistentWeights = weights.clone();
 	}
 	
 	public FloatPolygon getTargetPoints(int btpInd, Vector<BackboneTrackPoint> allBTPs){
+		
+		weights = persistentWeights.clone();
 		
 		BackboneTrackPoint btp = allBTPs.get(btpInd);
 		int numBBPts = btp.getNumBBPoints();
@@ -54,17 +58,23 @@ public class ImageForce extends Force {
 		}
 		
 		//Normalize the coordinates 
-		int numOut = 0 ;
+		//int numOut = 0 ;
 		for (int k=0; k<numBBPts; k++){
 			if (norm[k]!=0){
 				targetX[k] = targetX[k]/norm[k];
 				targetY[k] = targetY[k]/norm[k];
 			} else {
-				numOut++;
+				//if no cluster associated with point, move to nearest contour point and reduce image weight. 
+				double alpha = 0.1;
+				int[] ncp = btp.getNearestContourPoint(btp.getBackbone()[0][k], btp.getBackbone()[1][k]);
+				targetX[k] = ncp[0];
+				targetY[k] = ncp[1];
+				weights[k] *= alpha;
+				// numOut++; //for alternate method below
 				
 			}
 		}
-		
+		/* alternate method - use nearest cluster location
 		//Move target points back in the maggot region
 		float fracToCluster = 0.2f;
 		for (int k=0; numOut>0 && k<numBBPts; k++){
@@ -89,6 +99,7 @@ public class ImageForce extends Force {
 				numOut--;
 			}
 		}
+		*/
 		
 		
 		return new FloatPolygon(targetX, targetY);

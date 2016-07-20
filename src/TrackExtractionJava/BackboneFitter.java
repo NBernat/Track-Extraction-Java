@@ -184,7 +184,6 @@ public class BackboneFitter {
 		if (!generateFullWorkingTrack(tr)) {//creates the new track
 			comm.message("Error converting track points to btp", VerbLevel.verb_error);
 		}
-		 
 		
 	}
 	
@@ -521,6 +520,7 @@ public class BackboneFitter {
 	}
 	private Vector<Gap> findBentGaps(double[] htDists, double mean, double stdDev){
 		
+		//TODO: add artificial midlines to bent gaps
 		
 		boolean[] bent = new boolean[htDists.length];
 		for (int i=0; i<bent.length; i++){
@@ -1194,6 +1194,7 @@ public class BackboneFitter {
 		for (int tb = 0; tb < targetBackbones.size(); tb++) {
 
 			
+			//note that getWeights should be called after getTargetPoints
 			float[] targetX = targetBackbones.get(tb).xpoints;
 			float[] targetY = targetBackbones.get(tb).ypoints;
 			float[] weights = Forces.get(tb).getWeights();

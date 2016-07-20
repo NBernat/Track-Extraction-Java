@@ -19,6 +19,14 @@ import java.util.Scanner;
 import java.util.Vector;
 
 
+/**
+ * @author Marc Gershow
+ *
+ */
+/**
+ * @author Marc Gershow
+ *
+ */
 public class Track implements Serializable{
 	
 	/**
@@ -281,11 +289,35 @@ public class Track implements Serializable{
 			if (mtp.htValid){
 				HTdist[i]=Math.sqrt((mtp.head.x-mtp.tail.x)*(mtp.head.x-mtp.tail.x) + (mtp.head.y-mtp.tail.y)*(mtp.head.y-mtp.tail.y) );
 			} else {
-				HTdist[i] = Double.POSITIVE_INFINITY;
+				HTdist[i] = Double.NEGATIVE_INFINITY; //QUESTION: Ok to change to NEGATIVE_INFINITY?
 			}
 		}
 		return HTdist;
 	}
+	/**
+	 * sets the clustering variance as a fraction of the median HT distance of the maggots
+	 * the variance is set to the square of (median distance/(num backbone points * pointSpacingInSigmas))
+	 * @param pointSpacingInSigmas
+	 */
+	public void setVarianceFromHTdist (double pointSpacingInSigmas) {
+		if (points.isEmpty()) {
+			return;
+		}
+		if (!(points.firstElement() instanceof BackboneTrackPoint)){
+			return;
+		}
+		double[] HTdist = getHTdists();
+		java.util.Arrays.sort(HTdist);
+		double medianLength = HTdist[HTdist.length/2];
+		for (int i=0;i<points.size(); i++) {
+			BackboneTrackPoint btp= (BackboneTrackPoint) points.get(i);
+			btp.setGmmClusterVariance(medianLength*medianLength/(pointSpacingInSigmas*pointSpacingInSigmas*btp.getNumBBPoints()*btp.getNumBBPoints()));
+		}
+	}
+	public void setVarianceFromHTdist () {
+		setVarianceFromHTdist(2);
+	}
+	
 	
 	/**
 	 * Calculates trackpoint energies using default fitting parameters

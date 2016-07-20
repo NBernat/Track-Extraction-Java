@@ -663,6 +663,22 @@ public class MaggotTrackPoint extends ImTrackPoint {
 //		return cont;
 //	}
 	
+	public int[] getNearestContourPoint (double x, double y) {
+		double dist = Double.MAX_VALUE;
+		if (contourX.length == 0){
+			return null;
+		}
+		int ind = 0;
+		for (int j = 0; j < contourX.length; ++j) {
+			double tempdist = (x-contourX[j])*(x-contourX[j]) + (y-contourY[j])*(y-contourY[j]);
+			if (tempdist < dist) {
+				dist = tempdist;
+				ind = j;
+			}
+		}
+		return new int[] {contourX[ind], contourY[ind]};
+	}
+	
 	public int[][] getContourArray(){
 		
 		int[][] ar = new int[2][contourX.length];

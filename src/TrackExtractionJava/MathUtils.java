@@ -7,10 +7,32 @@ import java.awt.Color;
 public class MathUtils {
 
 	
+	public static double[] removeNonFinite(double[] vals) {
+		int n = 0;
+		for (double v : vals) {
+			if (!Double.isNaN(v) && !Double.isInfinite(v)) {
+				++n;
+			}
+		}
+		double[] newvals = new double[n];
+		int j = 0;
+		for (double v : vals) {
+			if (!Double.isNaN(v) && !Double.isInfinite(v)) {
+				newvals[j++] = v;
+			}
+		}
+		return newvals;
+		
+	}
 	
+	public static double mean(double[] vals) {
+		return mean(vals, true);
+	}
 	
-	
-	public static double mean(double[] vals){
+	public static double mean(double[] vals, boolean cleanInfinities){
+		if (cleanInfinities) {
+			vals = removeNonFinite(vals);
+		}
 		double sum=0;
 		for(int i=0; i<vals.length; i++){
 			sum += vals[i];
@@ -19,17 +41,23 @@ public class MathUtils {
 	}
 	
 	public static double stdDev(double[] vals){
-		return stdDev(vals, mean(vals));
+		vals = removeNonFinite(vals);
+		return stdDev(vals, mean(vals,false), false);
 	}
 	
-	public static double stdDev(double[] vals, double mean){
-		
+	public static double stdDev(double[] vals, double mean, boolean cleanInfinities){
+		if (cleanInfinities) {
+			vals = removeNonFinite(vals);
+		}
 		double varSum = 0;
 		for(int i=0; i<vals.length; i++){
 			varSum += (vals[i]-mean)*(vals[i]-mean);
 		}
 		
 		return Math.sqrt(varSum/vals.length);
+	}
+	public static double stdDev(double[] vals, double mean){
+		return stdDev(vals, mean, true);
 	}
 	
 	/**

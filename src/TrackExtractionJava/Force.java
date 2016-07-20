@@ -25,7 +25,7 @@ public class Force {
 	public Force(float[] weights, float totalWeight){
 		type = -1;
 		name = "Null";
-		this.weights = weights;
+		this.weights = weights.clone();
 		for (int i=0; i<this.weights.length; i++) this.weights[i] = this.weights[i]*totalWeight;
 	}
 	
@@ -34,7 +34,7 @@ public class Force {
 	protected Force(float[] weights, float totalWeight, int type, String name){
 		this.type = type;
 		this.name = name;
-		this.weights = weights;
+		this.weights = weights.clone();
 		for (int i=0; i<this.weights.length; i++) this.weights[i] = this.weights[i]*totalWeight;
 	}
 
@@ -44,7 +44,7 @@ public class Force {
 	
 
 	public float[] getWeights(){
-		return weights;
+		return weights.clone();
 	}
 	
 

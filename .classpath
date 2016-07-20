@@ -6,9 +6,8 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/Natalie/Documents/GitHub/MMF-ImageJ-Plugin"/>
-	<classpathentry kind="src" path="/MMF-ImageJ-Plugin"/>
-	<classpathentry kind="lib" path="C:/Fiji.app/jars/ij-1.50e.jar"/>
+	<classpathentry kind="lib" path="E:/Fiji.app/jars/ij-1.50e.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/mmf_reader"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
