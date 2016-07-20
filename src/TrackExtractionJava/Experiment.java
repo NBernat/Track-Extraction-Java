@@ -43,33 +43,30 @@ public class Experiment implements Serializable{
 	 */
 	private ExtractionParameters ep;
 	/**
-	 * List of IDs that contain CollisionTracks
+	 * List of IDs that contain CollisionTracks (Currently unused)
 	 */
-//	Vector<Integer> collisionTrackIDs;
+	//Vector<Integer> collisionTrackIDs;
+	
 	/**
 	 * List of tracks contained within the experiment
 	 */
 	Vector<Track> tracks;
+	
 	/**
-	 * 
+	 * Default Constructor
 	 */
-	private Vector<Force> Forces;
+	public Experiment(){}
 	
-	public Experiment(){
-		
-	}
-	
+	/**
+	 * Constructs an experiment from a file
+	 * @param filename The name of a file created by Experiment.toDisk() (e.g. *.jav, *.prejav)
+	 */
 	public Experiment(String filename){
 		try {
 			fname = filename;
 			ep = new ExtractionParameters();
-//			Forces = ;
-			
-			//TODO use experiment_Processor functions
 			DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(new File(filename))));
-			
-			loadFromDisk(dis, null);//new PrintWriter(System.out));
-//			System.out.println("Experiment loaded; "+tracks.size()+" tracks"); 
+			loadFromDisk(dis, null);
 		} catch (Exception e){
 			StringWriter sw = new StringWriter();
 			PrintWriter prw = new PrintWriter(sw);
@@ -79,46 +76,51 @@ public class Experiment implements Serializable{
 	}
 	
 	/**
-	 * Constructs an Experiment object
-	 * @param fname
-	 * @param ep
-	 * @param collisionTrackIDs
-	 * @param tracks
+	 * Constructs an experiment from a trackbuilder object
+	 * @param tb The trackbuilder containing extracted tracks
 	 */
-//	public Experiment(String fname, ExtractionParameters ep, Vector<Integer> collisionTrackIDs, Vector<Track> tracks) {
-//		init(fname, ep, tracks);
-////		init(fname, ep, collisionTrackIDs, tracks);
-//	}
-	
 	public Experiment(TrackBuilder tb){
 		init("", tb.ep,tb.finishedTracks);
-//		init("", tb.ep, tb.finishedColIDs, tb.finishedTracks);
 	}
 	
 	
 	
-	
+	/**
+	 * A private initializer
+	 * @param fname Name of file containing experiment
+	 * @param ep Extraction Parameters, ideally associated with the extraction of this Experiment's tracks (though sometimes just defaults) 
+	 * @param tracks The exmeriment's tracks
+	 */
 	private void init(String fname, ExtractionParameters ep, Vector<Track> tracks) {
 		this.fname = fname;
 		this.ep = ep;
-//		this.collisionTrackIDs = collisionTrackIDs;
 		this.tracks = tracks;
 	}
 	
+	/**
+	 * Constructs an experiment by cloning another experiment's data
+	 * @param exOld The old experiment to be cloned
+	 */
 	@SuppressWarnings("unchecked")
 	public Experiment(Experiment exOld){
 		init(exOld.fname, exOld.ep, (Vector<Track>)exOld.tracks.clone());
-//		init(exOld.fname, exOld.ep, exOld.collisionTrackIDs, (Vector<Track>)exOld.tracks.clone());
-		Forces = exOld.Forces;
 	}
 
+	/**
+	 * Constructs an experiment by cloning an old experiment but replacing the tracks
+	 * @param exOld The old experiemnt to be cloned
+	 * @param newTracks The tracks to replace exOld's tracks
+	 */
 	public Experiment(Experiment exOld, Vector<Track> newTracks){
 		init(exOld.fname, exOld.ep, newTracks);
-//		init(exOld.fname, exOld.ep, exOld.collisionTrackIDs, (Vector<Track>)exOld.tracks.clone());
-		Forces = exOld.Forces;
 	}
 	
+	/**
+	 * Finds "bad" tracks, using (and defining) default parameters to decide what is "bad" 
+	 * @return An experiment containing tracks noted as "bad"
+	 */
 	public Experiment flagBadTracks(){
+		
 		FittingParameters fp = new FittingParameters(); 
 		
 		int numStdDevs = fp.numStdDevForBadGap;
@@ -126,6 +128,7 @@ public class Experiment implements Serializable{
 		String[] eTypes = {TimeLengthForce.defaultName, ImageForce.defaultName};
 		
 		return flagBadTracks(eTypes, numStdDevs, minValidSegmentLen);
+		
 	}
 	
 	public Experiment flagBadTracks(String[] eTypes, int numStdDevs, int minValidSegmentLen){
@@ -229,7 +232,7 @@ public class Experiment implements Serializable{
 			if (pw!=null) pw.println("Setting parameters");
 			ex.fname = filename;
 			ex.ep = exParam;
-			ex.Forces = fp.getForces(0);
+//			ex.Forces = fp.getForces(0);
 			if (pw!=null) pw.println("Loading from Disk... ");
 			ex.loadFromDisk(dis, pw);
 			if (pw!=null) pw.println("...load from disk complete");
@@ -460,6 +463,8 @@ public class Experiment implements Serializable{
 	private static void skip2trackN(int n, DataInputStream dis, int pointType, PrintWriter pw) throws IOException{
 		for(int i=0; i<n;i++){
 			Track.fromDisk(dis, pointType, null, null);
+			
+			// TODO Correct calculation of sizeOnDisk & use this vvv instead
 //			int skip = dis.readInt();
 //			System.out.println("Skipping "+skip+" bytes");
 //			dis.skipBytes(skip);
@@ -468,11 +473,9 @@ public class Experiment implements Serializable{
 	
 	
 	private void loadFromDisk(DataInputStream dis, PrintWriter pw){
-//		System.out.println("Loading from disk...");
 		int progress = -2;
 		try{
 
-//			System.out.println("Loading from disk...");
 			//Read the Experiment Type
 			int tpType = dis.readInt();
 			if (pw!=null) pw.println("==> trackpoint type "+tpType);
@@ -488,7 +491,6 @@ public class Experiment implements Serializable{
 			progress = 0;
 			Track nextTrack;
 			for (int i=0; i<numTracks; i++){
-
 				if (pw!=null) pw.println("==> Track "+i+"/"+(numTracks-1));
 				nextTrack = Track.fromDisk(dis, tpType, this, pw);
 				if (nextTrack==null) {
@@ -496,14 +498,9 @@ public class Experiment implements Serializable{
 					return;
 				}
 				tracks.add(nextTrack);
-				
 				progress++;//= # of tracks loaded
-				
-				//TODO ask for garbage collection
 			}
 
-//			System.out.println("...done loading!");
-			
 		} catch (Exception e){
 			if (pw!=null) pw.println("Error: progress code "+progress);
 			System.out.println("...Error loading");
@@ -661,13 +658,13 @@ public class Experiment implements Serializable{
 		tracks.remove(t);
 	}
 	
-	public Vector<Force> getForces(){
-		return Forces;
-	}
-	
-	public void setForces(Vector<Force> Forces){
-		this.Forces = Forces;
-	}
+//	public Vector<Force> getForces(){
+//		return Forces;
+//	}
+//	
+//	public void setForces(Vector<Force> Forces){
+//		this.Forces = Forces;
+//	}
 	
 	
 	public void replaceTrack(Track newTrack, int ind){

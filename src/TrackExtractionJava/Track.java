@@ -2,7 +2,6 @@ package TrackExtractionJava;
 
 import ij.ImagePlus;
 import ij.ImageStack;
-import ij.gui.Plot;
 import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
 import ij.text.TextWindow;
@@ -920,7 +919,7 @@ public class Track implements Serializable{
 		return makeDescription("X", null, "");
 	}
 	
-	
+	/*
 	public void showEnergyPlot(){
 		
 		Plot plot = new Plot("Example plot", "Frame", "Energy");
@@ -958,7 +957,7 @@ public class Track implements Serializable{
 		
 		plot.show();
 	}
-	
+	*/
 
 	
 		
