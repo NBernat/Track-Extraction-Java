@@ -19,7 +19,8 @@ public class FittingParameters {
 	int endInd = 1000;
 	
 	
-	boolean storeEnergies = true;
+	boolean storeEnergies = false;
+//	boolean storeCommOutput = false;
 
 	
 	/**

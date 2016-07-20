@@ -9,7 +9,6 @@ import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;

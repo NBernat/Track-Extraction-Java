@@ -8,9 +8,6 @@ import ij.process.ImageProcessor;
 import ij.text.TextWindow;
 
 import java.awt.Color;
-import java.awt.Robot;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.PrintWriter;
@@ -21,11 +18,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Scanner;
 import java.util.Vector;
-
-import javax.swing.JButton;
-import javax.swing.JFrame;
-
-import sun.awt.SunToolkit.InfiniteLoop;
 
 
 public class Track implements Serializable{

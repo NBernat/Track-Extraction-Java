@@ -1,5 +1,8 @@
 package TrackExtractionJava;
 
+import java.io.File;
+import java.io.PrintWriter;
+
 
 public class Communicator {
 	/**
@@ -33,7 +36,24 @@ public class Communicator {
 		return "Communicator at verbosity level "+verbosity.name()+lb+outString;
 	}
 	
-
+	
+	public void saveOutput(String dstDir, String fileName){
+		if (!outString.equals("")){
+			PrintWriter out;
+			File f =new File(dstDir+fileName+".txt"); 
+			try{
+				if (!f.exists()) f.createNewFile();
+				out = new PrintWriter(f);
+				out.print(outString);
+				
+			} catch (Exception e){
+				e.printStackTrace();
+			}
+			
+		 }
+	}
+	
+	
 }
 
 

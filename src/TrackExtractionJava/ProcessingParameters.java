@@ -74,6 +74,9 @@ public class ProcessingParameters {
 	
 	public boolean saveSysOutToFile = true;
 	
+	boolean saveFittingOutput = false;
+	boolean saveExtractionOutput = false;
+	
 	boolean testMagFromDisk = false;
 	boolean testFitFromDisk = false;
 	

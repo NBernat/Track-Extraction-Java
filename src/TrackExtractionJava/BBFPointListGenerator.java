@@ -26,8 +26,8 @@ public class BBFPointListGenerator {
 	protected boolean clipEnds;// = false;
 	protected int BTPstartFrame;// = -1;
 	protected int BTPendFrame;// = -1;
-	private Vector<TrackPoint> startClippings;
-	private Vector<TrackPoint> endClippings;
+	protected Vector<TrackPoint> startClippings;
+	protected Vector<TrackPoint> endClippings;
 	
 	
 	public BBFPointListGenerator(BackboneFitter bbf, Track track, FittingParameters fp, Communicator comm) {

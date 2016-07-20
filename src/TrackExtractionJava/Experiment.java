@@ -146,7 +146,12 @@ public class Experiment implements Serializable{
 		return badEx;
 	}
 	
+	
 	public int toDisk(DataOutputStream dos, PrintWriter pw){
+		return toDisk(dos, pw, false);
+	}
+	
+	public int toDisk(DataOutputStream dos, PrintWriter pw, boolean verbose){
 		
 		
 		if (tracks.size()==0){
@@ -161,7 +166,7 @@ public class Experiment implements Serializable{
 		try {
 			int code = getTypeCode();
 			if (code>=0){
-				if (pw!=null) pw.println("Writing type code ("+code+")");
+				if (verbose && pw!=null) pw.println("Writing type code ("+code+")");
 				dos.writeInt(code);
 			} else {
 				if (pw!=null) pw.println("Invalid experiment code; save aborted");
@@ -174,7 +179,7 @@ public class Experiment implements Serializable{
 		
 		//Write the # of tracks
 		try {
-			if (pw!=null) pw.println("Writing # of tracks ("+tracks.size()+")");
+			if (verbose && pw!=null) pw.println("Writing # of tracks ("+tracks.size()+")");
 			dos.writeInt(tracks.size());
 		} catch (Exception e) {
 			if (pw!=null) pw.println("...Error writing # of tracks; save aborted");
@@ -182,20 +187,25 @@ public class Experiment implements Serializable{
 		}
 		
 		//Write each track
+		int trID = -1;
+		int trNum = -1;
 		try {
 			if (pw!=null) pw.println("Writing Tracks");
 			
 			for (int j=0; j<tracks.size(); j++){
 				Track tr = tracks.get(j);
-				if (pw!=null) pw.println("Writing track number "+j+"("+tr.getTrackID()+")");
-				if(tr.toDisk(dos,pw)!=0) {
+				trNum = j;
+				trID = tr.getTrackID();
+				
+				if (verbose && pw!=null) pw.println("Writing track number "+j+"("+tr.getTrackID()+")");
+				if(tr.toDisk(dos,(verbose)?pw:null)!=0) {
 					if (pw!=null) pw.println("...Error writing track "+tr.getTrackID()+"; save aborted");
 					return 1; 
 				}
 			}
 			
 		} catch (Exception e) {
-			if (pw!=null) pw.println("\n...Error writing tracks; save aborted");
+			if (pw!=null) pw.println("\n...Error (exception thrown) writing track (#"+trNum+" , ID="+trID+"); save aborted");
 			return 1;
 		}
 		
