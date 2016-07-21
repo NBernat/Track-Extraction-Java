@@ -147,4 +147,61 @@ public class displayUtils {
 		}
 	}
 	
+	
+	public static void drawTargets(ImageProcessor im, Vector<FloatPolygon> targetBackbones, int expandFac, int offX, int offY, Rectangle rect){
+		
+		if(targetBackbones==null){
+			return;
+		}
+		
+		Vector<Color> colors = getColorList();
+		
+		for (int j=0; j<targetBackbones.size(); j++){
+			Color color = colors.get(j%colors.size());
+			FloatPolygon bbNew = targetBackbones.get(j);
+			
+			im.setColor(color);
+			if (bbNew!=null && bbNew.npoints>0){
+				for (int i=0; i<bbNew.npoints; i++){
+					int x = (int)(expandFac*(bbNew.xpoints[i]-rect.x));
+					int y = (int)(expandFac*(bbNew.ypoints[i]-rect.y));
+					
+					if(!(x==0 && y==0)){
+						int dotX = offX + x;
+						int dotY = offY + y;
+						int circWid = 4;
+						im.drawOval(dotX-(circWid/2), dotY-(circWid/2), circWid, circWid);
+						
+//						if (i==0){
+//							im.drawOval(dotX-(circWid), dotY-(circWid), circWid*2, circWid*2);
+//						}
+						
+					} else {
+						im.setColor(Color.RED);
+						im.drawOval(1, 1, 6, 6);
+						im.setColor(color);
+					}
+				}
+			}else {
+				int ovalSize = 20;
+				im.drawOval(0, 0, ovalSize, ovalSize);
+			}
+		}
+		
+	}
+	
+	
+	private static Vector<Color> getColorList(){
+		
+		Vector<Color> colors = new Vector<Color>();
+		colors.add(Color.RED);
+		colors.add(Color.BLUE);
+		colors.add(Color.GREEN);
+		colors.add(Color.MAGENTA);
+		colors.add(Color.YELLOW);
+		
+		return colors;
+	}
+	
+	
 }

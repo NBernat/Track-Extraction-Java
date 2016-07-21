@@ -131,6 +131,13 @@ public class Experiment implements Serializable{
 		
 	}
 	
+	/**
+	 * Finds "bad" tracks using the arguments to define what is "bad"
+	 * @param eTypes The types of energy (associated with forces) to use in finding bad gaps
+	 * @param numStdDevs How many standard deviations above the mean track value any point must be to be considered bad  
+	 * @param minValidSegmentLen Any two "bad" gaps that are closer together than this size (in units of trackpoint) will be merged into one gap
+	 * @return An experiment containing all tracks that have "bad" gaps
+	 */
 	public Experiment flagBadTracks(String[] eTypes, int numStdDevs, int minValidSegmentLen){
 		
 		Vector<Track> badTracks = new Vector<Track>();
@@ -149,11 +156,24 @@ public class Experiment implements Serializable{
 		return badEx;
 	}
 	
-	
+	/**
+	 * Writes this experiment to an output stream, sending status updates to a printwriter
+	 * This function is the same as experiment.toDisk(dos, pw, false)
+	 * @param dos The output stream
+	 * @param pw The message-recieving print writer. To skip all status recording, set this to null
+	 * @return A status code; 0 means success, above zero indicates an error  
+	 */
 	public int toDisk(DataOutputStream dos, PrintWriter pw){
 		return toDisk(dos, pw, false);
 	}
 	
+	/**
+	 * Writes this experiment to an output stream, sending status updates to a printwriter
+	 * @param dos The output stream
+	 * @param pw The message-recieving print writer. To skip all status recording, set this to null
+	 * @param verbose Setting this flag true turns on detailed statuses that are fed to the PrintWriter
+	 * @return A status code; 0 means success, above zero indicates an error  
+	 */
 	public int toDisk(DataOutputStream dos, PrintWriter pw, boolean verbose){
 		
 		
@@ -223,7 +243,15 @@ public class Experiment implements Serializable{
 		return 0;
 	}
 	
-	
+	/**
+	 * Reads an experiment from a dataInputStream
+	 * @param dis The dataInputStream
+	 * @param filename Name of the source file
+	 * @param exParam Extraction parameters associated with the extraction of this experiment
+	 * @param fp Fitting parameters associated with the extraction of this experiment
+	 * @param pw  The message-recieving print writer. To skip all status recording, set this to null 
+	 * @return The experiment read from the input stream
+	 */
 	public static Experiment fromDisk(DataInputStream dis, String filename, ExtractionParameters exParam, FittingParameters fp, PrintWriter pw){
 		
 		
@@ -248,7 +276,7 @@ public class Experiment implements Serializable{
 	}
 	
 	/**
-	 * Opens the experiment, assigns default parameters
+	 * Static method for Opens the experiment, assigns default parameters
 	 */
 	public static Experiment fromPath(String path){
 		

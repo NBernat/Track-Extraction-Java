@@ -32,7 +32,7 @@ public class ProcessingParameters {
 	
 	/**
 	 * 0 = 3-pass fit scheme on entire track (or specified subset)
-	 * 1 = straight subsets (1-pass) + bent subsets (1-pass) + patch (3-pass)
+	 * 1 = 1-pass scheme on: straight subsets + bent subsets + diverged subsets + bad subsets + full track
 	 */
 	public int fitType = 1;
 	

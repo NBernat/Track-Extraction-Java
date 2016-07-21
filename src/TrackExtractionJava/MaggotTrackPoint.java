@@ -670,13 +670,17 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		}
 		int ind = 0;
 		for (int j = 0; j < contourX.length; ++j) {
-			double tempdist = (x-contourX[j])*(x-contourX[j]) + (y-contourY[j])*(y-contourY[j]);
+			
+			int contourXAbs = contourX[j]+rect.x;
+			int contourYAbs = contourY[j]+rect.y;
+			
+			double tempdist = (x-contourXAbs)*(x-contourXAbs) + (y-contourYAbs)*(y-contourYAbs);
 			if (tempdist < dist) {
 				dist = tempdist;
 				ind = j;
 			}
 		}
-		return new int[] {contourX[ind], contourY[ind]};
+		return new int[] {contourX[ind]+rect.x, contourY[ind]+rect.y};
 	}
 	
 	public int[][] getContourArray(){
