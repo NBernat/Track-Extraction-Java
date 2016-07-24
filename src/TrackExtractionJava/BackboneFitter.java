@@ -474,8 +474,8 @@ public class BackboneFitter {
 		edgeParams.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
 		edgeParams.freezeDiverged = true;
 		edgeParams.leaveBackbonesInPlace = true;
-		edgeParams.imageWeight = edgeParams.imageWeight*2;
-		upTailWeights_timeLength(edgeParams,tailUpFactor);
+//		edgeParams.imageWeight = edgeParams.imageWeight*2;
+//		upTailWeights_timeLength(edgeParams,tailUpFactor);
 		resetParams(edgeParams); 
 		int count = 0;
 		int maxCount = 5;
