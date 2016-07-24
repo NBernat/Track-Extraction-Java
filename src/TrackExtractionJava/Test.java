@@ -9,6 +9,8 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.Scanner;
 import java.util.Vector;
 
@@ -27,6 +29,28 @@ public class Test {//extends JFrame
 
 	public static void main(String[] args) {
 		
+		String[] dirs = {
+				"E:\\data2\\OdorPlusOpto\\42a@CsChrimson(X)redo_newparams\\S_Od_EtAc_Dr_0to10ppt_4drops#N_Re_B0to255s3_120Hz_800uW\\201507311116\\",
+				"E:\\data2\\OdorPlusOpto\\42a@CsChrimson(X)\\S_Od_EtAc_Dr_0to10ppt_4drops#N_Re_B0to255s3_120Hz_800uW\\201507311116\\",
+				"E:\\data2\\OdorPlusOpto\\Or42b@CsChrimson(3)\\N_Re_B0to255s3_120Hz_110uW#C_Bl_2uW\\201509101505\\",
+				"E:\\data\\optogenetics\\Or42a@Chrimson(X)\\RWN_0.3ohm_BWN_39ohm\\201504191707\\"
+		};
+		String[] names = {
+				"42a@CsChrimson(X)_S_Od_EtAc_Dr_0to10ppt_4drops#N_Re_B0to255s3_120Hz_800uW_201507311116",
+				"42a@CsChrimson(X)_S_Od_EtAc_Dr_0to10ppt_4drops#N_Re_B0to255s3_120Hz_800uW_201507311116",
+				"Or42b@CsChrimson(3)_N_Re_B0to255s3_120Hz_110uW#C_Bl_2uW_201509101505",
+				"Or42a@Chrimson(X)_RWN_0.3ohm_BWN_39ohm_201504191707"
+		};
+		for (int i=0; i<dirs.length; i++){
+			try {
+				testTailDrag(dirs[i], names[i]);
+			} catch (Exception e){
+				e.printStackTrace(new PrintStream(new BufferedOutputStream(System.out)));
+			}
+		}
+		
+		/*
+		*/
 		
 		/*
 		testBadTrackFinder();
@@ -40,8 +64,8 @@ public class Test {//extends JFrame
 		testSubsetInchInwards();
 		*/
 		
-		fitExperimentNewScheme();
 		/*
+		fitExperimentNewScheme();
 		*/
 		
 		/*
@@ -211,6 +235,102 @@ public class Test {//extends JFrame
 		
 	}
 	
+	public static void testTailDrag(String inputDir, String fileName){
+
+		ImageJ ij = new ImageJ();
+		
+//		String inputDir = "";
+		String outputDir = "E:\\testing\\Java Backbone Fitting\\test tuned fitting params\\";
+//		String inputFileName_full = outputDir+"test badness fixer\\0 Before any fixing\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.prejav";
+//		String fileName = "42a@CsChrimson(X)_S_Od_EtAc_Dr_0to10ppt_4drops#N_Re_B0to255s3_120Hz_800uW_201507311116";
+
+		String args[] = new String[2];
+//		args[0] = inputFileName_full;
+		
+		args[0] = inputDir+fileName+".mmf";
+		args[1] = outputDir+""+fileName+"\\";
+		
+		File f = new File(args[1]); 
+		if (!f.exists()){
+			f.mkdirs();
+		}
+
+//		Experiment exFull = new Experiment(inputFileName_full);
+//		Vector<Track> badTracks = new Vector<Track>();
+//		//Bad Orientation...
+//		//...at beginning of track
+//		badTracks.add(exFull.getTrack(25));
+//		//...during a turn (larva backs up)
+//		badTracks.add(exFull.getTrack(1));
+//		badTracks.add(exFull.getTrack(32));
+//		badTracks.add(exFull.getTrack(36));
+//		//Bad ball resolution...
+//		//...overshoot
+//		badTracks.add(exFull.getTrack(0));
+//		badTracks.add(exFull.getTrack(69));
+//		//...crinkle/flip
+//		badTracks.add(exFull.getTrack(8));
+//		badTracks.add(exFull.getTrack(33));
+//		badTracks.add(exFull.getTrack(36));
+//		
+//		Experiment ex = new Experiment(exFull, badTracks);
+		
+//		File f = new File(args[1]+"badTracks_manual.prejav");
+//		DataOutputStream dos;
+//		try {
+//			dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f)));
+//			ex.toDisk(dos, null);
+//			dos.close();
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		} 
+		
+		
+		
+//		args[0] = f.getAbsolutePath(); 
+//		args[1] += "overallUpBy10_tailUpByNone\\withNoExtraSetup\\";
+		
+		
+		Experiment_Processor ep = new Experiment_Processor();
+		ep.runningFromMain = true;
+
+		ExtractionParameters exP = new ExtractionParameters();
+		exP.subset = true;
+		exP.startFrame = 2000;
+		exP.endFrame = 4000;
+		
+		ProcessingParameters pp = new ProcessingParameters();
+		pp.doFitting = true;
+		pp.fitType=1;
+		pp.showFitEx = true;
+		
+		FittingParameters fp = new FittingParameters();
+		fp.storeEnergies = false;
+		
+		ep.prParams = pp;
+		ep.extrParams = exP;
+		ep.fitParams = fp;
+		
+		ep.run(args);
+		
+		
+//		Experiment ex = new Experiment(args[0]);
+////		ex.showEx();
+////		ex.getTrack(33).showFitting();
+//		
+//		BackboneFitter bbf = new BackboneFitter(ex.getTrack(33));
+//		
+//		bbf.fitTrackNewScheme();
+//		
+//		Vector<Track> fit = new Vector<Track>();
+//		fit.add(bbf.getTrack());
+//		Experiment fitTrackEx = new Experiment(ex, fit);
+//		fitTrackEx.showEx();
+		
+//		ij.quit();
+	}
+	
+	
 	public static void testBadTrackFinder(){
 		ImageJ ij = new ImageJ();
 		
@@ -297,11 +417,11 @@ public class Test {//extends JFrame
 		ImageJ ij = new ImageJ();
 		
 		String outputDir = "E:\\testing\\Java Backbone Fitting\\test badness fixer\\";
-		String inputFileName = "E:\\data\\phototaxis2\\berlin@berlin\\2NDs_B_Square_SW_96-160\\201411201541\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.mmf";//outputDir+"7 Coord to contour from marc\\4000_6000\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.prejav" ;//outputDir+"0 Before any fixing\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.prejav";// 
+		String inputFileName = outputDir+"0 Before any fixing\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.prejav";//"E:\\data\\phototaxis2\\berlin@berlin\\2NDs_B_Square_SW_96-160\\201411201541\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.mmf";//outputDir+"7 Coord to contour from marc\\4000_6000\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.prejav" ;// 
 		
 		String args[] = new String[2];
 		args[0] = inputFileName;
-		args[1] = outputDir+"7 Coord to contour from marc\\4000_6000\\";
+		args[1] = outputDir+"7 Coord to contour from marc\\1_2000\\";
 		
 		Experiment_Processor ep = new Experiment_Processor();
 		ep.runningFromMain = true;

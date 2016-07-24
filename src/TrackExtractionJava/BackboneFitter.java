@@ -58,6 +58,10 @@ public class BackboneFitter {
 	 */
 	Vector<BackboneTrackPoint> BTPs;
 	
+	/**
+	 * Generates clean lists up BackboneTrackPoints with initial guesses
+	 * Must be used *once* within the BackboneFitter
+	 */
 	private BBFPointListGenerator bplg;
 	
 	protected boolean clipEnds = false;
@@ -78,6 +82,10 @@ public class BackboneFitter {
 	private BBFUpdateScheme updater;
 	
 	private int pass;
+	
+	protected boolean doSetup = true;
+	
+	protected boolean[] artificial;
 	
 	private boolean hidePoints = false;
 	
@@ -324,40 +332,53 @@ public class BackboneFitter {
 
 		//run divergence fixer 
 		if (!noError){
-			if (diverged && params.refitDiverged){
-				System.out.println("Track diverged, attempting to fix");
-				handleDivergence();
-			} else {
+//			if (diverged && params.refitDiverged){
+//				System.out.println("Track diverged, attempting to fix");
+//				handleDivergence();
+//			} else {
 				workingTrack = null;
-			}
+//			}
 			
 		}
 		
 		System.out.println("Done fitting track");
 	}
 
-	protected void fitTrackSubset_IncludeSurrounding_old(int startInd, int endInd){
-		
-		useScaleFactors = true;
-		bplg.startInd = startInd;
-		bplg.endInd = endInd;
-		
-		for (int i=0; i<workingTrack.points.size(); i++){
-			if (i<startInd || i>endInd){
-				((BackboneTrackPoint)bplg.workingTrack.points.get(i)).scaleFactor = 0;
-			}
-		}
-		
-		
-		fitTrack();
-	}
+//	protected void fitTrackSubset_IncludeSurrounding_old(int startInd, int endInd){
+//		
+//		useScaleFactors = true;
+//		bplg.startInd = startInd;
+//		bplg.endInd = endInd;
+//		
+//		for (int i=0; i<workingTrack.points.size(); i++){
+//			if (i<startInd || i>endInd){
+//				((BackboneTrackPoint)bplg.workingTrack.points.get(i)).scaleFactor = 0;
+//			}
+//		}
+//		
+//		
+//		fitTrack();
+//	}
 	
 	
 	
 	
 	public void fitTrackNewScheme(){
 		
-		if (workingTrack.points.size()<params.minTrackLen){
+		int tailUpFactor = 1;
+		
+		//Do setup HERE 
+//		setupForPass();
+		bplg.reset();
+		bplg.generateFullBTPList();
+		BTPs = bplg.getBTPs();
+		shifts = new double[BTPs.size()];
+		updater = new BBFUpdateScheme(BTPs.size());
+		
+		doSetup = false;
+		
+		
+		if (bplg.workingTrack.points.size()<params.minTrackLen){
 			errTrack = workingTrack; 
 			System.out.println("Track length below fitparams.mintracklen");
 			workingTrack = null;
@@ -368,8 +389,13 @@ public class BackboneFitter {
 		bentLarvae = findBentGaps(workingTrack.getHTdists());
 		straightLarvae = findStraightGaps(bentLarvae);
 		
+		
+		
 		//Fit the straight larvae
 		// TODO turn this block into its own function
+		
+		freezeHideArtificial();
+//		doPause=false;
 		FittingParameters spp = FittingParameters.getSinglePassParams();
 		spp.freezeDiverged = true;
 		resetParams(spp);
@@ -384,13 +410,22 @@ public class BackboneFitter {
 		
 		//Fit the bent larvae
 		// TODO turn this block into its own function
+		
+//		doPause = true;
+		freezeHideArtificial();
+		
 		hideGapPoints = false;
 		spp.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
 		spp.freezeDiverged = true;
-		spp.imageWeight = spp.imageWeight*2;
+//		spp.imageWeight = spp.imageWeight*2;
+//		spp.spineLengthWeight *= 0.3f;
+//		spp.spineSmoothWeight *= 0.3f;
+//		spp.timeSmoothWeight[0] *= 0.3f;
+//		upTailWeights_timeLength(spp,tailUpFactor);
 		resetParams(spp);
+//		bplg.resetBackboneInfo_SinglePass();
 		if (userOut!=null) userOut.println("Fitting Bent Subsets: "+bentLarvae.toString());
-		fitSubsets(bentLarvae, hideGapPoints);
+		 fitSubsets(bentLarvae, hideGapPoints);
 		if (workingTrack==null){
 			System.out.println("Error fitting bent larvae");
 			return;
@@ -401,12 +436,13 @@ public class BackboneFitter {
 		// TODO turn this block into its own function
 		FittingParameters patchParams = FittingParameters.getSinglePassParams();
 
-		
+		divergedGaps.addAll(Gap.bools2Segs(artificial));
 		
 		patchParams.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
 		patchParams.freezeDiverged = true;
 		patchParams.leaveBackbonesInPlace = true;
-		patchParams.imageWeight = patchParams.imageWeight*2;
+//		patchParams.imageWeight = patchParams.imageWeight*2;
+//		upTailWeights_timeLength(patchParams,tailUpFactor);
 		resetParams(patchParams); 
 		//Vector<Gap> divGaps = new Vector<Gap>();//divergedGaps;
 	//	divGaps.addAll(divergedGaps);
@@ -425,6 +461,7 @@ public class BackboneFitter {
 			patchGap_InchInwards(divG, params.edgeSize, doPrev, doNext);
 			
 		}
+		
 		// TODO address diverged gaps added to divergedGaps during ^^ loop
 		if (workingTrack==null){
 			System.out.println("Error patching diverged frames");
@@ -438,6 +475,7 @@ public class BackboneFitter {
 		edgeParams.freezeDiverged = true;
 		edgeParams.leaveBackbonesInPlace = true;
 		edgeParams.imageWeight = edgeParams.imageWeight*2;
+		upTailWeights_timeLength(edgeParams,tailUpFactor);
 		resetParams(edgeParams); 
 		int count = 0;
 		int maxCount = 5;
@@ -456,9 +494,15 @@ public class BackboneFitter {
 		}
 		
 		// TODO
+		int numStdDevForSuspicious = 3;
+		badGaps = workingTrack.findBapGaps(params.energyTypeForBadGap, numStdDevForSuspicious);
 		if (badGaps.size()>0){
 			//Mark the suspicious tracks 
+			workingTrack.suspicious = true;
+			workingTrack.markSuspiciousGaps(badGaps);
+			
 		}
+		
 		
 		//Do final run on the whole track for continuity
 		spp = FittingParameters.getSinglePassParams();
@@ -466,7 +510,10 @@ public class BackboneFitter {
 		spp.freezeDiverged = true;
 		spp.leaveBackbonesInPlace = true;
 		resetParams(spp);
-		fitTrack();
+		for (int i=0; i<params.numFinalSingleIterations; i++){
+			runSingleIteration();
+		}
+//		fitTrack();
 		
 	}	
 		
@@ -502,31 +549,20 @@ public class BackboneFitter {
 			System.out.println("Error generating btplist");
 		}
 		
-		//Find high energy areas
-//		Vector<Gap> straightGaps = findStraightGaps();
-//		Vector<Gap> bentGaps = findBentGaps();
-		
-//		fullTrack = workingTrack;
-		//Run fitter on low energy energy gaps
-//		for (Gap sGap : straightGaps){
-//			
-//			//fitTrackSubset_IgnoreSurrounding(leGap.start, leGap.end);
-//		}
-//		
-//		for (Gap bGap : bentGaps){
-//			//fitTrackSubset_IncludeSurrounding(heGap.start, heGap.end);//, params.divBufferSize, false);
-//		}
-//		
-		
-		//Fit entire track?
 	}
 	
-	/*
-	private Vector<Gap> findStraightGaps(double[] htDists, double mean, double stdDev){
-			
-		return findStraightGaps(findBentGaps(htDists, mean, stdDev));
+	private void freezeHideArtificial(){
+		
+		artificial = new boolean[BTPs.size()];
+		for (int i=0; i<BTPs.size(); i++){
+			BackboneTrackPoint btp = BTPs.get(i);
+			if (btp.artificialMid){
+				btp.setFrozen(true);
+				btp.setHidden(true);
+				artificial[i] = true;
+			}
+		}
 	}
-	*/
 	
 	private Vector<Gap> findStraightGaps(Vector<Gap> bent){
 		
@@ -836,20 +872,20 @@ public class BackboneFitter {
 		fitSubsets(subsets, false);
 	}
 	
-	public void fitTrackSubset_IgnoreSurrounding_old(int startInd, int endInd){
-		fitTrackSubset_IgnoreSurrounding_old(startInd, endInd, true);
-	}
+//	public void fitTrackSubset_IgnoreSurrounding_old(int startInd, int endInd){
+//		fitTrackSubset_IgnoreSurrounding_old(startInd, endInd, true);
+//	}
 	
 	/**
 	 * Fits a subset of the working track. the full track is stored in fullTrack
 	 */
-	private void fitTrackSubset_IgnoreSurrounding_old(int startInd, int endInd, boolean saveFullTrack){
-//		subsets = true;
-		if (saveFullTrack) fullTrack = workingTrack;
-		workingTrack = new Track(fullTrack, startInd, endInd);
-		bplg.workingTrack = workingTrack;
-		fitTrack();
-	}
+//	private void fitTrackSubset_IgnoreSurrounding_old(int startInd, int endInd, boolean saveFullTrack){
+////		subsets = true;
+//		if (saveFullTrack) fullTrack = workingTrack;
+//		workingTrack = new Track(fullTrack, startInd, endInd);
+//		bplg.workingTrack = workingTrack;
+//		fitTrack();
+//	}
 	
 	
 	/**
@@ -955,9 +991,17 @@ public class BackboneFitter {
 	private boolean doPass(int grain){
 				
 		//Set the BTPs for this pass
-		if (!setupForPass()) {
-			return false;
-		}
+//		if (doSetup){
+//			boolean status = setupForPass();
+////			doSetup = false;
+//			if (!status) return false;
+//		}
+
+		//bplg.resetBackboneInfo_SinglePass();
+		//BTPs = bplg.getBTPs();
+		
+		//TODO: decide if this makes sense or represents a deeper problem
+		updater = new BBFUpdateScheme(BTPs.size());
 		
 		//Run the actual fitter
 		try {
@@ -981,6 +1025,7 @@ public class BackboneFitter {
 	}
 	
 	private boolean setupForPass(){
+		
 		BTPs.removeAllElements();
 		bplg.reset();
 		boolean noError = bplg.generateBTPList(pass);
@@ -998,20 +1043,25 @@ public class BackboneFitter {
 		return noError;
 	}
 	
-	
-	protected boolean[] getFrozenBTPs(){
+
+	private boolean setupForPass2(){
 		
-		boolean[] frozen = new boolean[BTPs.size()];
-		for (int i=0; i<BTPs.size(); i++) frozen[i] = BTPs.get(i).frozen;
-		return frozen;
+		BTPs.removeAllElements();
+		bplg.reset();
+		boolean noError = bplg.generateBTPList(pass);
+		BTPs = bplg.getBTPs();
+		
+		if (noError){
+			//updater = new BBFUpdateScheme(BTPs.size());
+			//if (hidePoints) updater.hidePoints(getHiddenBTPs());
+			
+			shifts = new double[BTPs.size()];
+		} else{
+			comm.message("Error generating backbones at pass "+pass, VerbLevel.verb_error);
+		}
+		
+		return noError;
 	}
-	
-	private boolean[] getHiddenBTPs(){
-	
-	boolean[] hidden = new boolean[BTPs.size()];
-	for (int i=0; i<BTPs.size(); i++) hidden[i] = BTPs.get(i).hidden;
-	return hidden;
-}
 	
 	
 	/**
@@ -1282,93 +1332,93 @@ public class BackboneFitter {
 	
 	
 	
-	private void handleDivergence(){
-		
-		fullTrack = workingTrack;
-		//Find easy subsets
-		Gap divGap = findDivergedGap();
-		
-		int[] startInds = {0, divGap.end+1};
-		int[] endInds = {divGap.start-1, workingTrack.points.size()-1};
-		
-		if (endInds[0]>0 && startInds[1]<(workingTrack.points.size()-1)){//The divergence is in the middle
-			//Run fitter on each subset 
-			BackboneFitter leftSegment = new BackboneFitter(new Track(oldTrack, startInds[0], endInds[0]), params);
-			BackboneFitter rightSegment = new BackboneFitter(new Track(oldTrack, startInds[1], endInds[1]), params);
-			leftSegment.fitTrack();
-			rightSegment.fitTrack();
-			
-			if ( leftSegment.fixed() && rightSegment.fixed() ){
-				diverged = false;
-				//Merge the tracks
-				mergeTrack(leftSegment.getTrack());
-				mergeTrack(rightSegment.getTrack());
-				
-				if (params.fixDiverged){
-					fixDivergedGap(divGap);
-					if (fixed()){
-						//Wahoo! Everything worked.
-						topOffFullTrack();
-					} else {
-						markGapInvalid(divGap);
-					}
-				} else {
-					markGapInvalid(divGap);
-				}
-				
-	
-				addInvalidGapsFromFitter(leftSegment);
-				addInvalidGapsFromFitter(rightSegment);
-				
-	
-				workingTrack = fullTrack;
-				
-			} else {
-				
-				if (leftSegment.fixed()) {
-					
-					// TODO check rightSegment for good pieces (in workingTrack)
-					
-					System.out.println("Replacing track "+workingTrack.getTrackID()+"("+workingTrack.getNumPoints()+"pts) with non-diverged subset track "+leftSegment.getTrack().getTrackID()+" ("+leftSegment.getTrack().getNumPoints()+"pts)");
-					errTrack = rightSegment.getTrack();
-					workingTrack = leftSegment.getTrack();
-					diverged = false;
-	//				mergeTrack(leftSegment.getTrack());
-	//				addInvalidGapsFromFitter(leftSegment);
-	//				diverged = false;
-	//				s = divGap.start;
-	//				e = endInds[1];
-				}else if (rightSegment.fixed()){
-					
-					// TODO check leftSegment for good pieces (in workingTrack)
-					
-					System.out.println("Replacing track "+workingTrack.getTrackID()+"("+workingTrack.getNumPoints()+"pts) with non-diverged subset track "+rightSegment.getTrack().getTrackID()+" ("+rightSegment.getTrack().getNumPoints()+"pts)");
-					errTrack = leftSegment.getTrack();
-					workingTrack = rightSegment.getTrack();
-	//				mergeTrack(rightSegment.getTrack());
-	//				addInvalidGapsFromFitter(rightSegment);
-	//				diverged = false;
-	//				s = startInds[0];
-	//				e = divGap.end;
-				} else {
-	//				Gap invalidGap = new Gap(startInds[0], endInds[1]); 
-	//				markGapInvalid(invalidGap);
-					diverged = true;
-					errTrack = workingTrack;
-					workingTrack = null;
-				}
-				
-			}
-			
-			
-		} else{//The divergence IS on an end
-			// TODO clip the ends 
-			
-		}
-		
-		
-	}
-	
+//	private void handleDivergence(){
+//		
+//		fullTrack = workingTrack;
+//		//Find easy subsets
+//		Gap divGap = findDivergedGap();
+//		
+//		int[] startInds = {0, divGap.end+1};
+//		int[] endInds = {divGap.start-1, workingTrack.points.size()-1};
+//		
+//		if (endInds[0]>0 && startInds[1]<(workingTrack.points.size()-1)){//The divergence is in the middle
+//			//Run fitter on each subset 
+//			BackboneFitter leftSegment = new BackboneFitter(new Track(oldTrack, startInds[0], endInds[0]), params);
+//			BackboneFitter rightSegment = new BackboneFitter(new Track(oldTrack, startInds[1], endInds[1]), params);
+//			leftSegment.fitTrack();
+//			rightSegment.fitTrack();
+//			
+//			if ( leftSegment.fixed() && rightSegment.fixed() ){
+//				diverged = false;
+//				//Merge the tracks
+//				mergeTrack(leftSegment.getTrack());
+//				mergeTrack(rightSegment.getTrack());
+//				
+//				if (params.fixDiverged){
+//					fixDivergedGap(divGap);
+//					if (fixed()){
+//						//Wahoo! Everything worked.
+//						topOffFullTrack();
+//					} else {
+//						markGapInvalid(divGap);
+//					}
+//				} else {
+//					markGapInvalid(divGap);
+//				}
+//				
+//	
+//				addInvalidGapsFromFitter(leftSegment);
+//				addInvalidGapsFromFitter(rightSegment);
+//				
+//	
+//				workingTrack = fullTrack;
+//				
+//			} else {
+//				
+//				if (leftSegment.fixed()) {
+//					
+//					// TODOx check rightSegment for good pieces (in workingTrack)
+//					
+//					System.out.println("Replacing track "+workingTrack.getTrackID()+"("+workingTrack.getNumPoints()+"pts) with non-diverged subset track "+leftSegment.getTrack().getTrackID()+" ("+leftSegment.getTrack().getNumPoints()+"pts)");
+//					errTrack = rightSegment.getTrack();
+//					workingTrack = leftSegment.getTrack();
+//					diverged = false;
+//	//				mergeTrack(leftSegment.getTrack());
+//	//				addInvalidGapsFromFitter(leftSegment);
+//	//				diverged = false;
+//	//				s = divGap.start;
+//	//				e = endInds[1];
+//				}else if (rightSegment.fixed()){
+//					
+//					// TODOx check leftSegment for good pieces (in workingTrack)
+//					
+//					System.out.println("Replacing track "+workingTrack.getTrackID()+"("+workingTrack.getNumPoints()+"pts) with non-diverged subset track "+rightSegment.getTrack().getTrackID()+" ("+rightSegment.getTrack().getNumPoints()+"pts)");
+//					errTrack = leftSegment.getTrack();
+//					workingTrack = rightSegment.getTrack();
+//	//				mergeTrack(rightSegment.getTrack());
+//	//				addInvalidGapsFromFitter(rightSegment);
+//	//				diverged = false;
+//	//				s = startInds[0];
+//	//				e = divGap.end;
+//				} else {
+//	//				Gap invalidGap = new Gap(startInds[0], endInds[1]); 
+//	//				markGapInvalid(invalidGap);
+//					diverged = true;
+//					errTrack = workingTrack;
+//					workingTrack = null;
+//				}
+//				
+//			}
+//			
+//			
+//		} else{//The divergence IS on an end
+//			// TODOx clip the ends 
+//			
+//		}
+//		
+//		
+//	}
+//	
 	
 	private Gap findDivergedGap(){
 		
@@ -1391,15 +1441,29 @@ public class BackboneFitter {
 		return (s!=-1 && e!=-1) ? new Gap(s, e) : null;
 		
 	}
-	
-	
-	private void addInvalidGapsFromFitter(BackboneFitter bbf){
-		for (Gap g : bbf.invalidGaps){
-			
-			int indOffset = bbf.fullTrack.points.firstElement().frameNum - fullTrack.points.firstElement().frameNum;
-			invalidGaps.addElement(new Gap(g.start+indOffset, g.end+indOffset));
-		}
+
+	protected boolean[] getFrozenBTPs(){
+		
+		boolean[] frozen = new boolean[BTPs.size()];
+		for (int i=0; i<BTPs.size(); i++) frozen[i] = BTPs.get(i).frozen;
+		return frozen;
 	}
+	
+	private boolean[] getHiddenBTPs(){
+	
+	boolean[] hidden = new boolean[BTPs.size()];
+	for (int i=0; i<BTPs.size(); i++) hidden[i] = BTPs.get(i).hidden;
+	return hidden;
+}
+	
+	
+//	private void addInvalidGapsFromFitter(BackboneFitter bbf){
+//		for (Gap g : bbf.invalidGaps){
+//			
+//			int indOffset = bbf.fullTrack.points.firstElement().frameNum - fullTrack.points.firstElement().frameNum;
+//			invalidGaps.addElement(new Gap(g.start+indOffset, g.end+indOffset));
+//		}
+//	}
 	
 	/**
 	 * Merges the points of track t into fullTrack
@@ -1408,49 +1472,49 @@ public class BackboneFitter {
 	 * 
 	 * @param t A track whose list of points is a (duplicated) subset of fullTrack 
 	 */
-	private void mergeTrack(Track t){
-		
-		//find point in fullTrack that corresponds to t.points.get(0);
-		int ftZeroInd = t.points.firstElement().frameNum-fullTrack.points.firstElement().frameNum;
-		
-		if (ftZeroInd<0 || ftZeroInd>=fullTrack.points.size() || (ftZeroInd+t.points.size()-1)>=fullTrack.points.size()){
-			//t is not a subset of fullTrack
-			return;
-		}
-		
-		//replace points
-		for (int i=0; i<t.points.size(); i++){
-			fullTrack.points.setElementAt(t.points.get(i), ftZeroInd+i); 
-		}
-		
-		
-		
-	}
+//	private void mergeTrack(Track t){
+//		
+//		//find point in fullTrack that corresponds to t.points.get(0);
+//		int ftZeroInd = t.points.firstElement().frameNum-fullTrack.points.firstElement().frameNum;
+//		
+//		if (ftZeroInd<0 || ftZeroInd>=fullTrack.points.size() || (ftZeroInd+t.points.size()-1)>=fullTrack.points.size()){
+//			//t is not a subset of fullTrack
+//			return;
+//		}
+//		
+//		//replace points
+//		for (int i=0; i<t.points.size(); i++){
+//			fullTrack.points.setElementAt(t.points.get(i), ftZeroInd+i); 
+//		}
+//		
+//		
+//		
+//	}
 	
 	
-	private void fixDivergedGap(Gap g){
-		//TODO
-		//fitTrackSubsetWithBuffer(g.start, g.end, params.divBufferSize, true);
-		
-	}
+//	private void fixDivergedGap(Gap g){
+//		//TODOx
+//		//fitTrackSubsetWithBuffer(g.start, g.end, params.divBufferSize, true);
+//		
+//	}
+//	
+//	private void topOffFullTrack(){
+//		// TODOx
+//		//Make sure to properly handle the fact that some points in the fixed track segments 
+//		//may be invalid
+//	}
 	
-	private void topOffFullTrack(){
-		// TODO
-		//Make sure to properly handle the fact that some points in the fixed track segments 
-		//may be invalid
-	}
-	
-	private void markGapInvalid(Gap g){
-		
-		for (int i=g.start; i<g.end; i++){
-			BackboneTrackPoint btp = (BackboneTrackPoint)fullTrack.points.get(i);
-			btp.bbvalid = false;
-			btp.bbOld = btp.bbInit;
-			btp.finalizeBackbone();
-		}
-		
-		invalidGaps.addElement(g);
-	}
+//	private void markGapInvalid(Gap g){
+//		
+//		for (int i=g.start; i<g.end; i++){
+//			BackboneTrackPoint btp = (BackboneTrackPoint)fullTrack.points.get(i);
+//			btp.bbvalid = false;
+//			btp.bbOld = btp.bbInit;
+//			btp.finalizeBackbone();
+//		}
+//		
+//		invalidGaps.addElement(g);
+//	}
 	
 	private void pause() {
 		
@@ -1463,12 +1527,7 @@ public class BackboneFitter {
 			if (userOut!=null) userOut.println("...Continuing");
 			
 		} else {
-//			try {
-//				wait();
-//			} catch (InterruptedException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
+			
 		}
 		
 		
@@ -1500,11 +1559,18 @@ public class BackboneFitter {
 	}
 	
 	
-	
-	
-	
-	
-	
+	protected void upTailWeights_timeLength(FittingParameters fp, double factor){
+		
+		int nPasses = fp.grains.length;
+		for (int i=0; i<nPasses; i++){
+			fp.timeLengthWeights[i][fp.numBBPts-1] *= factor;
+			fp.timeLengthWeights[i][fp.numBBPts-2] *= factor; 
+		}
+		
+		fp.imageWeights[fp.numBBPts-1] *= 0.1;
+		fp.imageWeights[fp.numBBPts-2] *= 0.1;
+		
+	}
 	
 	
 	

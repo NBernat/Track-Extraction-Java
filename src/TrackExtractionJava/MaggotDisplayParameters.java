@@ -7,7 +7,7 @@ public class MaggotDisplayParameters {
 	static int DEFAULTexpandFac = 10;
 	static boolean DEFAULTclusters = false;
 	static boolean DEFAULTmid = true;
-	static boolean DEFAULTinitialBB = false; 
+	static boolean DEFAULTinitialBB = true; 
 	static boolean DEFAULTnewBB = false;
 	static boolean DEFAULTcontour = false;
 	static boolean DEFAULTht = false;

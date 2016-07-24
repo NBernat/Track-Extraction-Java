@@ -65,7 +65,10 @@ public class displayUtils {
 //				im.drawDot(dotX, dotY);
 				int circWid = 4;
 				im.drawOval(dotX-(circWid/2), dotY-(circWid/2), circWid, circWid);
-				
+
+				if (i==0){
+					im.drawOval(dotX-(circWid), dotY-(circWid), circWid*2, circWid*2);
+				}
 			}
 		} else {
 			int size = 20;
@@ -83,9 +86,15 @@ public class displayUtils {
 			im.setColor(colors.get(j));
 			FloatPolygon floatMidline = midlines.get(j).getFloatPolygon();
 			for (int i=0; i<midlines.get(j).getNCoordinates(); i++){
+				
 				int dotX = offX + (int)(expandFac*(floatMidline.xpoints[i]));
 				int dotY = offY + (int)(expandFac*(floatMidline.ypoints[i]));
 				im.drawDot(dotX, dotY);
+				
+				int circWid = 2;
+				if (i==0){
+					im.drawOval(dotX-(circWid), dotY-(circWid), circWid*2, circWid*2);
+				}
 			}
 		}
 	}
@@ -104,6 +113,11 @@ public class displayUtils {
 					int circWid = 6;
 					im.drawOval(dotX-(circWid/2), dotY-(circWid/2), circWid, circWid);
 	//				im.drawDot(dotX, dotY);
+					
+
+					if (i==0){
+						im.drawOval(dotX-(circWid), dotY-(circWid), circWid*2, circWid*2);
+					}
 				} else {
 					im.setColor(Color.RED);
 					im.drawOval(0, 0, 5, 5);
@@ -194,11 +208,11 @@ public class displayUtils {
 	private static Vector<Color> getColorList(){
 		
 		Vector<Color> colors = new Vector<Color>();
-		colors.add(Color.RED);
-		colors.add(Color.BLUE);
-		colors.add(Color.GREEN);
-		colors.add(Color.MAGENTA);
-		colors.add(Color.YELLOW);
+		colors.add(Color.RED);//Image
+		colors.add(Color.BLUE);//Spine-Length
+		colors.add(Color.GREEN);//Spine-Smooth
+		colors.add(Color.MAGENTA);//Time-Length 
+		colors.add(Color.YELLOW);//Time-Smooth
 		
 		return colors;
 	}

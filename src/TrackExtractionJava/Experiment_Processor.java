@@ -631,6 +631,7 @@ public class Experiment_Processor implements PlugIn{
 					ex.replaceTrack(newTr, i);
 					String msg = trStr+": done fitting "+timStr;
 					if (bbf.wasClipped()) msg+=" (ends clipped)"; 
+					if (newTr.suspicious) msg+=" (suspicious fit)";
 					log(msg, true);
 				} else if (bbf.diverged()){
 					divergedCount++;

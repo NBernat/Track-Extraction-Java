@@ -72,7 +72,7 @@ public class ProcessingParameters {
 	
 	public boolean savetoCSV = false;
 	
-	public boolean saveSysOutToFile = true;
+	public boolean saveSysOutToFile = false;
 	
 	boolean saveFittingOutput = false;
 	boolean saveExtractionOutput = false;
