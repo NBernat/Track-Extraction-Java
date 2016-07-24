@@ -41,7 +41,7 @@ public class FittingParameters {
 	 */
 	int clusterMethod = 0;
 	
-	public int[] grains = {32,16, 1}; 
+	public int[] grains = {1}; 
 	public int smallGapMaxLen = 5;//The maximum gap length for which the previous midline will be carried forward (otherwise interpolate)
 	public int minValidSegmentLen = 20;//The minimum segment length (in frames) which is situated between two midline gaps and which is considered valid
 	//TODO: distances need to know about distance
@@ -57,19 +57,15 @@ public class FittingParameters {
 	public float imageWeight = 1.0f;
 	public float spineLengthWeight = 0.4f;
 	public float spineSmoothWeight = 0.8f;
-	public float[] timeLengthWeight = {0.3f, 0.1f, 0.1f};
-	public float[] timeSmoothWeight = {0.3f, 0.1f, 0.1f}; 
+	public float[] timeLengthWeight = {0.1f};
+	public float[] timeSmoothWeight = {0}; 
 	
 	//Head=0, Tail=end
 	public float[] imageWeights = {0.70f,0.75f,0.8f, 0.85f,1,1, 1};
 	public float[] spineLengthWeights = {.5f,1,1, 1,1,1, 1};
 	public float[] spineSmoothWeights = {.6f,1,1, 1,1,1, 1};
-	public float[][] timeLengthWeights = { {1,1,1, 1,1,1, 1},
-											{1,1,1, 1,1,1, 1},
-											{1,1,1, 1,1,1, 1} };
-	public float[][] timeSmoothWeights = { {1,1,1, 1,1,1, 1},
-											{1,1,1, 1,1,1, 1},
-											{1,1,1, 1,1,1, 1} };
+	public float[][] timeLengthWeights = { {1,1,1, 1,1,1, 1} };
+	public float[][] timeSmoothWeights = { {1,1,1, 1,1,1, 1} };
 	
 	
 	/**
@@ -96,8 +92,40 @@ public class FittingParameters {
 	
 	JPanel fpPanel;
 	
-	public FittingParameters(){
-		//TODO
+	public FittingParameters(){	}
+	
+
+	public static FittingParameters getSinglePassParams(){
+		return new FittingParameters();
+	}
+	
+	public static FittingParameters getMultiPassParams(){
+		
+		FittingParameters fp = new FittingParameters();
+			
+		
+		int[] gs = {32,16, 1}; 
+		fp.grains = gs;
+		
+		float[] tlw = {0.3f, 0.1f, 0.1f};
+		float[] tsw = {0.3f, 0.1f, 0.1f}; 
+		fp.timeLengthWeight = tlw;
+		fp.timeSmoothWeight = tsw;
+		
+		
+		float[][] tlws = { {1,1,1, 1,1,1, 1},
+							{1,1,1, 1,1,1, 1},
+							{1,1,1, 1,1,1, 1} };
+		float[][] tsws = { {1,1,1, 1,1,1, 1},
+							{1,1,1, 1,1,1, 1},
+							{1,1,1, 1,1,1, 1} };
+		fp.timeLengthWeights = tlws;
+		fp.timeSmoothWeights = tsws;
+		
+		
+		return fp;
+		
+		
 	}
 	
 	public boolean isFirstPass(int grain){
@@ -173,19 +201,6 @@ public class FittingParameters {
 	}
 	
 	
-	public static FittingParameters getSinglePassParams(){
-		FittingParameters fp = new FittingParameters();
-		
-		fp.grains = new int[1];
-		fp.timeLengthWeight = new float[1];
-		fp.timeSmoothWeight = new float[1];
-		
-		fp.grains[0] = 1;
-		fp.timeLengthWeight[0] = 0.1f;
-		fp.timeSmoothWeight[0] = 0;
-		
-		return fp;
-	}
 }
 
 
