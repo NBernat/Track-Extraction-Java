@@ -18,6 +18,7 @@ public class FittingParameters {
 	int startInd = 0;
 	int endInd = 1000;
 	
+	int numFinalSingleIterations = 5;
 	
 	boolean storeEnergies = false;
 //	boolean storeCommOutput = false;
@@ -43,8 +44,10 @@ public class FittingParameters {
 	public int[] grains = {32,16, 1}; 
 	public int smallGapMaxLen = 5;//The maximum gap length for which the previous midline will be carried forward (otherwise interpolate)
 	public int minValidSegmentLen = 20;//The minimum segment length (in frames) which is situated between two midline gaps and which is considered valid
-	public double minFlickerDist = numBBPts;//The minimum distance between spines which indicates an erroneous midline flicker 
-	public int gapDilation = 5;
+	//TODO: distances need to know about distance
+	// the typical lengh of a maggot ~15-20 pixels; midline has 11 pts; reversal ~11*15/2 = 80
+	public double minFlickerDist = 40; //was numBBPts 7/22 //The minimum distance between spines which indicates an erroneous midline flicker 
+	public int gapDilation = 2;
 	public boolean dilateToEdges = true;
 	
 	
@@ -58,8 +61,8 @@ public class FittingParameters {
 	public float[] timeSmoothWeight = {0.3f, 0.1f, 0.1f}; 
 	
 	//Head=0, Tail=end
-	public float[] imageWeights = {1,1,1, 1,1,1, 1};
-	public float[] spineLengthWeights = {0,1,1, 1,1,1, 1};
+	public float[] imageWeights = {0.70f,0.75f,0.8f, 0.85f,1,1, 1};
+	public float[] spineLengthWeights = {.5f,1,1, 1,1,1, 1};
 	public float[] spineSmoothWeights = {.6f,1,1, 1,1,1, 1};
 	public float[][] timeLengthWeights = { {1,1,1, 1,1,1, 1},
 											{1,1,1, 1,1,1, 1},
@@ -179,7 +182,7 @@ public class FittingParameters {
 		
 		fp.grains[0] = 1;
 		fp.timeLengthWeight[0] = 0.1f;
-		fp.timeSmoothWeight[0] = 0.1f;
+		fp.timeSmoothWeight[0] = 0;
 		
 		return fp;
 	}

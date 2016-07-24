@@ -49,6 +49,9 @@ public class Track implements Serializable{
 	protected boolean valid=true;
 	
 	protected boolean diverged = false;
+	
+	protected boolean suspicious = false;
+	
 	/**
 	 * Unique identifier for the track 
 	 */
@@ -392,7 +395,11 @@ public class Track implements Serializable{
 		
 		Vector<Gap> badGaps = Gap.bools2Segs(bad);
 		if (badGaps.size()>1) BBFPointListGenerator.mergeGaps(badGaps, minValidSegmentLen, null);
-		
+		Vector<Gap> small = new Vector<Gap>();
+		for (Gap bg: badGaps){
+			if (bg.size()<2) small.add(bg);
+		}
+		badGaps.removeAll(small);
 		
  		return badGaps;
 
@@ -430,6 +437,10 @@ public class Track implements Serializable{
 	
 	public boolean diverged(){
 		return diverged;
+	}
+	
+	public boolean suspicious(){
+		return suspicious;
 	}
 	
 	protected void setTrackID(int tid){
@@ -652,6 +663,26 @@ public class Track implements Serializable{
 		
 		
 	}
+	
+	protected void markSuspiciousGaps(Vector<Gap> badGaps){
+		
+		if (points.firstElement().getPointType()!=BackboneTrackPoint.pointType){
+			if (comm!=null) comm.message("Tried to mark suspicious points in track "+trackID+", but points were not of type BackboneTrackPoint", VerbLevel.verb_warning);
+			return;
+		}
+		
+		for (Gap bg: badGaps){
+			if (bg.start<0 || bg.end>=points.size()){
+				if (comm!=null) comm.message("Tried to mark a suspicious gap in track "+trackID+", but the gap ("+bg.start+"-"+bg.end+") was out of bounds", VerbLevel.verb_warning);
+				return;
+			} 
+			for (int i=bg.start; i<=bg.end; ++i){
+				((BackboneTrackPoint)points.get(i)).suspicious = true;
+			}
+		}
+		
+	}
+	
 	
 	public Track fitTrack(FittingParameters fp){
 		if (points==null || points.size()==0 || points.firstElement().getPointType()!=MaggotTrackPoint.pointType){

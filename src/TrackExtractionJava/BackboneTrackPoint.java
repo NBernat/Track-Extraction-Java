@@ -83,7 +83,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	/**
 	 * For plotting
 	 */
-	protected transient FloatPolygon bbInit;
+	private transient FloatPolygon bbInit;
 	/**
 	 * Temporary backbone used to fit the final backbone
 	 */
@@ -100,6 +100,8 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	protected boolean artificialMid;
 	
 	public boolean bbvalid = true;
+	
+	public boolean suspicious = false; 
 	
 	protected boolean hidden = false;
 	protected boolean frozen = false;
@@ -206,7 +208,9 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 			}
 			
 		}
-		bbInit = initBB.getFloatPolygon();
+		if (bbInit==null){
+			bbInit = initBB.getFloatPolygon();
+		}
 		bbOld = initBB.getFloatPolygon();
 		
 	}
@@ -477,6 +481,10 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 //		}
 	}
 	
+	public FloatPolygon getBbInit(){
+		return (bbInit==null)? null : bbInit.duplicate();
+	}
+	
 	public double[][] getBackbone(){
 		return CVUtils.fPoly2Array(backbone.getFloatPolygon(), rect.x, rect.y);
 	}
@@ -629,7 +637,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		if (clusters) displayUtils.drawClusters(im, numPix, MagPixX, MagPixY, clusterInds, expandFac, offX, offY, rect);
 		
 		//MIDLINE
-		if (mid) displayUtils.drawMidline(im, midline, offX, offY, expandFac, Color.YELLOW);
+		if (mid) displayUtils.drawMidline(im, midline, offX, offY, expandFac, artificialMid ? Color.CYAN : Color.YELLOW);
 		
 		//LR SEGS: TEMP
 //		if (initialBB) displayUtils.drawMidline(im, leftSeg, offX, offY, expandFac, Color.BLUE);

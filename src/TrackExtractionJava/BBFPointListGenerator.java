@@ -22,7 +22,8 @@ public class BBFPointListGenerator {
 	FittingParameters params;
 	Communicator comm;
 	
-	
+	boolean doDilation = true;
+	boolean doCleanup = true;
 	protected boolean clipEnds;// = false;
 	protected int BTPstartFrame;// = -1;
 	protected int BTPendFrame;// = -1;
@@ -153,6 +154,11 @@ public class BBFPointListGenerator {
 		
 	}
 
+	protected boolean resetBackboneInfo_SinglePass(){
+		BTPs = new Vector<BackboneTrackPoint>();
+		sampleTrackPoints(params.grains[0]);
+		return addBackboneInfo(0, 1);
+	}
 	
 	private boolean addBackboneInfo(int pass, int grain){
 		
@@ -163,7 +169,7 @@ public class BBFPointListGenerator {
 				for (int i=0; i<BTPs.size(); i++){
 					if (params.leaveFrozenBackbonesAlone && BTPs.get(i).frozen){
 						//do nothing
-					} else if ((params.leaveBackbonesInPlace && BTPs.get(i).backbone!=null && BTPs.get(i).backbone.getNCoordinates()>0)){
+					} else if ((params.leaveFrozenBackbonesAlone && !BTPs.get(i).frozen) || (params.leaveBackbonesInPlace && BTPs.get(i).backbone!=null && BTPs.get(i).backbone.getNCoordinates()>0)){
 						origin[0]=0;
 						origin[1]=0;
 						BTPs.get(i).setBackboneInfo(params.clusterMethod, BTPs.get(i).backbone, origin);
@@ -176,9 +182,13 @@ public class BBFPointListGenerator {
 					comm.message("Adding backbone info to BTP "+i+"(frame "+BTPs.get(i).frameNum+")", VerbLevel.verb_debug);
 				}
 				
-				boolean noError = cleanUpBTPs(findEmptyMids(), params.minFlickerDist*grain);
-				return noError;
-				
+				if (doCleanup){
+					boolean noError = cleanUpBTPs(findEmptyMids(), params.minFlickerDist*grain);
+					doCleanup = false;
+					return noError;
+				} else {
+					return true;
+				}
 			} else {
 				origin[0] = 0;
 				origin[1] = 0;
@@ -286,7 +296,7 @@ public class BBFPointListGenerator {
 			
 			currMag = btpIt.next();
 			if(prevMag!=null) {
-				dist = currMag.bbInitDist(prevMag.bbInit);
+				dist = currMag.bbInitDist(prevMag.getBbInit());
 			} else {
 				dist = -1;
 			}
@@ -338,7 +348,10 @@ public class BBFPointListGenerator {
 			
 			comm.message("Merging "+gaps.size()+" gaps", VerbLevel.verb_debug); 
 			
-			dilateGaps(gaps, params.gapDilation, params.minValidSegmentLen, 0, BTPs.size()-1, params.dilateToEdges);
+			if (doDilation){
+				dilateGaps(gaps, params.gapDilation, params.minValidSegmentLen, 0, BTPs.size()-1, params.dilateToEdges);
+				doDilation = false;
+			}
 			//dilateGaps(gaps, params.gapDilation, params.minValidSegmentLen, track.getStart().frameNum, track.getEnd().frameNum, params.dilateToEdges);
 			
 			if (mergeGaps(gaps, params.minValidSegmentLen, comm)) {
@@ -464,7 +477,6 @@ public class BBFPointListGenerator {
 			int gapLen = gapEnd - gapStart + 1;
 			comm.message("Filling gap of size "+gapLen, VerbLevel.verb_debug);
 			if (gapLen < params.smallGapMaxLen) {
-				// Set the
 				
 				PolygonRoi fillerMidline;
 				float[] origin;
@@ -515,6 +527,7 @@ public class BBFPointListGenerator {
 			} else if (gapStart==0 && gapEnd == (BTPs.size()-1)){
 				comm.message("All midlines are invalid in track "+workingTrack.getTrackID(), VerbLevel.verb_error);
 				System.out.println("All midlines are invalid in track "+workingTrack.getTrackID());
+				workingTrack.points.removeAllElements();
 				return false;
 				
 			} else {
@@ -542,6 +555,7 @@ public class BBFPointListGenerator {
 		int nFrames = (BTPendFrame>0)? BTPendFrame : workingTrack.points.lastElement().frameNum;
 		nFrames -= (BTPstartFrame>0)? BTPstartFrame : workingTrack.points.firstElement().frameNum;
 		if (nFrames<params.minTrackLen) {
+			workingTrack.points.removeAllElements();
 			System.out.println("After clipping, track is too short");
 			return false;
 		}
