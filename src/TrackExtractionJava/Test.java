@@ -32,13 +32,13 @@ public class Test {//extends JFrame
 		String[] dirs = {
 //				"E:\\data2\\OdorPlusOpto\\42a@CsChrimson(X)redo_newparams\\S_Od_EtAc_Dr_0to10ppt_4drops#N_Re_B0to255s3_120Hz_800uW\\201507311116\\",
 //				"E:\\data2\\OdorPlusOpto\\42a@CsChrimson(X)\\S_Od_EtAc_Dr_0to10ppt_4drops#N_Re_B0to255s3_120Hz_800uW\\201507311116\\",
-				"E:\\data2\\OdorPlusOpto\\Or42b@CsChrimson(3)\\N_Re_B0to255s3_120Hz_110uW#C_Bl_2uW\\201509101505\\",
+				"E:\\data2\\OdorPlusOpto\\Or42b@CsChrimson(3)\\N_Re_B0to255s3_120Hz_110uW#C_Bl_2uW\\201509101505\\"//,
 //				"E:\\data\\optogenetics\\Or42a@Chrimson(X)\\RWN_0.3ohm_BWN_39ohm\\201504191707\\"
 		};
 		String[] names = {
 //				"42a@CsChrimson(X)_S_Od_EtAc_Dr_0to10ppt_4drops#N_Re_B0to255s3_120Hz_800uW_201507311116",
 //				"42a@CsChrimson(X)_S_Od_EtAc_Dr_0to10ppt_4drops#N_Re_B0to255s3_120Hz_800uW_201507311116",
-				"Or42b@CsChrimson(3)_N_Re_B0to255s3_120Hz_110uW#C_Bl_2uW_201509101505",
+				"Or42b@CsChrimson(3)_N_Re_B0to255s3_120Hz_110uW#C_Bl_2uW_201509101505"//,
 //				"Or42a@Chrimson(X)_RWN_0.3ohm_BWN_39ohm_201504191707"
 		};
 		for (int i=0; i<dirs.length; i++){
@@ -314,7 +314,7 @@ public class Test {//extends JFrame
 //		ep.run(args);
 		
 		
-		Experiment ex = new Experiment(args[0]);
+		Experiment ex = new Experiment(args[1]+fileName+".prejav");
 //		ex.showEx();
 //		ex.getTrack(33).showFitting();
 		
