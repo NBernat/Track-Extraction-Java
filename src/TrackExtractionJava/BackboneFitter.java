@@ -360,12 +360,32 @@ public class BackboneFitter {
 //		fitTrack();
 //	}
 	
-	
-	
-	
+	/**
+	 * Runs the track fitter according to the straight-bent-diverged-suspicious-all scheme with default parameters
+	 */
 	public void fitTrackNewScheme(){
 		
-		int tailUpFactor = 1;
+		FittingParameters straightParams = new FittingParameters();
+		FittingParameters bentParams = new FittingParameters(); 
+		FittingParameters divergedParams = new FittingParameters();
+		FittingParameters suspiciousParams = new FittingParameters();
+		FittingParameters finalParams = new FittingParameters();
+		
+		fitTrackNewScheme(straightParams, bentParams, divergedParams, suspiciousParams, finalParams);
+	}
+	
+	/**
+	 * Runs the track fitter according to the straight-bent-diverged-suspicious-all scheme with the given parameters
+	 * @param straightParams
+	 * @param bentParams
+	 * @param divergedParams
+	 * @param suspiciousParams
+	 * @param finalParams
+	 */
+	public void fitTrackNewScheme(FittingParameters straightParams, FittingParameters bentParams, 
+			FittingParameters divergedParams, FittingParameters suspiciousParams, FittingParameters finalParams){
+		
+//		int tailUpFactor = 1;
 		
 		//Do setup HERE 
 //		setupForPass();
@@ -396,9 +416,9 @@ public class BackboneFitter {
 		
 		freezeHideArtificial();
 //		doPause=false;
-		FittingParameters spp = FittingParameters.getSinglePassParams();
-		spp.freezeDiverged = true;
-		resetParams(spp);
+//		straightParams = FittingParameters.getSinglePassParams();
+		straightParams.freezeDiverged = true;
+		resetParams(straightParams);
 		boolean hideGapPoints = true;
 		if (userOut!=null) userOut.println("Fitting Straight Subsets: "+straightLarvae.toString());
 		fitSubsets(straightLarvae, hideGapPoints);
@@ -415,14 +435,15 @@ public class BackboneFitter {
 		freezeHideArtificial();
 		
 		hideGapPoints = false;
-		spp.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
-		spp.freezeDiverged = true;
+//		bentParams = new FittingParameters();
+		bentParams.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
+		bentParams.freezeDiverged = true;
 //		spp.imageWeight = spp.imageWeight*2;
 //		spp.spineLengthWeight *= 0.3f;
 //		spp.spineSmoothWeight *= 0.3f;
 //		spp.timeSmoothWeight[0] *= 0.3f;
 //		upTailWeights_timeLength(spp,tailUpFactor);
-		resetParams(spp);
+		resetParams(bentParams);
 //		bplg.resetBackboneInfo_SinglePass();
 		if (userOut!=null) userOut.println("Fitting Bent Subsets: "+bentLarvae.toString());
 		 fitSubsets(bentLarvae, hideGapPoints);
@@ -434,16 +455,16 @@ public class BackboneFitter {
 
 		//Patch diverged sections
 		// TODO turn this block into its own function
-		FittingParameters patchParams = FittingParameters.getSinglePassParams();
+//		divergedParams = FittingParameters.getSinglePassParams();
 
 		divergedGaps.addAll(Gap.bools2Segs(artificial));
 		
-		patchParams.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
-		patchParams.freezeDiverged = true;
-		patchParams.leaveBackbonesInPlace = true;
+		divergedParams.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
+		divergedParams.freezeDiverged = true;
+		divergedParams.leaveBackbonesInPlace = true;
 //		patchParams.imageWeight = patchParams.imageWeight*2;
 //		upTailWeights_timeLength(patchParams,tailUpFactor);
-		resetParams(patchParams); 
+		resetParams(divergedParams); 
 		//Vector<Gap> divGaps = new Vector<Gap>();//divergedGaps;
 	//	divGaps.addAll(divergedGaps);
 		//for (Gap divG : divGaps){
@@ -470,13 +491,13 @@ public class BackboneFitter {
 		
 		//Inch inwards on the remaining bad gaps
 		Vector<Gap> badGaps = findBadGaps();
-		FittingParameters edgeParams = FittingParameters.getSinglePassParams();
-		edgeParams.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
-		edgeParams.freezeDiverged = true;
-		edgeParams.leaveBackbonesInPlace = true;
+//		suspiciousParams = FittingParameters.getSinglePassParams();
+		suspiciousParams.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
+		suspiciousParams.freezeDiverged = true;
+		suspiciousParams.leaveBackbonesInPlace = true;
 //		edgeParams.imageWeight = edgeParams.imageWeight*2;
 //		upTailWeights_timeLength(edgeParams,tailUpFactor);
-		resetParams(edgeParams); 
+		resetParams(suspiciousParams); 
 		int count = 0;
 		int maxCount = 5;
 		while (badGaps.size()>0 && count<maxCount){
@@ -505,11 +526,11 @@ public class BackboneFitter {
 		
 		
 		//Do final run on the whole track for continuity
-		spp = FittingParameters.getSinglePassParams();
-		spp.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
-		spp.freezeDiverged = true;
-		spp.leaveBackbonesInPlace = true;
-		resetParams(spp);
+//		finalParams = FittingParameters.getSinglePassParams();
+		finalParams.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
+		finalParams.freezeDiverged = true;
+		finalParams.leaveBackbonesInPlace = true;
+		resetParams(finalParams);
 		for (int i=0; i<params.numFinalSingleIterations; i++){
 			runSingleIteration();
 		}
