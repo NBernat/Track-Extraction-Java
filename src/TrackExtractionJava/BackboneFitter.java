@@ -407,7 +407,16 @@ public class BackboneFitter {
 			return;
 		}
 		
-		
+		double targetLength = 0;
+		Vector<BackboneTrackPoint> btplist = getBTPSubset(straightLarvae);
+		for (BackboneTrackPoint btp : btplist) {
+			//TODO Check with natalie that getBackboneLength() is valid here - i.e. that backbones are updated
+			targetLength += btp.getBackboneLength();
+		}
+		targetLength /= btplist.size();
+		spp.targetLength = (float) targetLength;
+		spp.spineExpansionWeight = 1;
+
 		//Fit the bent larvae
 		// TODO turn this block into its own function
 		
@@ -1573,8 +1582,22 @@ public class BackboneFitter {
 	}
 	
 	
-	
-	
+
+	public Vector<BackboneTrackPoint> getBTPSubset (Gap g) {
+		Vector<BackboneTrackPoint> v = new Vector<BackboneTrackPoint>();
+		for (int i = g.start; i < g.end; ++i) { 
+			//TODO check with Natalie if <= g.end is appropriate
+			v.add(BTPs.get(i));
+		}
+		return v;
+	}
+	public Vector<BackboneTrackPoint> getBTPSubset (Vector<Gap> g) {
+		Vector<BackboneTrackPoint> v = new Vector<BackboneTrackPoint>();
+		for (Gap gap : g) { 
+			v.addAll(getBTPSubset(gap));
+		}
+		return v;
+	}
 	
 	public Vector<BackboneTrackPoint> getBackboneTrackPoints() {
 		return BTPs;

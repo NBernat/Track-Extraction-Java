@@ -18,7 +18,7 @@ public class FittingParameters {
 	int startInd = 0;
 	int endInd = 1000;
 	
-	int numFinalSingleIterations = 5;
+	int numFinalSingleIterations = 50;
 	
 	boolean storeEnergies = false;
 //	boolean storeCommOutput = false;
@@ -56,22 +56,24 @@ public class FittingParameters {
 	
 	public float imageWeight = 1.0f;
 	public float spineLengthWeight = 0.4f;
-	public float spineSmoothWeight = 0.8f;
+	public float spineSmoothWeight = 1.0f;
 	public float[] timeLengthWeight = {0.3f, 0.1f, 0.1f};
 	public float[] timeSmoothWeight = {0.3f, 0.1f, 0.1f}; 
 	
 	//Head=0, Tail=end
-	public float[] imageWeights = {0.70f,0.75f,0.8f, 0.85f,1,1, 1};
-	public float[] spineLengthWeights = {.5f,1,1, 1,1,1, 1};
-	public float[] spineSmoothWeights = {.6f,1,1, 1,1,1, 1};
+	//public float[] imageWeights = {0.70f,0.75f,0.8f, 0.85f,1,1, 1};
+	public float[] imageWeights = {1,1,1, 1,1,1, 1};
+	public float[] spineLengthWeights = {.5f,1,1, 1,1,1, .25f};
+	public float[] spineSmoothWeights = {1,1,1, 1,1,1, 1};
 	public float[][] timeLengthWeights = { {1,1,1, 1,1,1, 1},
 											{1,1,1, 1,1,1, 1},
 											{1,1,1, 1,1,1, 1} };
 	public float[][] timeSmoothWeights = { {1,1,1, 1,1,1, 1},
 											{1,1,1, 1,1,1, 1},
 											{1,1,1, 1,1,1, 1} };
-	
-	
+	public float[] spineExpansionWeights = {1,1,1, 1,1,1, 1};
+	public float spineExpansionWeight = 0;
+	public float targetLength = -1;
 	/**
 	 * Refits the segments of a diverged track surrounding the divergence event
 	 */
@@ -99,6 +101,21 @@ public class FittingParameters {
 	public FittingParameters(){
 		//TODO
 	}
+	
+	public static FittingParameters getSinglePassParams(){
+		FittingParameters fp = new FittingParameters();
+		
+		fp.grains = new int[1];
+		fp.timeLengthWeight = new float[1];
+		fp.timeSmoothWeight = new float[1];
+		
+		fp.grains[0] = 1;
+		fp.timeLengthWeight[0] = 0.5f;
+		fp.timeSmoothWeight[0] = 0.5f;
+		
+		return fp;
+	}
+	
 	
 	public boolean isFirstPass(int grain){
 		return grain==grains[0];
@@ -145,6 +162,10 @@ public class FittingParameters {
 				timeLengthWeight(pass)));
 		Forces.add(new TimeSmoothForce(tsWeights,
 				timeSmoothWeight(pass)));
+		
+		if (spineExpansionWeight > 0 && targetLength > 0) {
+			Forces.add(new SpineExpansionForce(spineExpansionWeights, spineExpansionWeight, targetLength));
+		}
 		return Forces;
 	}
 	
@@ -173,19 +194,7 @@ public class FittingParameters {
 	}
 	
 	
-	public static FittingParameters getSinglePassParams(){
-		FittingParameters fp = new FittingParameters();
-		
-		fp.grains = new int[1];
-		fp.timeLengthWeight = new float[1];
-		fp.timeSmoothWeight = new float[1];
-		
-		fp.grains[0] = 1;
-		fp.timeLengthWeight[0] = 0.1f;
-		fp.timeSmoothWeight[0] = 0;
-		
-		return fp;
-	}
+	
 }
 
 

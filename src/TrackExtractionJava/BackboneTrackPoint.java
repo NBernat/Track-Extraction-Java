@@ -702,6 +702,17 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	}
 	
 	
+	public double getBackboneLength () {
+		int x[] = backbone.getXCoordinates();
+		int y[] = backbone.getYCoordinates();
+		return MathUtils.curveLength(MathUtils.castIntArray2Double(x), MathUtils.castIntArray2Double(y));
+	}
+	
+	public double[] getBackboneMean () {
+		return new double[] {MathUtils.mean(backbone.getXCoordinates()), MathUtils.mean(backbone.getYCoordinates())};
+	}
+	
+	
 	public int toDisk(DataOutputStream dos, PrintWriter pw){
 		
 		//Write all ImTrackPoint data

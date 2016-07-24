@@ -153,4 +153,31 @@ public class MathUtils {
 		for (int i=0; i<data.length; i++) d[i] = (double)data[i];
 		return d;
 	}
+	public static double[] castFloatArray2Double(float[] data){
+		double[] d = new double[data.length];
+		for (int i=0; i<data.length; i++) d[i] = (double)data[i];
+		return d;
+	}
+	
+	public static double[] castIntArray2Double(int[] data){
+		double[] d = new double[data.length];
+		for (int i=0; i<data.length; i++) d[i] = (double)data[i];
+		return d;
+	}
+
+	public static double mean(int[] vals) {
+		return mean(castIntArray2Double(vals));
+	}
+	public static double mean(float[] vals) {
+		return mean(castFloatArray2Double(vals));
+	}
+	
+	public static double curveLength(double[] x, double[] y) {
+		double len = 0;
+		for (int i = 1; i < x.length; ++i) {
+			len += Math.sqrt(Math.pow(x[i]-x[i-1], 2) + Math.pow(y[i]-y[i-1], 2));
+		}
+		return len;
+	}
+	
 }
