@@ -2,15 +2,11 @@ package TrackExtractionJava;
 
 import ij.ImagePlus;
 import ij.ImageStack;
-import ij.gui.Plot;
 import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
 import ij.text.TextWindow;
 
 import java.awt.Color;
-import java.awt.Robot;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.PrintWriter;
@@ -21,11 +17,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Scanner;
 import java.util.Vector;
-
-import javax.swing.JButton;
-import javax.swing.JFrame;
-
-import sun.awt.SunToolkit.InfiniteLoop;
 
 
 /**
@@ -960,7 +951,7 @@ public class Track implements Serializable{
 		return makeDescription("X", null, "");
 	}
 	
-	
+	/*
 	public void showEnergyPlot(){
 		
 		Plot plot = new Plot("Example plot", "Frame", "Energy");
@@ -998,7 +989,7 @@ public class Track implements Serializable{
 		
 		plot.show();
 	}
-	
+	*/
 
 	
 		

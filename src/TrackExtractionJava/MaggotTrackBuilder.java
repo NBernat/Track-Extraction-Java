@@ -2,8 +2,6 @@ package TrackExtractionJava;
 
 import java.util.Vector;
 
-import com.sun.xml.internal.ws.api.addressing.AddressingVersion.EPR;
-
 import ij.ImageStack;
 import ij.text.TextWindow;
 

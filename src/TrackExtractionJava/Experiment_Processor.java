@@ -1,12 +1,9 @@
 package TrackExtractionJava;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
@@ -61,7 +58,7 @@ public class Experiment_Processor implements PlugIn{
 	private TicToc runTime;
 	private int indentLevel;
 	
-	ProgressFrame progFrame;
+	String currProcess = "none";
 	
 	public static void main(String[] args){
 		
@@ -71,6 +68,7 @@ public class Experiment_Processor implements PlugIn{
 		Experiment_Processor ep = new Experiment_Processor();
 		ep.runningFromMain = true;
 		
+		ep.currProcess = "Parsing inputs";
 		if (args!=null && args.length>=1){
 			
 			if (args.length>=2){
@@ -110,7 +108,10 @@ public class Experiment_Processor implements PlugIn{
 		indentLevel=0;
 		runTime = new TicToc();
 		
+		currProcess = "Loading File";
 		boolean success = (loadFile(arg0));
+		
+		currProcess = "Processor setup";
 		if (dstDir==null) dstDir = srcDir;
 		if (prParams.saveSysOutToFile) setupSysOut();
 		setupParams();
@@ -123,7 +124,7 @@ public class Experiment_Processor implements PlugIn{
 			if(success){
 				if (ex==null){
 					
-					
+					currProcess = "Extracting Tracks";
 					log("Loaded mmf; Extracting tracks...");
 					if (!extractTracks()) {
 						log("Error extracting tracks; aborting experiment_processor.");
@@ -136,76 +137,81 @@ public class Experiment_Processor implements PlugIn{
 						mmfWin=null;
 					}
 					if (prParams.saveMagEx) {
-						log("Saving Maggot Tracks...");
-						System.out.println("Saving maggot Tracks...");
+						currProcess = "Saving Extracted Tracks";
+						log("Saving Maggot Tracks...", true);
 						saveOldTracks();
-						log("...done saving Maggot Tracks");
-						System.out.println("...Done saving maggot Tracks");
+						log("...done saving Maggot Tracks", true);
 					}
 					IJ.showStatus("Done Saving MaggotTrackPoint Experiment");
 				}
 				
-				if(prParams.testMagFromDisk){
-					try{
-						log("Testing MagEx.fromDisk...");
-						testFromDisk(false, processLog);
-						log("...MagEx.fromDisk complete");
-					} catch (Exception exc){
-						StringWriter sw = new StringWriter();
-						PrintWriter pw = new PrintWriter(sw);
-						exc.printStackTrace(pw);
-						log ("...Error in MTP Experiment fromDisk:\n"+sw.toString());
-					}
-				}
+//				if(prParams.testMagFromDisk){
+//					try{
+//						log("Testing MagEx.fromDisk...");
+//						testFromDisk(false, processLog);
+//						log("...MagEx.fromDisk complete");
+//					} catch (Exception exc){
+//						StringWriter sw = new StringWriter();
+//						PrintWriter pw = new PrintWriter(sw);
+//						exc.printStackTrace(pw);
+//						log ("...Error in MTP Experiment fromDisk:\n"+sw.toString());
+//					}
+//				}
+				
+				
 				System.gc();
 				if (prParams.doFitting){
-//					ex = new Experiment(ex);
+					
+					currProcess = "Fitting Tracks";
+					
 					log("Fitting "+ex.getNumTracks()+" Tracks...");
 										
 					fitTracks();
 					log("...done fitting tracks");
 					if (prParams.saveFitEx) {
-						log("Saving backbone tracks...");
-						System.out.println("Saving backbone Tracks...");
+						log("Saving backbone tracks...", true);
+						
+						currProcess = "Saving Fit Tracks";
 						if (saveNewTracks()){
-							log("...done saving backbone tracks");
-							System.out.println("...Done saving backbone Tracks");
+							log("...done saving backbone tracks", true);
 							
 						} else {
-							log("Error saving tracks");
+							log("Error saving tracks", true);
 						}
 						IJ.showStatus("Done Saving BackboneTrackPoint Experiment");
 					}
 					
 				}
 				
-				if(prParams.testFitFromDisk){
-					try{
-						log("Testing FitEx.fromDisk...");
-						testFromDisk(true, processLog);
-						log("...FitEx.fromDisk complete");
-					} catch (Exception exc){
-						StringWriter sw = new StringWriter();
-						PrintWriter pw = new PrintWriter(sw);
-						exc.printStackTrace(pw);
-						log ("...Error in BTP Experiment fromDisk:\n"+sw.toString());
-					}
-				}
+//				if(prParams.testFitFromDisk){
+//					try{
+//						log("Testing FitEx.fromDisk...");
+//						testFromDisk(true, processLog);
+//						log("...FitEx.fromDisk complete");
+//					} catch (Exception exc){
+//						StringWriter sw = new StringWriter();
+//						PrintWriter pw = new PrintWriter(sw);
+//						exc.printStackTrace(pw);
+//						log ("...Error in BTP Experiment fromDisk:\n"+sw.toString());
+//					}
+//				}
 				
 				if(prParams.savetoCSV){
+					currProcess = "Saving Params to CSV";
 					Experiment.toCSV(ex, dstDir+File.separator+dstName+".csv", csvPrefs);
 				}
 				
 				
 			} else {
-				log("...no success");
+				log("...no success setting up log");
 			}
 			
 			log("Done Processing");
 			
 		} catch (Exception e){
-			e.printStackTrace(processLog);			
+			log("Error Thrown During Processing; Current Step: "+currProcess);
 		} finally {
+			
 			if (processLog!=null) processLog.close();
 			if (prParams.closeMMF && mmfWin!=null) {
 				mmfWin.close();
@@ -219,6 +225,7 @@ public class Experiment_Processor implements PlugIn{
 		
 	}
 	
+	/*
 	private void testFromDisk(boolean btpData, PrintWriter pw){
 		
 //		String[] pathParts;
@@ -254,7 +261,7 @@ public class Experiment_Processor implements PlugIn{
 		}
 		
 	}
-	
+	*/
 	protected void setupSysOut(){
 
 		File f = new File(dstDir+"SystemDOTout.txt");
@@ -520,13 +527,14 @@ public class Experiment_Processor implements PlugIn{
 		MaggotTrackBuilder tb = new MaggotTrackBuilder(mmfStack.getImageStack(), extrParams);
 
 		try {
-			System.out.println("Extracting tracks");
+			log("Extracting tracks", true);
 			//Extract the tracks
 			tb.run();
+			log("Converting Extracted Tracks to Experiment");
 			status+="...Running complete! \n Converting to experiment... \n";
 			ex = new Experiment(tb.toExperiment());
 			status+="...Converted to Experiment\n";
-			
+			log("Track Extraction complete: Extracted "+ex.getNumTracks()+" tracks");
 			
 			//Show the extracted tracks
 			if(prParams.showMagEx){
@@ -537,10 +545,12 @@ public class Experiment_Processor implements PlugIn{
 				status+="...Experiment shown\n";
 			}
 			
-			System.out.println("Extracted "+ex.getNumTracks()+" tracks");
+			log("Extracted "+ex.getNumTracks()+" tracks", true);
 			
 			if (prParams.diagnosticIm){
+				log("Generating diagnostic im");
 				ImagePlus dIm1 = ex.getDiagnIm(mmfStack.getWidth(), mmfStack.getHeight());
+				log("Dont Generating diagnostic im; saving...");
 				String ps = File.separator;
 				String diagnPath = (dstDir!=null)? dstDir : srcDir;
 				diagnPath += "diagnostics"+ps;
@@ -550,14 +560,19 @@ public class Experiment_Processor implements PlugIn{
 				diagnPath+= srcName;
 				diagnPath = diagnPath.replace(diagnPath.substring(diagnPath.lastIndexOf("."), diagnPath.length()), " diagnostic foreground.bmp");
 				IJ.save(dIm1, diagnPath);
+				log("Done saving diagnostic im");
 			}
+			
+			if (prParams.saveFittingOutput){
+				tb.comm.saveOutput((dstDir!=null)? dstDir : srcDir, "FittingOutput");
+			}
+			
 			
 		} catch  (Exception e){
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
 			e.printStackTrace(pw);
-			log("Error opening experiment: \n"+sw.toString());
-			System.out.println("Experiment_Processor.extractTracks error");
+			log("Error opening experiment: \n"+sw.toString(), true);
 			new TextWindow("Error extracting tracks", status+"\n"+sw.toString(), 500, 500);
 			return false;
 		} finally{
@@ -572,7 +587,7 @@ public class Experiment_Processor implements PlugIn{
 	private void fitTracks(){
 		indentLevel++;
 		IJ.showStatus("Fitting Tracks...");
-		System.out.println("Fitting "+ex.getNumTracks()+" Tracks");
+		log("Fitting "+ex.getNumTracks()+" Tracks", true);
 		Track tr;
 		Track newTr = null;
 		Vector<Track> toRemove = new Vector<Track>();
@@ -592,7 +607,7 @@ public class Experiment_Processor implements PlugIn{
 			IJ.showStatus("Fitting Track "+(i+1)+"/"+ex.getNumTracks());
 			tr = getTrackFromEx(i);//ex.getTrackFromInd(i);
 			if (tr==null) { 
-				System.out.println("Error loading track");
+				log("Error loading track", true);
 				break;
 			}
 			String trStr = "Track "+tr.getTrackID();
@@ -616,20 +631,20 @@ public class Experiment_Processor implements PlugIn{
 					ex.replaceTrack(newTr, i);
 					String msg = trStr+": done fitting "+timStr;
 					if (bbf.wasClipped()) msg+=" (ends clipped)"; 
-					System.out.println(msg);
+					log(msg, true);
 				} else if (bbf.diverged()){
 					divergedCount++;
 					tr.setDiverged(true); 
-					System.out.println(trStr+": diverged "+timStr);
+					log(trStr+": diverged "+timStr, true);
 					toRemove.add(tr);
 					errorsToSave.add(tr);
 				} else if (bbf.divergedGaps!=null && bbf.divergedGaps.size()>0){
 					divergedCount++;
-					System.out.println(trStr+": diverged, but was frozen "+timStr);
+					log(trStr+": diverged, but was frozen "+timStr, true);
 					errorsToSave.add(tr);
 				} else {
 					tr.setValid(false);
-					System.out.println(trStr+": ERROR "+timStr);
+					log(trStr+": ERROR "+timStr, true);
 					toRemove.add(tr);
 //					errorsToSave.add(tr);
 				}
@@ -646,16 +661,25 @@ public class Experiment_Processor implements PlugIn{
 					bbf.saveEnergyProfiles(f.getAbsolutePath());
 				}
 				
+				if (prParams.saveFittingOutput){
+					
+					File f = new File(dstDir+"\\FitterOutput\\track"+i+"\\");
+					if (!f.exists()) f.mkdirs();
+					bbf.saveCommOutput(f.getAbsolutePath());
+					
+				}
+				
+				
 				
 			} else {
 				toRemove.add(tr);
 				tr.setValid(false);
 				shortCount++;
-				System.out.println(trStr+": too short to fit");
+				log(trStr+": too short to fit", true);
 				toRemove.add(tr);
 			}
 			
-			
+			// TODO
 //			bbf.saveCommOutput(dstDir);//bbf.showCommOutput();
 		}
 		
@@ -664,10 +688,10 @@ public class Experiment_Processor implements PlugIn{
 		
 		
 		IJ.showStatus("Done fitting tracks");
-		System.out.println("Done fitting tracks: ");
-		System.out.println(shortCount+"/"+ex.getNumTracks()+" were too short (minlength="+prParams.minTrackLen+")");
-		System.out.println(divergedCount+"/"+(ex.getNumTracks()-shortCount)+" remaining diverged");
-		System.out.println((ex.getNumTracks()-toRemove.size()+shortCount)+"/"+(ex.getNumTracks()-shortCount-divergedCount)+" remaining were fit successfully");
+		log("Done fitting tracks: ", true);
+		log(shortCount+"/"+ex.getNumTracks()+" were too short (minlength="+prParams.minTrackLen+")", true);
+		log(divergedCount+"/"+(ex.getNumTracks()-shortCount)+" remaining diverged", true);
+		log((ex.getNumTracks()-toRemove.size()+shortCount)+"/"+(ex.getNumTracks()-shortCount-divergedCount)+" remaining were fit successfully", true);
 		
 		//Remove the tracks that couldn't be fit
 		for(Track t : toRemove){
@@ -682,7 +706,7 @@ public class Experiment_Processor implements PlugIn{
 			} else {
 				dim = ex.getMaxPlateDimensions();
 			}
-			System.out.println("Generating diagnostic im...");
+			log("Generating diagnostic im (with fit)...", true);
 			ImagePlus dIm1 = ex.getDiagnIm(dim[0], dim[1]);
 			String ps = File.separator;
 			String diagnPath = (dstDir!=null)? dstDir : srcDir;
@@ -693,14 +717,14 @@ public class Experiment_Processor implements PlugIn{
 			diagnPath+= srcName;
 			diagnPath = diagnPath.replace(diagnPath.substring(diagnPath.lastIndexOf("."), diagnPath.length()), " diagnostic foreground.bmp");
 			IJ.save(dIm1, diagnPath);
-			System.out.println("...Done generating diagnostic im");
+			log("...Done generating diagnostic im", true);
 			
 		}
 		
 		if (prParams.saveErrors){
-			System.out.println("Saving Error tracks...");
+			log("Saving Error tracks...", true);
 			saveErrorTracks(errorsToSave);
-			System.out.println("...Done saving error tracks");
+			log("...Done saving error tracks", true);
 		}
 		
 		//Show the fitted tracks
@@ -736,16 +760,16 @@ public class Experiment_Processor implements PlugIn{
 	 * @param tr The track of MaggotTrackPoints to be fit
 	 * @return A track fit by the BackboneFitter
 	 */
-	private Track fitTrack(Track tr){
-		indentLevel++;
-		
-//		bbf = new BackboneFitter(tr, fitParams);
-		bbf.fitTrack(tr);
-		indentLevel--;
-		
-		return bbf.getTrack();
-		
-	}
+//	private Track fitTrack(Track tr){
+//		indentLevel++;
+//		
+////		bbf = new BackboneFitter(tr, fitParams);
+//		bbf.fitTrack(tr);
+//		indentLevel--;
+//		
+//		return bbf.getTrack();
+//		
+//	}
 
 	
 	/**
@@ -754,8 +778,7 @@ public class Experiment_Processor implements PlugIn{
 	private boolean saveOldTracks(){
 		indentLevel++;
 		File f = new File(prParams.setMagExPath(srcDir, srcName, dstDir, dstName));
-		System.out.println("Saving MaggotTrack experiment to "+f.getPath());
-		log("Saving MaggotTrack experiment to "+f.getPath());
+		log("Saving MaggotTrack experiment to "+f.getPath(), true);
 		boolean status;
 		try{
 			DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f))); 
@@ -768,9 +791,8 @@ public class Experiment_Processor implements PlugIn{
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
 			e.printStackTrace(pw);
-			log("Error saving experiment: \n"+sw.toString());
+			log("Error saving experiment after extraction: \n"+sw.toString(), true);
 			status=false;
-			System.out.println("Experiment_processor.saveOldTracks error");
 		}
 		
 		indentLevel--;
@@ -783,16 +805,17 @@ public class Experiment_Processor implements PlugIn{
 		indentLevel++;
 		
 		File f = new File(prParams.setFitExPath(srcDir, srcName, dstDir, dstName));
-		System.out.println("Saving LarvaTrack experiment to "+f.getPath());
+		log("Saving LarvaTrack experiment to "+f.getPath(),true);
 		boolean status;
 		try{
 			DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f))); 
 			ex.toDisk(dos, processLog);
 			status=true;
 			dos.close();
+			log("Done saving LarvaTrack experiment", true);
 		} catch(Exception e){
 			status=false;
-			System.out.println("Experiment_processor.saveNewTracks error");
+			log("Experiment_processor.saveNewTracks error");
 		}
 		
 		indentLevel--;
@@ -804,15 +827,16 @@ public class Experiment_Processor implements PlugIn{
 	private void saveErrorTracks(Vector<Track> errTracks){
 		String fDst = (dstDir!=null)? dstDir : srcDir;
 		File f = new File(fDst+File.separator+"divergedTrackExp.jav");
-		System.out.println("Saving error track experiment to "+f.getPath());
+		log("Saving error track experiment to "+f.getPath(), true);
 		try{
 			DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f))); 
 			Experiment errEx = new Experiment(ex, errTracks);
 			
 			errEx.toDisk(dos, processLog);
 			dos.close();
+			log("Done saving error track experiment", true);
 		} catch(Exception e){
-			System.out.println("Experiment_processor.saveErrorTracks error");
+			log("Experiment_processor.saveErrorTracks error", true);
 		}
 	}
 	
@@ -1225,12 +1249,17 @@ public class Experiment_Processor implements PlugIn{
 
 	
 	private void log(String message){
-//		System.out.println(message);
+		log(message, false);
+	}
+	
+	private void log(String message, boolean print){
 		
+		if (print) System.out.println(message);
 		
 		String indent = "";
 		for (int i=0;i<indentLevel; i++) indent+="----";
-		processLog.println(runTime.tocSec()+indent+" "+message);
+		processLog.println(runTime.tocSec()+"sec: "+indent+" "+message);
+		
 	}
 	
 }

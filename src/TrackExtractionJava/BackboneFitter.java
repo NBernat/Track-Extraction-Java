@@ -4,7 +4,6 @@ import ij.ImagePlus;
 import ij.gui.PolygonRoi;
 import ij.process.FloatPolygon;
 import ij.text.TextWindow;
-import ij.util.ArrayUtil;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -13,17 +12,13 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.ListIterator;
 import java.util.Scanner;
 import java.util.Vector;
-
-import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
 
 /**
  * Fits backbones to a track of MaggotTrackPoints
@@ -88,6 +83,7 @@ public class BackboneFitter {
 	
 	private boolean useScaleFactors = true;
 	
+	boolean inchingInwards = false;
 	private boolean diverged = false;
 	protected int divergedInd = -1;
 	Vector<Gap> divergedGaps;
@@ -98,7 +94,6 @@ public class BackboneFitter {
 	Vector<EnergyProfile> energyProfiles;
 	
 	transient Communicator comm;
-	transient Communicator bbcomm;
 
 	
 	boolean doPause = false;
@@ -151,8 +146,6 @@ public class BackboneFitter {
 	
 		comm = new Communicator();
 		comm.setVerbosity(VerbLevel.verb_error);
-		bbcomm = new Communicator();
-		bbcomm.setVerbosity(VerbLevel.verb_off);
 		
 		initTrack(t);
 
@@ -406,22 +399,33 @@ public class BackboneFitter {
 
 		//Patch diverged sections
 		// TODO turn this block into its own function
-		FittingParameters patchParams = new FittingParameters();
+		FittingParameters patchParams = FittingParameters.getSinglePassParams();
+
+		
+		
 		patchParams.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
 		patchParams.freezeDiverged = true;
 		patchParams.leaveBackbonesInPlace = true;
 		patchParams.imageWeight = patchParams.imageWeight*2;
 		resetParams(patchParams); 
-//		Vector<Gap> divGaps = divergedGaps;//new Vector<Gap>();
-//		divGaps.addAll(divergedGaps);
-		for (Gap divG : divergedGaps){
+		//Vector<Gap> divGaps = new Vector<Gap>();//divergedGaps;
+	//	divGaps.addAll(divergedGaps);
+		//for (Gap divG : divGaps){
+		int initialSize = divergedGaps.size();
+		for (int i = 0; i < divergedGaps.size() && i < 2*initialSize+10; ++i) {
+			Gap divG = divergedGaps.get(i);
 //			patchTrackSubset(divG, params.divergedPatchBuffer, patchParams);
 			boolean doPrev =  divG.start != 0;
 			boolean doNext =  divG.end != (workingTrack.getNumPoints()-1);
 			if (userOut!=null) userOut.println("Patching Diverged Subset: "+divG.toString());
+
+			//Unfreeze the whole gap before fitting
+			setFrozen(divG.start, divG.end, false);
+			setHidden(divG.start, divG.end, false);
 			patchGap_InchInwards(divG, params.edgeSize, doPrev, doNext);
 			
 		}
+		// TODO address diverged gaps added to divergedGaps during ^^ loop
 		if (workingTrack==null){
 			System.out.println("Error patching diverged frames");
 			return;
@@ -436,17 +440,24 @@ public class BackboneFitter {
 		edgeParams.imageWeight = edgeParams.imageWeight*2;
 		resetParams(edgeParams); 
 		int count = 0;
-		int maxCount = 10;
+		int maxCount = 5;
 		while (badGaps.size()>0 && count<maxCount){
 			for (Gap badG : badGaps){
-				boolean doPrev =  badG.start != 0;
-				boolean doNext =  badG.end != (workingTrack.getNumPoints()-1);
-				if (userOut!=null) userOut.println("Patching Bad Subset: "+badG.toString());
-				patchGap_InchInwards(badG, params.edgeSize, doPrev, doNext);
+				if (badG.size()>1){
+					boolean doPrev =  badG.start != 0;
+					boolean doNext =  badG.end != (workingTrack.getNumPoints()-1);
+					if (userOut!=null) userOut.println("Patching Bad Subset: "+badG.toString());
+					patchGap_InchInwards(badG, params.edgeSize, doPrev, doNext);
+				}
 			}
 			badGaps = findBadGaps();
 			count++;
 			params.imageWeight=params.imageWeight*1.02f;
+		}
+		
+		// TODO
+		if (badGaps.size()>0){
+			//Mark the suspicious tracks 
 		}
 		
 		//Do final run on the whole track for continuity
@@ -510,11 +521,12 @@ public class BackboneFitter {
 		//Fit entire track?
 	}
 	
-	
+	/*
 	private Vector<Gap> findStraightGaps(double[] htDists, double mean, double stdDev){
 			
 		return findStraightGaps(findBentGaps(htDists, mean, stdDev));
 	}
+	*/
 	
 	private Vector<Gap> findStraightGaps(Vector<Gap> bent){
 		
@@ -746,21 +758,6 @@ public class BackboneFitter {
 	
 	protected Vector<Gap> findBadGaps(){
 		
-//		double[] meanStdDev = workingTrack.getEnergyMeanStdDev(params.energyTypeForBadGap);
-//		double thresh = meanStdDev[0] + params.numStdDevForBadGap*meanStdDev[1];
-//		
-//		double[] e = workingTrack.getEnergies(params.energyTypeForBadGap);
-//		boolean[] bad = new boolean[e.length];
-//		for (int i=0; i<bad.length; i++){
-//			bad[i] = e[i]>thresh;
-//		}
-//		
-//		Vector<Gap> badGaps = Gap.bools2Segs(bad);
-//		if (badGaps.size()>1) BBFPointListGenerator.mergeGaps(badGaps, params.minValidSegmentLen, null);
-//		
-//		
-// 		return badGaps;
-		
 		return workingTrack.findBadGaps(params.energyTypeForBadGap, params.numStdDevForBadGap, params.minValidSegmentLen);
 		
 	}
@@ -775,8 +772,10 @@ public class BackboneFitter {
 	 * @return
 	 */
 	protected boolean patchGap_InchInwards(Gap badG, int edgeSize, boolean doPrev, boolean doNext){
-		
+
 		if (!doPrev && !doNext) return false;
+		
+		inchingInwards = true;
 		
 //		float oldIWt = params.imageWeight*2;
 		float[] oldwts = params.timeLengthWeight;
@@ -789,7 +788,17 @@ public class BackboneFitter {
 		int numPtsCutoff = (doPrev && doNext)? 2 : 1;   
 		while (unfit.size()>numPtsCutoff && success){
 			resetForNextExectution();
+
+			// TODO Remove this later
+//			if (unfit.start >= 153 && unfit.end < 184) {
+//				doPause = true;
+//				userIn = new Scanner(System.in);
+//				userOut = System.out;
+//				userOut.println("gap: " + unfit.start + " - " + unfit.end);
+//			}
 			success = fitSubsetEdges(unfit, edgeSize, true, doPrev, doNext); 
+			
+			// TODO check if the edge points have been frozen (bc of divergence)
 			
 			if (success){
 				if (doPrev) unfit.start++;
@@ -803,7 +812,7 @@ public class BackboneFitter {
 			
 		}
 		
-		
+		//Run the fitter on the whole gap
 		resetForNextExectution();
 		Vector<Gap> bads = new Vector<Gap>();
 		bads.add(badG);
@@ -812,6 +821,8 @@ public class BackboneFitter {
 		
 //		params.imageWeight = oldIWt;
 		params.timeLengthWeight = oldwts;
+		
+		inchingInwards = false;
 		return success;
 	}
 	
@@ -988,7 +999,7 @@ public class BackboneFitter {
 	}
 	
 	
-	private boolean[] getFrozenBTPs(){
+	protected boolean[] getFrozenBTPs(){
 		
 		boolean[] frozen = new boolean[BTPs.size()];
 		for (int i=0; i<BTPs.size(); i++) frozen[i] = BTPs.get(i).frozen;
@@ -1018,7 +1029,6 @@ public class BackboneFitter {
 
 			// Do a relaxation step
 			comm.message("Updating " + updater.inds2Update().length+ " backbones", VerbLevel.verb_debug);
-			bbcomm.message("\n\nIteration "+updater.getIterNum(), VerbLevel.verb_debug);
 			
 			if (params.storeEnergies){
 				if (!firstPass){
@@ -1043,7 +1053,10 @@ public class BackboneFitter {
 
 			// Setup for the next step
 			calcShifts();
-			if (diverged && params.freezeDiverged){
+			if (diverged && inchingInwards){
+				// TODO freeze diverged point (singular) 
+			}else 
+				if (diverged && params.freezeDiverged){
 				Gap div = findDivergedGap();
 				int trackIndStart = BTPs.get(div.start).frameNum-bplg.workingTrack.points.firstElement().frameNum;
 				int trackIndEnd = BTPs.get(div.end).frameNum-bplg.workingTrack.points.firstElement().frameNum;
@@ -1129,7 +1142,6 @@ public class BackboneFitter {
 				}
 			}
 			
-			bbcomm.message("Frame "+btpInd+" Components:", VerbLevel.verb_debug);
 			
 			FloatPolygon newBB = CVUtils.fPolyAdd(CVUtils.fPolyMult(generateNewBackbone(targetBackbones), scaleFactor), CVUtils.fPolyMult(BTPs.get(btpInd).bbOld, 1-scaleFactor));//scaleFactor * generateNewBackbone(targetBackbones) + (1-scaleFactor) * BTPs.get(btpInd).bbOld;
 			
@@ -1174,6 +1186,10 @@ public class BackboneFitter {
 			comm.message("Error getting target backbones: \n"+sw.toString()+"\n", VerbLevel.verb_error);
 		}
 		
+		if (doPause){
+			BTPs.get(btpInd).targetBackbones = targetBackbones;
+		}
+		
 		return targetBackbones;
 
 	}
@@ -1186,8 +1202,6 @@ public class BackboneFitter {
 	 */
 	private FloatPolygon generateNewBackbone(Vector<FloatPolygon> targetBackbones) {
 		
-		boolean makeString = (updater.getIterNum()<20);
-		StringBuilder st = new StringBuilder("\n");
 		
 		float[] zeros = new float[params.numBBPts];
 		Arrays.fill(zeros, 0);
@@ -1204,7 +1218,6 @@ public class BackboneFitter {
 		// factors for normalization
 		for (int tb = 0; tb < targetBackbones.size(); tb++) {
 
-			if (makeString) st.append(Forces.get(tb).name+": ");
 			
 			//note that getWeights should be called after getTargetPoints
 			float[] targetX = targetBackbones.get(tb).xpoints;
@@ -1212,18 +1225,14 @@ public class BackboneFitter {
 			float[] weights = Forces.get(tb).getWeights();
 
 			for (int k = 0; k < params.numBBPts; k++) {
-				if (makeString) st.append(k);
 				if (weights[k] != 0 && targetX[k]!=0 && targetY[k]!=0) {
-					st.append("("+targetX[k]+","+targetY[k]+")");
 					newX[k] += targetX[k] * weights[k];
 					newY[k] += targetY[k] * weights[k];
 					normFactors[k] += weights[k];
 				}
 			}
-			st.append("\n");		
 
 		}
-		bbcomm.message(st.toString(), VerbLevel.verb_debug);
 		comm.message("Normalizing points", VerbLevel.verb_debug);
 		// Normalize each point
 		for (int k = 0; k < params.numBBPts; k++) {
@@ -1483,6 +1492,7 @@ public class BackboneFitter {
 			pauseDisplayParams.initialBB = true;
 			pauseDisplayParams.contour = true;
 			pauseDisplayParams.mid = true;
+			pauseDisplayParams.forces = true;
 			
 			pauseStack = bplg.workingTrack.playMovie(bplg.workingTrack.getTrackID(), pauseDisplayParams);
 		}
@@ -1518,9 +1528,6 @@ public class BackboneFitter {
 		if (!comm.outString.equals("")){
 			 new TextWindow("TrackFitter", comm.outString, 500, 500);
 		 }
-		if (!bbcomm.outString.equals("")){
-			new TextWindow("Backbone Generation", bbcomm.outString, 500, 500);
-		}
 	}
 	
 	public void saveCommOutput(String dstDir){
@@ -1538,18 +1545,6 @@ public class BackboneFitter {
 			
 		 }
 		
-		if (!bbcomm.outString.equals("")){
-			PrintWriter out;
-			File f =new File(dstDir+"Backbone Generation.txt"); 
-			try{
-				if (!f.exists()) f.createNewFile();
-				out = new PrintWriter(f);
-					out.print(bbcomm.outString);
-				
-			} catch (Exception e){
-				e.printStackTrace();
-			}
-		}
 	}
 	
 	public void saveEnergyProfiles(String dstDir){

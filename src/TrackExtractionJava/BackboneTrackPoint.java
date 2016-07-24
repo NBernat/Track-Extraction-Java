@@ -93,6 +93,8 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	 */
 	protected transient FloatPolygon bbNew;
 	
+	protected Vector<FloatPolygon> targetBackbones = null;
+	
 	transient BackboneFitter bf;
 	
 	protected boolean artificialMid;
@@ -653,44 +655,8 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		}
 		
 		//FORCES
-		if (forces) {
-			boolean error = false;
-			
-			String status = "Frame "+frameNum+"\n";
-	//		displayUtils.drawForces(im, bbNew, bf.Forces, bf.BTPs, expandFac, expandFac, offX, offY, rect);
-			Color[] colors = {Color.WHITE, Color.MAGENTA,Color.GREEN, Color.CYAN, Color.RED};
-			for(int f=0; f<(bf.Forces.size()-1); f++){
-				
-				im.setColor(colors[f]);
-				try{
-					status += bf.Forces.get(f).getName()+": ";
-					
-					FloatPolygon targetPts = bf.Forces.get(f).getTargetPoints(frameNum-bf.BTPs.firstElement().frameNum, bf.BTPs);
-					
-					if (targetPts!=null && targetPts.npoints==bbNew.npoints){
-						for (int i=0; i<targetPts.npoints; i++){
-							
-							int x1 = offX + (int)(expandFac*(bbNew.xpoints[i]-rect.x));
-							int y1 = offY + (int)(expandFac*(bbNew.ypoints[i]-rect.y));
-							int x2 = (int)(expandFac*(targetPts.xpoints[i]-rect.x)+offX);
-							int y2 = (int)(expandFac*(targetPts.ypoints[i]-rect.y)+offY);
-							status += "("+(targetPts.xpoints[i]-rect.x)+","+(targetPts.ypoints[i]-rect.y)+") ";
-							
-							im.drawLine(x1, y1, x2, y2);
-							im.drawOval(x2, y2, 2, 2);
-		//					im.drawDot((int)(expandFac*(targetPts.xpoints[i]-rect.x)+offX), (int)(expandFac*(targetPts.ypoints[i]-rect.y)+offY));
-							
-						}
-					}
-					status+="\n";
-				} catch (Exception e ){
-					error = true;
-//					new TextWindow("Plotting Error: Forces", status, 500, 500);
-				}
-			}
-			
-			if (error && track!=null && track.comm!=null) comm.message(status, VerbLevel.verb_error);
-			
+		if (forces && targetBackbones!=null && targetBackbones.size()>0) {
+			displayUtils.drawTargets(im, targetBackbones, expandFac, offX, offY, rect);//TargetBackbones are absolute coords
 		}
 			
 			

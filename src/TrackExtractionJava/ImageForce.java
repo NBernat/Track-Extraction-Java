@@ -38,9 +38,14 @@ public class ImageForce extends Force {
 		if (btp.getClusterMethod()==0){
 			for (int pix=0; pix<btp.getNumPix(); pix++){
 				int k=btp.getClusterInds(pix);
-				targetX[k] += btp.getMagPixI(pix)*(btp.getMagPixX(pix));
-				targetY[k] += btp.getMagPixI(pix)*(btp.getMagPixY(pix));
-				norm[k] += btp.getMagPixI(pix);
+				
+				if (k>=0){
+					targetX[k] += btp.getMagPixI(pix)*(btp.getMagPixX(pix));
+					targetY[k] += btp.getMagPixI(pix)*(btp.getMagPixY(pix));
+					norm[k] += btp.getMagPixI(pix);
+				} else {
+					
+				}
 			}
 		} else {
 			for (int pix=0; pix<btp.getNumPix(); pix++){
@@ -61,7 +66,7 @@ public class ImageForce extends Force {
 			} else {
 				//if no cluster associated with point, move to nearest contour point and reduce image weight. 
 				double alpha = 0.1;
-				int[] ncp = btp.getNearestContourPoint(btp.getBackbone()[0][k], btp.getBackbone()[1][k]);
+				int[] ncp = btp.getNearestContourPoint(btp.bbOld.xpoints[k], btp.bbOld.ypoints[k]);
 				targetX[k] = ncp[0];
 				targetY[k] = ncp[1];
 				weights[k] *= alpha;

@@ -3,10 +3,6 @@ package TrackExtractionJava;
 import ij.gui.Plot;
 
 import java.awt.Color;
-import java.awt.Dimension;
-import java.util.Arrays;
-
-import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
 
 public class MathUtils {
 
