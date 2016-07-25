@@ -113,8 +113,8 @@ public class Experiment_Processor implements PlugIn{
 		
 		currProcess = "Processor setup";
 		if (dstDir==null) dstDir = srcDir;
-		if (prParams.saveSysOutToFile) setupSysOut();
 		setupParams();
+		if (prParams.saveSysOutToFile) setupSysOut();
 
 		try {
 			runTime.tic();

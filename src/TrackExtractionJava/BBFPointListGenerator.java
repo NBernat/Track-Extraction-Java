@@ -355,7 +355,7 @@ public class BBFPointListGenerator {
 			//dilateGaps(gaps, params.gapDilation, params.minValidSegmentLen, track.getStart().frameNum, track.getEnd().frameNum, params.dilateToEdges);
 			
 			if (mergeGaps(gaps, params.minValidSegmentLen, comm)) {
-				invalidateGaps(gaps);
+//				invalidateGaps(gaps);
 //				MaggotTrackBuilder.orientMaggotTrack(BTPs, comm, track.getTrackID());
 			}
 			
@@ -419,15 +419,15 @@ public class BBFPointListGenerator {
 		return gapsChanged;
 	}
 
-	private void invalidateGaps(Vector<Gap> gaps){
-		for (int i=0; i<gaps.size(); i++){
-			Gap gap = gaps.get(i);
-			for (int j=gap.start; j<=gap.end; j++){
-				BackboneTrackPoint btp = BTPs.get(j);
-				btp.bbvalid = false;
-			}
-		}
-	}
+//	private void invalidateGaps(Vector<Gap> gaps){
+//		for (int i=0; i<gaps.size(); i++){
+//			Gap gap = gaps.get(i);
+//			for (int j=gap.start; j<=gap.end; j++){
+//				BackboneTrackPoint btp = BTPs.get(j);
+//				btp.bbvalid = false;
+//			}
+//		}
+//	}
 	
 	
 	/**
