@@ -37,13 +37,16 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	private transient int numPix;
 	/**
 	 * A list of X Coordinates of points that are considered as part of the maggot 
-	 * QUESTION: These coordinates are referenced to original video image, not to subimage stored in ImTrackPoint ?
+	 * <p>
+	 * Coordinates are *Absolute* coordinates, not coords relative to image frame
 	 * <p>
 	 * Contains numPix valid elements
 	 */
 	private transient float[] MagPixX;
 	/**
-	 * A list of X Coordinates of points that are considered as part of the maggot 
+	 * A list of Y Coordinates of points that are considered as part of the maggot  
+	 * <p>
+	 * Coordinates are *Absolute* coordinates, not coords relative to image frame
 	 * <p>
 	 * Contains numPix valid elements  
 	 */
@@ -65,7 +68,9 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	 */
 	private transient int[] clusterInds;
 	
-	
+	/**
+	 * The pixel clustering method used by the backbone fitter
+	 */
 	private int clusterMethod=0;
 	
 	/**
@@ -76,37 +81,85 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	private transient double gmmClusterVariance = -1;
 	
 	/**
-	 * The backbone of the maggot
+	 * The final backbone of the maggot
+	 * <p>
+	 * NOTE: during backbone fitting, this is not set; instead use bbOld/bbNew
 	 */
 	PolygonRoi backbone;
 	
 	/**
-	 * For plotting
+	 * The BackboneFitter's initial guess for the backbone. Absolute coordinates.
+	 * <p>
+	 * (Used for plotting)
 	 */
 	private transient FloatPolygon bbInit;
 	/**
-	 * Temporary backbone used to fit the final backbone
+	 * Temporary backbone used to fit the final backbone. Absolute coordinates.
+	 * <p>
+	 * In the backbone-fitting algorithm, bbOld stores the previous iteration's backbone, and 
+	 * is used for all calculations of new backbones  
 	 */
 	protected transient FloatPolygon bbOld;
 	/**
-	 * Temporary backbone used to fit the final backbone
+	 * Temporary backbone used to fit the final backbone. Absolute coordinates.
+	 * <p>
+	 * In the backbone fitting algorithm, bbNew stores the current iteration's backbone
 	 */
 	protected transient FloatPolygon bbNew;
 	
-	protected Vector<FloatPolygon> targetBackbones = null;
+	/**
+	 * The target backbones used to generate the last backbone. Absolute coordinates. Used in track.showFitting.
+	 * Not saved to disk. 
+	 */
+	protected transient Vector<FloatPolygon> targetBackbones = null;
 	
+	/**
+	 * The backbone fitter used to fit this btp. Present primarily for access to bf.communicator
+	 * Not saved to disk.
+	 */
 	transient BackboneFitter bf;
 	
+	/**
+	 * Flag indicating whether or not the midline (i.e. the one generated during extraction) was  
+	 * used as the initial backbone guess. True means the midline was replaced before calculating a 
+	 * backbone.
+	 */
 	protected boolean artificialMid;
-	
-	public boolean bbvalid = true;
-	
+
+	/**
+	 * Flag indicating whether or not this backbone is considered a potentially incorrect representation 
+	 * of the larva's posture. 
+	 * <p>
+	 * Calculated in the backbone fitter after all fitting has occurred 
+	 */
 	public boolean suspicious = false; 
 	
+	
+	/**
+	 * Flag indicating whether or not this btp is used in calculations for neighboring btp's backbone
+	 */
 	protected boolean hidden = false;
+	
+	/**
+	 * Flag indicating whether or not this backbone is to be updated in the current iteration of the backbone fitter
+	 */
 	protected boolean frozen = false;
 	
+	/**
+	 * Relatively unused currently; put in place to modulate the step size by which bbOld is adjusted to 
+	 * create bbNew. 
+	 * <p>
+	 * See BackboneFitter.bbRelaxationStep 
+	 */
 	protected double scaleFactor = 1;
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	public BackboneTrackPoint(){
 		
@@ -122,9 +175,9 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	 * @param thresh
 	 */
 	public BackboneTrackPoint(double x, double y, Rectangle rect, double area,
-			int frame, int thresh) {
+			int frame, int thresh, int numBBPts) {
 		super(x, y, rect, area, frame, thresh);
-		//QUESTION: needs numBBPts?
+		this.numBBPts = numBBPts; 
 	}
 	
 	
@@ -138,25 +191,37 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	public static BackboneTrackPoint convertMTPtoBTP(MaggotTrackPoint mtp, int numBBPts){
 		
 		//Copy all old info
-		
-		BackboneTrackPoint btp = new BackboneTrackPoint(mtp.x, mtp.y, mtp.rect, mtp.area, mtp.frameNum, mtp.thresh);
+		BackboneTrackPoint btp = new BackboneTrackPoint(mtp.x, mtp.y, mtp.rect, mtp.area, mtp.frameNum, mtp.thresh, numBBPts);
 		mtp.copyInfoIntoBTP(btp);
 
 		//Make new stuff
-		btp.numBBPts = numBBPts; 
+//		btp.numBBPts = numBBPts; 
 		
 		return btp;
 	}
 	
+	
+	/**
+	 * Resets the backbone info, marking the point with the artificialMid flag
+	 * See also: setBackboneInfo 
+	 * @param clusterMethod
+	 * @param newMidline
+	 * @param prevOrigin
+	 */
 	protected void fillInBackboneInfo(int clusterMethod, PolygonRoi newMidline, float[] prevOrigin){
 		artificialMid = true;
 		setBackboneInfo(clusterMethod, newMidline, prevOrigin);
 	}
 	
+	/**
+	 * Sets initial backbone guess, complete with pixel/cluster info. All info stored as absolute coordinates
+	 * @param clusterMethod
+	 * @param newMidline
+	 * @param prevOrigin
+	 */
 	protected void setBackboneInfo(int clusterMethod, PolygonRoi newMidline, float[] prevOrigin){
 		
 		if(newMidline!=null){
-			
 			
 			//Correct the origin of the midline
 			FloatPolygon newMid = newMidline.getFloatPolygon();
@@ -378,6 +443,13 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		return distSqr;
 	}
 
+	
+	/**
+	 * Returns the sum of the distance squared between each backbone coordinate
+	 * <p>
+	 * Calculation is made between bbNew and bbOld 
+	 * @return
+	 */
 	public double calcPointShift(){
 		//Calculate the change between the old and new backbones
 		double shift = 0;
@@ -418,7 +490,7 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	}
 	
 	/**
-	 * Stores the final backbone
+	 * Stores the final backbone, and resets head, tail and midpoint
 	 */
 	protected void finalizeBackbone(){
 		if (bbOld!=null){
@@ -433,14 +505,24 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		}
 	}
 	
+	/**
+	 * 
+	 * @param energies
+	 */
 	public void storeEnergies(HashMap<String, Double> energies){
 		this.energies = energies;
 	}
 	
+	/**
+	 * Returns the previous point in the track
+	 */
 	public BackboneTrackPoint getPrev(){
 		return (BackboneTrackPoint)prev;
 	}
 	
+	/**
+	 * Returns the next point in the track
+	 */
 	public BackboneTrackPoint getNext(){
 		return (BackboneTrackPoint)next;
 	}
@@ -485,10 +567,19 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		return (bbInit==null)? null : bbInit.duplicate();
 	}
 	
+	/**
+	 * Gets the finalized backbone. NOTE: during backbone fitting, this is not set; instead use bbOld/bbNew
+	 * @return
+	 */
 	public double[][] getBackbone(){
 		return CVUtils.fPoly2Array(backbone.getFloatPolygon(), rect.x, rect.y);
 	}
 	
+	/**
+	 * Interpolates the backbone to the given number of coordinates
+	 * @param numCoords
+	 * @return
+	 */
 	public double[][] getInterpdBackbone(int numCoords){
 		if (numCoords==-1) numCoords = numBBPts;
 		PolygonRoi newBB = getInterpolatedSegment(backbone, numCoords);
@@ -589,8 +680,10 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 		int centerX = (int)(x-rect.x)*(expandFac);
 		int centerY = (int)(y-rect.y)*(expandFac);
 		ImageProcessor pIm = CVUtils.padAndCenter(new ImagePlus("Point "+pointID, bigIm), expandFac*trackWindowWidth, expandFac*trackWindowHeight, centerX, centerY);
-		int offX = trackWindowWidth*(expandFac/2) - ((int)x-rect.x)*expandFac;//rect.x-imOriginX;
-		int offY = trackWindowHeight*(expandFac/2) - ((int)y-rect.y)*expandFac;//rect.y-imOriginY;
+		int windowCenterX = trackWindowWidth*(expandFac/2);
+		int windowCenterY = trackWindowHeight*(expandFac/2);
+		int offX =  windowCenterX - centerX;//((int)x-rect.x)*expandFac;//rect.x-imOriginX;
+		int offY = windowCenterY - centerY;//((int)y-rect.y)*expandFac;//rect.y-imOriginY;
 		
 		
 		return drawFeatures(pIm, offX, offY, expandFac, clusters, mid, initialBB, newBB, contour, ht, forces, bb); 
