@@ -32,8 +32,8 @@ public class TicToc {
     	this("anonymous");
     }
     public TicToc(String name) {
-    this.name = name;
-	   reset();
+        this.name = name;
+	    reset();
 	}
     public void reset() {
     	ncalls = 0;
