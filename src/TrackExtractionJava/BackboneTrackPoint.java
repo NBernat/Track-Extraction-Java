@@ -31,7 +31,11 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	 */
 	final static int pointType = 3;
 	 
-	private static final double minShiftToUpdateClusters = 0.1;
+	/**
+	 * minimum summed squared shift to call an update on the clustering
+	 * (0.01 = .1^2)
+	 */
+	private static final double minShiftToUpdateClusters = 0.01;
 	
 	/**
 	 * The number of pixels in the image considered as part of the maggot
