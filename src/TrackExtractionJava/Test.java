@@ -29,10 +29,8 @@ public class Test {//extends JFrame
 
 	public static void main(String[] args) {
 		
-<<<<<<< HEAD
 		
 		testMHG();
-=======
 		/*
 		String[] dirs = {
 //				"E:\\data2\\OdorPlusOpto\\42a@CsChrimson(X)redo_newparams\\S_Od_EtAc_Dr_0to10ppt_4drops#N_Re_B0to255s3_120Hz_800uW\\201507311116\\",
@@ -54,7 +52,6 @@ public class Test {//extends JFrame
 			}
 		}
 		*/
->>>>>>> refs/remotes/NBernat/master
 		
 		/*
 		*/
@@ -363,11 +360,8 @@ public class Test {//extends JFrame
 //		ex.showEx();
 //		ex.getTrack(33).showFitting();
 		
-<<<<<<< HEAD
-		BackboneFitter bbf = new BackboneFitter(ex.getTrack(33));
-=======
+
 		BackboneFitter bbf = new BackboneFitter(ex.getTrack(523));
->>>>>>> refs/remotes/NBernat/master
 		
 		bbf.fitTrackNewScheme();
 		
