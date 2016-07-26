@@ -351,7 +351,7 @@ public class BackboneFitter {
 	 * 
 	 */
 	public void fitTrack() {
-		
+		Timer.tic("fitTrack");
 //		clearPrev();
 		
 		if (workingTrack.points.size()<params.minTrackLen){
@@ -368,7 +368,9 @@ public class BackboneFitter {
 		
 		noError = true;
 		for(int i=0; (i<params.grains.length && noError); i++){
+			Timer.tic("fitTrack:doPass");
 			noError = doPass(params.grains[i]);
+			Timer.toc("fitTrack:doPass");
 			if (!noError) {
 				comm.message("Error on track ("+workingTrack.getTrackID()+") pass "+i+"(grain "+params.grains[i]+") \n ---------------------------- \n \n", VerbLevel.verb_error);
 				errTrack = workingTrack;
@@ -385,6 +387,7 @@ public class BackboneFitter {
 			workingTrack = null;
 			
 		}
+		Timer.toc("fitTrack");
 		
 //		System.out.println("Done fitting track");
 	}
@@ -697,7 +700,7 @@ public class BackboneFitter {
 	}
 	
 	public void fitSubsets(Vector<Gap> subsets, boolean hideGapPoints){
-
+		Timer.tic("fitSubsets");
 		if (subsets==null || subsets.size()==0){
 			return;
 		}
@@ -709,12 +712,15 @@ public class BackboneFitter {
 		setFrozenGapsInTrack(subsets, true);
 		if (hideGapPoints) setHiddenGapsInTrack(subsets, true); 
 		
+		Timer.tic("fitSubsets:fitTrack");
 		fitTrack();
+		Timer.toc("fitSubsets:fitTrack");
 		
 		setFrozenGapsInTrack(subsets, false);
 		if (hideGapPoints) setHiddenGapsInTrack(subsets, false); 
 		
 		useScaleFactors = usfOld;
+		Timer.toc("fitSubsets");
 	}
 	
 	/**
@@ -1161,8 +1167,10 @@ public class BackboneFitter {
 	 * returns convergence status
 	 */
 	private boolean runFitter() {
+		Timer.tic("runFitter");
 		boolean firstPass=true;
 		do {
+			Timer.tic("runFitter:loopA");
 			comm.message("Iteration number " + updater.getIterNum(), VerbLevel.verb_debug);
 
 			// Do a relaxation step
@@ -1180,8 +1188,10 @@ public class BackboneFitter {
 					firstPass=false;
 				}
 			}
-			
+			Timer.toc("runFitter:loopA");
+			Timer.tic("runFitter:relaxBackbones");
 			relaxBackbones(updater.inds2Update());
+			Timer.toc("runFitter:relaxBackbones");
 			
 			if (params.storeEnergies){
 				for (int i=0; i<energyProfiles.size(); i++){
@@ -1190,10 +1200,13 @@ public class BackboneFitter {
 			}
 
 			// Setup for the next step
+			Timer.tic("runFitter:calcShifts");
 			calcShifts();
+			Timer.toc("runFitter:calcShifts");
 			if (diverged && inchingInwards){
 				// TODO freeze diverged point (singular) 
 			}else 
+				Timer.tic("runFitter:elseBlock");
 				if (diverged && params.freezeDiverged){
 				Gap div = findDivergedGap();
 				int trackIndStart = BTPs.get(div.start).frameNum-bplg.workingTrack.points.firstElement().frameNum;
@@ -1202,6 +1215,7 @@ public class BackboneFitter {
 				setHidden(trackIndStart, trackIndEnd, true);
 				divergedGaps.add(new Gap(trackIndStart, trackIndEnd));
 				diverged =false;
+				Timer.toc("runFitter:elseBlock");
 			}
 			
 			
@@ -1209,8 +1223,9 @@ public class BackboneFitter {
 				pause();
 			}
 			
-			
+			Timer.tic("runFitter:setupForNextRelaxationStep");
 			setupForNextRelaxationStep();
+			Timer.toc("runFitter:setupForNextRelaxationStep");
 			
 			// Show the fitting messages, if necessary
 			if (!updater.comm.outString.equals("")) {
@@ -1224,6 +1239,8 @@ public class BackboneFitter {
 		if (!diverged) {
 			finalizeBackbones();
 		}
+		Timer.toc("runFitter");
+
 		return !diverged;
 
 	}
