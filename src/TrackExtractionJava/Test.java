@@ -29,8 +29,32 @@ public class Test {//extends JFrame
 
 	public static void main(String[] args) {
 		
+<<<<<<< HEAD
 		
 		testMHG();
+=======
+		/*
+		String[] dirs = {
+//				"E:\\data2\\OdorPlusOpto\\42a@CsChrimson(X)redo_newparams\\S_Od_EtAc_Dr_0to10ppt_4drops#N_Re_B0to255s3_120Hz_800uW\\201507311116\\",
+//				"E:\\data2\\OdorPlusOpto\\42a@CsChrimson(X)\\S_Od_EtAc_Dr_0to10ppt_4drops#N_Re_B0to255s3_120Hz_800uW\\201507311116\\",
+				"E:\\data2\\OdorPlusOpto\\Or42b@CsChrimson(3)\\N_Re_B0to255s3_120Hz_110uW#C_Bl_2uW\\201509101505\\"//,
+//				"E:\\data\\optogenetics\\Or42a@Chrimson(X)\\RWN_0.3ohm_BWN_39ohm\\201504191707\\"
+		};
+		String[] names = {
+//				"42a@CsChrimson(X)_S_Od_EtAc_Dr_0to10ppt_4drops#N_Re_B0to255s3_120Hz_800uW_201507311116",
+//				"42a@CsChrimson(X)_S_Od_EtAc_Dr_0to10ppt_4drops#N_Re_B0to255s3_120Hz_800uW_201507311116",
+				"Or42b@CsChrimson(3)_N_Re_B0to255s3_120Hz_110uW#C_Bl_2uW_201509101505"//,
+//				"Or42a@Chrimson(X)_RWN_0.3ohm_BWN_39ohm_201504191707"
+		};
+		for (int i=0; i<dirs.length; i++){
+			try {
+				testTailDrag(dirs[i], names[i]);
+			} catch (Exception e){
+				e.printStackTrace(new PrintStream(new BufferedOutputStream(System.out)));
+			}
+		}
+		*/
+>>>>>>> refs/remotes/NBernat/master
 		
 		/*
 		*/
@@ -130,8 +154,8 @@ public class Test {//extends JFrame
 		testParamToDisk();
 		*/
 		
-		/*
 		testEx_Proc();
+		/*
 		*/
 		
 		
@@ -335,11 +359,15 @@ public class Test {//extends JFrame
 //		ep.run(args);
 		
 		
-		Experiment ex = new Experiment(args[0]);
+		Experiment ex = new Experiment(args[1]+fileName+".prejav");
 //		ex.showEx();
 //		ex.getTrack(33).showFitting();
 		
+<<<<<<< HEAD
 		BackboneFitter bbf = new BackboneFitter(ex.getTrack(33));
+=======
+		BackboneFitter bbf = new BackboneFitter(ex.getTrack(523));
+>>>>>>> refs/remotes/NBernat/master
 		
 		bbf.fitTrackNewScheme();
 		
@@ -666,6 +694,9 @@ public class Test {//extends JFrame
 		
 	}
 	
+	/**
+	 * DEFUNCT: bbf.fitTrack(Track t) method no longer exists
+	 */
 	public static void testNewBBFArchitecture(){
 		
 		String outputDir = "E:\\testing\\Java Backbone Fitting\\test orientation fix\\";
@@ -678,7 +709,9 @@ public class Test {//extends JFrame
 		bbf.fitTrack();
 		
 		BackboneFitter bbfOld = new BackboneFitter();
-		bbfOld.fitTrack(ex.getTrackFromInd(50));
+		///method no longer exists
+		//bbfOld.fitTrack(ex.getTrackFromInd(50));
+		///
 		
 		System.out.println("Done");
 	}
@@ -805,6 +838,10 @@ public class Test {//extends JFrame
 		if (s!=null) s.close();
 	}
 	
+	
+	/**
+	 * DEFUNCT: bbf.fitTrack(Track t) method no longer exists
+	 */
 	public static void testTrackBreakdown(){
 		ImageJ imj = new ImageJ(ImageJ.NO_SHOW);
 		
@@ -852,8 +889,10 @@ public class Test {//extends JFrame
 					int ef = (len<((i+1)*clipLen))? len-1: (i+1)*clipLen;
 					
 					Track clipTrack = new Track(longTrack.getPoints().subList(sf, ef), i);
-							
-					bbf.fitTrack(clipTrack);
+						
+					///method no longer exists
+					//bbf.fitTrack(clipTrack);
+					///
 					
 					if (bbf.getTrack()!=null){
 						fitTracks.add(bbf.getTrack());				
@@ -1621,11 +1660,11 @@ public class Test {//extends JFrame
 		
 		ImageJ imj = new ImageJ(ImageJ.NO_SHOW);
 		
-		Experiment_Processor ep = new Experiment_Processor();
+//		Experiment_Processor ep = new Experiment_Processor();
 		
 		
 		//Set params from input
-		ep.runningFromMain = true;
+//		ep.runningFromMain = true;
 //		ep.prParams = p;
 //		ep.extrParams = e;
 //		ep.fitParams = f;
@@ -1633,11 +1672,11 @@ public class Test {//extends JFrame
 		//Set src and dest
 		String[] epArgs = new String[3];
 		epArgs[0] = "C:\\Users\\Natalie\\Documents\\Testing\\Interface testing\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.mmf";
-		epArgs[1] = "C:\\Users\\Natalie\\Documents\\Testing\\Interface testing\\";
-		epArgs[2] = "Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541";
+		epArgs[1] = "E:\\testing\\Full Processing\\";
+//		epArgs[2] = "Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541";
 		
-		ep.run(epArgs[0]);
-		
+//		ep.run(epArgs[0]);
+		Experiment_Processor.main(epArgs);
 
 		imj.quit();
 	}
