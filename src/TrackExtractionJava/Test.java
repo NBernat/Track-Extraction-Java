@@ -5,12 +5,16 @@ import ij.ImagePlus;
 
 import java.awt.BorderLayout;
 import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Scanner;
 import java.util.Vector;
 
@@ -60,7 +64,7 @@ public class Test {//extends JFrame
 		testBadTrackFinder();
 		*/
 
-		testFitterPauseDisplay();
+		//testFitterPauseDisplay();
 		/*
 		*/
 		
@@ -270,8 +274,28 @@ public class Test {//extends JFrame
 		
 			fit.add(bbf.getTrack());
 		}
+		BufferedWriter writer = null;
+		try {
+            String timeLog = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+            File logFile = new File(args[1] + timeLog + " timing.txt");
+
+
+            writer = new BufferedWriter(new FileWriter(logFile));
+            Timer.generateReport(writer);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                // Close the writer regardless of what happens...
+            	if (writer != null)
+            		writer.close();
+            } catch (Exception e) {
+            }
+        }
+		
 		Experiment fitTrackEx = new Experiment(ex, fit);
 		fitTrackEx.showEx();
+		
 		
 //		ij.quit();
 	}

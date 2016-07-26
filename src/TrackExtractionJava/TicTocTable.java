@@ -24,6 +24,10 @@ public class TicTocTable {
 	private boolean enabled = true;
 	private Hashtable<String, TicToc> timers;
 	
+	public TicTocTable() {
+		timers = new Hashtable<String, TicToc>();
+	}
+	
 	public void tic(String name) {
 		tic(name, false);
 	}
@@ -53,7 +57,13 @@ public class TicTocTable {
 	    }
 	    return td.toc();
 	}
-
+	 public double getElapsedTime (String name) {
+		TicToc td = timers.get(name);
+	    if (td == null) {
+	        return NOT_FOUND; //key not found
+	    }
+	    return td.getElapsedTime();
+	 }
 
 	 public void generateReport(Writer w) throws IOException {
 	    

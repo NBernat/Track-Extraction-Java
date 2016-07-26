@@ -164,9 +164,9 @@ public class BackboneFitter {
 	 */
 	Vector<Integer> numIters;
 	
-	boolean doTiming = true;
-	Vector<String> timingNames;
-	Vector<Double> timingInfo;
+//	boolean doTiming = true;
+	//Vector<String> timingNames;
+	//Vector<Double> timingInfo;
 	
 	/**
 	 * An object with output messages. 
@@ -249,8 +249,8 @@ public class BackboneFitter {
 		comm = new Communicator();
 		comm.setVerbosity(VerbLevel.verb_error);
 		
-		timingNames = new Vector<String>();
-		timingInfo = new Vector<Double>();
+		//timingNames = new Vector<String>();
+		//timingInfo = new Vector<Double>();
 		
 		initTrack(t);
 
@@ -408,9 +408,8 @@ public class BackboneFitter {
 	public void fitTrackNewScheme(FittingParameters straightParams, FittingParameters bentParams, 
 			FittingParameters divergedParams, FittingParameters suspiciousParams, FittingParameters finalParams){
 		
-		
-		TicToc tt = new TicToc();
-		if (doTiming) tt.tic();
+		Timer.tic("FitTrackNewScheme");
+		Timer.tic("FTNS:Setup");
 		//Check input parameters
 		if (straightParams==null){
 			straightParams = new FittingParameters();
@@ -445,12 +444,9 @@ public class BackboneFitter {
 		bentLarvae = findBentGaps(workingTrack.getHTdists());
 		straightLarvae = findStraightGaps(bentLarvae);
 		
-		if (doTiming) {
-			timingNames.add("Setup");
-			timingInfo.add(new Double(tt.tocSec()));
-			tt.tic();
-		}
+		Timer.toc("FTNS:Setup");
 		
+		Timer.tic("FTNS:fit-straight");
 		//Fit the straight larvae
 		straightParams.freezeDiverged = true;
 		resetParams(straightParams);
@@ -461,12 +457,9 @@ public class BackboneFitter {
 			System.out.println("Error fitting straight larvae");
 			return;
 		}
+		Timer.toc("FTNS:fit-straight");
 		
-		if (doTiming) {
-			timingNames.add("Straight Fitting");
-			timingInfo.add(new Double(tt.tocSec()));
-			tt.tic();
-		}		
+		Timer.tic("FTNS:calcTargetLength");
 		//Calculate expansion force params based on straight larvae
 		double targetLength = 0;
 		Vector<BackboneTrackPoint> btplist = getBTPSubset(straightLarvae);
@@ -474,14 +467,10 @@ public class BackboneFitter {
 			targetLength += btp.getBackboneLength();
 		}
 		targetLength /= btplist.size();
-
-		if (doTiming) {
-			timingNames.add("Expansion calculations");
-			timingInfo.add(new Double(tt.tocSec()));
-			tt.tic();
-		}
+		Timer.toc("FTNS:calcTargetLength");
 		
 		//Fit the bent larvae
+		Timer.tic("FTNS:fit-bent");
 		hideGapPoints = false;
 		bentParams.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
 		bentParams.freezeDiverged = true;
@@ -494,12 +483,9 @@ public class BackboneFitter {
 			System.out.println("Error fitting bent larvae");
 			return;
 		}
+		Timer.toc("FTNS:fit-bent");
 		
-		if (doTiming) {
-			timingNames.add("Bent Fitting");
-			timingInfo.add(new Double(tt.tocSec()));
-			tt.tic();
-		}
+		Timer.tic("FTNS:fix-diverged");
 
 		//Patch diverged sections
 		divergedParams.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
@@ -535,12 +521,9 @@ public class BackboneFitter {
 			return;
 		}
 		
-		if (doTiming) {
-			timingNames.add("Diverged Fitting");
-			timingInfo.add(new Double(tt.tocSec()));
-			tt.tic();
-		}
+		Timer.toc("FTNS:fix-diverged");
 		
+		Timer.tic("FTNS:inch-inward");
 		//Inch inwards on the remaining bad gaps
 		Vector<Gap> badGaps = findBadGaps();
 		suspiciousParams.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
@@ -570,13 +553,9 @@ public class BackboneFitter {
 			count++;
 			params.imageWeight=params.imageWeight*1.02f;
 		}
+		Timer.toc("FTNS:inch-inward");
 		
-		if (doTiming) {
-			timingNames.add("Suspicious Fitting");
-			timingInfo.add(new Double(tt.tocSec()));
-			tt.tic();
-		}
-		
+		Timer.tic("FTNS:final-fit");
 		//Do final run on the whole track for continuity
 		finalParams.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
 		finalParams.freezeDiverged = true;
@@ -588,12 +567,9 @@ public class BackboneFitter {
 			runSingleIteration();
 		}
 		
-		if (doTiming) {
-			timingNames.add("Final Fitting");
-			timingInfo.add(new Double(tt.tocSec()));
-			tt.tic();
-		}
+		Timer.toc("FTNS:final-fit");
 		
+		Timer.tic("FTNS:final-mark");
 		//Mark the suspicious tracks 
 		int numStdDevForSuspicious = 3;
 		badGaps = workingTrack.findBapGaps(params.energyTypeForBadGap, numStdDevForSuspicious);
@@ -608,18 +584,8 @@ public class BackboneFitter {
 			System.out.println("Fitting error; exiting Fitter");
 		}
 		
-		if (doTiming) {
-			timingNames.add("Final Marking");
-			timingInfo.add(new Double(tt.tocSec()));
-			tt.tic();
-		}
-		
-		if (doTiming) {
-			double total = 0;
-			for (Double d : timingInfo) total+=d;
-			timingNames.add("Total");
-			timingInfo.add(total);
-		}
+		Timer.toc("FTNS:final-mark");
+		Timer.toc("FitTrackNewScheme");
 		
 	}
 		
@@ -1665,7 +1631,8 @@ public class BackboneFitter {
 	}
 	
 	public String timingInfoToString(){
-		
+		return Timer.generateReport();
+		/*
 		if (!doTiming || timingInfo==null || timingInfo.size()<1 || timingNames==null || timingNames.size()<1){
 			return "No timing info taken";
 		}
@@ -1691,7 +1658,7 @@ public class BackboneFitter {
 			if (i<(numEntries-1)) sb.append("; ");
 		}
 		
-		return sb.toString();
+		return sb.toString();*/
 	}
 	
 	

@@ -83,7 +83,8 @@ public class Experiment_Processor implements PlugIn{
 
 
 	public Experiment_Processor(){
-		
+		runTime = new TicToc();
+		runTime.tic();
 	}
 	
 	public void run(String[] args){
@@ -603,8 +604,6 @@ public class Experiment_Processor implements PlugIn{
 			if (i%fitParams.GCInterval==0){
 				System.gc();
 			}
-			TicToc trTic = new TicToc();
-			trTic.tic();
 			IJ.showStatus("Fitting Track "+(i+1)+"/"+ex.getNumTracks());
 			tr = getTrackFromEx(i);//ex.getTrackFromInd(i);
 			if (tr==null) { 
@@ -616,9 +615,9 @@ public class Experiment_Processor implements PlugIn{
 				
 //				bbf = new BackboneFitter(bbf.params);
 //				newTr = fitTrack(tr);
-				
+				Timer.tic("fitTracks:bbf");
+
 				BackboneFitter bbf = new BackboneFitter(tr, fitParams);
-				bbf.doTiming = prParams.doFitTiming;
 				if (prParams.fitType>0){
 					bbf.fitTrackNewScheme();
 				} else {
@@ -626,8 +625,7 @@ public class Experiment_Processor implements PlugIn{
 				}
 				newTr = bbf.getTrack();
 				
-				long[] minSec = trTic.tocMinSec();
-				String timStr = "("+(int)minSec[0]+"m"+minSec[1]+"s)";
+				String timStr = "(" + Timer.toc("fitTracks:bbf") + " s)";
 				trStr+=" (#"+i+"/"+(ex.getNumTracks()-1)+")";
 				if (newTr!=null){
 					ex.replaceTrack(newTr, i);
@@ -1257,12 +1255,11 @@ public class Experiment_Processor implements PlugIn{
 	}
 	
 	private void log(String message, boolean print){
-		
 		if (print) System.out.println(message);
 		
 		String indent = "";
 		for (int i=0;i<indentLevel; i++) indent+="----";
-		processLog.println(runTime.tocSec()+"sec: "+indent+" "+message);
+		processLog.println(runTime.getElapsedTime()*0.001+" sec: "+indent+" "+message);
 		
 	}
 	

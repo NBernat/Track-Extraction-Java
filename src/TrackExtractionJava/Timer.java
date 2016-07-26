@@ -28,7 +28,10 @@ class Timer {
 	   return tt.toc(name, notock);
 	}
 
-
+	public static double getElapsedTime (String name) {
+	    return tt.getElapsedTime(name);
+	 }
+	
 	 public static void generateReport(Writer w) throws IOException {
 	    tt.generateReport(w);
 	}
