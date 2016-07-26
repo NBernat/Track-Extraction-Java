@@ -29,25 +29,8 @@ public class Test {//extends JFrame
 
 	public static void main(String[] args) {
 		
-		String[] dirs = {
-//				"E:\\data2\\OdorPlusOpto\\42a@CsChrimson(X)redo_newparams\\S_Od_EtAc_Dr_0to10ppt_4drops#N_Re_B0to255s3_120Hz_800uW\\201507311116\\",
-//				"E:\\data2\\OdorPlusOpto\\42a@CsChrimson(X)\\S_Od_EtAc_Dr_0to10ppt_4drops#N_Re_B0to255s3_120Hz_800uW\\201507311116\\",
-				"E:\\data2\\OdorPlusOpto\\Or42b@CsChrimson(3)\\N_Re_B0to255s3_120Hz_110uW#C_Bl_2uW\\201509101505\\",
-//				"E:\\data\\optogenetics\\Or42a@Chrimson(X)\\RWN_0.3ohm_BWN_39ohm\\201504191707\\"
-		};
-		String[] names = {
-//				"42a@CsChrimson(X)_S_Od_EtAc_Dr_0to10ppt_4drops#N_Re_B0to255s3_120Hz_800uW_201507311116",
-//				"42a@CsChrimson(X)_S_Od_EtAc_Dr_0to10ppt_4drops#N_Re_B0to255s3_120Hz_800uW_201507311116",
-				"Or42b@CsChrimson(3)_N_Re_B0to255s3_120Hz_110uW#C_Bl_2uW_201509101505",
-//				"Or42a@Chrimson(X)_RWN_0.3ohm_BWN_39ohm_201504191707"
-		};
-		for (int i=0; i<dirs.length; i++){
-			try {
-				testTailDrag(dirs[i], names[i]);
-			} catch (Exception e){
-				e.printStackTrace(new PrintStream(new BufferedOutputStream(System.out)));
-			}
-		}
+		
+		testMHG();
 		
 		/*
 		*/
@@ -235,12 +218,50 @@ public class Test {//extends JFrame
 		
 	}
 	
-	public static void testTailDrag(String inputDir, String fileName){
+	public static void testMHG(){
+
+		ImageJ ij = new ImageJ();
+		
+		String fileName = "Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541";
+		String outputDir = "E:\\bernatTest\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541\\";
+
+		String args[] = new String[2];
+		
+		args[0] = outputDir+fileName+".prejav";
+		args[1] = outputDir+""+fileName+"\\";
+		
+		File f = new File(args[1]); 
+		if (!f.exists()){
+			f.mkdirs();
+		}
+
+		
+		Experiment ex = new Experiment(args[0]);
+
+		Vector<Track> fit = new Vector<Track>();
+		
+		int[] tnum = {33, 69, 8};
+		
+		for (int tn : tnum) {
+			BackboneFitter bbf = new BackboneFitter(ex.getTrack(tn));
+		
+			bbf.fitTrackNewScheme();
+		
+			fit.add(bbf.getTrack());
+		}
+		Experiment fitTrackEx = new Experiment(ex, fit);
+		fitTrackEx.showEx();
+		
+//		ij.quit();
+	}
+	
+	public static void testTailDrag(){
 
 		ImageJ ij = new ImageJ();
 		
 //		String inputDir = "";
-		String outputDir = "E:\\testing\\Java Backbone Fitting\\test tuned fitting params\\";
+		String fileName = "Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541";
+		String outputDir = "E:\\bernatTest\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541\\";
 //		String inputFileName_full = outputDir+"test badness fixer\\0 Before any fixing\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.prejav";
 //		String fileName = "42a@CsChrimson(X)_S_Od_EtAc_Dr_0to10ppt_4drops#N_Re_B0to255s3_120Hz_800uW_201507311116";
 
@@ -318,7 +339,7 @@ public class Test {//extends JFrame
 //		ex.showEx();
 //		ex.getTrack(33).showFitting();
 		
-		BackboneFitter bbf = new BackboneFitter(ex.getTrack(525));
+		BackboneFitter bbf = new BackboneFitter(ex.getTrack(33));
 		
 		bbf.fitTrackNewScheme();
 		
