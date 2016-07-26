@@ -24,6 +24,14 @@ public class TicTocTable {
 	private boolean enabled = true;
 	private Hashtable<String, TicToc> timers;
 	
+	public TicTocTable() {
+		timers = new Hashtable<String, TicToc>();
+	}
+	
+	public void tic(String name) {
+		tic(name, false);
+	}
+	
 	public void tic(String name, boolean notick) {
 	    if (!enabled || notick)
 	        return;
@@ -36,6 +44,10 @@ public class TicTocTable {
 	    td.tic();
 	}
 
+	public double toc(String name) {
+		return toc(name, false);
+	}
+	
 	public double toc(String name, boolean notock) {
 	    if (!enabled || notock) {
 	        return 0;
@@ -45,7 +57,13 @@ public class TicTocTable {
 	    }
 	    return td.toc();
 	}
-
+	 public double getElapsedTime (String name) {
+		TicToc td = timers.get(name);
+	    if (td == null) {
+	        return NOT_FOUND; //key not found
+	    }
+	    return td.getElapsedTime();
+	 }
 
 	 public void generateReport(Writer w) throws IOException {
 	    
@@ -89,6 +107,13 @@ public class TicTocTable {
 		for (Enumeration<TicToc> e = timers.elements(); e.hasMoreElements();){
 			e.nextElement().reset();
 		}
+	}
+	
+	public void enable() {
+		enabled = true;
+	}
+	public void disable() {
+		enabled = false;
 	}
 
 }

@@ -32,8 +32,8 @@ public class TicToc {
     	this("anonymous");
     }
     public TicToc(String name) {
-    this.name = name;
-	   reset();
+        this.name = name;
+	    reset();
 	}
     public void reset() {
     	ncalls = 0;
@@ -52,6 +52,13 @@ public class TicToc {
  	    }
  	    ticked = true;
     }
+    /* public double getElapsedTime
+     * returns elapsed time since start without toc'ing
+     */
+    public double getElapsedTime () {
+    	return System.currentTimeMillis() - starttime;
+    }
+    
     public double toc() {  	
 	    if (!ticked) {
 	        return NOT_TICKED; //toc called without tic
@@ -67,10 +74,10 @@ public class TicToc {
 	public void writeInfo (Writer w) throws IOException {
 		w.append("name: " + name + "\n");
 		w.append(" ncalls: " + ncalls + "\n");
-		w.append(" totaltime: " + totaltime + "\n");
-		w.append(" maxtime: " + maxtime + "\n");
-		w.append(" mintime: " + mintime + "\n");
-		w.append(" avg time: " + totaltime/ncalls + "\n");
+		w.append(" totaltime: " + 0.001*totaltime + "\n");
+		w.append(" maxtime: " + 0.001*maxtime + "\n");
+		w.append(" mintime: " + 0.001*mintime + "\n");
+		w.append(" avg time: " + 0.001*totaltime/ncalls + "\n");
 		w.append(" num blown tics: " + numblowntics + "\n");
 	}
 	public int getNcalls() {
