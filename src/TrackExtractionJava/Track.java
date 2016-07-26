@@ -323,25 +323,6 @@ public class Track implements Serializable{
 	
 	
 	/**
-	 * Calculates trackpoint energies using default fitting parameters
-	 * 
-	 */
-//	public void calcEnergies(){
-//		calcEnergies(new FittingParameters());
-//	}
-	
-	/**
-	 * Calculates trackpoint energies using 
-	 * @param fp
-	 */
-//	public void calcEnergies(FittingParameters fp){
-//		
-//		for (int i=0; i<points.size(); i++){
-//			points.get(i).calcEnergies(fp);
-//		}
-//	}
-	
-	/**
 	 * Gathers and returns energies of the given type from trackpoints
 	 * 
 	 * returns [] if energy type is not available for this type of point
@@ -630,35 +611,23 @@ public class Track implements Serializable{
 		
 	}
 	
-	
 	public void showFitting(){
+		showFitting(null, null, null, null, null);
+	}
+	
+	public void showFitting(FittingParameters straightParams, FittingParameters bentParams, 
+			FittingParameters divergedParams, FittingParameters suspiciousParams, FittingParameters finalParams){
+		
 		if (points==null || points.size()==0 || points.firstElement().getPointType()!=MaggotTrackPoint.pointType){
 			return;
 		}
-		
-		//Make a button
-//		JFrame buttonFrame = new JFrame("NextIterationFrame");
-////		buttonFrame.setSize(200, 200);
-//		
-//		JButton nextButton = new JButton("Next Iteration");
-//		nextButton.addActionListener(new ActionListener() {
-//			@Override
-//			public void actionPerformed(ActionEvent e) {
-//				notify();
-//			}
-//		});
-//		
-//		buttonFrame.add(nextButton);
-//		buttonFrame.setVisible(true);
-		
 		
 		BackboneFitter bbf = new BackboneFitter(this);
 		bbf.doPause = true;
 		bbf.userIn = new Scanner(System.in);
 		bbf.userOut = System.out;
 		
-		// TODO pass in a track fitting scheme and/or Fitting Params
-		bbf.fitTrackNewScheme();
+		bbf.fitTrackNewScheme(straightParams, bentParams, divergedParams, suspiciousParams, finalParams);
 		
 		
 		

@@ -210,6 +210,7 @@ public class Experiment_Processor implements PlugIn{
 			
 		} catch (Exception e){
 			log("Error Thrown During Processing; Current Step: "+currProcess);
+			log(e.getMessage());
 		} finally {
 			
 			if (processLog!=null) processLog.close();
@@ -617,6 +618,7 @@ public class Experiment_Processor implements PlugIn{
 //				newTr = fitTrack(tr);
 				
 				BackboneFitter bbf = new BackboneFitter(tr, fitParams);
+				bbf.doTiming = prParams.doFitTiming;
 				if (prParams.fitType>0){
 					bbf.fitTrackNewScheme();
 				} else {
@@ -626,12 +628,13 @@ public class Experiment_Processor implements PlugIn{
 				
 				long[] minSec = trTic.tocMinSec();
 				String timStr = "("+(int)minSec[0]+"m"+minSec[1]+"s)";
-				trStr+=" (#"+bbf.newTrID+")";
+				trStr+=" (#"+i+"/"+(ex.getNumTracks()-1)+")";
 				if (newTr!=null){
 					ex.replaceTrack(newTr, i);
 					String msg = trStr+": done fitting "+timStr;
 					if (bbf.wasClipped()) msg+=" (ends clipped)"; 
 					if (newTr.suspicious) msg+=" (suspicious fit)";
+					if (prParams.doFitTiming) log("Track "+newTr.getTrackID()+": "+bbf.timingInfoToString(),true);
 					log(msg, true);
 				} else if (bbf.diverged()){
 					divergedCount++;

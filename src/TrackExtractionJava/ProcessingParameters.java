@@ -30,6 +30,8 @@ public class ProcessingParameters {
 	
 	public boolean doFitting = true;
 	
+	public boolean doFitTiming = true;
+	
 	/**
 	 * 0 = 3-pass fit scheme on entire track (or specified subset)
 	 * 1 = 1-pass scheme on: straight subsets + bent subsets + diverged subsets + bad subsets + full track
