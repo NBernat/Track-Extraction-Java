@@ -4,8 +4,11 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.*;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Vector;
 
 public class TicTocTable {
 
@@ -66,11 +69,16 @@ public class TicTocTable {
 	 }
 
 	 public void generateReport(Writer w) throws IOException {
-	    
+	    Vector<TicToc> v = new Vector<TicToc>();
 		for (Enumeration<TicToc> e = timers.elements(); e.hasMoreElements();){
-			w.append("--\n");
-			e.nextElement().writeInfo(w);
+			v.add(e.nextElement());
 		}
+		Collections.sort(v,new alphaSorter());
+		for (TicToc t : v) {
+			w.append("--\n");
+			t.writeInfo(w);
+		}
+
 	}
 	public String generateReport () {
 		StringWriter sw = new StringWriter();
@@ -118,6 +126,23 @@ public class TicTocTable {
 
 }
 
+class alphaSorter implements Comparator<TicToc> {
+
+	@Override
+	public int compare(TicToc o1, TicToc o2) {
+		return o1.getName().compareToIgnoreCase(o2.getName());
+	}
+	
+}
+
+class totalTimeSorter implements Comparator<TicToc> {
+
+	@Override
+	public int compare(TicToc o1, TicToc o2) {
+		return Double.compare(o1.getTotaltime(), o2.getTotaltime());
+	}
+	
+}
     
 
 
