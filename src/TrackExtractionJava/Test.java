@@ -60,8 +60,8 @@ public class Test {//extends JFrame
 		testBadTrackFinder();
 		*/
 
-		/*
 		testFitterPauseDisplay();
+		/*
 		*/
 		
 		/*
@@ -151,8 +151,8 @@ public class Test {//extends JFrame
 		testParamToDisk();
 		*/
 		
-		testEx_Proc();
 		/*
+		testEx_Proc();
 		*/
 		
 		
@@ -403,23 +403,23 @@ public class Test {//extends JFrame
 		Experiment ex = new Experiment(inputFileName);
 		Track t = ex.getTrack(trackID);
 		
-		t.showFitting();
-//		BackboneFitter bbf = new BackboneFitter(t);
+//		t.showFitting();
+		BackboneFitter bbf = new BackboneFitter(t);
 //		bbf.doPause = true;
-////		bbf.userIn = new Scanner(System.in);
+//		bbf.userIn = new Scanner(System.in);
 //		bbf.userOut = System.out;
-//		
-//		bbf.fitTrackNewScheme();
+		
+		bbf.fitTrackNewScheme();
 		
 		
-//		if (bbf.getTrack()!=null){
-//			Vector<Track> newTracks = new Vector<Track>();
-//			newTracks.add(bbf.getTrack());
-//			Experiment newExperiment = new Experiment(ex, newTracks);
-//			newExperiment.showEx();
-//		}
+		if (bbf.getTrack()!=null){
+			Vector<Track> newTracks = new Vector<Track>();
+			newTracks.add(bbf.getTrack());
+			Experiment newExperiment = new Experiment(ex, newTracks);
+			newExperiment.showEx();
+		}
 		
-		ij.quit();
+//		ij.quit();
 	}
 	
 	public static void testSubsetInchInwards(){
@@ -1665,7 +1665,7 @@ public class Test {//extends JFrame
 		
 		//Set src and dest
 		String[] epArgs = new String[3];
-		epArgs[0] = "C:\\Users\\Natalie\\Documents\\Testing\\Interface testing\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.mmf";
+		epArgs[0] = "E:\\testing\\Full Processing\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.prejav";//"C:\\Users\\Natalie\\Documents\\Testing\\Interface testing\\Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541.mmf";
 		epArgs[1] = "E:\\testing\\Full Processing\\";
 //		epArgs[2] = "Berlin@Berlin_2NDs_B_Square_SW_96-160_201411201541";
 		

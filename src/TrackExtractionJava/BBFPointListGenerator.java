@@ -419,16 +419,6 @@ public class BBFPointListGenerator {
 		return gapsChanged;
 	}
 
-//	private void invalidateGaps(Vector<Gap> gaps){
-//		for (int i=0; i<gaps.size(); i++){
-//			Gap gap = gaps.get(i);
-//			for (int j=gap.start; j<=gap.end; j++){
-//				BackboneTrackPoint btp = BTPs.get(j);
-//				btp.bbvalid = false;
-//			}
-//		}
-//	}
-	
 	
 	/**
 	 * Finds and fills all the empty midlines
@@ -462,7 +452,7 @@ public class BBFPointListGenerator {
 	 * carried through the gap. Otherwise, the midlines are interpolated from
 	 * the surrounding midlines
 	 * <p>
-	 * False is returned when both the midlines surrounding a small gap, or one
+	 * False is returned when either both the midlines surrounding a small gap, or one
 	 * of the midlines surrounding a large gap, is at the beginning or end of
 	 * the track
 	 * 
@@ -476,7 +466,7 @@ public class BBFPointListGenerator {
 		try { 
 			int gapLen = gapEnd - gapStart + 1;
 			comm.message("Filling gap of size "+gapLen, VerbLevel.verb_debug);
-			if (gapLen < params.smallGapMaxLen) {
+			if (gapLen < params.smallGapMaxLen) { //Small gap
 				
 				PolygonRoi fillerMidline;
 				float[] origin;
@@ -496,7 +486,7 @@ public class BBFPointListGenerator {
 					BTPs.get(i).fillInBackboneInfo(params.clusterMethod, fillerMidline, origin);
 				}
 	
-			} else if (gapStart != 0 && gapEnd != (BTPs.size() - 1)) {
+			} else if (gapStart != 0 && gapEnd != (BTPs.size() - 1)) { //Large gap
 				comm.message("Filling large gap", VerbLevel.verb_debug);
 				
 				Vector<FloatPolygon> newMids = interpBackbones(gapStart - 1, gapEnd + 1);
@@ -524,14 +514,14 @@ public class BBFPointListGenerator {
 				
 				comm.message("Gap filled", VerbLevel.verb_debug);
 			
-			} else if (gapStart==0 && gapEnd == (BTPs.size()-1)){
+			} else if (gapStart==0 && gapEnd == (BTPs.size()-1)){ //Whole track is a gap
 				comm.message("All midlines are invalid in track "+workingTrack.getTrackID(), VerbLevel.verb_error);
 				System.out.println("All midlines are invalid in track "+workingTrack.getTrackID());
 				workingTrack.points.removeAllElements();
 				return false;
 				
-			} else {
-				clipEnds=true;
+			} else { //Gap is on either end of the track
+				clipEnds=true; //Set the flag for clipEnds to be called later 
 				if (gapStart == 0) {
 					BTPstartFrame=BTPs.get(gapEnd+1).frameNum;
 				} else if (gapEnd == (BTPs.size()-1)){
@@ -551,6 +541,7 @@ public class BBFPointListGenerator {
 	private boolean clipEnds(){
 		
 		comm.message("Clipping ends on track "+workingTrack.getTrackID()+": startFrame="+BTPstartFrame+" endFrame="+BTPendFrame, VerbLevel.verb_message);
+		bbf.clipEnds = true;
 		
 		int nFrames = (BTPendFrame>0)? BTPendFrame : workingTrack.points.lastElement().frameNum;
 		nFrames -= (BTPstartFrame>0)? BTPstartFrame : workingTrack.points.firstElement().frameNum;
@@ -581,9 +572,6 @@ public class BBFPointListGenerator {
 				}
 				//Remove elements
 				BTPs.subList(i, BTPs.size()).clear();
-				
-				
-				//TODO edit the subset in bbf
 				
 			} else {
 				comm.message("Error clipping ends in track "+workingTrack.getTrackID()+": could not find index of new end frame ("+BTPendFrame+")", VerbLevel.verb_error);
