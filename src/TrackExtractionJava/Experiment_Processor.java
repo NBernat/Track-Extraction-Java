@@ -625,14 +625,14 @@ public class Experiment_Processor implements PlugIn{
 				}
 				newTr = bbf.getTrack();
 				
-				String timStr = "(" + Timer.toc("fitTracks:bbf") + " s)";
+				String timStr = "(" + Timer.toc("fitTracks:bbf")/1000 + " s)";
 				trStr+=" (#"+i+"/"+(ex.getNumTracks()-1)+")";
 				if (newTr!=null){
 					ex.replaceTrack(newTr, i);
 					String msg = trStr+": done fitting "+timStr;
 					if (bbf.wasClipped()) msg+=" (ends clipped)"; 
 					if (newTr.suspicious) msg+=" (suspicious fit)";
-					if (prParams.doFitTiming) log("Track "+newTr.getTrackID()+": "+bbf.timingInfoToString(),true);
+//					if (prParams.doFitTiming) log("Track "+newTr.getTrackID()+": "+bbf.timingInfoToString(),true);
 					log(msg, true);
 				} else if (bbf.diverged()){
 					divergedCount++;
