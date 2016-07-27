@@ -66,7 +66,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	
 	protected boolean htValid;
 	
-	protected boolean saveContourPoint = true;
+	protected boolean saveContourStart = true;
 	
 	final double maxContourAngle = Math.PI/2.0;
 	final int numMidCoords = 11;
@@ -990,7 +990,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 
 	public int toDisk(DataOutputStream dos, PrintWriter pw){
 		int r = toDiskOld(dos, pw);
-		if (r==0 && saveContourPoint){
+		if (r==0 && saveContourStart){
 			try{
 				dos.writeInt(contourStart.x);
 				dos.writeInt(contourStart.y);
@@ -1015,22 +1015,13 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			//Write htvalid
 			dos.writeByte(htValid ? 1:0);
 			
-//			dos.writeInt(contourStart.x);
-//			dos.writeInt(contourStart.y);
-			
 			//Write # contour pts 
 			dos.writeInt(contourX.length);
+			
 			//Write contour
 			for (int i=0; i<contourX.length; i++){
-				
 				dos.writeInt(contourX[i]);
 				dos.writeInt(contourY[i]);
-				
-				/*ContourPoint cp = cont.get(i);
-				if (cp.toDisk(dos, pw)>0){
-					if (pw!=null) pw.println("Error writing ContourPoint "+i+"/"+cont.size()+" for MaggotTrackPoint "+pointID);
-					return 2;
-				}*/
 			}
 			
 		} catch (Exception e) {
@@ -1038,19 +1029,6 @@ public class MaggotTrackPoint extends ImTrackPoint {
 			return 1;
 		}
 		
-//		try{
-//			if(htValid){
-//				//Write head 
-//				head.toDisk(dos, pw);
-//				//Write mid
-//				midpoint.toDisk(dos, pw);
-//				//Write tail
-//				tail.toDisk(dos, pw);
-//			}
-//		} catch (Exception e) {
-//			if (pw!=null) pw.println("Error writing MaggotTrackPoint data(head,tail,mid) for point "+pointID+"; aborting save");
-//			return 1;
-//		}
 		try{
 			if (head!=null){
 				head.toDisk(dos, pw);
@@ -1106,20 +1084,15 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	public int sizeOnDisk(){
 		
 		int size = super.sizeOnDisk();
-		//size+= ; 1 byte + (1 int + nConPts*sizeOfContourPoint) + (3*sizeOfContourPoint) + (1 int + 2*numMidlineCoords*sizeOfFloat)
-		// = 1 byte + 2 int + 2*numMidlineCoords float + (3+nContourPts) sizeOfContourPoint
-		size += 1 + 2*Integer.SIZE/Byte.SIZE; 
-		if (saveContourPoint){
-			size += 2*Integer.SIZE/Byte.SIZE; 			
-		}
+		size += 1;//htvalid
+		size += Integer.SIZE/Byte.SIZE;//# contour points 
 		size += contourX.length*2*(Integer.SIZE/Byte.SIZE);//ContourPoint.sizeOnDisk();
-		if (htValid){
-			size += 3*ContourPoint.sizeOnDisk();
+		size += 3*ContourPoint.sizeOnDisk();//head, tail, midline (or empty contour points)
+		size += Integer.SIZE/Byte.SIZE; //# midline points
+		if (midline!=null) size += (2*midline.getNCoordinates())*Float.SIZE/Byte.SIZE; //midline points
+		if (saveContourStart){//TODO write this flag to disk
+			size += 2*Integer.SIZE/Byte.SIZE; //contour start	
 		}
-		if (midline!=null){
-			size += (2*midline.getNCoordinates())*java.lang.Float.SIZE/Byte.SIZE;
-		}
-		
 		return size;
 	}
 	
@@ -1136,7 +1109,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 
 	protected int loadFromDisk(DataInputStream dis, Track t, PrintWriter pw){
 		int r = loadFromDiskOld(dis, t, pw);
-		if (r==0 && saveContourPoint){
+		if (r==0 && saveContourStart){
 			try {
 				contourStart = new Point(dis.readInt(), dis.readInt());
 			}catch (Exception e){

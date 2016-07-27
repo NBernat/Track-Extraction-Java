@@ -33,9 +33,14 @@ public class Test {//extends JFrame
 
 	public static void main(String[] args) {
 		
-		
-		testMHG();
+		try {
+			testTrackFromDisk();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		/*
+		testMHG();
 		String[] dirs = {
 //				"E:\\data2\\OdorPlusOpto\\42a@CsChrimson(X)redo_newparams\\S_Od_EtAc_Dr_0to10ppt_4drops#N_Re_B0to255s3_120Hz_800uW\\201507311116\\",
 //				"E:\\data2\\OdorPlusOpto\\42a@CsChrimson(X)\\S_Od_EtAc_Dr_0to10ppt_4drops#N_Re_B0to255s3_120Hz_800uW\\201507311116\\",
@@ -275,6 +280,7 @@ public class Test {//extends JFrame
 			fit.add(bbf.getTrack());
 		}
 		BufferedWriter writer = null;
+		//from stackoverflow example code ...
 		try {
             String timeLog = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
             File logFile = new File(args[1] + timeLog + " timing.txt");
@@ -286,7 +292,6 @@ public class Test {//extends JFrame
             e.printStackTrace();
         } finally {
             try {
-                // Close the writer regardless of what happens...
             	if (writer != null)
             		writer.close();
             } catch (Exception e) {
@@ -479,6 +484,28 @@ public class Test {//extends JFrame
 		ij.quit();
 	}
 	
+	public static void testTrackFromDisk() throws Exception{
+		
+		ImageJ ij = new ImageJ();
+		
+//		String fname = "E:\\extracted\\Test\\Or42b(2)@CsChrimson(3)\\C_Bl_2uW#N_Re_B0to255s3_120Hz_800uW\\Or42b(2)@CsChrimson(3)_C_Bl_2uW#N_Re_B0to255s3_120Hz_800uW_201606271555.jav";
+		String fnameNew = "E:\\extracted\\Test\\Or42b(2)@CsChrimson(3)\\C_Bl_2uW#N_Re_B0to255s3_120Hz_800uW\\newSave1555.jav";
+		
+//		System.out.println("Loading...");
+//		Experiment ex = new Experiment(fname);
+//		System.out.println("Saving...");
+//		File f = new File(fnameNew);
+//		DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f)));
+//		ex.toDisk(dos, null);
+//		dos.close();
+//		System.out.println("Done!");
+		
+		int n = Experiment.getNumTracks(fnameNew);
+		Track t = Experiment.getTrack(n-1, fnameNew);
+		t.playMovie();
+		
+	}
+	
 	public static void fitExperimentNewScheme(){
 		
 		ImageJ ij = new ImageJ();
@@ -488,7 +515,7 @@ public class Test {//extends JFrame
 		
 		String args[] = new String[2];
 		args[0] = inputFileName;
-		args[1] = outputDir+"7 Coord to contour from marc\\1_2000\\";
+		args[1] = "E:\\testing\\Full Processing\\Speed test\\";
 		
 		Experiment_Processor ep = new Experiment_Processor();
 		ep.runningFromMain = true;
@@ -509,6 +536,25 @@ public class Test {//extends JFrame
 		ep.fitParams = fp;
 		
 		ep.run(args);
+
+		
+		BufferedWriter writer = null;
+		try {
+            String timeLog = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+            File logFile = new File(args[1] + timeLog + " timing.txt");
+
+
+            writer = new BufferedWriter(new FileWriter(logFile));
+            Timer.generateReport(writer);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+            	if (writer != null)
+            		writer.close();
+            } catch (Exception e) {
+            }
+        }
 		
 		ij.quit();
 	}

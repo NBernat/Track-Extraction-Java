@@ -425,7 +425,7 @@ public class Experiment implements Serializable{
 	public static int getNumTracks(String fname){
 		try {
 			DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(new File(fname))));
-			dis.readInt();
+			dis.readInt();//skip past typecode
 			int nTracks = dis.readInt();
 			dis.close();
 			return nTracks;
@@ -490,12 +490,9 @@ public class Experiment implements Serializable{
 
 	private static void skip2trackN(int n, DataInputStream dis, int pointType, PrintWriter pw) throws IOException{
 		for(int i=0; i<n;i++){
-			Track.fromDisk(dis, pointType, null, null);
 			
-			// TODO Correct calculation of sizeOnDisk & use this vvv instead
-//			int skip = dis.readInt();
-//			System.out.println("Skipping "+skip+" bytes");
-//			dis.skipBytes(skip);
+			int skip = dis.readInt();
+			dis.skipBytes(skip);
 		}
 	}
 	

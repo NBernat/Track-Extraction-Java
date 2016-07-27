@@ -259,7 +259,9 @@ public class ImTrackPoint extends TrackPoint{
 	public int sizeOnDisk(){
 		
 		int size = super.sizeOnDisk();
-		size += (2+im.getWidth()*im.getHeight());//Size of byte=1
+		size += 2;//Im width, height
+		size += im.getWidth()*im.getHeight();//pixels
+		
 		return size;
 	}
 

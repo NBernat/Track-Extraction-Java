@@ -870,7 +870,18 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	public int sizeOnDisk(){
 		
 		int size = super.sizeOnDisk();
-		size += Short.SIZE/Byte.SIZE + (2*backbone.getNCoordinates())*java.lang.Float.SIZE/Byte.SIZE+ Byte.SIZE/Byte.SIZE;
+		size += Short.SIZE/Byte.SIZE;//# backbone pts
+		size += (2*backbone.getNCoordinates())*java.lang.Float.SIZE/Byte.SIZE;//Backbone coords
+		size += Byte.SIZE/Byte.SIZE;//artificialmid flag
+		
+		size += Integer.SIZE/Byte.SIZE;//# energy values
+		if (energies!=null){
+			for(String key : energies.keySet()){
+				size += 2*Byte.SIZE/Byte.SIZE; //UTF metadata
+				size += key.getBytes().length; //UTF representation of energy name
+				size += Double.SIZE/Byte.SIZE; //energy value
+			}
+		}
 		
 		return size;
 	}

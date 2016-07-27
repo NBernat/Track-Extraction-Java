@@ -400,7 +400,7 @@ public class TrackPoint implements Serializable {
 	}
 	
 	public int sizeOnDisk(){
-		return 6*Integer.SIZE/Byte.SIZE + 3*java.lang.Double.SIZE/Byte.SIZE;
+		return 7*Integer.SIZE/Byte.SIZE + 3*Double.SIZE/Byte.SIZE;
 	}
 	
 	public static TrackPoint fromDisk(DataInputStream dis, Track t, PrintWriter pw){

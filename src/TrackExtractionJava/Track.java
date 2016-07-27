@@ -754,8 +754,10 @@ public class Track implements Serializable{
 	
 	private int sizeOnDisk(PrintWriter pw){
 		
-		//Add the size of the "# of points" field (32-bit integer)
-		int size = Integer.SIZE/Byte.SIZE;
+		int size =Integer.SIZE/Byte.SIZE;//trackID
+		size += 1;//Boolean.SIZE/Byte.SIZE;//valid
+		size += 1;//Boolean.SIZE/Byte.SIZE;//diverged
+		size += Integer.SIZE/Byte.SIZE;//NumPts
 		
 		//Add the size of each point
 		for (int i=0; i<points.size(); i++){
