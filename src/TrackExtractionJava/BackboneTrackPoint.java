@@ -32,6 +32,12 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	final static int pointType = 3;
 	 
 	/**
+	 * minimum summed squared shift to call an update on the clustering
+	 * (0.01 = .1^2)
+	 */
+	private static final double minShiftToUpdateClusters = 0.01;
+	
+	/**
 	 * The number of pixels in the image considered as part of the maggot
 	 */
 	private transient int numPix;
@@ -67,6 +73,8 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	 * Contains numPix valid elements
 	 */
 	private transient int[] clusterInds;
+	
+	private transient double cumulativeShift = 0;
 	
 	/**
 	 * The pixel clustering method used by the backbone fitter
@@ -452,12 +460,17 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	 */
 	public double calcPointShift(){
 		//Calculate the change between the old and new backbones
+		if (frozen) {
+			return 0;
+		}
+		
 		double shift = 0;
 		for(int i=0; i<numBBPts; i++){
 			double xs = bbNew.xpoints[i]-bbOld.xpoints[i];
 			double ys = bbNew.ypoints[i]-bbOld.ypoints[i];
 			shift += (xs*xs)+(ys*ys);
 		}
+		cumulativeShift += shift;
 		
 		return shift;
 	}
@@ -484,9 +497,15 @@ public class BackboneTrackPoint extends MaggotTrackPoint{
 	 * Preps the working variables for the next iteration of the fitting algorithm
 	 */
 	protected void setupForNextRelaxationStep(){
+		if (frozen) {
+			return;
+		}
 		bbOld = bbNew;
-		MagPixWold = MagPixWnew;
-		setClusterInfo();//fills in MagPixWnew using MagPixWold 
+		if (cumulativeShift >= minShiftToUpdateClusters) {
+			cumulativeShift = 0;
+			MagPixWold = MagPixWnew;
+			setClusterInfo();//fills in MagPixWnew using MagPixWold 
+		}
 	}
 	
 	/**

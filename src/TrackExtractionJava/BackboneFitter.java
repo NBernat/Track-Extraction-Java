@@ -351,7 +351,7 @@ public class BackboneFitter {
 	 * 
 	 */
 	public void fitTrack() {
-		
+		Timer.tic("fitTrack");
 //		clearPrev();
 		
 		if (workingTrack.points.size()<params.minTrackLen){
@@ -368,7 +368,9 @@ public class BackboneFitter {
 		
 		noError = true;
 		for(int i=0; (i<params.grains.length && noError); i++){
+			Timer.tic("fitTrack:doPass");
 			noError = doPass(params.grains[i]);
+			Timer.toc("fitTrack:doPass");
 			if (!noError) {
 				comm.message("Error on track ("+workingTrack.getTrackID()+") pass "+i+"(grain "+params.grains[i]+") \n ---------------------------- \n \n", VerbLevel.verb_error);
 				errTrack = workingTrack;
@@ -385,6 +387,7 @@ public class BackboneFitter {
 			workingTrack = null;
 			
 		}
+		Timer.toc("fitTrack");
 		
 //		System.out.println("Done fitting track");
 	}
@@ -452,7 +455,9 @@ public class BackboneFitter {
 		resetParams(straightParams);
 		boolean hideGapPoints = true;
 		if (userOut!=null) userOut.println("Fitting Straight Subsets: "+straightLarvae.toString());
+		Timer.tic("fitSubsets-straight");
 		fitSubsets(straightLarvae, hideGapPoints);
+		Timer.toc("fitSubsets-straight");
 		if (workingTrack==null){
 			System.out.println("Error fitting straight larvae");
 			return;
@@ -478,7 +483,9 @@ public class BackboneFitter {
 		bentParams.spineExpansionWeight = 1;
 		resetParams(bentParams);
 		if (userOut!=null) userOut.println("Fitting Bent Subsets: "+bentLarvae.toString());
-		 fitSubsets(bentLarvae, hideGapPoints);
+		Timer.tic("fitSubsets-bent");
+		fitSubsets(bentLarvae, hideGapPoints);
+		Timer.toc("fitSubsets-bent");
 		if (workingTrack==null){
 			System.out.println("Error fitting bent larvae");
 			return;
@@ -693,7 +700,7 @@ public class BackboneFitter {
 	}
 	
 	public void fitSubsets(Vector<Gap> subsets, boolean hideGapPoints){
-
+		Timer.tic("fitSubsets");
 		if (subsets==null || subsets.size()==0){
 			return;
 		}
@@ -705,12 +712,15 @@ public class BackboneFitter {
 		setFrozenGapsInTrack(subsets, true);
 		if (hideGapPoints) setHiddenGapsInTrack(subsets, true); 
 		
+		Timer.tic("fitSubsets:fitTrack");
 		fitTrack();
+		Timer.toc("fitSubsets:fitTrack");
 		
 		setFrozenGapsInTrack(subsets, false);
 		if (hideGapPoints) setHiddenGapsInTrack(subsets, false); 
 		
 		useScaleFactors = usfOld;
+		Timer.toc("fitSubsets");
 	}
 	
 	/**
@@ -725,6 +735,7 @@ public class BackboneFitter {
 	
 	public boolean fitSubsetEdges(Gap subset, int edgeSize, boolean freezeHideInner, boolean doPrev, boolean doNext){
 		
+		Timer.tic("fitSubsetEdges");
 		int freezeHideS = (doPrev)? (subset.start+edgeSize) : subset.start;
 		int freexeHideE = (doNext)? (subset.end-edgeSize) : subset.end;
 		
@@ -740,8 +751,9 @@ public class BackboneFitter {
 		
 		Vector<Gap> subs = new Vector<Gap>();
 		subs.add(subset);
+		Timer.tic("fitSubsetEdges:fitSubsets");
 		fitSubsets(subs, false);
-		
+		Timer.toc("fitSubsetEdges:fitSubsets");
 		//Unhide/Unfreeze inner points manually
 		if (freezeHideInner){
 			setFrozen(freezeHideS, freexeHideE, false);
@@ -752,7 +764,8 @@ public class BackboneFitter {
 			workingTrack = tempTrack;
 			return false;
 		}
-		
+
+		Timer.toc("fitSubsetEdges");
 		return true;
 		
 	}
@@ -877,9 +890,9 @@ public class BackboneFitter {
 	 * @return
 	 */
 	protected boolean patchGap_InchInwards(Gap badG, int edgeSize, boolean doPrev, boolean doNext){
-
-		if (!doPrev && !doNext) return false;
 		
+		if (!doPrev && !doNext) return false;
+		Timer.tic("patchGap_InchInwards");
 		inchingInwards = true;
 		
 //		float oldIWt = params.imageWeight*2;
@@ -892,6 +905,7 @@ public class BackboneFitter {
 		boolean success = true;
 		int numPtsCutoff = (doPrev && doNext)? 2 : 1;   
 		while (unfit.size()>numPtsCutoff && success){
+			Timer.tic("patchGap_InchInwards:inner_loop");
 			resetForNextExectution();
 
 			// TODO Remove this later
@@ -901,8 +915,9 @@ public class BackboneFitter {
 //				userOut = System.out;
 //				userOut.println("gap: " + unfit.start + " - " + unfit.end);
 //			}
+			Timer.tic("patchGap_InchInwards:fitSubsetEdges_call_1");
 			success = fitSubsetEdges(unfit, edgeSize, true, doPrev, doNext); 
-			
+			Timer.toc("patchGap_InchInwards:fitSubsetEdges_call_1");
 			// TODO check if the edge points have been frozen (bc of divergence)
 			
 			if (success){
@@ -911,12 +926,15 @@ public class BackboneFitter {
 				
 				if (unfit.size()<=numPtsCutoff){
 					resetForNextExectution();
+					Timer.tic("patchGap_InchInwards:fitSubsetEdges_call_2");
 					success = fitSubsetEdges(unfit, 1, false, doPrev, doNext);
+					Timer.toc("patchGap_InchInwards:fitSubsetEdges_call_2");
 				}
 			}
+			Timer.toc("patchGap_InchInwards:inner_loop");
 			
 		}
-		
+		Timer.tic("patchGap_InchInwards:fit whole gap");
 		//Run the fitter on the whole gap
 		resetForNextExectution();
 		Vector<Gap> bads = new Vector<Gap>();
@@ -928,6 +946,10 @@ public class BackboneFitter {
 		params.timeLengthWeight = oldwts;
 		
 		inchingInwards = false;
+		Timer.toc("patchGap_InchInwards:fit whole gap");
+
+		Timer.toc("patchGap_InchInwards");
+
 		return success;
 	}
 	
@@ -1145,8 +1167,10 @@ public class BackboneFitter {
 	 * returns convergence status
 	 */
 	private boolean runFitter() {
+		Timer.tic("runFitter");
 		boolean firstPass=true;
 		do {
+			Timer.tic("runFitter:loopA");
 			comm.message("Iteration number " + updater.getIterNum(), VerbLevel.verb_debug);
 
 			// Do a relaxation step
@@ -1164,8 +1188,10 @@ public class BackboneFitter {
 					firstPass=false;
 				}
 			}
-			
+			Timer.toc("runFitter:loopA");
+			Timer.tic("runFitter:relaxBackbones");
 			relaxBackbones(updater.inds2Update());
+			Timer.toc("runFitter:relaxBackbones");
 			
 			if (params.storeEnergies){
 				for (int i=0; i<energyProfiles.size(); i++){
@@ -1174,10 +1200,13 @@ public class BackboneFitter {
 			}
 
 			// Setup for the next step
+			Timer.tic("runFitter:calcShifts");
 			calcShifts();
+			Timer.toc("runFitter:calcShifts");
 			if (diverged && inchingInwards){
 				// TODO freeze diverged point (singular) 
 			}else 
+				Timer.tic("runFitter:elseBlock");
 				if (diverged && params.freezeDiverged){
 				Gap div = findDivergedGap();
 				int trackIndStart = BTPs.get(div.start).frameNum-bplg.workingTrack.points.firstElement().frameNum;
@@ -1186,6 +1215,7 @@ public class BackboneFitter {
 				setHidden(trackIndStart, trackIndEnd, true);
 				divergedGaps.add(new Gap(trackIndStart, trackIndEnd));
 				diverged =false;
+				Timer.toc("runFitter:elseBlock");
 			}
 			
 			
@@ -1193,8 +1223,9 @@ public class BackboneFitter {
 				pause();
 			}
 			
-			
+			Timer.tic("runFitter:setupForNextRelaxationStep");
 			setupForNextRelaxationStep();
+			Timer.toc("runFitter:setupForNextRelaxationStep");
 			
 			// Show the fitting messages, if necessary
 			if (!updater.comm.outString.equals("")) {
@@ -1208,6 +1239,8 @@ public class BackboneFitter {
 		if (!diverged) {
 			finalizeBackbones();
 		}
+		Timer.toc("runFitter");
+
 		return !diverged;
 
 	}
@@ -1232,9 +1265,11 @@ public class BackboneFitter {
 					bbRelaxationStep(i);
 				}
 			} else if (params.storeEnergies){
+				Timer.tic("relaxBackbones:storingEnergyOfUnfitPoints");
 				for (int j=0; j<energyProfiles.size(); j++){
 					energyProfiles.get(j).addEnergyEntry(i, -1);
 				}
+				Timer.toc("relaxBackbones:storingEnergyOfUnfitPoints");
 				
 			}
 		}
@@ -1297,9 +1332,10 @@ public class BackboneFitter {
 		// Store the backbones which are relaxed under individual forces
 		try{
 			for (int i=0; i<Forces.size(); i++){
-				
+				Timer.tic("Force_" + i);
 				FloatPolygon tb = Forces.get(i).getTargetPoints(btpInd, BTPs);
 				targetBackbones.add(tb);
+				Timer.toc("Force_" + i);
 			}
 		} catch(Exception e){
 			StringWriter sw = new StringWriter();
