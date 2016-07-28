@@ -487,22 +487,67 @@ public class Test {//extends JFrame
 	public static void testTrackFromDisk() throws Exception{
 		
 		ImageJ ij = new ImageJ();
-		
+		String magExName = "E:\\extracted\\OdorPlusOpto\\Or42a@CsChrimson(3)\\N_Re_B0to255s3_120Hz_90uW#C_Bl_2uW\\Or42a@CsChrimson(3)_N_Re_B0to255s3_120Hz_90uW#C_Bl_2uW_201509021651.prejav";
+//		String mmfName = "E:\\data\\Test\\Or42b(2)@CsChrimson(3)2\\C_Bl_2uW#N_Re_B0to255s3_120Hz_800uW\\201607141545\\Or42b(2)@CsChrimson(3)_C_Bl_2uW#N_Re_B0to255s3_120Hz_800uW_201607141545.mmf"; 
 //		String fname = "E:\\extracted\\Test\\Or42b(2)@CsChrimson(3)\\C_Bl_2uW#N_Re_B0to255s3_120Hz_800uW\\Or42b(2)@CsChrimson(3)_C_Bl_2uW#N_Re_B0to255s3_120Hz_800uW_201606271555.jav";
-		String fnameNew = "E:\\extracted\\Test\\Or42b(2)@CsChrimson(3)\\C_Bl_2uW#N_Re_B0to255s3_120Hz_800uW\\newSave1555.jav";
+//		String fSrcDirNew = "E:\\extracted\\Test\\Or42b(2)@CsChrimson(3)\\C_Bl_2uW#N_Re_B0to255s3_120Hz_800uW\\"; 
+//		String fnameNew = "newSave1545.jav";
+		
+		
+		String badExDir = "E:\\extracted\\OdorPlusOpto\\Or42a@CsChrimson(3)\\N_Re_B0to255s3_120Hz_90uW#C_Bl_2uW\\badEx\\";
+//		File f = new File(badExDir+"\\badEx.prejav");
+		
+		String[] args = new String[3];
+		args[0] = badExDir+"\\badEx.prejav";
+//		Experiment badEx = new Experiment(args[0]);
+//		badEx.tracks.firstElement().showFitting();
+//		badEx.tracks.firstElement().playMovie();
+//		MaggotTrackBuilder.orientMaggotTrack(badEx.tracks.firstElement(), new ExtractionParameters().framesBtwnContSegs, null);		
+//		badEx.tracks.firstElement().playMovie();
+		
+		args[1] = badExDir;
+		args[2] = "badEx_refit_oriented.jav";
+		Experiment_Processor ep = new Experiment_Processor();
+		ep.runningFromMain = true;
+		ep.run(args);
+		ep.ex.showEx();
+		
+//		Vector<Track> matchTrack = new Vector<Track>();
+//		Track oldTrack = ep.ex.tracks.get(ep.ex.tracks.size()/2);
+//		matchTrack.add(oldTrack);
+//		
+//		Experiment exNew = new Experiment(fSrcDirNew+"\\"+fnameNew);
+//		matchTrack.add(exNew.getTrack(oldTrack.getTrackID()));
+//		
+//		Experiment matching = new Experiment(exNew, matchTrack);
+//		matching.showEx();
 		
 //		System.out.println("Loading...");
-//		Experiment ex = new Experiment(fname);
+//		Experiment ex = new Experiment(magExName);
+//		Vector<Track> badTracks = new Vector<Track>();
+//		badTracks.add(ex.getTrack(122));
+//		badTracks.add(ex.getTrack(147));
+//		String badExDir = "E:\\extracted\\OdorPlusOpto\\Or42a@CsChrimson(3)\\N_Re_B0to255s3_120Hz_90uW#C_Bl_2uW\\badEx\\";
+//		Experiment bad = new Experiment(ex, badTracks);
 //		System.out.println("Saving...");
-//		File f = new File(fnameNew);
+//		File f = new File(badExDir+"\\badEx.prejav");
 //		DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f)));
-//		ex.toDisk(dos, null);
+//		bad.toDisk(dos, null);
 //		dos.close();
 //		System.out.println("Done!");
 		
-		int n = Experiment.getNumTracks(fnameNew);
-		Track t = Experiment.getTrack(n-1, fnameNew);
-		t.playMovie();
+		
+		
+		
+		
+		
+		
+//		int n = Experiment.getNumTracks(fnameNew);
+//		Track t = Experiment.getTrack(n-1, fnameNew);
+//		MaggotDisplayParameters mdp = new MaggotDisplayParameters();
+//		mdp.contour = true;
+//		t.playMovie(mdp);
+//		System.out.println();
 		
 	}
 	

@@ -11,6 +11,7 @@ import ij.text.TextWindow;
 
 import java.awt.Color;
 import java.awt.Point;
+import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.io.DataInputStream;
@@ -135,7 +136,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		int ptN = contour.getNCoordinates();
 		con = new Vector<ContourPoint>();
 		for(int ind=0; ind<ptN; ind++){
-				con.add(new ContourPoint(contour.getXCoordinates()[ind]+contour.getBounds().x, contour.getYCoordinates()[ind]+contour.getBounds().y));
+				con.add(new ContourPoint(contour.getXCoordinates()[ind], contour.getYCoordinates()[ind]));
 		}
 		
 		
@@ -419,8 +420,12 @@ public class MaggotTrackPoint extends ImTrackPoint {
 	}
 	
 	protected static PolygonRoi getInterpolatedSegment(PolygonRoi origSegment, int numPts, boolean debug){
+		return getInterpolatedSegment(origSegment, numPts, 0.01f, true, debug);
+	}
+	
+	protected static PolygonRoi getInterpolatedSegment(PolygonRoi origSegment, int numPts, double eps,  boolean tryAgain, boolean debug){
 
-		if (numPts==0 || origSegment.getNCoordinates()==0){
+		if (numPts<2 || origSegment.getNCoordinates()==0){
 			return null;
 		}
 
@@ -428,24 +433,58 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		com.setVerbosity(VerbLevel.verb_debug);
 		com.message("Interpolating Segment: "+numPts+"points", VerbLevel.verb_debug);
 		
+		FloatPolygon fp = origSegment.getFloatPolygon();
+		float[] x = fp.xpoints;
+		float[] y = fp.ypoints;
+		
+		
+		double step = ((double) fp.npoints - 1) / (numPts-1);
+		float[] newx = new float[numPts];
+		float[] newy = new float[numPts];
+		for (int j = 0; j < numPts; ++j) {
+			double m = step*j;
+			int k = (int) m;
+			
+			if (k >= fp.npoints - 1) {
+				newx[j] = x[k];
+				newy[j] = y[k];
+			} else {
+				newx[j] = (float) ((1+k-m)*x[k] + (m-k)*x[k+1]);
+				newy[j] = (float) ((1+k-m)*y[k] + (m-k)*y[k+1]);
+			}
+		}
+		/*
+		FloatPolygon upsampled = origSegment.getInterpolatedPolygon(origSegment.getLength()/(10*numPts), true);
+
+		float[] x = upsampled.xpoints;
+		float y[] = upsampled.ypoints;
+		float[] newx = new float[numPts];
+		float[] newy = new float[numPts];
+		*/
+		return new PolygonRoi(newx, newy, Roi.POLYLINE);
+		/*
 		try{	
 			double spacing = (origSegment.getLength())/(numPts-1);
 			com.message("Spacing is "+spacing, VerbLevel.verb_debug);
 			PolygonRoi retSeg = new PolygonRoi(origSegment.getInterpolatedPolygon(spacing, true), Roi.POLYLINE);
 			com.message("Initial retSeg has "+retSeg.getNCoordinates()+" points", VerbLevel.verb_debug);
 			int count = 0;
+			
 			if (retSeg.getNCoordinates()!=numPts){
 				//comm.message("Initial interpolation spacing was incorrect, there were "+retSeg.getNCoordinates()+"points", VerbLevel.verb_debug);
 				count++;
 				double changeFact;
+				boolean prevUp;
 				if ((retSeg.getNCoordinates()-numPts)>0){ //too many points
 					//increase the spacing slightly, check
-					changeFact=1.01;
+					changeFact=1+eps;
 				} else { //too few points
-					changeFact=.99;
+					changeFact=1-eps;
 				}
 				
-				while (retSeg.getNCoordinates()!= numPts && retSeg.getNCoordinates()>0 && retSeg.getNCoordinates()<10*numPts && spacing*changeFact>0.01){
+				while (retSeg.getNCoordinates()!= numPts && retSeg.getNCoordinates()>(numPts/2) && retSeg.getNCoordinates()<10*numPts && spacing*changeFact>0.001){
+					
+					
 					spacing = spacing*changeFact;
 					retSeg = new PolygonRoi(origSegment.getInterpolatedPolygon(spacing, true), Roi.POLYLINE);
 				}
@@ -457,12 +496,17 @@ public class MaggotTrackPoint extends ImTrackPoint {
 				return retSeg;
 			} else {
 				//comm.message("Segment could not be found with the proper number of coordinates (currently "+retSeg.getNCoordinates()+")", VerbLevel.verb_debug);
-				return origSegment;
+				if (tryAgain){
+					return getInterpolatedSegment(origSegment, numPts, eps*.1, false, debug); 
+				} else {
+					return origSegment;
+				}
 			}
 		} catch (Exception e){
 			new TextWindow("Interpolation error", com.outString+"\nError interpolating spine: \n"+e.getMessage(), 500, 500);
 			return null;
 		}
+		*/
 	}
 	
 	
@@ -773,8 +817,8 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		
 		int expandFac = mdp.expandFac;
 		
-		imOriginX = (int)x-(trackWindowWidth/2)-1;
-		imOriginY = (int)y-(trackWindowHeight/2)-1;
+		imOriginX = (int)x-(trackWindowWidth/2);
+		imOriginY = (int)y-(trackWindowHeight/2);
 //		im.snapshot();
 		
 		ImageProcessor bigIm = im.resize(im.getWidth()*expandFac);
@@ -922,8 +966,8 @@ public class MaggotTrackPoint extends ImTrackPoint {
 		btp.next = next;
 		btp.contourStart = contourStart;
 		btp.nConPts = nConPts;
-		btp.contourX = contourX;
-		btp.contourY = contourY;
+		btp.contourX = contourX;//.clone();
+		btp.contourY = contourY;//.clone();
 		btp.head = head;
 		btp.headi = headi;
 		btp.tail = tail;
@@ -1061,6 +1105,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 				
 				//Write the midline
 				FloatPolygon mfp = midline.getFloatPolygon();//Removes the "XBase"/"YBase" crap from PolygonRoi
+				Rectangle bounds = mfp.getBounds();
 				for (int i=0; i<midline.getNCoordinates(); i++){
 					dos.writeFloat(mfp.xpoints[i]);
 					dos.writeFloat(mfp.ypoints[i]);
@@ -1184,7 +1229,7 @@ public class MaggotTrackPoint extends ImTrackPoint {
 					midX[i] = dis.readFloat();
 					midY[i] = dis.readFloat();
 				}
-				midline = new PolygonRoi(midX, midY, PolygonRoi.POLYLINE);
+				midline = new PolygonRoi(new FloatPolygon(midX, midY), PolygonRoi.POLYLINE);
 			}
 			
 		} catch (Exception e) {

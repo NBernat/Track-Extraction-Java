@@ -284,8 +284,8 @@ public class CVUtils {
 		Graphics g = newIm.getGraphics();
 		g.setColor(Color.black);
 		g.fillRect(0,0,newWidth,newHeight);
-		int offsetX = (newWidth/2)+1-centerX;
-		int offsetY = (newHeight/2)+1-centerY;
+		int offsetX = (newWidth/2)-centerX;
+		int offsetY = (newHeight/2)-centerY;
 		g.drawImage(image.getBufferedImage(), offsetX, offsetY, null);
 		
 		ImagePlus retIm = new ImagePlus("Padded "+image.getTitle(), newIm);
