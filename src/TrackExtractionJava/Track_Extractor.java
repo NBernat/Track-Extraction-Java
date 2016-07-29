@@ -21,10 +21,12 @@ import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+
 //import ij.ImageJ;
 import ij.ImageStack;
 import ij.WindowManager;
 import ij.plugin.PlugIn;
+import ij.plugin.frame.RoiManager;
 import ij.text.TextWindow;
 
 
@@ -51,7 +53,13 @@ public class Track_Extractor implements PlugIn{
 	
 	
 	public ImageStack getStack(){
-		return WindowManager.getCurrentWindow().getImagePlus().getImageStack();
+		
+		ImageStack stack = WindowManager.getCurrentWindow().getImagePlus().getImageStack();
+//		WindowManager.getCurrentWindow().getImagePlus().setOverlay(null);
+//		WindowManager.getCurrentWindow().close();
+//		RoiManager.getInstance().move;
+//		WindowManager.getCurrentWindow().close();
+		return stack;
 	}
 	
 	public static void main(String[] args) {
@@ -187,7 +195,7 @@ class ExtractorFrame extends JFrame{
 		
 		
 		//Set params from input
-		ep.runningFromMain = true;
+		ep.runningFromMain = false;
 		ep.prParams = params.procParams;
 		ep.extrParams = params.extrParams;
 		ep.fitParams = params.fitParams;
@@ -242,7 +250,7 @@ class InputPanel extends JPanel{
 	JTextField outputNameFld;
 	
 
-	static String txFldDisplay = "Choose a file (or type 'current')";
+	static String txFldDisplay = "Choose a file... (or type 'current' )";
 	int txFldNColumns = 20;
 	
 	//Constructors

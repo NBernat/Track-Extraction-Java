@@ -64,12 +64,12 @@ public class CSVPrefs {
 				false,//"prevPointID",//Start of MaggotTrackPoint data
 				false,//"nextPointID",
 				true,//"htValid",
-				false,//"head.x",
-				false,//"head.y",
-				false,//"mid.x",
-				false,//"mid.y",
-				false,//"tail.x",
-				false,//"tail.y",//End of MaggotTrackPoint
+				true,//"head.x",
+				true,//"head.y",
+				true,//"mid.x",
+				true,//"mid.y",
+				true,//"tail.x",
+				true,//"tail.y",//End of MaggotTrackPoint
 				false//"artificialMid"//Start&End of BackboneTrackPoint data
 			};
 			includeValue=initVals;

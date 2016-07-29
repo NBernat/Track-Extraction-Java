@@ -29,6 +29,7 @@ import ij.WindowManager;
 import ij.gui.ImageWindow;
 import ij.io.OpenDialog;
 import ij.plugin.PlugIn;
+import ij.plugin.frame.RoiManager;
 import ij.text.TextWindow;
 
 
@@ -117,6 +118,7 @@ public class Experiment_Processor implements PlugIn{
 		setupParams();
 		if (prParams.saveSysOutToFile) setupSysOut();
 
+		IJ.showMessage("setupParams returned");
 		try {
 			runTime.tic();
 			String logpathname = setupLog();
@@ -134,6 +136,7 @@ public class Experiment_Processor implements PlugIn{
 					log("...done extracting tracks"); 
 					if (prParams.closeMMF && mmfWin!=null) {
 						log("Closing MMF Window");
+						RoiManager.getInstance().reset();
 						mmfWin.close();
 						mmfWin=null;
 					}
@@ -372,6 +375,7 @@ public class Experiment_Processor implements PlugIn{
 				
 			} else if (fileName.equalsIgnoreCase("current")) {
 				success = useCurrentWindow();
+				IJ.showMessage("use current window returned");
 			} else{ 
 				
 				success = openWithIJ(dir, fileName);
@@ -393,6 +397,7 @@ public class Experiment_Processor implements PlugIn{
 	private boolean useCurrentWindow(){
 		mmfWin = WindowManager.getCurrentWindow();
 		mmfStack = mmfWin.getImagePlus();
+//		mmfWin.close();
 		return mmfStack!=null;
 	}
 	
@@ -528,6 +533,7 @@ public class Experiment_Processor implements PlugIn{
 		status+="Running trackbuilder...\n";
 		MaggotTrackBuilder tb = new MaggotTrackBuilder(mmfStack.getImageStack(), extrParams);
 
+		IJ.showMessage("trackbuilder made");
 		try {
 			log("Extracting tracks", true);
 			//Extract the tracks
@@ -1260,7 +1266,7 @@ public class Experiment_Processor implements PlugIn{
 		String indent = "";
 		for (int i=0;i<indentLevel; i++) indent+="----";
 		processLog.println(runTime.getElapsedTime()*0.001+" sec: "+indent+" "+message);
-		
+		processLog.flush();
 	}
 	
 }

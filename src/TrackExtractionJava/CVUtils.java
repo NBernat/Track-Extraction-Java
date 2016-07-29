@@ -210,7 +210,7 @@ public class CVUtils {
 		
 		
 		//Populate the results table
-		Roi r = threshIm.getRoi();
+//		Roi r = threshIm.getRoi();
 		
 		double mint = threshIm.getProcessor().getMinThreshold();
 		double maxt = threshIm.getProcessor().getMaxThreshold();
@@ -230,7 +230,7 @@ public class CVUtils {
 			System.out.println ("partAN returned error");
 		};
 		threshIm.getProcessor().setThreshold(mint, maxt, ImageProcessor.NO_LUT_UPDATE);
-		threshIm.setRoi(r);
+//		threshIm.setRoi(r);
 		
 		
 		return rt;

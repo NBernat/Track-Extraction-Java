@@ -88,7 +88,6 @@ public class ExtractionParameters implements Serializable{
 	int sampleInd = 10;
 	int trackWindowHeight = 30;
 	int trackWindowWidth = 30;
-	int trackZoomFac = 10;
 	int[] matchSpill = {};//{234,251,356,367};
 	boolean flagAbnormalMatches = false;
 	boolean dispTrackInfo = false;

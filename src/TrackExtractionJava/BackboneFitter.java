@@ -441,6 +441,7 @@ public class BackboneFitter {
 			return;
 		}
 		//Add all the potentially bad midline gaps to the diverged list
+		//NOTE: this is so they are addressed with the diverged spines (see below)
 		freezeHideArtificial();
 		divergedGaps.addAll(Gap.bools2Segs(artificial));
 		
@@ -498,7 +499,8 @@ public class BackboneFitter {
 		
 		Timer.tic("FTNS:fix-diverged");
 
-		//Patch diverged sections
+		//Patch diverged sections 
+		//NOTE: artificial midlines have been added to this list (see above)
 		divergedParams.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
 		divergedParams.freezeDiverged = true;
 		divergedParams.leaveBackbonesInPlace = true;
@@ -516,6 +518,7 @@ public class BackboneFitter {
 			}
 			
 			Gap divG = divergedGaps.get(i);
+			//Decide if you inch in from one side or both sides
 			boolean doPrev =  divG.start != 0;
 			boolean doNext =  divG.end != (workingTrack.getNumPoints()-1);
 			if (userOut!=null) userOut.println("Patching Diverged Subset: "+divG.toString());
@@ -571,7 +574,7 @@ public class BackboneFitter {
 		Timer.toc("FTNS:inch-inward");
 		
 		Timer.tic("FTNS:final-fit");
-		//Do final run on the whole track for continuity
+		//Do final iterations on the whole track for continuity
 		finalParams.leaveFrozenBackbonesAlone = true;//This tells the plg not to re-initialize the frozen bb's
 		finalParams.freezeDiverged = true;
 		finalParams.leaveBackbonesInPlace = true;
@@ -583,6 +586,7 @@ public class BackboneFitter {
 		for (int i=0; i<params.numFinalSingleIterations; i++){
 			runSingleIteration();
 		}
+		//finalizeBackbones();//TODO This wasn't being done. Test number of iterations
 		
 		Timer.toc("FTNS:final-fit");
 		
@@ -611,9 +615,6 @@ public class BackboneFitter {
 	public void runSingleIteration(){
 			
 		//Run one iteration of fitter on entire track to get energies 
-		//TODO Make sure this vv doesn't cause an error
-//		boolean noError = bplg.generateFullBTPList();
-//		BTPs = bplg.getBTPs();
 		
 		if (params.storeEnergies){
 			for (int i=0; i<energyProfiles.size(); i++){

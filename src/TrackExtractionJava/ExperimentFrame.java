@@ -11,7 +11,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.BufferedOutputStream;
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.DateFormat;
@@ -19,6 +22,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Vector;
+
+
+
+
 
 
 
@@ -39,6 +46,7 @@ import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.xml.crypto.Data;
 
 
 
@@ -285,7 +293,9 @@ class TrackPanel extends JPanel {
 	
 	MaggotDisplayParameters mdp;
 	
-	JButton saveButton;
+	JButton playButton;
+	JButton saveToExButton;
+	JButton saveToCSVButton;
 	JPanel buttonPanel;
 	
 	public TrackPanel(MaggotDisplayParameters mdp){
@@ -308,7 +318,7 @@ class TrackPanel extends JPanel {
 		
 		
 		//Build and add the play button 
-		JButton playButton = new JButton("Play Track Movie");
+		playButton = new JButton("Play Track Movie");
 		playButton.setSize(100, 40);
 		playButton.addActionListener(new ActionListener() {
 			@Override
@@ -317,18 +327,34 @@ class TrackPanel extends JPanel {
 			}
 		});
 		
-//		JButton plotButton = new JButton("Plot Track Energies");
-//		plotButton.setSize(150, 40);
-//		plotButton.addActionListener(new ActionListener() {
-//			@Override
-//			public void actionPerformed(ActionEvent e) {
-//				plotCurrentTrackE();
-//			}
-//		});
+		
+		saveToExButton = new JButton("Save Track to Experiment");
+		saveToExButton.setSize(100, 40);
+		saveToExButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				saveTrackToExperiment();
+			}
+		});
+		
+		
+		saveToCSVButton = new JButton("Save Track to CSV");
+		saveToCSVButton.setSize(100, 40);
+		saveToCSVButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				//set prefs
+				saveTrackToCSV(new CSVPrefs());
+			}
+		});
+		
+		
+		
 		//Build and add the play button 
 		buttonPanel = new JPanel();
 		buttonPanel.add(playButton);
-//		buttonPanel.add(plotButton);
+		buttonPanel.add(saveToCSVButton);
+		buttonPanel.add(saveToExButton);
 		
 		
 		add(descriptionPanel, BorderLayout.CENTER);
@@ -360,9 +386,70 @@ class TrackPanel extends JPanel {
 		}
 	}
 	
-	
-	public void plotCurrentTrackE(){
+	public void saveTrackToExperiment(){
+		String dir = "[unassigned]";
 		
+		try{
+			if (track!=null && track.points!=null && track.points.size()>0){
+				
+				Vector<Track> tvec = new Vector<Track>();
+				tvec.add(track);
+				Experiment ex = new Experiment(track.exp, tvec);
+				
+				String name = "track"+track.getTrackID()+"Ex";
+				String ext = (track.points.firstElement().getPointType()<BackboneTrackPoint.pointType)? 
+							".prejav" : ".jav";
+				
+				//open a directory selector
+				SaveDialog sd = new SaveDialog("Choose a directory...", name, ext);
+				dir = sd.getDirectory();
+				
+				if (dir!=null && dir !=""){
+					File f = new File(dir+name+ext);
+					DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f)));
+					ex.toDisk(dos, null);
+					dos.close();
+				}
+				
+			}
+		} catch(Exception e){
+			StringWriter sw = new StringWriter();
+			PrintWriter prw = new PrintWriter(sw);
+			e.printStackTrace(prw);
+			new TextWindow("SaveTrackToEx Error", "Could not save track "+track.getTrackID()+" to Experiment in "+dir+"\n"+sw.toString()+"\n", 500, 500);
+		}
+	}
+	
+	public void saveTrackToCSV(CSVPrefs prefs){
+		String dir = "[unassigned]";
+		
+		try{
+			if (track!=null && track.points!=null && track.points.size()>0){
+				
+				Vector<Track> tvec = new Vector<Track>();
+				tvec.add(track);
+				Experiment ex = new Experiment(track.exp, tvec);
+				
+				String name = "track"+track.getTrackID();
+				String ext = ".csv";
+				
+				//open a directory selector
+				SaveDialog sd = new SaveDialog("Choose a directory...", name, ext);
+				dir = sd.getDirectory();
+				name = sd.getFileName();
+				
+				if (dir!=null && dir !=""){
+					File f = new File(dir+name+ext);
+					Experiment.toCSV(ex, f.getAbsolutePath(), prefs);//ex.totoDisk(dos, null);
+				}
+				
+			}
+		} catch(Exception e){
+			StringWriter sw = new StringWriter();
+			PrintWriter prw = new PrintWriter(sw);
+			e.printStackTrace(prw);
+			new TextWindow("SaveTrackToCSV Error", "Could not save track "+track.getTrackID()+" to CSV in "+dir+"\n"+sw.toString()+"\n", 500, 500);
+		}
 	}
 	
 }
